@@ -204,7 +204,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                   <SelectContent>
                     {models.map((model) => (
                       <SelectItem key={model.id} value={model.name}>
-                        {model.name} (€{model.basePrice.toLocaleString('it-IT')})
+                        {model.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -229,7 +229,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                   <SelectContent>
                     {trims.map((trim) => (
                       <SelectItem key={trim.id} value={trim.name}>
-                        {trim.name} (+€{trim.basePrice.toLocaleString('it-IT')})
+                        {trim.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -256,7 +256,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                   <SelectContent>
                     {fuelTypes.map((fuelType) => (
                       <SelectItem key={fuelType.id} value={fuelType.name}>
-                        {fuelType.name} (+€{fuelType.priceAdjustment.toLocaleString('it-IT')})
+                        {fuelType.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -281,7 +281,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                   <SelectContent>
                     {colors.map((color) => (
                       <SelectItem key={color.id} value={`${color.name} (${color.type})`}>
-                        {color.name} ({color.type}) (+€{color.priceAdjustment.toLocaleString('it-IT')})
+                        {color.name} ({color.type})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -308,7 +308,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                   <SelectContent>
                     {transmissions.map((transmission) => (
                       <SelectItem key={transmission.id} value={transmission.name}>
-                        {transmission.name} (+€{transmission.priceAdjustment.toLocaleString('it-IT')})
+                        {transmission.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
