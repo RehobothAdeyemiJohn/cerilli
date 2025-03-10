@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -11,6 +10,7 @@ export type Vehicle = {
   imageUrl?: string;
   status: 'available' | 'reserved' | 'sold';
   dateAdded: string;
+  transmission?: string;
 };
 
 export type User = {

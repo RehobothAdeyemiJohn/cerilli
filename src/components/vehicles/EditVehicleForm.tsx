@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Vehicle } from '@/types';
 
 const vehicleSchema = z.object({
   model: z.string().min(2, { message: "Il modello deve avere almeno 2 caratteri." }),
@@ -22,49 +22,42 @@ const vehicleSchema = z.object({
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
-interface AddVehicleFormProps {
-  onComplete: () => void;
+interface EditVehicleFormProps {
+  vehicle: Vehicle;
+  onComplete: (vehicle: Vehicle) => void;
+  onCancel: () => void;
 }
 
-const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
+const EditVehicleForm = ({ vehicle, onComplete, onCancel }: EditVehicleFormProps) => {
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
-      model: '',
-      trim: '',
-      fuelType: '',
-      exteriorColor: '',
-      price: 0,
-      location: '',
-      accessories: '',
-      transmission: '',
-      status: 'available',
+      model: vehicle.model,
+      trim: vehicle.trim,
+      fuelType: vehicle.fuelType,
+      exteriorColor: vehicle.exteriorColor,
+      price: vehicle.price,
+      location: vehicle.location,
+      accessories: vehicle.accessories.join(', '),
+      transmission: vehicle.transmission || 'Manuale', // Default value if not present
+      status: vehicle.status,
     },
   });
 
   const onSubmit = (data: VehicleFormValues) => {
-    // In un'applicazione reale, questo invierebbe i dati a un'API
-    console.log('Invio veicolo:', data);
-    
     // Process accessories string into an array
     const accessoriesArray = data.accessories ? 
       data.accessories.split(',').map(item => item.trim()) : 
       [];
     
-    const newVehicle = {
+    const updatedVehicle: Vehicle = {
+      ...vehicle,
       ...data,
-      id: String(Date.now()), // Generazione semplice di ID per demo
       accessories: accessoriesArray,
-      dateAdded: new Date().toISOString().split('T')[0],
     };
     
-    console.log('Nuovo veicolo creato:', newVehicle);
-    toast({ 
-      title: "Veicolo Aggiunto", 
-      description: `${data.model} ${data.trim} è stato aggiunto all'inventario.`,
-    });
-    
-    onComplete();
+    console.log('Vehicle updated:', updatedVehicle);
+    onComplete(updatedVehicle);
   };
 
   return (
@@ -155,12 +148,12 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="price"
+            name="exteriorColor"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Prezzo (€)</FormLabel>
+                <FormLabel>Colore Esterno</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="100" {...field} />
+                  <Input placeholder="es. Rosso Racing" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -169,12 +162,12 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
           
           <FormField
             control={form.control}
-            name="exteriorColor"
+            name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Colore Esterno</FormLabel>
+                <FormLabel>Prezzo (€)</FormLabel>
                 <FormControl>
-                  <Input placeholder="es. Rosso Racing" {...field} />
+                  <Input type="number" min="0" step="100" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -248,7 +241,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         <div className="flex justify-end gap-4 pt-4">
           <button 
             type="button" 
-            onClick={onComplete}
+            onClick={onCancel}
             className="px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50"
           >
             Annulla
@@ -257,7 +250,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
             type="submit"
             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           >
-            Aggiungi Veicolo
+            Aggiorna Veicolo
           </button>
         </div>
       </form>
@@ -265,4 +258,4 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
   );
 };
 
-export default AddVehicleForm;
+export default EditVehicleForm;
