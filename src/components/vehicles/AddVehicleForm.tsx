@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -7,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Vehicle } from '@/types';
 
 const vehicleSchema = z.object({
   model: z.string().min(2, { message: "Il modello deve avere almeno 2 caratteri." }),
@@ -23,7 +23,7 @@ const vehicleSchema = z.object({
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
 interface AddVehicleFormProps {
-  onComplete: () => void;
+  onComplete: (newVehicle: Vehicle) => void;
 }
 
 const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
@@ -43,15 +43,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
   });
 
   const onSubmit = (data: VehicleFormValues) => {
-    // In un'applicazione reale, questo invierebbe i dati a un'API
-    console.log('Invio veicolo:', data);
-    
-    // Process accessories string into an array
     const accessoriesArray = data.accessories ? 
       data.accessories.split(',').map(item => item.trim()) : 
       [];
     
-    const newVehicle = {
+    const newVehicle: Vehicle = {
       ...data,
       id: String(Date.now()), // Generazione semplice di ID per demo
       accessories: accessoriesArray,
@@ -64,7 +60,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
       description: `${data.model} ${data.trim} è stato aggiunto all'inventario.`,
     });
     
-    onComplete();
+    onComplete(newVehicle);
   };
 
   return (

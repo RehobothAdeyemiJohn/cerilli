@@ -4,7 +4,7 @@ import { Plus, Filter } from 'lucide-react';
 import { vehicles } from '@/data/mockData';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
-import { Vehicle } from '@/types';
+import { Vehicle, Filter as VehicleFilter } from '@/types';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
@@ -13,10 +13,15 @@ const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
   const [inventory, setInventory] = useState<Vehicle[]>(vehicles);
+  const [activeFilters, setActiveFilters] = useState<VehicleFilter | null>(null);
   
-  const availableVehicles = inventory.filter(v => v.status === 'available');
-  const reservedVehicles = inventory.filter(v => v.status === 'reserved');
-  const soldVehicles = inventory.filter(v => v.status === 'sold');
+  const filteredVehicles = activeFilters 
+    ? filterVehicles(inventory, activeFilters)
+    : inventory;
+    
+  const availableVehicles = filteredVehicles.filter(v => v.status === 'available');
+  const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
+  const soldVehicles = filteredVehicles.filter(v => v.status === 'sold');
   
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -34,6 +39,15 @@ const Inventory = () => {
   
   const handleVehicleDelete = (vehicleId: string) => {
     setInventory(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
+  };
+  
+  const handleVehicleAdd = (newVehicle: Vehicle) => {
+    setInventory(prev => [...prev, newVehicle]);
+    closeAddVehicleDrawer();
+  };
+  
+  const handleFiltersChange = (filters: VehicleFilter) => {
+    setActiveFilters(filters);
   };
   
   return (
@@ -62,7 +76,7 @@ const Inventory = () => {
             <DrawerContent>
               <div className="p-6 max-w-2xl mx-auto">
                 <h2 className="text-xl font-bold mb-4">Aggiungi Nuovo Veicolo</h2>
-                <AddVehicleForm onComplete={closeAddVehicleDrawer} />
+                <AddVehicleForm onComplete={handleVehicleAdd} />
               </div>
             </DrawerContent>
           </Drawer>
@@ -74,7 +88,7 @@ const Inventory = () => {
           ${showFilters ? 'block' : 'hidden'}
           md:block w-full md:w-64 flex-shrink-0
         `}>
-          <VehicleFilters />
+          <VehicleFilters onFiltersChange={handleFiltersChange} />
         </div>
         
         <div className="flex-1">
@@ -90,7 +104,7 @@ const Inventory = () => {
                 Venduti ({soldVehicles.length})
               </TabsTrigger>
               <TabsTrigger value="all">
-                Tutti ({inventory.length})
+                Tutti ({filteredVehicles.length})
               </TabsTrigger>
             </TabsList>
             
@@ -120,7 +134,7 @@ const Inventory = () => {
             
             <TabsContent value="all">
               <VehicleList 
-                vehicles={inventory} 
+                vehicles={filteredVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
               />
@@ -130,6 +144,48 @@ const Inventory = () => {
       </div>
     </div>
   );
+};
+
+// Funzione per filtrare i veicoli in base ai filtri attivi
+const filterVehicles = (vehicles: Vehicle[], filters: VehicleFilter): Vehicle[] => {
+  return vehicles.filter(vehicle => {
+    // Filtra per modello
+    if (filters.models.length > 0 && !filters.models.includes(vehicle.model)) {
+      return false;
+    }
+    
+    // Filtra per allestimento
+    if (filters.trims.length > 0 && !filters.trims.includes(vehicle.trim)) {
+      return false;
+    }
+    
+    // Filtra per tipo di carburante
+    if (filters.fuelTypes.length > 0 && !filters.fuelTypes.includes(vehicle.fuelType)) {
+      return false;
+    }
+    
+    // Filtra per colore
+    if (filters.colors.length > 0 && !filters.colors.includes(vehicle.exteriorColor)) {
+      return false;
+    }
+    
+    // Filtra per posizione
+    if (filters.locations.length > 0 && !filters.locations.includes(vehicle.location)) {
+      return false;
+    }
+    
+    // Filtra per prezzo
+    if (vehicle.price < filters.priceRange[0] || vehicle.price > filters.priceRange[1]) {
+      return false;
+    }
+    
+    // Filtra per stato
+    if (filters.status.length > 0 && !filters.status.includes(vehicle.status)) {
+      return false;
+    }
+    
+    return true;
+  });
 };
 
 export default Inventory;

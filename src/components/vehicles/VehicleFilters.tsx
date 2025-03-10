@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -17,8 +17,13 @@ import {
   getLocations,
   getPriceRange
 } from '@/data/mockData';
+import { Filter } from '@/types';
 
-const VehicleFilters = () => {
+interface VehicleFiltersProps {
+  onFiltersChange?: (filters: Filter) => void;
+}
+
+const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
   // Get filter options from mockData
   const models = getModels();
   const trims = getTrims();
@@ -35,6 +40,30 @@ const VehicleFilters = () => {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice, maxPrice]);
   const [searchText, setSearchText] = useState('');
+  
+  // Callback per notificare il componente genitore quando i filtri cambiano
+  useEffect(() => {
+    if (onFiltersChange) {
+      const filters: Filter = {
+        models: selectedModels,
+        trims: selectedTrims,
+        fuelTypes: selectedFuelTypes,
+        colors: selectedColors,
+        locations: selectedLocations,
+        priceRange: priceRange,
+        status: []
+      };
+      onFiltersChange(filters);
+    }
+  }, [
+    selectedModels,
+    selectedTrims,
+    selectedFuelTypes,
+    selectedColors,
+    selectedLocations,
+    priceRange,
+    onFiltersChange
+  ]);
   
   // Toggle selection functions
   const toggleModel = (model: string) => {
@@ -99,13 +128,13 @@ const VehicleFilters = () => {
   
   return (
     <div className="bg-white rounded-md border p-4">
-      <h2 className="font-medium mb-4">Filters</h2>
+      <h2 className="font-medium mb-4">Filtri</h2>
       
       <form onSubmit={handleSearch} className="relative mb-4">
         <Input
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search vehicles..."
+          placeholder="Cerca veicoli..."
           className="pr-10"
         />
         <button 
@@ -118,7 +147,7 @@ const VehicleFilters = () => {
       
       <Accordion type="multiple" defaultValue={['price', 'model']}>
         <AccordionItem value="price">
-          <AccordionTrigger>Price Range</AccordionTrigger>
+          <AccordionTrigger>Fascia di Prezzo</AccordionTrigger>
           <AccordionContent>
             <div className="px-1">
               <Slider
@@ -139,7 +168,7 @@ const VehicleFilters = () => {
         </AccordionItem>
         
         <AccordionItem value="model">
-          <AccordionTrigger>Model</AccordionTrigger>
+          <AccordionTrigger>Modello</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {models.map((model) => (
@@ -166,7 +195,7 @@ const VehicleFilters = () => {
         </AccordionItem>
         
         <AccordionItem value="trim">
-          <AccordionTrigger>Trim</AccordionTrigger>
+          <AccordionTrigger>Allestimento</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {trims.map((trim) => (
@@ -193,7 +222,7 @@ const VehicleFilters = () => {
         </AccordionItem>
         
         <AccordionItem value="fuelType">
-          <AccordionTrigger>Fuel Type</AccordionTrigger>
+          <AccordionTrigger>Alimentazione</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {fuelTypes.map((fuelType) => (
@@ -220,7 +249,7 @@ const VehicleFilters = () => {
         </AccordionItem>
         
         <AccordionItem value="color">
-          <AccordionTrigger>Color</AccordionTrigger>
+          <AccordionTrigger>Colore</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {colors.map((color) => (
@@ -247,7 +276,7 @@ const VehicleFilters = () => {
         </AccordionItem>
         
         <AccordionItem value="location">
-          <AccordionTrigger>Location</AccordionTrigger>
+          <AccordionTrigger>Posizione</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {locations.map((location) => (
@@ -278,7 +307,7 @@ const VehicleFilters = () => {
         onClick={clearFilters}
         className="w-full mt-4 py-2 text-sm text-center border border-gray-200 rounded-md hover:bg-gray-50"
       >
-        Clear Filters
+        Cancella Filtri
       </button>
     </div>
   );
