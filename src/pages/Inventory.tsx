@@ -177,7 +177,10 @@ const Inventory = () => {
           ${showFilters ? 'block' : 'hidden'}
           md:block w-full md:w-64 flex-shrink-0
         `}>
-          <VehicleFilters onFiltersChange={handleFiltersChange} />
+          <VehicleFilters 
+            inventory={inventory} 
+            onFiltersChange={handleFiltersChange} 
+          />
         </div>
         
         <div className="flex-1">

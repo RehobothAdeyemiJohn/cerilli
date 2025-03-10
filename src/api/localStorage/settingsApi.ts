@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   VehicleModel, 
@@ -134,43 +133,62 @@ export const initSettingsData = () => {
 };
 
 // Generic CRUD functions for settings
-const getItems = <T>(key: string): T[] => {
-  const items = localStorage.getItem(key);
-  return items ? JSON.parse(items) : [];
+const getItems = <T>(key: string): Promise<T[]> => {
+  return new Promise((resolve) => {
+    const items = localStorage.getItem(key);
+    resolve(items ? JSON.parse(items) : []);
+  });
 };
 
-const setItems = <T>(key: string, items: T[]): void => {
-  localStorage.setItem(key, JSON.stringify(items));
+const setItems = <T>(key: string, items: T[]): Promise<void> => {
+  return new Promise((resolve) => {
+    localStorage.setItem(key, JSON.stringify(items));
+    resolve();
+  });
 };
 
-const getItem = <T>(key: string, id: string): T | null => {
-  const items = getItems<T>(key);
-  return items.find((item: any) => item.id === id) || null;
+const getItem = <T>(key: string, id: string): Promise<T | null> => {
+  return new Promise((resolve) => {
+    const items = localStorage.getItem(key);
+    const parsed = items ? JSON.parse(items) : [];
+    resolve(parsed.find((item: any) => item.id === id) || null);
+  });
 };
 
-const createItem = <T extends { id?: string }>(key: string, item: Omit<T, 'id'>): T => {
-  const items = getItems<T>(key);
-  const newItem = { ...item, id: uuidv4() } as T;
-  items.push(newItem);
-  setItems(key, items);
-  return newItem;
+const createItem = <T extends { id?: string }>(key: string, item: Omit<T, 'id'>): Promise<T> => {
+  return new Promise((resolve) => {
+    const items = localStorage.getItem(key);
+    const parsed = items ? JSON.parse(items) : [];
+    const newItem = { ...item, id: uuidv4() } as T;
+    parsed.push(newItem);
+    localStorage.setItem(key, JSON.stringify(parsed));
+    resolve(newItem);
+  });
 };
 
-const updateItem = <T extends { id: string }>(key: string, id: string, item: T): T => {
-  const items = getItems<T>(key);
-  const index = items.findIndex((i: any) => i.id === id);
-  if (index !== -1) {
-    items[index] = { ...item, id }; // Ensure the ID remains the same
-    setItems(key, items);
-    return items[index];
-  }
-  throw new Error(`Item with id ${id} not found`);
+const updateItem = <T extends { id: string }>(key: string, id: string, item: T): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    const items = localStorage.getItem(key);
+    const parsed = items ? JSON.parse(items) : [];
+    const index = parsed.findIndex((i: any) => i.id === id);
+    if (index !== -1) {
+      parsed[index] = { ...item, id };
+      localStorage.setItem(key, JSON.stringify(parsed));
+      resolve(parsed[index]);
+    } else {
+      reject(new Error(`Item with id ${id} not found`));
+    }
+  });
 };
 
-const deleteItem = (key: string, id: string): void => {
-  const items = getItems<any>(key);
-  const filteredItems = items.filter((item: any) => item.id !== id);
-  setItems(key, filteredItems);
+const deleteItem = (key: string, id: string): Promise<void> => {
+  return new Promise((resolve) => {
+    const items = localStorage.getItem(key);
+    const parsed = items ? JSON.parse(items) : [];
+    const filteredItems = parsed.filter((item: any) => item.id !== id);
+    localStorage.setItem(key, JSON.stringify(filteredItems));
+    resolve();
+  });
 };
 
 // Specific APIs for each setting type
@@ -218,7 +236,6 @@ export const accessoriesApi = {
   getAll: () => getItems<Accessory>(SETTINGS_KEYS.ACCESSORIES),
   getById: (id: string) => getItem<Accessory>(SETTINGS_KEYS.ACCESSORIES, id),
   create: (accessory: Omit<Accessory, 'id'>) => {
-    // Calculate price without VAT (IVA esclusa) - assuming 22% VAT
     const priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
     return createItem<Accessory>(SETTINGS_KEYS.ACCESSORIES, {
       ...accessory,
@@ -226,7 +243,6 @@ export const accessoriesApi = {
     });
   },
   update: (id: string, accessory: Accessory) => {
-    // Calculate price without VAT (IVA esclusa) - assuming 22% VAT
     const priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
     return updateItem<Accessory>(SETTINGS_KEYS.ACCESSORIES, id, {
       ...accessory,
@@ -234,14 +250,13 @@ export const accessoriesApi = {
     });
   },
   delete: (id: string) => deleteItem(SETTINGS_KEYS.ACCESSORIES, id),
-  
-  // Get accessories compatible with a specific model and trim
   getCompatible: (modelId: string, trimId: string) => {
-    const allAccessories = getItems<Accessory>(SETTINGS_KEYS.ACCESSORIES);
-    return allAccessories.filter(acc => {
-      const modelCompatible = acc.compatibleModels.length === 0 || acc.compatibleModels.includes(modelId);
-      const trimCompatible = acc.compatibleTrims.length === 0 || acc.compatibleTrims.includes(trimId);
-      return modelCompatible && trimCompatible;
+    return getItems<Accessory>(SETTINGS_KEYS.ACCESSORIES).then(allAccessories => {
+      return allAccessories.filter(acc => {
+        const modelCompatible = acc.compatibleModels.length === 0 || acc.compatibleModels.includes(modelId);
+        const trimCompatible = acc.compatibleTrims.length === 0 || acc.compatibleTrims.includes(trimId);
+        return modelCompatible && trimCompatible;
+      });
     });
   }
 };
