@@ -28,6 +28,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
     status: 'available',
     dateAdded: '2023-12-01',
+    telaio: 'WBA98765432109876',
   },
   {
     id: '3',
@@ -41,6 +42,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=2025&auto=format&fit=crop',
     status: 'reserved',
     dateAdded: '2024-01-05',
+    telaio: 'WBA23456789012345',
   },
   {
     id: '4',
@@ -54,6 +56,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop',
     status: 'available',
     dateAdded: '2024-02-10',
+    telaio: 'WBA34567890123456',
   },
   {
     id: '5',
@@ -67,6 +70,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070&auto=format&fit=crop',
     status: 'sold',
     dateAdded: '2023-10-20',
+    telaio: 'WBA45678901234567',
   },
   {
     id: '6',
@@ -80,6 +84,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1567343483496-bdf93e63ab81?q=80&w=2062&auto=format&fit=crop',
     status: 'available',
     dateAdded: '2024-01-25',
+    telaio: 'WBA56789012345678',
   },
 ];
 
