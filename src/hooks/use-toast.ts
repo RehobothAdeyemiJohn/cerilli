@@ -1,5 +1,5 @@
 
-import { useToast as useToastOriginal } from "@/components/ui/use-toast";
+// Importing from the shadcn component which exports the fixed functions
+import { useToast, toast } from "@/components/ui/use-toast";
 
-export const useToast = useToastOriginal;
-export { toast } from "@/components/ui/use-toast";
+export { useToast, toast };

@@ -173,17 +173,17 @@ const VehicleFilters = () => {
               <div className="space-y-2">
                 {trims.map((trim) => (
                   <div 
-                    key={trim} 
+                    key={trim.toString()} 
                     className="flex items-center"
-                    onClick={() => toggleTrim(trim)}
+                    onClick={() => toggleTrim(trim.toString())}
                   >
                     <div className={`
                       h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedTrims.includes(trim) 
+                      ${selectedTrims.includes(trim.toString()) 
                         ? 'bg-primary border-primary' 
                         : 'border-gray-300'}
                     `}>
-                      {selectedTrims.includes(trim) && (
+                      {selectedTrims.includes(trim.toString()) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
                     </div>
@@ -200,17 +200,17 @@ const VehicleFilters = () => {
               <div className="space-y-2">
                 {fuelTypes.map((fuelType) => (
                   <div 
-                    key={fuelType} 
+                    key={fuelType.toString()} 
                     className="flex items-center"
-                    onClick={() => toggleFuelType(fuelType)}
+                    onClick={() => toggleFuelType(fuelType.toString())}
                   >
                     <div className={`
                       h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedFuelTypes.includes(fuelType) 
+                      ${selectedFuelTypes.includes(fuelType.toString()) 
                         ? 'bg-primary border-primary' 
                         : 'border-gray-300'}
                     `}>
-                      {selectedFuelTypes.includes(fuelType) && (
+                      {selectedFuelTypes.includes(fuelType.toString()) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
                     </div>
@@ -227,17 +227,17 @@ const VehicleFilters = () => {
               <div className="space-y-2">
                 {colors.map((color) => (
                   <div 
-                    key={color} 
+                    key={color.toString()} 
                     className="flex items-center"
-                    onClick={() => toggleColor(color)}
+                    onClick={() => toggleColor(color.toString())}
                   >
                     <div className={`
                       h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedColors.includes(color) 
+                      ${selectedColors.includes(color.toString()) 
                         ? 'bg-primary border-primary' 
                         : 'border-gray-300'}
                     `}>
-                      {selectedColors.includes(color) && (
+                      {selectedColors.includes(color.toString()) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
                     </div>
@@ -254,17 +254,17 @@ const VehicleFilters = () => {
               <div className="space-y-2">
                 {locations.map((location) => (
                   <div 
-                    key={location} 
+                    key={location.toString()} 
                     className="flex items-center"
-                    onClick={() => toggleLocation(location)}
+                    onClick={() => toggleLocation(location.toString())}
                   >
                     <div className={`
                       h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedLocations.includes(location) 
+                      ${selectedLocations.includes(location.toString()) 
                         ? 'bg-primary border-primary' 
                         : 'border-gray-300'}
                     `}>
-                      {selectedLocations.includes(location) && (
+                      {selectedLocations.includes(location.toString()) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
                     </div>
