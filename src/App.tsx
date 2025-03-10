@@ -11,6 +11,7 @@ import Inventory from "./pages/Inventory";
 import Quotes from "./pages/Quotes";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
+import Dealers from "./pages/Dealers";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 
