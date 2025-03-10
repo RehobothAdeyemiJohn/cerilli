@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, User, Car, Search } from 'lucide-react';
+import { Bell, User, ShoppingBag, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getCurrentUser } from '@/data/mockData';
 
@@ -12,8 +12,8 @@ const Header = () => {
     <header className="w-full h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6">
       <div className="flex items-center gap-3">
         <Link to="/" className="items-center hidden md:flex">
-          <Car className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold ml-2">Cirelli Motor Co.</span>
+          <ShoppingBag className="h-6 w-6 text-primary" />
+          <span className="text-xl font-semibold ml-2">Gestionale CMC</span>
         </Link>
       </div>
       
@@ -22,7 +22,7 @@ const Header = () => {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input 
             type="search" 
-            placeholder="Search for vehicles, orders..." 
+            placeholder="Cerca veicoli, ordini..." 
             className="pl-9 bg-gray-50 w-full"
           />
         </div>

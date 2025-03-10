@@ -52,9 +52,10 @@ export type Filter = {
   trims: string[];
   fuelTypes: string[];
   colors: string[];
-  priceRange: [number, number];
   locations: string[];
-  status: ('available' | 'reserved' | 'sold')[];
+  priceRange: [number, number];
+  status: string[];
+  searchText?: string;
 };
 
 export type Stat = {

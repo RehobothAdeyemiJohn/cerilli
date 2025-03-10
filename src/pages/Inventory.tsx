@@ -257,12 +257,27 @@ const filterVehicles = (vehicles: Vehicle[], filters: VehicleFilter): Vehicle[] 
       return false;
     }
     
-    if (vehicle.price < filters.priceRange[0] || vehicle.price > filters.priceRange[1]) {
+    if (filters.status.length > 0 && !filters.status.includes(vehicle.status)) {
       return false;
     }
     
-    if (filters.status.length > 0 && !filters.status.includes(vehicle.status)) {
-      return false;
+    if (filters.searchText && filters.searchText.trim() !== '') {
+      const searchTerm = filters.searchText.toLowerCase();
+      const vehicleValues = [
+        vehicle.model,
+        vehicle.trim,
+        vehicle.fuelType,
+        vehicle.exteriorColor,
+        vehicle.location,
+        vehicle.telaio,
+        ...vehicle.accessories
+      ].map(val => String(val).toLowerCase());
+      
+      const matchesSearch = vehicleValues.some(val => val.includes(searchTerm));
+      
+      if (!matchesSearch) {
+        return false;
+      }
     }
     
     return true;

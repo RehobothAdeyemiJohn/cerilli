@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Car, 
+  ShoppingBag, 
   FileText, 
-  ShoppingCart, 
+  Car, 
   Users, 
   Settings, 
   LogOut,
@@ -18,11 +18,11 @@ const Sidebar = () => {
   
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Inventory', path: '/inventory', icon: Car },
-    { name: 'Quotes', path: '/quotes', icon: FileText },
-    { name: 'Orders', path: '/orders', icon: ShoppingCart },
+    { name: 'Stock', path: '/inventory', icon: ShoppingBag },
+    { name: 'Preventivi', path: '/quotes', icon: FileText },
+    { name: 'Ordini Auto', path: '/orders', icon: Car },
     { name: 'Dealers', path: '/dealers', icon: Users },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { name: 'Impostazioni', path: '/settings', icon: Settings },
   ];
   
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -48,8 +48,8 @@ const Sidebar = () => {
         <div className="flex flex-col h-full">
           <div className="px-6 py-5">
             <div className="flex items-center gap-3">
-              <Car className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">Cirelli Motor</span>
+              <ShoppingBag className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">Gestionale CMC</span>
             </div>
           </div>
           

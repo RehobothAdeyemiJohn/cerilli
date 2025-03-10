@@ -1,36 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Check } from 'lucide-react';
+import { Search, Check, FilterX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { 
-  getModels, 
-  getTrims, 
-  getFuelTypes, 
-  getColors,
-  getLocations,
-  getPriceRange
-} from '@/data/mockData';
-import { Filter } from '@/types';
+import { Filter, Vehicle } from '@/types';
 
 interface VehicleFiltersProps {
   onFiltersChange?: (filters: Filter) => void;
+  inventory: Vehicle[]; // Pass inventory to dynamically generate filters
 }
 
-const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
-  // Get filter options from mockData
-  const models = getModels();
-  const trims = getTrims();
-  const fuelTypes = getFuelTypes();
-  const colors = getColors();
-  const locations = getLocations();
-  const [minPrice, maxPrice] = getPriceRange();
+const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps) => {
+  // Extract unique values from inventory
+  const getUniqueValues = (key: keyof Vehicle): string[] => {
+    if (!inventory || inventory.length === 0) return [];
+    
+    const values = inventory.map(vehicle => String(vehicle[key]));
+    return [...new Set(values)].filter(Boolean);
+  };
+  
+  const models = getUniqueValues('model');
+  const trims = getUniqueValues('trim');
+  const fuelTypes = getUniqueValues('fuelType');
+  const colors = getUniqueValues('exteriorColor');
+  const locations = getUniqueValues('location');
   
   // State for selected filters
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -38,10 +36,18 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([minPrice, maxPrice]);
   const [searchText, setSearchText] = useState('');
   
-  // Callback per notificare il componente genitore quando i filtri cambiano
+  // Reset filters when inventory changes
+  useEffect(() => {
+    setSelectedModels([]);
+    setSelectedTrims([]);
+    setSelectedFuelTypes([]);
+    setSelectedColors([]);
+    setSelectedLocations([]);
+  }, []);
+  
+  // Callback to notify parent component when filters change
   useEffect(() => {
     if (onFiltersChange) {
       const filters: Filter = {
@@ -50,8 +56,9 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
         fuelTypes: selectedFuelTypes,
         colors: selectedColors,
         locations: selectedLocations,
-        priceRange: priceRange,
-        status: []
+        priceRange: [0, 1000000], // Default range (not used anymore)
+        status: [],
+        searchText: searchText
       };
       onFiltersChange(filters);
     }
@@ -61,7 +68,7 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
     selectedFuelTypes,
     selectedColors,
     selectedLocations,
-    priceRange,
+    searchText,
     onFiltersChange
   ]);
   
@@ -106,14 +113,8 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
     );
   };
   
-  const handlePriceChange = (values: number[]) => {
-    setPriceRange([values[0], values[1]]);
-  };
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Searching for:', searchText);
-    // In a real app, this would trigger filtering
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
   };
   
   const clearFilters = () => {
@@ -122,7 +123,6 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
     setSelectedFuelTypes([]);
     setSelectedColors([]);
     setSelectedLocations([]);
-    setPriceRange([minPrice, maxPrice]);
     setSearchText('');
   };
   
@@ -130,60 +130,44 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
     <div className="bg-white rounded-md border p-4">
       <h2 className="font-medium mb-4">Filtri</h2>
       
-      <form onSubmit={handleSearch} className="relative mb-4">
+      <div className="relative mb-4">
         <Input
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Cerca veicoli..."
+          onChange={handleSearchChange}
+          placeholder="Cerca telaio, modello..."
           className="pr-10"
         />
-        <button 
-          type="submit"
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-        >
-          <Search className="h-4 w-4" />
-        </button>
-      </form>
+        {searchText && (
+          <button 
+            onClick={() => setSearchText('')}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <FilterX className="h-4 w-4" />
+          </button>
+        )}
+        {!searchText && (
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        )}
+      </div>
       
-      <Accordion type="multiple" defaultValue={['price', 'model']}>
-        <AccordionItem value="price">
-          <AccordionTrigger>Fascia di Prezzo</AccordionTrigger>
-          <AccordionContent>
-            <div className="px-1">
-              <Slider
-                defaultValue={[minPrice, maxPrice]}
-                min={minPrice}
-                max={maxPrice}
-                step={(maxPrice - minPrice) / 20}
-                value={[priceRange[0], priceRange[1]]}
-                onValueChange={handlePriceChange}
-                className="my-4"
-              />
-              <div className="flex justify-between text-sm">
-                <span>€{priceRange[0].toLocaleString()}</span>
-                <span>€{priceRange[1].toLocaleString()}</span>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
+      <Accordion type="multiple" defaultValue={['model']}>
         <AccordionItem value="model">
           <AccordionTrigger>Modello</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
               {models.map((model) => (
                 <div 
-                  key={String(model)} 
+                  key={model} 
                   className="flex items-center"
-                  onClick={() => toggleModel(String(model))}
+                  onClick={() => toggleModel(model)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedModels.includes(String(model)) 
+                    ${selectedModels.includes(model) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedModels.includes(String(model)) && (
+                    {selectedModels.includes(model) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
@@ -200,17 +184,17 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
             <div className="space-y-2">
               {trims.map((trim) => (
                 <div 
-                  key={String(trim)} 
+                  key={trim} 
                   className="flex items-center"
-                  onClick={() => toggleTrim(String(trim))}
+                  onClick={() => toggleTrim(trim)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedTrims.includes(String(trim)) 
+                    ${selectedTrims.includes(trim) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedTrims.includes(String(trim)) && (
+                    {selectedTrims.includes(trim) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
@@ -227,17 +211,17 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
             <div className="space-y-2">
               {fuelTypes.map((fuelType) => (
                 <div 
-                  key={String(fuelType)} 
+                  key={fuelType} 
                   className="flex items-center"
-                  onClick={() => toggleFuelType(String(fuelType))}
+                  onClick={() => toggleFuelType(fuelType)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedFuelTypes.includes(String(fuelType)) 
+                    ${selectedFuelTypes.includes(fuelType) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedFuelTypes.includes(String(fuelType)) && (
+                    {selectedFuelTypes.includes(fuelType) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
@@ -254,17 +238,17 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
             <div className="space-y-2">
               {colors.map((color) => (
                 <div 
-                  key={String(color)} 
+                  key={color} 
                   className="flex items-center"
-                  onClick={() => toggleColor(String(color))}
+                  onClick={() => toggleColor(color)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedColors.includes(String(color)) 
+                    ${selectedColors.includes(color) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedColors.includes(String(color)) && (
+                    {selectedColors.includes(color) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
@@ -281,17 +265,17 @@ const VehicleFilters = ({ onFiltersChange }: VehicleFiltersProps) => {
             <div className="space-y-2">
               {locations.map((location) => (
                 <div 
-                  key={String(location)} 
+                  key={location} 
                   className="flex items-center"
-                  onClick={() => toggleLocation(String(location))}
+                  onClick={() => toggleLocation(location)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedLocations.includes(String(location)) 
+                    ${selectedLocations.includes(location) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedLocations.includes(String(location)) && (
+                    {selectedLocations.includes(location) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
