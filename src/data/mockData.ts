@@ -1,4 +1,4 @@
-import { Vehicle, User, Quote, Order, Stat, ChartData } from '@/types';
+import { Vehicle, User, Quote, Order, Stat, ChartData, Dealer, Vendor } from '@/types';
 
 // Utilizziamo let invece di const per permettere la modifica dell'array
 export let vehicles: Vehicle[] = [
@@ -258,6 +258,113 @@ export const salesByMonth: ChartData = [
   { name: 'May', value: 22 },
   { name: 'Jun', value: 19 },
 ];
+
+// Initialize mock dealers data
+export let dealers: Dealer[] = [
+  {
+    id: '1',
+    companyName: 'Auto Galleria Rossi',
+    address: 'Via Roma 123',
+    city: 'Milano',
+    province: 'MI',
+    zipCode: '20100',
+    createdAt: '2023-01-15',
+  },
+  {
+    id: '2',
+    companyName: 'MotorValle Bianchi',
+    address: 'Corso Italia 45',
+    city: 'Roma',
+    province: 'RM',
+    zipCode: '00100',
+    createdAt: '2023-03-20',
+  },
+  {
+    id: '3',
+    companyName: 'Centro Auto Milano',
+    address: 'Via Torino 67',
+    city: 'Milano',
+    province: 'MI',
+    zipCode: '20123',
+    createdAt: '2023-05-10',
+  },
+];
+
+// Initialize mock vendors data
+export let vendors: Vendor[] = [
+  {
+    id: '1',
+    dealerId: '1',
+    name: 'Marco Rossi',
+    email: 'marco@autogalleriarossi.it',
+    password: 'password123',
+    role: 'vendor',
+    createdAt: '2023-01-20',
+  },
+  {
+    id: '2',
+    dealerId: '2',
+    name: 'Giulia Bianchi',
+    email: 'giulia@motovallebianchi.it',
+    password: 'password123',
+    role: 'vendor',
+    createdAt: '2023-03-25',
+  },
+];
+
+// CRUD operations for dealers
+export const addDealer = (newDealer: Omit<Dealer, 'id' | 'createdAt'>): Dealer => {
+  const dealer: Dealer = {
+    id: `${dealers.length + 1}`,
+    ...newDealer,
+    createdAt: new Date().toISOString().split('T')[0],
+  };
+  dealers.push(dealer);
+  return dealer;
+};
+
+export const updateDealer = (updatedDealer: Dealer): Dealer => {
+  const index = dealers.findIndex(d => d.id === updatedDealer.id);
+  if (index !== -1) {
+    dealers[index] = updatedDealer;
+    return updatedDealer;
+  }
+  throw new Error('Dealer not found');
+};
+
+export const deleteDealer = (dealerId: string): void => {
+  dealers = dealers.filter(d => d.id !== dealerId);
+  // Also delete associated vendors
+  vendors = vendors.filter(v => v.dealerId !== dealerId);
+};
+
+// CRUD operations for vendors
+export const getVendorsByDealerId = (dealerId: string): Vendor[] => {
+  return vendors.filter(v => v.dealerId === dealerId);
+};
+
+export const addVendor = (newVendor: Omit<Vendor, 'id' | 'createdAt'>): Vendor => {
+  const vendor: Vendor = {
+    id: `${vendors.length + 1}`,
+    ...newVendor,
+    createdAt: new Date().toISOString().split('T')[0],
+  };
+  vendors.push(vendor);
+  return vendor;
+};
+
+export const updateVendor = (updatedVendor: Vendor): Vendor => {
+  const index = vendors.findIndex(v => v.id === updatedVendor.id);
+  if (index !== -1) {
+    vendors[index] = updatedVendor;
+    return updatedVendor;
+  }
+  throw new Error('Vendor not found');
+};
+
+export const deleteVendor = (vendorId: string): void => {
+  vendors = vendors.filter(v => v.id !== vendorId);
+};
 
 export const getUniqueValues = (field: keyof Vehicle) => {
   const values = vehicles.map(vehicle => vehicle[field]);

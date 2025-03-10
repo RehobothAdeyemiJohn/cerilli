@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +20,7 @@ import {
 import VendorFormDialog from './VendorFormDialog';
 import { Dealer, Vendor } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
+import { getVendorsByDealerId, deleteVendor } from '@/data/mockData';
 
 interface VendorsDialogProps {
   open: boolean;
@@ -36,9 +38,17 @@ const VendorsDialog = ({
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const { toast } = useToast();
 
+  // Load vendors when dialog opens or dealer changes
+  useEffect(() => {
+    if (dealer && open) {
+      const dealerVendors = getVendorsByDealerId(dealer.id);
+      setVendors(dealerVendors);
+    }
+  }, [dealer, open]);
+
   const handleDeleteVendor = async (id: string) => {
     try {
-      // TODO: Implement delete vendor API call
+      deleteVendor(id);
       setVendors(vendors.filter(vendor => vendor.id !== id));
       toast({
         title: "Venditore eliminato con successo",
@@ -51,6 +61,14 @@ const VendorsDialog = ({
     }
   };
 
+  // Function to refresh vendors list
+  const refreshVendors = () => {
+    if (dealer) {
+      const updatedVendors = getVendorsByDealerId(dealer.id);
+      setVendors(updatedVendors);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
@@ -58,6 +76,9 @@ const VendorsDialog = ({
           <DialogTitle>
             Venditori - {dealer?.companyName}
           </DialogTitle>
+          <DialogDescription>
+            Gestisci i venditori associati a questo dealer.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex justify-end mb-4">
@@ -80,33 +101,41 @@ const VendorsDialog = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendors.map((vendor) => (
-                <TableRow key={vendor.id}>
-                  <TableCell>{vendor.name}</TableCell>
-                  <TableCell>{vendor.email}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedVendor(vendor);
-                          setIsVendorFormOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteVendor(vendor.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {vendors.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                    Nessun venditore presente
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                vendors.map((vendor) => (
+                  <TableRow key={vendor.id}>
+                    <TableCell>{vendor.name}</TableCell>
+                    <TableCell>{vendor.email}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedVendor(vendor);
+                            setIsVendorFormOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteVendor(vendor.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -116,6 +145,7 @@ const VendorsDialog = ({
           onOpenChange={setIsVendorFormOpen}
           dealer={dealer}
           vendor={selectedVendor}
+          onSuccess={refreshVendors}
         />
       </DialogContent>
     </Dialog>

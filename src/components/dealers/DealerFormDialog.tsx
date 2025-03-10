@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -21,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
+import { addDealer, updateDealer } from '@/data/mockData';
 
 const formSchema = z.object({
   companyName: z.string().min(1, 'Nome azienda richiesto'),
@@ -34,12 +36,14 @@ interface DealerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dealer?: Dealer | null;
+  onSuccess?: () => void;
 }
 
 const DealerFormDialog = ({
   open,
   onOpenChange,
   dealer,
+  onSuccess,
 }: DealerFormDialogProps) => {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,14 +57,43 @@ const DealerFormDialog = ({
     },
   });
 
+  // Reset form when dealer changes or dialog opens
+  React.useEffect(() => {
+    if (open) {
+      form.reset({
+        companyName: dealer?.companyName || '',
+        address: dealer?.address || '',
+        city: dealer?.city || '',
+        province: dealer?.province || '',
+        zipCode: dealer?.zipCode || '',
+      });
+    }
+  }, [dealer, open, form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // TODO: Implement create/update dealer API call
-      toast({
-        title: dealer 
-          ? "Dealer aggiornato con successo"
-          : "Dealer creato con successo",
-      });
+      if (dealer) {
+        // Update existing dealer
+        updateDealer({
+          ...dealer,
+          ...values,
+        });
+        toast({
+          title: "Dealer aggiornato con successo",
+        });
+      } else {
+        // Create new dealer
+        addDealer(values);
+        toast({
+          title: "Dealer creato con successo",
+        });
+      }
+      
+      // Call onSuccess callback to refresh the list
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -77,6 +110,9 @@ const DealerFormDialog = ({
           <DialogTitle>
             {dealer ? 'Modifica Dealer' : 'Nuovo Dealer'}
           </DialogTitle>
+          <DialogDescription>
+            Inserisci i dettagli del dealer.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
