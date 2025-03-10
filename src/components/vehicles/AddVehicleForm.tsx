@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -8,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vehicle } from '@/types';
-import { addVehicle } from '@/data/mockData';
 
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
@@ -52,7 +50,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
       [];
     
     const newVehicle: Vehicle = {
-      id: String(Date.now()),
+      id: String(Date.now()), // ID temporaneo, sarà sostituito dal server
       model: data.model,
       trim: data.trim,
       fuelType: data.fuelType,
@@ -67,14 +65,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
     };
     
     console.log('Nuovo veicolo creato:', newVehicle);
-    
-    // Aggiungiamo il veicolo al database locale
-    addVehicle(newVehicle);
-    
-    toast({ 
-      title: "Veicolo Aggiunto", 
-      description: `${data.model} ${data.trim} è stato aggiunto all'inventario.`,
-    });
     
     onComplete(newVehicle);
   };

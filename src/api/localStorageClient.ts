@@ -216,8 +216,11 @@ export const vehiclesApi = {
       dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
     };
     
-    vehicles.push(newVehicle);
-    localStorage.setItem('cirelli_vehicles', JSON.stringify(vehicles));
+    // Aggiungiamo il nuovo veicolo all'array esistente
+    const updatedVehicles = [...vehicles, newVehicle];
+    
+    // Salviamo utilizzando la chiave corretta
+    localStorage.setItem(KEYS.VEHICLES, JSON.stringify(updatedVehicles));
     
     return newVehicle;
   },
