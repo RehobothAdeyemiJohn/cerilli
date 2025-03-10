@@ -262,56 +262,61 @@ export const accessoriesApi = {
 };
 
 // Helper function to calculate the total price of a vehicle based on its configuration
-export const calculateVehiclePrice = (
+export const calculateVehiclePrice = async (
   modelId: string,
   trimId: string,
   fuelTypeId: string,
   colorId: string,
   transmissionId: string,
   accessoryIds: string[]
-): number => {
+): Promise<number> => {
   let totalPrice = 0;
   
-  // Base price from model
-  const model = modelsApi.getById(modelId);
-  if (model) {
-    totalPrice += model.basePrice;
-  }
-  
-  // Add trim price adjustment
-  const trim = trimsApi.getById(trimId);
-  if (trim) {
-    totalPrice += trim.basePrice;
-  }
-  
-  // Add fuel type price adjustment
-  const fuelType = fuelTypesApi.getById(fuelTypeId);
-  if (fuelType) {
-    totalPrice += fuelType.priceAdjustment;
-  }
-  
-  // Add color price adjustment
-  const color = colorsApi.getById(colorId);
-  if (color) {
-    totalPrice += color.priceAdjustment;
-  }
-  
-  // Add transmission price adjustment
-  const transmission = transmissionsApi.getById(transmissionId);
-  if (transmission) {
-    totalPrice += transmission.priceAdjustment;
-  }
-  
-  // Add accessories prices
-  const allAccessories = getItems<Accessory>(SETTINGS_KEYS.ACCESSORIES);
-  accessoryIds.forEach(accId => {
-    const accessory = allAccessories.find(a => a.id === accId);
-    if (accessory) {
-      totalPrice += accessory.priceWithVAT;
+  try {
+    // Base price from model
+    const model = await getItem<VehicleModel>(SETTINGS_KEYS.MODELS, modelId);
+    if (model) {
+      totalPrice += model.basePrice;
     }
-  });
-  
-  return totalPrice;
+    
+    // Add trim price adjustment
+    const trim = await getItem<VehicleTrim>(SETTINGS_KEYS.TRIMS, trimId);
+    if (trim) {
+      totalPrice += trim.basePrice;
+    }
+    
+    // Add fuel type price adjustment
+    const fuelType = await getItem<FuelType>(SETTINGS_KEYS.FUEL_TYPES, fuelTypeId);
+    if (fuelType) {
+      totalPrice += fuelType.priceAdjustment;
+    }
+    
+    // Add color price adjustment
+    const color = await getItem<ExteriorColor>(SETTINGS_KEYS.COLORS, colorId);
+    if (color) {
+      totalPrice += color.priceAdjustment;
+    }
+    
+    // Add transmission price adjustment
+    const transmission = await getItem<Transmission>(SETTINGS_KEYS.TRANSMISSIONS, transmissionId);
+    if (transmission) {
+      totalPrice += transmission.priceAdjustment;
+    }
+    
+    // Add accessories prices
+    const allAccessories = await getItems<Accessory>(SETTINGS_KEYS.ACCESSORIES);
+    for (const accId of accessoryIds) {
+      const accessory = allAccessories.find(a => a.id === accId);
+      if (accessory) {
+        totalPrice += accessory.priceWithVAT;
+      }
+    }
+    
+    return totalPrice;
+  } catch (error) {
+    console.error('Error calculating vehicle price:', error);
+    return 0;
+  }
 };
 
 // Update localStorage.js to initialize settings data

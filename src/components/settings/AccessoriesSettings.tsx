@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { accessoriesApi, modelsApi, trimsApi } from '@/api/localStorage';
@@ -48,7 +47,13 @@ const AccessoriesSettings = () => {
   });
   
   const createMutation = useMutation({
-    mutationFn: (accessory: Omit<Accessory, 'id' | 'priceWithoutVAT'>) => accessoriesApi.create(accessory),
+    mutationFn: (accessory: Omit<Accessory, "id" | "priceWithoutVAT">) => {
+      const priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
+      return accessoriesApi.create({
+        ...accessory,
+        priceWithoutVAT
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accessories'] });
       toast({
@@ -211,7 +216,6 @@ const AccessoriesSettings = () => {
     return <div>Caricamento accessori...</div>;
   }
   
-  // Calculate price without VAT for display purposes
   const calculatePriceWithoutVAT = (priceWithVAT: number) => {
     return Math.round(priceWithVAT / 1.22);
   };
@@ -263,7 +267,6 @@ const AccessoriesSettings = () => {
         </TableBody>
       </Table>
       
-      {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -361,7 +364,6 @@ const AccessoriesSettings = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -391,7 +393,6 @@ const AccessoriesSettings = () => {
                       setCurrentAccessory(current => current ? {
                         ...current, 
                         priceWithVAT,
-                        // We'll update this in the API, but for UI display purposes:
                         priceWithoutVAT: calculatePriceWithoutVAT(priceWithVAT)
                       } : null);
                     }}
@@ -467,7 +468,6 @@ const AccessoriesSettings = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
