@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vehicle } from '@/types';
+import { vehiclesApi } from '@/api/localStorage';
 
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
@@ -44,29 +46,42 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
     },
   });
 
-  const onSubmit = (data: VehicleFormValues) => {
+  const onSubmit = async (data: VehicleFormValues) => {
     const accessoriesArray = data.accessories ? 
       data.accessories.split(',').map(item => item.trim()) : 
       [];
     
-    const newVehicle: Vehicle = {
-      id: String(Date.now()), // ID temporaneo, sarà sostituito dal server
-      model: data.model,
-      trim: data.trim,
-      fuelType: data.fuelType,
-      exteriorColor: data.exteriorColor,
-      price: data.price,
-      location: data.location,
-      accessories: accessoriesArray,
-      status: data.status,
-      dateAdded: new Date().toISOString().split('T')[0],
-      transmission: data.transmission,
-      telaio: data.telaio,
-    };
-    
-    console.log('Nuovo veicolo creato:', newVehicle);
-    
-    onComplete(newVehicle);
+    try {
+      const newVehicleData: Omit<Vehicle, 'id'> = {
+        model: data.model,
+        trim: data.trim,
+        fuelType: data.fuelType,
+        exteriorColor: data.exteriorColor,
+        price: data.price,
+        location: data.location,
+        accessories: accessoriesArray,
+        status: data.status,
+        dateAdded: new Date().toISOString().split('T')[0],
+        transmission: data.transmission,
+        telaio: data.telaio,
+      };
+      
+      console.log('Dati veicolo da salvare:', newVehicleData);
+      
+      // Salva il veicolo utilizzando l'API
+      const savedVehicle = await vehiclesApi.create(newVehicleData);
+      console.log('Veicolo salvato con successo:', savedVehicle);
+      
+      // Passa il veicolo salvato al gestore di completamento
+      onComplete(savedVehicle);
+    } catch (error) {
+      console.error('Errore durante il salvataggio del veicolo:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il salvataggio del veicolo.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

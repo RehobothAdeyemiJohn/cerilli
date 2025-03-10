@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Filter } from 'lucide-react';
-import { vehiclesApi } from '@/api/apiClient';
+import { vehiclesApi } from '@/api/localStorage';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import { Vehicle, Filter as VehicleFilter } from '@/types';
@@ -112,29 +112,12 @@ const Inventory = () => {
       return;
     }
     
-    const vehicleWithDate = {
-      ...newVehicle,
-      dateAdded: new Date().toISOString().split('T')[0],
-    };
-    
-    createMutation.mutate(vehicleWithDate, {
-      onSuccess: (createdVehicle) => {
-        toast({
-          title: "Veicolo Aggiunto",
-          description: `${createdVehicle.model} ${createdVehicle.trim} è stato aggiunto all'inventario.`,
-        });
-        setShowAddVehicleDrawer(false);
-      },
-      onSettled: (data, error) => {
-        if (error) {
-          toast({
-            title: "Errore",
-            description: "Si è verificato un errore durante l'aggiunta del veicolo.",
-            variant: "destructive",
-          });
-          console.error("Errore durante l'aggiunta:", error);
-        }
-      }
+    console.log('Nuovo veicolo ricevuto da AddVehicleForm:', newVehicle);
+    setShowAddVehicleDrawer(false);
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    toast({
+      title: "Veicolo Aggiunto",
+      description: `${newVehicle.model} ${newVehicle.trim} è stato aggiunto all'inventario.`,
     });
   };
   
