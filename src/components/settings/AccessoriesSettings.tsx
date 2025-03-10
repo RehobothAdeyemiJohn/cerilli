@@ -7,7 +7,7 @@ import { accessoriesApi } from '@/api/localStorage';
 import { Accessory } from '@/types';
 import FormDialog from './common/FormDialog';
 import AccessoryForm from './accessories/AccessoryForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const AccessoriesSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

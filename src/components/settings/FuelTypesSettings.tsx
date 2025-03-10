@@ -7,7 +7,7 @@ import { fuelTypesApi } from '@/api/localStorage';
 import { FuelType } from '@/types';
 import FormDialog from './common/FormDialog';
 import FuelTypeForm from './fueltypes/FuelTypeForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const FuelTypesSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

@@ -7,7 +7,7 @@ import { trimsApi } from '@/api/localStorage';
 import { VehicleTrim } from '@/types';
 import FormDialog from './common/FormDialog';
 import TrimForm from './trims/TrimForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const TrimsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

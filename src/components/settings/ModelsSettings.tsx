@@ -7,7 +7,7 @@ import { modelsApi } from '@/api/localStorage';
 import { VehicleModel } from '@/types';
 import FormDialog from './common/FormDialog';
 import ModelForm from './models/ModelForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const ModelsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

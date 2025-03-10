@@ -7,7 +7,7 @@ import { transmissionsApi } from '@/api/localStorage';
 import { Transmission } from '@/types';
 import FormDialog from './common/FormDialog';
 import TransmissionForm from './transmissions/TransmissionForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const TransmissionsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

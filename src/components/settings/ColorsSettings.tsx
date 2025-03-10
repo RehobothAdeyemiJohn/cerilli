@@ -7,7 +7,7 @@ import { colorsApi } from '@/api/localStorage';
 import { ExteriorColor } from '@/types';
 import FormDialog from './common/FormDialog';
 import ColorForm from './colors/ColorForm';
-import SettingsTable from './common/SettingsTable';
+import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
 
 const ColorsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

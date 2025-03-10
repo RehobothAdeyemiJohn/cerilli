@@ -139,8 +139,27 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
 
   const onSubmit = async (data: VehicleFormValues) => {
     try {
+      // Ensure all required fields are present and non-empty
+      if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
+          !data.location || !data.transmission || !data.status || !data.telaio) {
+        toast({
+          title: "Errore",
+          description: "Tutti i campi sono obbligatori.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const newVehicleData: Omit<Vehicle, 'id'> = {
-        ...data,
+        model: data.model,
+        trim: data.trim,
+        fuelType: data.fuelType,
+        exteriorColor: data.exteriorColor,
+        location: data.location,
+        transmission: data.transmission,
+        status: data.status,
+        telaio: data.telaio,
+        accessories: data.accessories || [],
         price: calculatedPrice,
         dateAdded: new Date().toISOString().split('T')[0],
       };
