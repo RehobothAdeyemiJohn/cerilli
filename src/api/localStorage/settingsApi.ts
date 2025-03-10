@@ -39,10 +39,10 @@ export const initSettingsData = () => {
   // Initialize trims
   if (!localStorage.getItem(SETTINGS_KEYS.TRIMS)) {
     const defaultTrims: VehicleTrim[] = [
-      { id: '1', name: 'Plus', basePrice: 0 },
-      { id: '2', name: 'Premium', basePrice: 2500 },
-      { id: '3', name: 'Cross', basePrice: 3000 },
-      { id: '4', name: 'Sport', basePrice: 4000 },
+      { id: '1', name: 'Plus', basePrice: 0, compatibleModels: [] },
+      { id: '2', name: 'Premium', basePrice: 2500, compatibleModels: [] },
+      { id: '3', name: 'Cross', basePrice: 3000, compatibleModels: [] },
+      { id: '4', name: 'Sport', basePrice: 4000, compatibleModels: [] },
     ];
     localStorage.setItem(SETTINGS_KEYS.TRIMS, JSON.stringify(defaultTrims));
   }
@@ -50,12 +50,12 @@ export const initSettingsData = () => {
   // Initialize fuel types
   if (!localStorage.getItem(SETTINGS_KEYS.FUEL_TYPES)) {
     const defaultFuelTypes: FuelType[] = [
-      { id: '1', name: 'Benzina', priceAdjustment: 0 },
-      { id: '2', name: 'Gpl', priceAdjustment: 1500 },
-      { id: '3', name: 'Mhev', priceAdjustment: 2500 },
-      { id: '4', name: 'Mhev Gpl', priceAdjustment: 4000 },
-      { id: '5', name: 'Phev', priceAdjustment: 6000 },
-      { id: '6', name: 'EV', priceAdjustment: 8000 },
+      { id: '1', name: 'Benzina', priceAdjustment: 0, compatibleModels: [] },
+      { id: '2', name: 'Gpl', priceAdjustment: 1500, compatibleModels: [] },
+      { id: '3', name: 'Mhev', priceAdjustment: 2500, compatibleModels: [] },
+      { id: '4', name: 'Mhev Gpl', priceAdjustment: 4000, compatibleModels: [] },
+      { id: '5', name: 'Phev', priceAdjustment: 6000, compatibleModels: [] },
+      { id: '6', name: 'EV', priceAdjustment: 8000, compatibleModels: [] },
     ];
     localStorage.setItem(SETTINGS_KEYS.FUEL_TYPES, JSON.stringify(defaultFuelTypes));
   }
@@ -63,12 +63,12 @@ export const initSettingsData = () => {
   // Initialize colors
   if (!localStorage.getItem(SETTINGS_KEYS.COLORS)) {
     const defaultColors: ExteriorColor[] = [
-      { id: '1', name: 'Pure Ice', type: 'metallizzato', priceAdjustment: 800 },
-      { id: '2', name: 'Obsydian Black', type: 'metallizzato', priceAdjustment: 800 },
-      { id: '3', name: 'Metallic Sky', type: 'metallizzato', priceAdjustment: 800 },
-      { id: '4', name: 'Red Flame', type: 'metallizzato', priceAdjustment: 1000 },
-      { id: '5', name: 'Petrol Green', type: 'metallizzato', priceAdjustment: 800 },
-      { id: '6', name: 'Solid Green', type: 'pastello', priceAdjustment: 0 },
+      { id: '1', name: 'Pure Ice', type: 'metallizzato', priceAdjustment: 800, compatibleModels: [] },
+      { id: '2', name: 'Obsydian Black', type: 'metallizzato', priceAdjustment: 800, compatibleModels: [] },
+      { id: '3', name: 'Metallic Sky', type: 'metallizzato', priceAdjustment: 800, compatibleModels: [] },
+      { id: '4', name: 'Red Flame', type: 'metallizzato', priceAdjustment: 1000, compatibleModels: [] },
+      { id: '5', name: 'Petrol Green', type: 'metallizzato', priceAdjustment: 800, compatibleModels: [] },
+      { id: '6', name: 'Solid Green', type: 'pastello', priceAdjustment: 0, compatibleModels: [] },
     ];
     localStorage.setItem(SETTINGS_KEYS.COLORS, JSON.stringify(defaultColors));
   }
@@ -76,10 +76,10 @@ export const initSettingsData = () => {
   // Initialize transmissions
   if (!localStorage.getItem(SETTINGS_KEYS.TRANSMISSIONS)) {
     const defaultTransmissions: Transmission[] = [
-      { id: '1', name: 'Manuale', priceAdjustment: 0 },
-      { id: '2', name: 'Automatico CVT 6', priceAdjustment: 1500 },
-      { id: '3', name: 'Automatico DCT 7', priceAdjustment: 2500 },
-      { id: '4', name: 'Automatico DCT 8', priceAdjustment: 3000 },
+      { id: '1', name: 'Manuale', priceAdjustment: 0, compatibleModels: [] },
+      { id: '2', name: 'Automatico CVT 6', priceAdjustment: 1500, compatibleModels: [] },
+      { id: '3', name: 'Automatico DCT 7', priceAdjustment: 2500, compatibleModels: [] },
+      { id: '4', name: 'Automatico DCT 8', priceAdjustment: 3000, compatibleModels: [] },
     ];
     localStorage.setItem(SETTINGS_KEYS.TRANSMISSIONS, JSON.stringify(defaultTransmissions));
   }
@@ -326,3 +326,4 @@ export const updateStorageUtils = () => {
     initSettingsData();
   }
 };
+

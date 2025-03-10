@@ -234,7 +234,6 @@ const Inventory = () => {
                 vehicles={stockCMCVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
-                locationOptions={locationOptions}
               />
             </TabsContent>
 
@@ -243,7 +242,6 @@ const Inventory = () => {
                 vehicles={stockVirtualeVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
-                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -252,7 +250,6 @@ const Inventory = () => {
                 vehicles={reservedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
-                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -261,7 +258,6 @@ const Inventory = () => {
                 vehicles={soldVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
-                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -270,7 +266,6 @@ const Inventory = () => {
                 vehicles={filteredVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
-                locationOptions={locationOptions}
               />
             </TabsContent>
           </Tabs>
