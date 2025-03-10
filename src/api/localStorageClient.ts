@@ -1,3 +1,4 @@
+
 import { Vehicle, Quote, Order } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -211,16 +212,16 @@ export const vehiclesApi = {
     const newVehicle = {
       ...vehicle,
       id: uuidv4(),
-      // Assicuriamoci che tutti i campi obbligatori siano presenti
       imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
+      accessories: vehicle.accessories || [],
     };
     
-    // Aggiungiamo il nuovo veicolo all'array esistente
     const updatedVehicles = [...vehicles, newVehicle];
-    
-    // Salviamo utilizzando la chiave corretta
     localStorage.setItem(KEYS.VEHICLES, JSON.stringify(updatedVehicles));
+    
+    console.log('Vehicle saved:', newVehicle);
+    console.log('Updated vehicles array:', updatedVehicles);
     
     return newVehicle;
   },
@@ -379,3 +380,4 @@ export const ordersApi = {
 };
 
 export default { vehiclesApi, quotesApi, ordersApi };
+
