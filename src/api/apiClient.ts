@@ -1,12 +1,11 @@
-
 import axios from 'axios';
 import { Vehicle, Quote, Order } from '@/types';
-import { vehiclesApi as localVehiclesApi, quotesApi as localQuotesApi, ordersApi as localOrdersApi } from './localStorageClient';
+import { vehiclesApi as localVehiclesApi, quotesApi as localQuotesApi, ordersApi as localOrdersApi } from './localStorage';
 
-// Controlliamo se siamo in un ambiente di produzione Lovable
+// Check if we're in a Lovable production environment
 const isLovableProduction = window.location.hostname.includes('lovable.app');
 
-// Configurazione di base per axios (usato solo in ambiente di sviluppo)
+// Base configuration for axios (used only in development environment)
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   headers: {
@@ -14,7 +13,7 @@ const apiClient = axios.create({
   },
 });
 
-// API per i veicoli
+// API for vehicles
 export const vehiclesApi = isLovableProduction ? localVehiclesApi : {
   getAll: async (): Promise<Vehicle[]> => {
     const response = await apiClient.get('/vehicles');
@@ -41,7 +40,7 @@ export const vehiclesApi = isLovableProduction ? localVehiclesApi : {
   }
 };
 
-// API per preventivi (quotes)
+// API for quotes
 export const quotesApi = isLovableProduction ? localQuotesApi : {
   getAll: async (): Promise<Quote[]> => {
     const response = await apiClient.get('/quotes');
@@ -68,7 +67,7 @@ export const quotesApi = isLovableProduction ? localQuotesApi : {
   }
 };
 
-// API per ordini (orders)
+// API for orders
 export const ordersApi = isLovableProduction ? localOrdersApi : {
   getAll: async (): Promise<Order[]> => {
     const response = await apiClient.get('/orders');
