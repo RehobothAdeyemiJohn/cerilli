@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Filter } from 'lucide-react';
-import { vehicles, addVehicle, updateVehicle, deleteVehicle } from '@/data/mockData';
+import { vehiclesApi } from '@/api/apiClient';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import { Vehicle, Filter as VehicleFilter } from '@/types';
@@ -9,17 +9,42 @@ import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
-  const [inventory, setInventory] = useState<Vehicle[]>(vehicles);
   const [activeFilters, setActiveFilters] = useState<VehicleFilter | null>(null);
   
-  // Ricarichiamo l'inventario quando cambia l'array vehicles
-  useEffect(() => {
-    setInventory([...vehicles]);
-  }, []);
+  const queryClient = useQueryClient();
+  
+  // Utilizziamo React Query per gestire i dati e la cache
+  const { data: inventory = [], isLoading, error } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: vehiclesApi.getAll,
+  });
+  
+  // Mutazioni per aggiornare, eliminare e aggiungere veicoli
+  const updateMutation = useMutation({
+    mutationFn: (vehicle: Vehicle) => vehiclesApi.update(vehicle.id, vehicle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
+  });
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => vehiclesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
+  });
+  
+  const createMutation = useMutation({
+    mutationFn: (vehicle: Omit<Vehicle, 'id'>) => vehiclesApi.create(vehicle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
+  });
   
   const filteredVehicles = activeFilters 
     ? filterVehicles(inventory, activeFilters)
@@ -38,17 +63,23 @@ const Inventory = () => {
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
-    // Aggiorna sia lo stato locale che il database mock
-    setInventory(prev => prev.map(vehicle => 
-      vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle
-    ));
-    
-    // Aggiorna il database mock
-    updateVehicle(updatedVehicle);
-    
-    toast({
-      title: "Veicolo Aggiornato",
-      description: `${updatedVehicle.model} ${updatedVehicle.trim} è stato aggiornato con successo.`,
+    updateMutation.mutate(updatedVehicle, {
+      onSuccess: () => {
+        toast({
+          title: "Veicolo Aggiornato",
+          description: `${updatedVehicle.model} ${updatedVehicle.trim} è stato aggiornato con successo.`,
+        });
+      },
+      onSettled: (data, error) => {
+        if (error) {
+          toast({
+            title: "Errore",
+            description: "Si è verificato un errore durante l'aggiornamento del veicolo.",
+            variant: "destructive",
+          });
+          console.error("Errore durante l'aggiornamento:", error);
+        }
+      }
     });
   };
   
@@ -56,19 +87,27 @@ const Inventory = () => {
     // Trova il veicolo prima di eliminarlo per il messaggio toast
     const vehicleToDelete = inventory.find(v => v.id === vehicleId);
     
-    // Aggiorna sia lo stato locale che il database mock
-    setInventory(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
-    
-    // Aggiorna il database mock
-    deleteVehicle(vehicleId);
-    
-    if (vehicleToDelete) {
-      toast({
-        title: "Veicolo Eliminato",
-        description: `${vehicleToDelete.model} ${vehicleToDelete.trim} è stato eliminato dall'inventario.`,
-        variant: "destructive",
-      });
-    }
+    deleteMutation.mutate(vehicleId, {
+      onSuccess: () => {
+        if (vehicleToDelete) {
+          toast({
+            title: "Veicolo Eliminato",
+            description: `${vehicleToDelete.model} ${vehicleToDelete.trim} è stato eliminato dall'inventario.`,
+            variant: "destructive",
+          });
+        }
+      },
+      onSettled: (data, error) => {
+        if (error) {
+          toast({
+            title: "Errore",
+            description: "Si è verificato un errore durante l'eliminazione del veicolo.",
+            variant: "destructive",
+          });
+          console.error("Errore durante l'eliminazione:", error);
+        }
+      }
+    });
   };
   
   const handleVehicleAdd = (newVehicle: Vehicle | null) => {
@@ -77,23 +116,48 @@ const Inventory = () => {
       return;
     }
     
-    // Aggiorna sia lo stato locale che il database mock
-    setInventory(prev => [...prev, newVehicle]);
+    // Rimuoviamo l'id perché sarà generato dal server
+    const { id, ...vehicleWithoutId } = newVehicle;
     
-    // Aggiorna il database mock
-    addVehicle(newVehicle);
-    
-    toast({
-      title: "Veicolo Aggiunto",
-      description: `${newVehicle.model} ${newVehicle.trim} è stato aggiunto all'inventario.`,
+    createMutation.mutate(vehicleWithoutId, {
+      onSuccess: (createdVehicle) => {
+        toast({
+          title: "Veicolo Aggiunto",
+          description: `${createdVehicle.model} ${createdVehicle.trim} è stato aggiunto all'inventario.`,
+        });
+        setShowAddVehicleDrawer(false);
+      },
+      onSettled: (data, error) => {
+        if (error) {
+          toast({
+            title: "Errore",
+            description: "Si è verificato un errore durante l'aggiunta del veicolo.",
+            variant: "destructive",
+          });
+          console.error("Errore durante l'aggiunta:", error);
+        }
+      }
     });
-    
-    setShowAddVehicleDrawer(false);
   };
   
   const handleFiltersChange = (filters: VehicleFilter) => {
     setActiveFilters(filters);
   };
+  
+  // Mostrare un messaggio di loading o errore
+  if (isLoading) {
+    return <div className="container mx-auto py-6 px-4">Caricamento inventario...</div>;
+  }
+  
+  if (error) {
+    return (
+      <div className="container mx-auto py-6 px-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          Si è verificato un errore durante il caricamento dell'inventario. Riprova più tardi.
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto py-6 px-4">
