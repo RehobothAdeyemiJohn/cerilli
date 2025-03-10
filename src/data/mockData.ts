@@ -1,4 +1,3 @@
-
 import { Vehicle, User, Quote, Order, Stat, ChartData } from '@/types';
 
 // Utilizziamo let invece di const per permettere la modifica dell'array
@@ -15,6 +14,7 @@ export let vehicles: Vehicle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1541348263662-e068662d82af?q=80&w=2148&auto=format&fit=crop',
     status: 'available',
     dateAdded: '2023-11-15',
+    telaio: 'WBA12345678901234',
   },
   {
     id: '2',

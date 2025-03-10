@@ -17,7 +17,8 @@ const vehicleSchema = z.object({
   location: z.string().min(1, { message: "La posizione è obbligatoria." }),
   accessories: z.string().optional(),
   transmission: z.string().min(1, { message: "Il tipo di cambio è obbligatorio." }),
-  status: z.enum(["available", "reserved", "sold"])
+  status: z.enum(["available", "reserved", "sold"]),
+  telaio: z.string().min(5, { message: "Il numero di telaio deve avere almeno 5 caratteri." })
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -39,6 +40,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
       accessories: '',
       transmission: '',
       status: 'available',
+      telaio: '',
     },
   });
 
@@ -59,6 +61,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
       status: data.status,
       dateAdded: new Date().toISOString().split('T')[0],
       transmission: data.transmission,
+      telaio: data.telaio,
     };
     
     console.log('Nuovo veicolo creato:', newVehicle);
@@ -106,6 +109,20 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
+            name="telaio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Numero Telaio</FormLabel>
+                <FormControl>
+                  <Input placeholder="es. WBA12345678901234" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
             name="fuelType"
             render={({ field }) => (
               <FormItem>
@@ -123,30 +140,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     <SelectItem value="Mhev Gpl">Mhev Gpl</SelectItem>
                     <SelectItem value="Phev">Phev</SelectItem>
                     <SelectItem value="EV">EV</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="transmission"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cambio</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona il tipo di cambio" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Manuale">Manuale</SelectItem>
-                    <SelectItem value="Automatico CVT 6">Automatico CVT 6</SelectItem>
-                    <SelectItem value="Automatico DCT 7">Automatico DCT 7</SelectItem>
-                    <SelectItem value="Automatico DCT 8">Automatico DCT 8</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -247,6 +240,32 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
             </FormItem>
           )}
         />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="transmission"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cambio</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona il tipo di cambio" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Manuale">Manuale</SelectItem>
+                    <SelectItem value="Automatico CVT 6">Automatico CVT 6</SelectItem>
+                    <SelectItem value="Automatico DCT 7">Automatico DCT 7</SelectItem>
+                    <SelectItem value="Automatico DCT 8">Automatico DCT 8</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <div className="flex justify-end gap-4 pt-4">
           <button 

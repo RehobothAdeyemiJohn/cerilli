@@ -11,6 +11,7 @@ export type Vehicle = {
   status: 'available' | 'reserved' | 'sold';
   dateAdded: string;
   transmission?: string;
+  telaio: string;
 };
 
 export type User = {
