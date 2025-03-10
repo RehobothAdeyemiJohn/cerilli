@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Settings as SettingsIcon } from 'lucide-react';
 import { vehiclesApi } from '@/api/localStorage';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -137,6 +138,14 @@ const Inventory = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Inventario Veicoli</h1>
         <div className="flex gap-4 mt-4 md:mt-0">
+          <Link 
+            to="/settings"
+            className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50"
+          >
+            <SettingsIcon className="h-4 w-4 mr-2" />
+            Impostazioni
+          </Link>
+          
           <button 
             onClick={toggleFilters}
             className="md:hidden flex items-center px-4 py-2 border border-gray-200 rounded-md"
