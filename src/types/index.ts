@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -102,26 +101,29 @@ export type VehicleTrim = {
   id: string;
   name: string;
   basePrice: number;
-  compatibleModels?: string[]; // Array of model IDs
+  compatibleModels: string[]; // Array of model IDs, empty means all models
 };
 
 export type FuelType = {
   id: string;
   name: string;
-  priceAdjustment: number; // Price adjustment relative to base price
+  priceAdjustment: number;
+  compatibleModels: string[]; // Array of model IDs, empty means all models
 };
 
 export type ExteriorColor = {
   id: string;
   name: string;
-  type: string; // e.g., "metallizzato", "pastello"
+  type: string;
   priceAdjustment: number;
+  compatibleModels: string[]; // Array of model IDs, empty means all models
 };
 
 export type Transmission = {
   id: string;
   name: string;
   priceAdjustment: number;
+  compatibleModels: string[]; // Array of model IDs, empty means all models
 };
 
 export type Accessory = {

@@ -1,9 +1,12 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ExteriorColor } from '@/types';
+import { modelsApi } from '@/api/localStorage';
 
 interface ColorFormProps {
   color: Partial<ExteriorColor>;
@@ -11,6 +14,11 @@ interface ColorFormProps {
 }
 
 const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
+  const { data: models = [] } = useQuery({
+    queryKey: ['models'],
+    queryFn: modelsApi.getAll
+  });
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -48,6 +56,30 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
           onChange={(e) => onChange('priceAdjustment', Number(e.target.value))}
           placeholder="es. 800"
         />
+      </div>
+      <div className="space-y-2">
+        <Label>Compatibilità Modelli</Label>
+        <p className="text-sm text-gray-500 mb-2">
+          Lascia vuoto per tutti i modelli
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {models.map((model) => (
+            <div key={model.id} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`model-${model.id}`}
+                checked={(color.compatibleModels || []).includes(model.id)}
+                onCheckedChange={(checked) => {
+                  const currentModels = color.compatibleModels || [];
+                  const updatedModels = checked
+                    ? [...currentModels, model.id]
+                    : currentModels.filter(id => id !== model.id);
+                  onChange('compatibleModels', updatedModels);
+                }}
+              />
+              <Label htmlFor={`model-${model.id}`}>{model.name}</Label>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
