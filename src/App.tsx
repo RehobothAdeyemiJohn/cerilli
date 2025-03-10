@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Quotes from "./pages/Quotes";
 import Orders from "./pages/Orders";
+import Settings from "./pages/Settings";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 
@@ -53,6 +54,11 @@ const App = () => (
           <Route path="/orders" element={
             <AppLayout>
               <Orders />
+            </AppLayout>
+          } />
+          <Route path="/settings" element={
+            <AppLayout>
+              <Settings />
             </AppLayout>
           } />
           <Route path="*" element={<NotFound />} />
