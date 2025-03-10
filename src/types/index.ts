@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -71,7 +70,26 @@ export type ChartData = {
   value: number;
 }[];
 
-// New types for Settings
+export type Dealer = {
+  id: string;
+  companyName: string;
+  address: string;
+  city: string;
+  province: string;
+  zipCode: string;
+  createdAt: string;
+};
+
+export type Vendor = {
+  id: string;
+  dealerId: string;
+  name: string;
+  email: string;
+  password: string;
+  role: 'vendor';
+  createdAt: string;
+};
+
 export type VehicleModel = {
   id: string;
   name: string;
