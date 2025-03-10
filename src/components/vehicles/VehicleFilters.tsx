@@ -8,27 +8,46 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Filter, Vehicle } from '@/types';
+import { Filter, Vehicle, VehicleModel, VehicleTrim, FuelType, ExteriorColor } from '@/types';
+import { modelsApi, trimsApi, fuelTypesApi, colorsApi } from '@/api/localStorage';
+import { useQuery } from '@tanstack/react-query';
 
 interface VehicleFiltersProps {
   onFiltersChange?: (filters: Filter) => void;
-  inventory: Vehicle[]; // Pass inventory to dynamically generate filters
+  inventory: Vehicle[]; // Still need inventory for locations
 }
 
 const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps) => {
-  // Extract unique values from inventory
-  const getUniqueValues = (key: keyof Vehicle): string[] => {
+  // Fetch settings data using React Query
+  const { data: modelSettings = [] } = useQuery({
+    queryKey: ['models'],
+    queryFn: modelsApi.getAll,
+  });
+  
+  const { data: trimSettings = [] } = useQuery({
+    queryKey: ['trims'],
+    queryFn: trimsApi.getAll,
+  });
+  
+  const { data: fuelTypeSettings = [] } = useQuery({
+    queryKey: ['fuelTypes'],
+    queryFn: fuelTypesApi.getAll,
+  });
+  
+  const { data: colorSettings = [] } = useQuery({
+    queryKey: ['colors'],
+    queryFn: colorsApi.getAll,
+  });
+  
+  // Extract locations from inventory
+  const getUniqueLocations = (): string[] => {
     if (!inventory || inventory.length === 0) return [];
     
-    const values = inventory.map(vehicle => String(vehicle[key]));
+    const values = inventory.map(vehicle => String(vehicle.location));
     return [...new Set(values)].filter(Boolean);
   };
   
-  const models = getUniqueValues('model');
-  const trims = getUniqueValues('trim');
-  const fuelTypes = getUniqueValues('fuelType');
-  const colors = getUniqueValues('exteriorColor');
-  const locations = getUniqueValues('location');
+  const locations = getUniqueLocations();
   
   // State for selected filters
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -155,23 +174,23 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
           <AccordionTrigger>Modello</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
-              {models.map((model) => (
+              {modelSettings.map((modelSetting: VehicleModel) => (
                 <div 
-                  key={model} 
+                  key={modelSetting.id} 
                   className="flex items-center"
-                  onClick={() => toggleModel(model)}
+                  onClick={() => toggleModel(modelSetting.name)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedModels.includes(model) 
+                    ${selectedModels.includes(modelSetting.name) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedModels.includes(model) && (
+                    {selectedModels.includes(modelSetting.name) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
-                  <span className="text-sm">{model}</span>
+                  <span className="text-sm">{modelSetting.name}</span>
                 </div>
               ))}
             </div>
@@ -182,23 +201,23 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
           <AccordionTrigger>Allestimento</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
-              {trims.map((trim) => (
+              {trimSettings.map((trimSetting: VehicleTrim) => (
                 <div 
-                  key={trim} 
+                  key={trimSetting.id} 
                   className="flex items-center"
-                  onClick={() => toggleTrim(trim)}
+                  onClick={() => toggleTrim(trimSetting.name)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedTrims.includes(trim) 
+                    ${selectedTrims.includes(trimSetting.name) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedTrims.includes(trim) && (
+                    {selectedTrims.includes(trimSetting.name) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
-                  <span className="text-sm">{trim}</span>
+                  <span className="text-sm">{trimSetting.name}</span>
                 </div>
               ))}
             </div>
@@ -209,23 +228,23 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
           <AccordionTrigger>Alimentazione</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
-              {fuelTypes.map((fuelType) => (
+              {fuelTypeSettings.map((fuelTypeSetting: FuelType) => (
                 <div 
-                  key={fuelType} 
+                  key={fuelTypeSetting.id} 
                   className="flex items-center"
-                  onClick={() => toggleFuelType(fuelType)}
+                  onClick={() => toggleFuelType(fuelTypeSetting.name)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedFuelTypes.includes(fuelType) 
+                    ${selectedFuelTypes.includes(fuelTypeSetting.name) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedFuelTypes.includes(fuelType) && (
+                    {selectedFuelTypes.includes(fuelTypeSetting.name) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
-                  <span className="text-sm">{fuelType}</span>
+                  <span className="text-sm">{fuelTypeSetting.name}</span>
                 </div>
               ))}
             </div>
@@ -236,23 +255,23 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
           <AccordionTrigger>Colore</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2">
-              {colors.map((color) => (
+              {colorSettings.map((colorSetting: ExteriorColor) => (
                 <div 
-                  key={color} 
+                  key={colorSetting.id} 
                   className="flex items-center"
-                  onClick={() => toggleColor(color)}
+                  onClick={() => toggleColor(colorSetting.name)}
                 >
                   <div className={`
                     h-4 w-4 rounded border mr-2 flex items-center justify-center
-                    ${selectedColors.includes(color) 
+                    ${selectedColors.includes(colorSetting.name) 
                       ? 'bg-primary border-primary' 
                       : 'border-gray-300'}
                   `}>
-                    {selectedColors.includes(color) && (
+                    {selectedColors.includes(colorSetting.name) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
-                  <span className="text-sm">{color}</span>
+                  <span className="text-sm">{colorSetting.name}</span>
                 </div>
               ))}
             </div>
