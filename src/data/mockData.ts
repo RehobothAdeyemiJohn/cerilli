@@ -1,7 +1,8 @@
 
 import { Vehicle, User, Quote, Order, Stat, ChartData } from '@/types';
 
-export const vehicles: Vehicle[] = [
+// Utilizziamo let invece di const per permettere la modifica dell'array
+export let vehicles: Vehicle[] = [
   {
     id: '1',
     model: 'Cirelli 500',
@@ -81,6 +82,31 @@ export const vehicles: Vehicle[] = [
     dateAdded: '2024-01-25',
   },
 ];
+
+// Funzioni per manipolare l'array vehicles
+export const addVehicle = (newVehicle: Vehicle): void => {
+  // Aggiungiamo l'immagine di default se manca
+  const vehicleWithImage = {
+    ...newVehicle,
+    imageUrl: newVehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+  };
+  vehicles.push(vehicleWithImage);
+};
+
+export const updateVehicle = (updatedVehicle: Vehicle): void => {
+  const index = vehicles.findIndex(v => v.id === updatedVehicle.id);
+  if (index !== -1) {
+    // Mantieni l'imageUrl originale se non viene fornita
+    vehicles[index] = {
+      ...updatedVehicle,
+      imageUrl: updatedVehicle.imageUrl || vehicles[index].imageUrl,
+    };
+  }
+};
+
+export const deleteVehicle = (vehicleId: string): void => {
+  vehicles = vehicles.filter(v => v.id !== vehicleId);
+};
 
 export const users: User[] = [
   {

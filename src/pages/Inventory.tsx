@@ -1,19 +1,25 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Filter } from 'lucide-react';
-import { vehicles } from '@/data/mockData';
+import { vehicles, addVehicle, updateVehicle, deleteVehicle } from '@/data/mockData';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import { Vehicle, Filter as VehicleFilter } from '@/types';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
+import { toast } from '@/hooks/use-toast';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
   const [inventory, setInventory] = useState<Vehicle[]>(vehicles);
   const [activeFilters, setActiveFilters] = useState<VehicleFilter | null>(null);
+  
+  // Ricarichiamo l'inventario quando cambia l'array vehicles
+  useEffect(() => {
+    setInventory([...vehicles]);
+  }, []);
   
   const filteredVehicles = activeFilters 
     ? filterVehicles(inventory, activeFilters)
@@ -32,13 +38,37 @@ const Inventory = () => {
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
+    // Aggiorna sia lo stato locale che il database mock
     setInventory(prev => prev.map(vehicle => 
       vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle
     ));
+    
+    // Aggiorna il database mock
+    updateVehicle(updatedVehicle);
+    
+    toast({
+      title: "Veicolo Aggiornato",
+      description: `${updatedVehicle.model} ${updatedVehicle.trim} è stato aggiornato con successo.`,
+    });
   };
   
   const handleVehicleDelete = (vehicleId: string) => {
+    // Trova il veicolo prima di eliminarlo per il messaggio toast
+    const vehicleToDelete = inventory.find(v => v.id === vehicleId);
+    
+    // Aggiorna sia lo stato locale che il database mock
     setInventory(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
+    
+    // Aggiorna il database mock
+    deleteVehicle(vehicleId);
+    
+    if (vehicleToDelete) {
+      toast({
+        title: "Veicolo Eliminato",
+        description: `${vehicleToDelete.model} ${vehicleToDelete.trim} è stato eliminato dall'inventario.`,
+        variant: "destructive",
+      });
+    }
   };
   
   const handleVehicleAdd = (newVehicle: Vehicle | null) => {
@@ -47,8 +77,17 @@ const Inventory = () => {
       return;
     }
     
-    console.log('Aggiungendo veicolo all\'inventario:', newVehicle);
+    // Aggiorna sia lo stato locale che il database mock
     setInventory(prev => [...prev, newVehicle]);
+    
+    // Aggiorna il database mock
+    addVehicle(newVehicle);
+    
+    toast({
+      title: "Veicolo Aggiunto",
+      description: `${newVehicle.model} ${newVehicle.trim} è stato aggiunto all'inventario.`,
+    });
+    
     setShowAddVehicleDrawer(false);
   };
   
