@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Filter } from 'lucide-react';
 import { vehiclesApi } from '@/api/apiClient';
 import VehicleList from '@/components/vehicles/VehicleList';
@@ -18,13 +17,11 @@ const Inventory = () => {
   
   const queryClient = useQueryClient();
   
-  // Utilizziamo React Query per gestire i dati e la cache
   const { data: inventory = [], isLoading, error } = useQuery({
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
   });
   
-  // Mutazioni per aggiornare, eliminare e aggiungere veicoli
   const updateMutation = useMutation({
     mutationFn: (vehicle: Vehicle) => vehiclesApi.update(vehicle.id, vehicle),
     onSuccess: () => {
@@ -84,7 +81,6 @@ const Inventory = () => {
   };
   
   const handleVehicleDelete = (vehicleId: string) => {
-    // Trova il veicolo prima di eliminarlo per il messaggio toast
     const vehicleToDelete = inventory.find(v => v.id === vehicleId);
     
     deleteMutation.mutate(vehicleId, {
@@ -116,10 +112,12 @@ const Inventory = () => {
       return;
     }
     
-    // Rimuoviamo l'id perché sarà generato dal server
-    const { id, ...vehicleWithoutId } = newVehicle;
+    const vehicleWithDate = {
+      ...newVehicle,
+      dateAdded: new Date().toISOString().split('T')[0],
+    };
     
-    createMutation.mutate(vehicleWithoutId, {
+    createMutation.mutate(vehicleWithDate, {
       onSuccess: (createdVehicle) => {
         toast({
           title: "Veicolo Aggiunto",
@@ -144,7 +142,6 @@ const Inventory = () => {
     setActiveFilters(filters);
   };
   
-  // Mostrare un messaggio di loading o errore
   if (isLoading) {
     return <div className="container mx-auto py-6 px-4">Caricamento inventario...</div>;
   }

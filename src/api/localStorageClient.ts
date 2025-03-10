@@ -211,10 +211,13 @@ export const vehiclesApi = {
     const newVehicle = {
       ...vehicle,
       id: uuidv4(),
+      // Assicuriamoci che tutti i campi obbligatori siano presenti
+      imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+      dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
     };
     
     vehicles.push(newVehicle);
-    localStorage.setItem(KEYS.VEHICLES, JSON.stringify(vehicles));
+    localStorage.setItem('cirelli_vehicles', JSON.stringify(vehicles));
     
     return newVehicle;
   },
