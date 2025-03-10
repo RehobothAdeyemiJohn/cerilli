@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -7,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vehicle } from '@/types';
+import { addVehicle } from '@/data/mockData';
 
 const vehicleSchema = z.object({
-  model: z.string().min(2, { message: "Il modello deve avere almeno 2 caratteri." }),
+  model: z.string().min(1, { message: "Il modello è obbligatorio." }),
   trim: z.string().min(1, { message: "L'allestimento è obbligatorio." }),
   fuelType: z.string().min(1, { message: "Il tipo di alimentazione è obbligatorio." }),
   exteriorColor: z.string().min(1, { message: "Il colore esterno è obbligatorio." }),
@@ -65,6 +67,10 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
     };
     
     console.log('Nuovo veicolo creato:', newVehicle);
+    
+    // Aggiungiamo il veicolo al database locale
+    addVehicle(newVehicle);
+    
     toast({ 
       title: "Veicolo Aggiunto", 
       description: `${data.model} ${data.trim} è stato aggiunto all'inventario.`,
@@ -83,9 +89,23 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Modello</FormLabel>
-                <FormControl>
-                  <Input placeholder="es. Cirelli 500" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona il modello" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Cirelli 1">Cirelli 1</SelectItem>
+                    <SelectItem value="Cirelli 2">Cirelli 2</SelectItem>
+                    <SelectItem value="Cirelli 3">Cirelli 3</SelectItem>
+                    <SelectItem value="Cirelli 4">Cirelli 4</SelectItem>
+                    <SelectItem value="Cirelli 5">Cirelli 5</SelectItem>
+                    <SelectItem value="Cirelli 7">Cirelli 7</SelectItem>
+                    <SelectItem value="Cirelli 8">Cirelli 8</SelectItem>
+                    <SelectItem value="Cirelli Sport Coupè">Cirelli Sport Coupè</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -97,9 +117,19 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Allestimento</FormLabel>
-                <FormControl>
-                  <Input placeholder="es. Sport" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona l'allestimento" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Plus">Plus</SelectItem>
+                    <SelectItem value="Premium">Premium</SelectItem>
+                    <SelectItem value="Cross">Cross</SelectItem>
+                    <SelectItem value="Sport">Sport</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -107,20 +137,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="telaio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Numero Telaio</FormLabel>
-                <FormControl>
-                  <Input placeholder="es. WBA12345678901234" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
           <FormField
             control={form.control}
             name="fuelType"
@@ -146,22 +162,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
               </FormItem>
             )}
           />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prezzo (€)</FormLabel>
-                <FormControl>
-                  <Input type="number" min="0" step="100" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           
           <FormField
             control={form.control}
@@ -169,8 +169,60 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Colore Esterno</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona il colore" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Pure Ice (metallizzato)">Pure Ice (metallizzato)</SelectItem>
+                    <SelectItem value="Obsydian Black (metallizzato)">Obsydian Black (metallizzato)</SelectItem>
+                    <SelectItem value="Metallic Sky (metallizzato)">Metallic Sky (metallizzato)</SelectItem>
+                    <SelectItem value="Red Flame (metallizzato)">Red Flame (metallizzato)</SelectItem>
+                    <SelectItem value="Petrol Green (metallizzato)">Petrol Green (metallizzato)</SelectItem>
+                    <SelectItem value="Solid Green (pastello)">Solid Green (pastello)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="transmission"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cambio</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona il tipo di cambio" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Manuale">Manuale</SelectItem>
+                    <SelectItem value="Automatico CVT 6">Automatico CVT 6</SelectItem>
+                    <SelectItem value="Automatico DCT 7">Automatico DCT 7</SelectItem>
+                    <SelectItem value="Automatico DCT 8">Automatico DCT 8</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="accessories"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Accessori (separati da virgola)</FormLabel>
                 <FormControl>
-                  <Input placeholder="es. Rosso Racing" {...field} />
+                  <Input placeholder="es. Sistema di Navigazione, Sedili in Pelle, Audio Premium" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -227,40 +279,30 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="accessories"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Accessori (separati da virgola)</FormLabel>
-              <FormControl>
-                <Input placeholder="es. Sistema di Navigazione, Sedili in Pelle, Audio Premium" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="transmission"
+            name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Cambio</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona il tipo di cambio" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Manuale">Manuale</SelectItem>
-                    <SelectItem value="Automatico CVT 6">Automatico CVT 6</SelectItem>
-                    <SelectItem value="Automatico DCT 7">Automatico DCT 7</SelectItem>
-                    <SelectItem value="Automatico DCT 8">Automatico DCT 8</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Prezzo di Listino (€)</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" step="100" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="telaio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Numero Telaio</FormLabel>
+                <FormControl>
+                  <Input placeholder="es. WBA12345678901234" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
