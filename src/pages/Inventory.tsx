@@ -7,9 +7,11 @@ import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import { Vehicle } from '@/types';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
   
   const availableVehicles = vehicles.filter(v => v.status === 'available');
   const reservedVehicles = vehicles.filter(v => v.status === 'reserved');
@@ -17,6 +19,10 @@ const Inventory = () => {
   
   const toggleFilters = () => {
     setShowFilters(!showFilters);
+  };
+  
+  const closeAddVehicleDrawer = () => {
+    setShowAddVehicleDrawer(false);
   };
   
   return (
@@ -32,17 +38,20 @@ const Inventory = () => {
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
           
-          <Drawer>
+          <Drawer open={showAddVehicleDrawer} onOpenChange={setShowAddVehicleDrawer}>
             <DrawerTrigger asChild>
-              <button className="flex items-center px-4 py-2 bg-primary text-white rounded-md">
+              <button 
+                className="flex items-center px-4 py-2 bg-primary text-white rounded-md"
+                onClick={() => setShowAddVehicleDrawer(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Vehicle
               </button>
             </DrawerTrigger>
             <DrawerContent>
-              <div className="p-6 max-w-md mx-auto">
+              <div className="p-6 max-w-2xl mx-auto">
                 <h2 className="text-xl font-bold mb-4">Add New Vehicle</h2>
-                <p className="text-gray-500 mb-4">Form to add a new vehicle would go here</p>
+                <AddVehicleForm onComplete={closeAddVehicleDrawer} />
               </div>
             </DrawerContent>
           </Drawer>

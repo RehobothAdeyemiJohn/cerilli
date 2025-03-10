@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import VehicleCard from './VehicleCard';
 import { Vehicle, Filter } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { formatCurrency } from '@/lib/utils';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -53,12 +54,6 @@ const VehicleList = ({ vehicles, filter }: VehicleListProps) => {
               </DialogHeader>
               
               <div className="mt-4">
-                <img 
-                  src={selectedVehicle.imageUrl || '/placeholder.svg'} 
-                  alt={`${selectedVehicle.model} ${selectedVehicle.trim}`}
-                  className="w-full h-48 object-cover rounded-md"
-                />
-                
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Model</p>
@@ -79,7 +74,7 @@ const VehicleList = ({ vehicles, filter }: VehicleListProps) => {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Price</p>
                     <p className="font-bold text-primary">
-                      €{selectedVehicle.price.toLocaleString()}
+                      {formatCurrency(selectedVehicle.price)}
                     </p>
                   </div>
                   <div>

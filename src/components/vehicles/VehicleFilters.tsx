@@ -1,23 +1,25 @@
 
 import React, { useState } from 'react';
-import { Check, ChevronDown, Filter } from 'lucide-react';
+import { Search, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Slider } from "@/components/ui/slider";
-import {
-  getModels,
-  getTrims,
-  getFuelTypes,
+} from '@/components/ui/accordion';
+import { 
+  getModels, 
+  getTrims, 
+  getFuelTypes, 
   getColors,
   getLocations,
-  getPriceRange,
+  getPriceRange
 } from '@/data/mockData';
 
 const VehicleFilters = () => {
+  // Get filter options from mockData
   const models = getModels();
   const trims = getTrims();
   const fuelTypes = getFuelTypes();
@@ -25,257 +27,259 @@ const VehicleFilters = () => {
   const locations = getLocations();
   const [minPrice, maxPrice] = getPriceRange();
   
+  // State for selected filters
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedTrims, setSelectedTrims] = useState<string[]>([]);
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice, maxPrice]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchText, setSearchText] = useState('');
   
+  // Toggle selection functions
   const toggleModel = (model: string) => {
-    if (selectedModels.includes(model)) {
-      setSelectedModels(selectedModels.filter(m => m !== model));
-    } else {
-      setSelectedModels([...selectedModels, model]);
-    }
+    setSelectedModels(prev => 
+      prev.includes(model) 
+        ? prev.filter(m => m !== model) 
+        : [...prev, model]
+    );
   };
   
   const toggleTrim = (trim: string) => {
-    if (selectedTrims.includes(trim)) {
-      setSelectedTrims(selectedTrims.filter(t => t !== trim));
-    } else {
-      setSelectedTrims([...selectedTrims, trim]);
-    }
+    setSelectedTrims(prev => 
+      prev.includes(trim) 
+        ? prev.filter(t => t !== trim) 
+        : [...prev, trim]
+    );
   };
   
   const toggleFuelType = (fuelType: string) => {
-    if (selectedFuelTypes.includes(fuelType)) {
-      setSelectedFuelTypes(selectedFuelTypes.filter(f => f !== fuelType));
-    } else {
-      setSelectedFuelTypes([...selectedFuelTypes, fuelType]);
-    }
+    setSelectedFuelTypes(prev => 
+      prev.includes(fuelType) 
+        ? prev.filter(f => f !== fuelType) 
+        : [...prev, fuelType]
+    );
   };
   
   const toggleColor = (color: string) => {
-    if (selectedColors.includes(color)) {
-      setSelectedColors(selectedColors.filter(c => c !== color));
-    } else {
-      setSelectedColors([...selectedColors, color]);
-    }
+    setSelectedColors(prev => 
+      prev.includes(color) 
+        ? prev.filter(c => c !== color) 
+        : [...prev, color]
+    );
   };
   
   const toggleLocation = (location: string) => {
-    if (selectedLocations.includes(location)) {
-      setSelectedLocations(selectedLocations.filter(l => l !== location));
-    } else {
-      setSelectedLocations([...selectedLocations, location]);
-    }
+    setSelectedLocations(prev => 
+      prev.includes(location) 
+        ? prev.filter(l => l !== location) 
+        : [...prev, location]
+    );
   };
   
   const handlePriceChange = (values: number[]) => {
     setPriceRange([values[0], values[1]]);
   };
   
-  const resetFilters = () => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Searching for:', searchText);
+    // In a real app, this would trigger filtering
+  };
+  
+  const clearFilters = () => {
     setSelectedModels([]);
     setSelectedTrims([]);
     setSelectedFuelTypes([]);
     setSelectedColors([]);
     setSelectedLocations([]);
     setPriceRange([minPrice, maxPrice]);
-  };
-  
-  const toggleFiltersVisibility = () => {
-    setShowFilters(!showFilters);
-  };
-  
-  const formatPrice = (price: number) => {
-    return `€${price.toLocaleString()}`;
+    setSearchText('');
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-        <h3 className="font-medium">Filters</h3>
-        <button
-          onClick={resetFilters}
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          Reset
-        </button>
-        
-        <button
-          className="md:hidden flex items-center text-gray-700"
-          onClick={toggleFiltersVisibility}
-        >
-          <Filter className="h-4 w-4 mr-1" />
-          {showFilters ? 'Hide' : 'Show'}
-        </button>
-      </div>
+    <div className="bg-white rounded-md border p-4">
+      <h2 className="font-medium mb-4">Filters</h2>
       
-      <div className={`
-        ${showFilters ? 'max-h-[1000px]' : 'max-h-0'} 
-        md:max-h-none 
-        overflow-hidden transition-all duration-300
-      `}>
-        <Accordion type="multiple" defaultValue={["price", "model"]}>
-          <AccordionItem value="price">
-            <AccordionTrigger className="px-4">Price Range</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="mt-2">
-                <Slider
-                  defaultValue={[minPrice, maxPrice]}
-                  max={maxPrice}
-                  min={minPrice}
-                  step={500}
-                  value={[priceRange[0], priceRange[1]]}
-                  onValueChange={handlePriceChange}
-                />
-                <div className="flex justify-between mt-2 text-sm text-gray-500">
-                  <span>{formatPrice(priceRange[0])}</span>
-                  <span>{formatPrice(priceRange[1])}</span>
+      <form onSubmit={handleSearch} className="relative mb-4">
+        <Input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Search vehicles..."
+          className="pr-10"
+        />
+        <button 
+          type="submit"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          <Search className="h-4 w-4" />
+        </button>
+      </form>
+      
+      <Accordion type="multiple" defaultValue={['price', 'model']}>
+        <AccordionItem value="price">
+          <AccordionTrigger>Price Range</AccordionTrigger>
+          <AccordionContent>
+            <div className="px-1">
+              <Slider
+                defaultValue={[minPrice, maxPrice]}
+                min={minPrice}
+                max={maxPrice}
+                step={(maxPrice - minPrice) / 20}
+                value={[priceRange[0], priceRange[1]]}
+                onValueChange={handlePriceChange}
+                className="my-4"
+              />
+              <div className="flex justify-between text-sm">
+                <span>€{priceRange[0].toLocaleString()}</span>
+                <span>€{priceRange[1].toLocaleString()}</span>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="model">
+          <AccordionTrigger>Model</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2">
+              {models.map((model) => (
+                <div 
+                  key={String(model)} 
+                  className="flex items-center"
+                  onClick={() => toggleModel(String(model))}
+                >
+                  <div className={`
+                    h-4 w-4 rounded border mr-2 flex items-center justify-center
+                    ${selectedModels.includes(String(model)) 
+                      ? 'bg-primary border-primary' 
+                      : 'border-gray-300'}
+                  `}>
+                    {selectedModels.includes(String(model)) && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
+                  </div>
+                  <span className="text-sm">{model}</span>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="model">
-            <AccordionTrigger className="px-4">Model</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-2">
-                {models.map((model) => (
-                  <div 
-                    key={model.toString()} 
-                    className="flex items-center"
-                    onClick={() => toggleModel(model.toString())}
-                  >
-                    <div className={`
-                      h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedModels.includes(model.toString()) 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300'}
-                    `}>
-                      {selectedModels.includes(model.toString()) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className="text-sm">{model}</span>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="trim">
+          <AccordionTrigger>Trim</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2">
+              {trims.map((trim) => (
+                <div 
+                  key={String(trim)} 
+                  className="flex items-center"
+                  onClick={() => toggleTrim(String(trim))}
+                >
+                  <div className={`
+                    h-4 w-4 rounded border mr-2 flex items-center justify-center
+                    ${selectedTrims.includes(String(trim)) 
+                      ? 'bg-primary border-primary' 
+                      : 'border-gray-300'}
+                  `}>
+                    {selectedTrims.includes(String(trim)) && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
                   </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="trim">
-            <AccordionTrigger className="px-4">Trim</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-2">
-                {trims.map((trim) => (
-                  <div 
-                    key={trim.toString()} 
-                    className="flex items-center"
-                    onClick={() => toggleTrim(trim.toString())}
-                  >
-                    <div className={`
-                      h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedTrims.includes(trim.toString()) 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300'}
-                    `}>
-                      {selectedTrims.includes(trim.toString()) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className="text-sm">{trim}</span>
+                  <span className="text-sm">{trim}</span>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="fuelType">
+          <AccordionTrigger>Fuel Type</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2">
+              {fuelTypes.map((fuelType) => (
+                <div 
+                  key={String(fuelType)} 
+                  className="flex items-center"
+                  onClick={() => toggleFuelType(String(fuelType))}
+                >
+                  <div className={`
+                    h-4 w-4 rounded border mr-2 flex items-center justify-center
+                    ${selectedFuelTypes.includes(String(fuelType)) 
+                      ? 'bg-primary border-primary' 
+                      : 'border-gray-300'}
+                  `}>
+                    {selectedFuelTypes.includes(String(fuelType)) && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
                   </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="fuelType">
-            <AccordionTrigger className="px-4">Fuel Type</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-2">
-                {fuelTypes.map((fuelType) => (
-                  <div 
-                    key={fuelType.toString()} 
-                    className="flex items-center"
-                    onClick={() => toggleFuelType(fuelType.toString())}
-                  >
-                    <div className={`
-                      h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedFuelTypes.includes(fuelType.toString()) 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300'}
-                    `}>
-                      {selectedFuelTypes.includes(fuelType.toString()) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className="text-sm">{fuelType}</span>
+                  <span className="text-sm">{fuelType}</span>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="color">
+          <AccordionTrigger>Color</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2">
+              {colors.map((color) => (
+                <div 
+                  key={String(color)} 
+                  className="flex items-center"
+                  onClick={() => toggleColor(String(color))}
+                >
+                  <div className={`
+                    h-4 w-4 rounded border mr-2 flex items-center justify-center
+                    ${selectedColors.includes(String(color)) 
+                      ? 'bg-primary border-primary' 
+                      : 'border-gray-300'}
+                  `}>
+                    {selectedColors.includes(String(color)) && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
                   </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="color">
-            <AccordionTrigger className="px-4">Color</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-2">
-                {colors.map((color) => (
-                  <div 
-                    key={color.toString()} 
-                    className="flex items-center"
-                    onClick={() => toggleColor(color.toString())}
-                  >
-                    <div className={`
-                      h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedColors.includes(color.toString()) 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300'}
-                    `}>
-                      {selectedColors.includes(color.toString()) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className="text-sm">{color}</span>
+                  <span className="text-sm">{color}</span>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="location">
+          <AccordionTrigger>Location</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2">
+              {locations.map((location) => (
+                <div 
+                  key={String(location)} 
+                  className="flex items-center"
+                  onClick={() => toggleLocation(String(location))}
+                >
+                  <div className={`
+                    h-4 w-4 rounded border mr-2 flex items-center justify-center
+                    ${selectedLocations.includes(String(location)) 
+                      ? 'bg-primary border-primary' 
+                      : 'border-gray-300'}
+                  `}>
+                    {selectedLocations.includes(String(location)) && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
                   </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="location">
-            <AccordionTrigger className="px-4">Location</AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-2">
-                {locations.map((location) => (
-                  <div 
-                    key={location.toString()} 
-                    className="flex items-center"
-                    onClick={() => toggleLocation(location.toString())}
-                  >
-                    <div className={`
-                      h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedLocations.includes(location.toString()) 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300'}
-                    `}>
-                      {selectedLocations.includes(location.toString()) && (
-                        <Check className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                    <span className="text-sm">{location}</span>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+                  <span className="text-sm">{location}</span>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+      
+      <button
+        onClick={clearFilters}
+        className="w-full mt-4 py-2 text-sm text-center border border-gray-200 rounded-md hover:bg-gray-50"
+      >
+        Clear Filters
+      </button>
     </div>
   );
 };

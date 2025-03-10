@@ -1,9 +1,5 @@
 
 import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast";
-import {
-  useToast as useToastHook,
-  toast as toastFunction,
-} from "@radix-ui/react-toast";
 
 export type {
   ToastProps,
