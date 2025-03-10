@@ -269,6 +269,7 @@ export let dealers: Dealer[] = [
     province: 'MI',
     zipCode: '20100',
     createdAt: '2023-01-15',
+    isActive: true,
   },
   {
     id: '2',
@@ -278,6 +279,7 @@ export let dealers: Dealer[] = [
     province: 'RM',
     zipCode: '00100',
     createdAt: '2023-03-20',
+    isActive: true,
   },
   {
     id: '3',
@@ -287,6 +289,7 @@ export let dealers: Dealer[] = [
     province: 'MI',
     zipCode: '20123',
     createdAt: '2023-05-10',
+    isActive: true,
   },
 ];
 
@@ -317,6 +320,7 @@ export const addDealer = (newDealer: Omit<Dealer, 'id' | 'createdAt'>): Dealer =
   const dealer: Dealer = {
     id: `${dealers.length + 1}`,
     ...newDealer,
+    isActive: newDealer.isActive !== undefined ? newDealer.isActive : true,
     createdAt: new Date().toISOString().split('T')[0],
   };
   dealers.push(dealer);

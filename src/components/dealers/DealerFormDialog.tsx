@@ -30,6 +30,7 @@ const formSchema = z.object({
   city: z.string().min(1, 'Città richiesta'),
   province: z.string().length(2, 'Inserire la sigla della provincia'),
   zipCode: z.string().length(5, 'CAP non valido'),
+  isActive: z.boolean().default(true),
 });
 
 interface DealerFormDialogProps {
@@ -54,6 +55,7 @@ const DealerFormDialog = ({
       city: dealer?.city || '',
       province: dealer?.province || '',
       zipCode: dealer?.zipCode || '',
+      isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
     },
   });
 
@@ -66,6 +68,7 @@ const DealerFormDialog = ({
         city: dealer?.city || '',
         province: dealer?.province || '',
         zipCode: dealer?.zipCode || '',
+        isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
       });
     }
   }, [dealer, open, form]);
@@ -82,8 +85,15 @@ const DealerFormDialog = ({
           title: "Dealer aggiornato con successo",
         });
       } else {
-        // Create new dealer
-        addDealer(values);
+        // Create new dealer - ensure all required fields are present
+        addDealer({
+          companyName: values.companyName,
+          address: values.address,
+          city: values.city,
+          province: values.province,
+          zipCode: values.zipCode,
+          isActive: values.isActive,
+        });
         toast({
           title: "Dealer creato con successo",
         });

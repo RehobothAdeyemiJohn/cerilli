@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash, Users } from 'lucide-react';
+import { Edit, Trash, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,7 +14,7 @@ import DealerFormDialog from './DealerFormDialog';
 import VendorsDialog from './VendorsDialog';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { dealers, deleteDealer } from '@/data/mockData';
+import { dealers, deleteDealer, updateDealer } from '@/data/mockData';
 
 const DealerList = () => {
   const [dealersList, setDealersList] = useState<Dealer[]>([]);
@@ -43,6 +43,32 @@ const DealerList = () => {
     }
   };
 
+  const toggleDealerStatus = (dealer: Dealer) => {
+    try {
+      const updatedDealer = {
+        ...dealer,
+        isActive: !dealer.isActive
+      };
+      updateDealer(updatedDealer);
+      
+      // Update the dealers list
+      setDealersList(dealersList.map(d => 
+        d.id === dealer.id ? updatedDealer : d
+      ));
+      
+      toast({
+        title: updatedDealer.isActive 
+          ? "Dealer attivato con successo" 
+          : "Dealer disattivato con successo",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore durante l'aggiornamento dello stato",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Function to refresh dealers list
   const refreshDealers = () => {
     setDealersList([...dealers]);
@@ -54,6 +80,7 @@ const DealerList = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Stato</TableHead>
               <TableHead>Azienda</TableHead>
               <TableHead>Indirizzo</TableHead>
               <TableHead>Città</TableHead>
@@ -65,13 +92,28 @@ const DealerList = () => {
           <TableBody>
             {dealersList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                   Nessun dealer presente
                 </TableCell>
               </TableRow>
             ) : (
               dealersList.map((dealer) => (
                 <TableRow key={dealer.id}>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleDealerStatus(dealer)}
+                      className={`p-0 h-auto ${dealer.isActive ? 'text-green-500' : 'text-red-500'}`}
+                      title={dealer.isActive ? 'Attivo - Clicca per disattivare' : 'Inattivo - Clicca per attivare'}
+                    >
+                      {dealer.isActive ? (
+                        <ToggleRight className="h-6 w-6" />
+                      ) : (
+                        <ToggleLeft className="h-6 w-6" />
+                      )}
+                    </Button>
+                  </TableCell>
                   <TableCell>{dealer.companyName}</TableCell>
                   <TableCell>{dealer.address}</TableCell>
                   <TableCell>{dealer.city}</TableCell>
