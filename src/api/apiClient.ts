@@ -4,8 +4,8 @@ import { Vehicle, Quote, Order } from '@/types';
 
 // Configurazione di base per axios
 const apiClient = axios.create({
-  // Cambia questo URL con l'indirizzo del tuo server quando sarà pronto
-  baseURL: 'http://localhost:3001/api',
+  // Configura l'URL del server backend
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -38,6 +38,58 @@ export const vehiclesApi = {
   }
 };
 
-// Puoi aggiungere API simili per quote e orders
+// API per preventivi (quotes)
+export const quotesApi = {
+  getAll: async (): Promise<Quote[]> => {
+    const response = await apiClient.get('/quotes');
+    return response.data;
+  },
+  
+  getById: async (id: string): Promise<Quote> => {
+    const response = await apiClient.get(`/quotes/${id}`);
+    return response.data;
+  },
+  
+  create: async (quote: Omit<Quote, 'id'>): Promise<Quote> => {
+    const response = await apiClient.post('/quotes', quote);
+    return response.data;
+  },
+  
+  update: async (id: string, quote: Partial<Quote>): Promise<Quote> => {
+    const response = await apiClient.put(`/quotes/${id}`, quote);
+    return response.data;
+  },
+  
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/quotes/${id}`);
+  }
+};
+
+// API per ordini (orders)
+export const ordersApi = {
+  getAll: async (): Promise<Order[]> => {
+    const response = await apiClient.get('/orders');
+    return response.data;
+  },
+  
+  getById: async (id: string): Promise<Order> => {
+    const response = await apiClient.get(`/orders/${id}`);
+    return response.data;
+  },
+  
+  create: async (order: Omit<Order, 'id'>): Promise<Order> => {
+    const response = await apiClient.post('/orders', order);
+    return response.data;
+  },
+  
+  update: async (id: string, order: Partial<Order>): Promise<Order> => {
+    const response = await apiClient.put(`/orders/${id}`, order);
+    return response.data;
+  },
+  
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/orders/${id}`);
+  }
+};
 
 export default apiClient;
