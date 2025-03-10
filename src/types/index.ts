@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -69,3 +70,45 @@ export type ChartData = {
   name: string;
   value: number;
 }[];
+
+// New types for Settings
+export type VehicleModel = {
+  id: string;
+  name: string;
+  basePrice: number;
+};
+
+export type VehicleTrim = {
+  id: string;
+  name: string;
+  basePrice: number;
+  compatibleModels?: string[]; // Array of model IDs
+};
+
+export type FuelType = {
+  id: string;
+  name: string;
+  priceAdjustment: number; // Price adjustment relative to base price
+};
+
+export type ExteriorColor = {
+  id: string;
+  name: string;
+  type: string; // e.g., "metallizzato", "pastello"
+  priceAdjustment: number;
+};
+
+export type Transmission = {
+  id: string;
+  name: string;
+  priceAdjustment: number;
+};
+
+export type Accessory = {
+  id: string;
+  name: string;
+  priceWithVAT: number;
+  priceWithoutVAT: number;
+  compatibleModels: string[]; // Array of model IDs, empty means all models
+  compatibleTrims: string[]; // Array of trim IDs, empty means all trims
+};
