@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -20,6 +19,7 @@ import {
   calculateVehiclePrice 
 } from '@/api/localStorage';
 import { useQuery } from '@tanstack/react-query';
+import { dealers } from '@/data/mockData';
 
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
@@ -37,12 +37,26 @@ type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
 interface AddVehicleFormProps {
   onComplete: (newVehicle: Vehicle | null) => void;
+  locationOptions?: string[];
 }
 
-const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
+const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) => {
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const [locations, setLocations] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
+
+  useEffect(() => {
+    if (locationOptions) {
+      setLocations(locationOptions);
+    } else {
+      const defaultLocations = ['Stock CMC', 'Stock Virtuale'];
+      const activeDealerLocations = dealers
+        .filter(dealer => dealer.isActive)
+        .map(dealer => dealer.companyName);
+      setLocations([...defaultLocations, ...activeDealerLocations]);
+    }
+  }, [locationOptions]);
 
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
@@ -106,7 +120,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          // Find accessory IDs from accessory names
           const selectedAccessoryIds = watchAccessories.map(name => {
             const acc = accessories.find(a => a.name === name);
             return acc ? acc.id : '';
@@ -146,7 +159,6 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
 
   const onSubmit = async (data: VehicleFormValues) => {
     try {
-      // Ensure all required fields are present and non-empty
       if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
           !data.location || !data.transmission || !data.status || !data.telaio) {
         toast({
@@ -347,10 +359,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Main Warehouse">Magazzino Principale</SelectItem>
-                    <SelectItem value="North Branch">Filiale Nord</SelectItem>
-                    <SelectItem value="South Branch">Filiale Sud</SelectItem>
-                    <SelectItem value="East Branch">Filiale Est</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

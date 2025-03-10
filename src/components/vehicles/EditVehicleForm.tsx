@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -19,6 +18,7 @@ import {
   calculateVehiclePrice 
 } from '@/api/localStorage';
 import { useQuery } from '@tanstack/react-query';
+import { dealers } from '@/data/mockData';
 
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
@@ -38,11 +38,25 @@ interface EditVehicleFormProps {
   vehicle: Vehicle;
   onComplete: (vehicle: Vehicle) => void;
   onCancel: () => void;
+  locationOptions?: string[];
 }
 
-const EditVehicleForm = ({ vehicle, onComplete, onCancel }: EditVehicleFormProps) => {
+const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: EditVehicleFormProps) => {
   const [calculatedPrice, setCalculatedPrice] = useState<number>(vehicle.price || 0);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const [locations, setLocations] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
+
+  useEffect(() => {
+    if (locationOptions) {
+      setLocations(locationOptions);
+    } else {
+      const defaultLocations = ['Stock CMC', 'Stock Virtuale'];
+      const activeDealerLocations = dealers
+        .filter(dealer => dealer.isActive)
+        .map(dealer => dealer.companyName);
+      setLocations([...defaultLocations, ...activeDealerLocations]);
+    }
+  }, [locationOptions]);
 
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
@@ -102,7 +116,6 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel }: EditVehicleFormProps
         const modelObj = models.find(m => m.name === watchModel);
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        // Estrarre solo il nome del colore senza il tipo
         const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
         const colorName = colorParts ? colorParts[1] : watchColor;
         const colorType = colorParts ? colorParts[2] : '';
@@ -110,7 +123,6 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel }: EditVehicleFormProps
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          // Find accessory IDs from accessory names
           const selectedAccessoryIds = watchAccessories.map(name => {
             const acc = accessories.find(a => a.name === name);
             return acc ? acc.id : '';
@@ -328,10 +340,11 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel }: EditVehicleFormProps
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Main Warehouse">Magazzino Principale</SelectItem>
-                    <SelectItem value="North Branch">Filiale Nord</SelectItem>
-                    <SelectItem value="South Branch">Filiale Sud</SelectItem>
-                    <SelectItem value="East Branch">Filiale Est</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

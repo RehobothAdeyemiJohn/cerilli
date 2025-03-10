@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Plus, Filter, Settings as SettingsIcon } from 'lucide-react';
 import { vehiclesApi } from '@/api/localStorage';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
-import { Vehicle, Filter as VehicleFilter } from '@/types';
+import { Vehicle, Filter as VehicleFilter, Dealer } from '@/types';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
@@ -11,13 +12,29 @@ import { toast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { dealers } from '@/data/mockData';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
   const [activeFilters, setActiveFilters] = useState<VehicleFilter | null>(null);
+  const [locationOptions, setLocationOptions] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
   
   const queryClient = useQueryClient();
+  
+  // Load dealer names to use as location options
+  useEffect(() => {
+    // Start with the default locations
+    const defaultLocations = ['Stock CMC', 'Stock Virtuale'];
+    
+    // Add active dealer names
+    const activeDealerLocations = dealers
+      .filter(dealer => dealer.isActive)
+      .map(dealer => dealer.companyName);
+    
+    // Set the combined array as location options
+    setLocationOptions([...defaultLocations, ...activeDealerLocations]);
+  }, []);
   
   const { data: inventory = [], isLoading, error } = useQuery({
     queryKey: ['vehicles'],
@@ -184,7 +201,8 @@ const Inventory = () => {
         `}>
           <VehicleFilters 
             inventory={inventory}
-            onFiltersChange={handleFiltersChange} 
+            onFiltersChange={handleFiltersChange}
+            locationOptions={locationOptions}
           />
         </div>
         
@@ -210,6 +228,7 @@ const Inventory = () => {
                 vehicles={availableVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
+                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -218,6 +237,7 @@ const Inventory = () => {
                 vehicles={reservedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
+                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -226,6 +246,7 @@ const Inventory = () => {
                 vehicles={soldVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
+                locationOptions={locationOptions}
               />
             </TabsContent>
             
@@ -234,6 +255,7 @@ const Inventory = () => {
                 vehicles={filteredVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
+                locationOptions={locationOptions}
               />
             </TabsContent>
           </Tabs>
