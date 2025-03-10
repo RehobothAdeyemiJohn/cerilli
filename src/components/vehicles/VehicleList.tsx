@@ -173,12 +173,20 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
                 </div>
                 
                 <div className="flex gap-4 mt-6">
-                  <button className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90">
-                    Crea Preventivo
-                  </button>
-                  <button className="flex-1 border border-gray-200 py-2 rounded-md hover:bg-gray-50">
-                    Ordina Veicolo
-                  </button>
+                  {selectedVehicle.status === 'available' ? (
+                    <>
+                      <button className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90">
+                        Crea Preventivo
+                      </button>
+                      <button className="flex-1 border border-gray-200 py-2 rounded-md hover:bg-gray-50">
+                        Ordina Veicolo
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
+                      {selectedVehicle.status === 'reserved' ? 'Veicolo Prenotato' : 'Veicolo Venduto'}
+                    </div>
+                  )}
                 </div>
               </div>
             </>
