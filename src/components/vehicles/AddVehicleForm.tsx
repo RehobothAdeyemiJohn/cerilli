@@ -106,21 +106,28 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
+          // Find accessory IDs from accessory names
+          const selectedAccessoryIds = watchAccessories.map(name => {
+            const acc = accessories.find(a => a.name === name);
+            return acc ? acc.id : '';
+          }).filter(id => id !== '');
+
           const price = await calculateVehiclePrice(
             modelObj.id,
             trimObj.id,
             fuelTypeObj.id,
             colorObj.id,
             transmissionObj.id,
-            watchAccessories || []
+            selectedAccessoryIds
           );
+          
           setCalculatedPrice(price);
         }
       }
     };
 
     updatePrice();
-  }, [watchModel, watchTrim, watchFuelType, watchColor, watchTransmission, watchAccessories, models, trims, fuelTypes, colors, transmissions]);
+  }, [watchModel, watchTrim, watchFuelType, watchColor, watchTransmission, watchAccessories, models, trims, fuelTypes, colors, transmissions, accessories]);
 
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
@@ -326,52 +333,54 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Posizione</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona la posizione" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Main Warehouse">Magazzino Principale</SelectItem>
-                  <SelectItem value="North Branch">Filiale Nord</SelectItem>
-                  <SelectItem value="South Branch">Filiale Sud</SelectItem>
-                  <SelectItem value="East Branch">Filiale Est</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Posizione</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona la posizione" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Main Warehouse">Magazzino Principale</SelectItem>
+                    <SelectItem value="North Branch">Filiale Nord</SelectItem>
+                    <SelectItem value="South Branch">Filiale Sud</SelectItem>
+                    <SelectItem value="East Branch">Filiale Est</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Stato</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona lo stato" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="available">Disponibile</SelectItem>
-                  <SelectItem value="reserved">Prenotato</SelectItem>
-                  <SelectItem value="sold">Venduto</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stato</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona lo stato" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="available">Disponibile</SelectItem>
+                    <SelectItem value="reserved">Prenotato</SelectItem>
+                    <SelectItem value="sold">Venduto</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="space-y-4">
           <FormField
