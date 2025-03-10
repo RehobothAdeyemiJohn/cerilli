@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -102,11 +101,14 @@ const TrimsSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
+  const columns: SettingsTableColumn<VehicleTrim>[] = [
     { 
-      header: "Prezzo Aggiuntivo", 
-      accessor: (trim: VehicleTrim) => `€${trim.basePrice.toLocaleString('it-IT')}`,
+      header: "Nome", 
+      accessor: "name" as keyof VehicleTrim 
+    },
+    { 
+      header: "Prezzo Base", 
+      accessor: (trim) => `€${trim.basePrice.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];

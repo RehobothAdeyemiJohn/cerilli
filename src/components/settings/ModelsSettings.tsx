@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -102,11 +101,14 @@ const ModelsSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
+  const columns: SettingsTableColumn<VehicleModel>[] = [
+    { 
+      header: "Nome", 
+      accessor: "name" as keyof VehicleModel 
+    },
     { 
       header: "Prezzo Base", 
-      accessor: (model: VehicleModel) => `€${model.basePrice.toLocaleString('it-IT')}`,
+      accessor: (model) => `€${model.basePrice.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -102,11 +101,14 @@ const FuelTypesSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
+  const columns: SettingsTableColumn<FuelType>[] = [
+    { 
+      header: "Nome", 
+      accessor: "name" as keyof FuelType 
+    },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (fuelType: FuelType) => `€${fuelType.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (fuelType) => `€${fuelType.priceAdjustment.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];

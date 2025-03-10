@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -102,12 +101,18 @@ const ColorsSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
-    { header: "Tipo", accessor: "type" },
+  const columns: SettingsTableColumn<ExteriorColor>[] = [
+    { 
+      header: "Nome", 
+      accessor: "name" as keyof ExteriorColor 
+    },
+    { 
+      header: "Tipo", 
+      accessor: "type" as keyof ExteriorColor 
+    },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (color: ExteriorColor) => `€${color.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (color) => `€${color.priceAdjustment.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];

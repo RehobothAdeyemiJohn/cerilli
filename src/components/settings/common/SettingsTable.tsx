@@ -22,6 +22,14 @@ function SettingsTable<T extends { id: string }>({
   onEdit, 
   onDelete 
 }: SettingsTableProps<T>) {
+  const getCellValue = (item: T, accessor: keyof T | ((item: T) => React.ReactNode)): React.ReactNode => {
+    if (typeof accessor === 'function') {
+      return accessor(item);
+    }
+    const value = item[accessor];
+    return value != null ? String(value) : '';
+  };
+
   return (
     <div className="rounded-md border">
       <table className="min-w-full divide-y divide-gray-200">
@@ -44,17 +52,11 @@ function SettingsTable<T extends { id: string }>({
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((item) => (
             <tr key={item.id} className="hover:bg-gray-50">
-              {columns.map((column, index) => {
-                const value = typeof column.accessor === 'function' 
-                  ? column.accessor(item) 
-                  : item[column.accessor];
-                
-                return (
-                  <td key={index} className={`px-6 py-4 whitespace-nowrap ${column.className || ''}`}>
-                    {value}
-                  </td>
-                );
-              })}
+              {columns.map((column, index) => (
+                <td key={index} className={`px-6 py-4 whitespace-nowrap ${column.className || ''}`}>
+                  {getCellValue(item, column.accessor)}
+                </td>
+              ))}
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end gap-2">
                   <Button

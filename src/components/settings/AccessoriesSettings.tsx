@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -127,16 +126,19 @@ const AccessoriesSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
+  const columns: SettingsTableColumn<Accessory>[] = [
+    { 
+      header: "Nome", 
+      accessor: "name" as keyof Accessory 
+    },
     { 
       header: "Prezzo con IVA", 
-      accessor: (accessory: Accessory) => `€${accessory.priceWithVAT.toLocaleString('it-IT')}`,
+      accessor: (accessory) => `€${accessory.priceWithVAT.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
     { 
       header: "Prezzo senza IVA", 
-      accessor: (accessory: Accessory) => `€${accessory.priceWithoutVAT.toLocaleString('it-IT')}`,
+      accessor: (accessory) => `€${accessory.priceWithoutVAT.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -103,12 +102,14 @@ const TransmissionsSettings = () => {
     }
   };
 
-  const columns = [
-    { header: "Nome", accessor: "name" },
+  const columns: SettingsTableColumn<Transmission>[] = [
+    { 
+      header: "Nome", 
+      accessor: "name" as keyof Transmission 
+    },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (transmission: Transmission) => 
-        `€${transmission.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (transmission) => `€${transmission.priceAdjustment.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
   ];
