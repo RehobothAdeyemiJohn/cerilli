@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Filter, Settings as SettingsIcon } from 'lucide-react';
 import { vehiclesApi } from '@/api/localStorage';
@@ -59,9 +58,11 @@ const Inventory = () => {
     ? filterVehicles(inventory, activeFilters)
     : inventory;
     
-  const availableVehicles = filteredVehicles.filter(v => v.status === 'available');
+  const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC');
+  const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   const soldVehicles = filteredVehicles.filter(v => v.status === 'sold');
+  const availableVehicles = filteredVehicles.filter(v => v.status === 'available');
   
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -187,7 +188,10 @@ const Inventory = () => {
             <DrawerContent>
               <div className="p-6 max-w-2xl mx-auto">
                 <h2 className="text-xl font-bold mb-4">Aggiungi Nuovo Veicolo</h2>
-                <AddVehicleForm onComplete={handleVehicleAdd} />
+                <AddVehicleForm 
+                  onComplete={handleVehicleAdd}
+                  locationOptions={locationOptions} 
+                />
               </div>
             </DrawerContent>
           </Drawer>
@@ -202,15 +206,17 @@ const Inventory = () => {
           <VehicleFilters 
             inventory={inventory}
             onFiltersChange={handleFiltersChange}
-            locationOptions={locationOptions}
           />
         </div>
         
         <div className="flex-1">
-          <Tabs defaultValue="available">
+          <Tabs defaultValue="stock-cmc">
             <TabsList className="mb-6">
-              <TabsTrigger value="available">
-                Disponibili ({availableVehicles.length})
+              <TabsTrigger value="stock-cmc">
+                Stock CMC ({stockCMCVehicles.length})
+              </TabsTrigger>
+              <TabsTrigger value="stock-virtuale">
+                Stock Virtuale ({stockVirtualeVehicles.length})
               </TabsTrigger>
               <TabsTrigger value="reserved">
                 Prenotati ({reservedVehicles.length})
@@ -223,9 +229,18 @@ const Inventory = () => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="available">
+            <TabsContent value="stock-cmc">
               <VehicleList 
-                vehicles={availableVehicles} 
+                vehicles={stockCMCVehicles} 
+                onVehicleUpdated={handleVehicleUpdate}
+                onVehicleDeleted={handleVehicleDelete}
+                locationOptions={locationOptions}
+              />
+            </TabsContent>
+
+            <TabsContent value="stock-virtuale">
+              <VehicleList 
+                vehicles={stockVirtualeVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
                 locationOptions={locationOptions}

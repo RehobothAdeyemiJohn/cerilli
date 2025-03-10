@@ -22,7 +22,7 @@ export const initLocalStorage = () => {
         exteriorColor: 'Rosso Racing',
         accessories: ['Navigation System', 'Premium Audio', 'Leather Seats'],
         price: 28500,
-        location: 'Stock CMC', // Changed from Main Warehouse
+        location: 'Stock CMC',
         imageUrl: 'https://images.unsplash.com/photo-1541348263662-e068662d82af?q=80&w=2148&auto=format&fit=crop',
         status: 'available',
         dateAdded: '2023-11-15',
@@ -50,7 +50,7 @@ export const initLocalStorage = () => {
         exteriorColor: 'Azzurro Marino',
         accessories: ['Driver Assistance Package', 'Premium Interior', 'Fast Charging'],
         price: 56000,
-        location: 'Stock CMC', // Changed from Main Warehouse
+        location: 'Stock CMC',
         imageUrl: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=2025&auto=format&fit=crop',
         status: 'reserved',
         dateAdded: '2024-01-05',
