@@ -1,53 +1,30 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { accessoriesApi, modelsApi, trimsApi } from '@/api/localStorage';
-import { Accessory, VehicleModel, VehicleTrim } from '@/types';
-import { toast } from '@/hooks/use-toast';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Plus } from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose
-} from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 
+import React, { useState } from 'react';
+import { Accessory } from '@/types';
+import { accessoriesApi } from '@/api/localStorage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+
+// Component for managing accessories settings
 const AccessoriesSettings = () => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentAccessory, setCurrentAccessory] = useState<Accessory | null>(null);
-  const [newAccessory, setNewAccessory] = useState<Omit<Accessory, 'id' | 'priceWithoutVAT'>>({ 
-    name: '', 
-    priceWithVAT: 0, 
-    compatibleModels: [],
-    compatibleTrims: []
+  const [editingAccessory, setEditingAccessory] = useState<Accessory | null>(null);
+  const [newAccessory, setNewAccessory] = useState({
+    name: '',
+    priceWithVAT: 0,
+    compatibleModels: [] as string[],
+    compatibleTrims: [] as string[]
   });
-  
+
   const queryClient = useQueryClient();
-  
-  const { data: accessories = [], isLoading: isAccessoriesLoading } = useQuery({
+
+  const { data: accessories = [], isLoading } = useQuery({
     queryKey: ['accessories'],
     queryFn: accessoriesApi.getAll
   });
-  
-  const { data: models = [], isLoading: isModelsLoading } = useQuery({
-    queryKey: ['models'],
-    queryFn: modelsApi.getAll
-  });
-  
-  const { data: trims = [], isLoading: isTrimsLoading } = useQuery({
-    queryKey: ['trims'],
-    queryFn: trimsApi.getAll
-  });
-  
+
   const createMutation = useMutation({
-    mutationFn: (accessory: Omit<Accessory, "id" | "priceWithoutVAT">) => {
+    mutationFn: (accessory: Omit<Accessory, 'id' | 'priceWithoutVAT'>) => {
+      // Calculate priceWithoutVAT automatically
       const priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
       return accessoriesApi.create({
         ...accessory,
@@ -56,28 +33,38 @@ const AccessoriesSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accessories'] });
+      setNewAccessory({
+        name: '',
+        priceWithVAT: 0,
+        compatibleModels: [],
+        compatibleTrims: []
+      });
       toast({
         title: "Accessorio Aggiunto",
         description: "L'accessorio è stato aggiunto con successo."
       });
-      setIsAddDialogOpen(false);
-      setNewAccessory({ name: '', priceWithVAT: 0, compatibleModels: [], compatibleTrims: [] });
     }
   });
-  
+
   const updateMutation = useMutation({
-    mutationFn: (accessory: Accessory) => accessoriesApi.update(accessory.id, accessory),
+    mutationFn: (accessory: Accessory) => {
+      // Recalculate priceWithoutVAT when updating
+      const priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
+      return accessoriesApi.update(accessory.id, {
+        ...accessory,
+        priceWithoutVAT
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accessories'] });
+      setEditingAccessory(null);
       toast({
         title: "Accessorio Aggiornato",
         description: "L'accessorio è stato aggiornato con successo."
       });
-      setIsEditDialogOpen(false);
-      setCurrentAccessory(null);
     }
   });
-  
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => accessoriesApi.delete(id),
     onSuccess: () => {
@@ -86,405 +73,270 @@ const AccessoriesSettings = () => {
         title: "Accessorio Eliminato",
         description: "L'accessorio è stato eliminato con successo."
       });
-      setIsDeleteDialogOpen(false);
-      setCurrentAccessory(null);
     }
   });
-  
-  const handleAddSubmit = (e: React.FormEvent) => {
+
+  const handleAddAccessory = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate(newAccessory);
   };
-  
-  const handleEditSubmit = (e: React.FormEvent) => {
+
+  const handleUpdateAccessory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentAccessory) {
-      updateMutation.mutate(currentAccessory);
+    if (editingAccessory) {
+      updateMutation.mutate(editingAccessory);
     }
   };
-  
-  const handleDeleteSubmit = () => {
-    if (currentAccessory) {
-      deleteMutation.mutate(currentAccessory.id);
+
+  const handleDeleteAccessory = (id: string) => {
+    if (window.confirm("Sei sicuro di voler eliminare questo accessorio?")) {
+      deleteMutation.mutate(id);
     }
   };
-  
-  const openEditDialog = (accessory: Accessory) => {
-    setCurrentAccessory(accessory);
-    setIsEditDialogOpen(true);
+
+  const handleEditClick = (accessory: Accessory) => {
+    setEditingAccessory(accessory);
   };
-  
-  const openDeleteDialog = (accessory: Accessory) => {
-    setCurrentAccessory(accessory);
-    setIsDeleteDialogOpen(true);
+
+  const handleCancelEdit = () => {
+    setEditingAccessory(null);
   };
-  
-  const toggleModelInNewAccessory = (modelId: string) => {
-    setNewAccessory(prevAccessory => {
-      const compatibleModels = prevAccessory.compatibleModels || [];
-      if (compatibleModels.includes(modelId)) {
-        return {
-          ...prevAccessory,
-          compatibleModels: compatibleModels.filter(id => id !== modelId)
-        };
-      } else {
-        return {
-          ...prevAccessory,
-          compatibleModels: [...compatibleModels, modelId]
-        };
-      }
-    });
-  };
-  
-  const toggleTrimInNewAccessory = (trimId: string) => {
-    setNewAccessory(prevAccessory => {
-      const compatibleTrims = prevAccessory.compatibleTrims || [];
-      if (compatibleTrims.includes(trimId)) {
-        return {
-          ...prevAccessory,
-          compatibleTrims: compatibleTrims.filter(id => id !== trimId)
-        };
-      } else {
-        return {
-          ...prevAccessory,
-          compatibleTrims: [...compatibleTrims, trimId]
-        };
-      }
-    });
-  };
-  
-  const toggleModelInCurrentAccessory = (modelId: string) => {
-    setCurrentAccessory(prevAccessory => {
-      if (!prevAccessory) return null;
-      
-      const compatibleModels = prevAccessory.compatibleModels || [];
-      if (compatibleModels.includes(modelId)) {
-        return {
-          ...prevAccessory,
-          compatibleModels: compatibleModels.filter(id => id !== modelId)
-        };
-      } else {
-        return {
-          ...prevAccessory,
-          compatibleModels: [...compatibleModels, modelId]
-        };
-      }
-    });
-  };
-  
-  const toggleTrimInCurrentAccessory = (trimId: string) => {
-    setCurrentAccessory(prevAccessory => {
-      if (!prevAccessory) return null;
-      
-      const compatibleTrims = prevAccessory.compatibleTrims || [];
-      if (compatibleTrims.includes(trimId)) {
-        return {
-          ...prevAccessory,
-          compatibleTrims: compatibleTrims.filter(id => id !== trimId)
-        };
-      } else {
-        return {
-          ...prevAccessory,
-          compatibleTrims: [...compatibleTrims, trimId]
-        };
-      }
-    });
-  };
-  
-  const getCompatibilityText = (accessory: Accessory) => {
-    let modelText = "Tutti i modelli";
-    let trimText = "Tutti gli allestimenti";
-    
-    if (accessory.compatibleModels.length > 0) {
-      modelText = models
-        .filter(model => accessory.compatibleModels.includes(model.id))
-        .map(model => model.name)
-        .join(", ");
-    }
-    
-    if (accessory.compatibleTrims.length > 0) {
-      trimText = trims
-        .filter(trim => accessory.compatibleTrims.includes(trim.id))
-        .map(trim => trim.name)
-        .join(", ");
-    }
-    
-    return `Modelli: ${modelText}. Allestimenti: ${trimText}`;
-  };
-  
-  if (isAccessoriesLoading || isModelsLoading || isTrimsLoading) {
-    return <div>Caricamento accessori...</div>;
+
+  if (isLoading) {
+    return <div>Caricamento...</div>;
   }
-  
-  const calculatePriceWithoutVAT = (priceWithVAT: number) => {
-    return Math.round(priceWithVAT / 1.22);
-  };
-  
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Accessori</h2>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Aggiungi Accessorio
-        </Button>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold">Gestione Accessori</h2>
+      
+      {/* Add new accessory form */}
+      <div className="bg-white p-4 rounded-md shadow">
+        <h3 className="text-lg font-semibold mb-4">Aggiungi Nuovo Accessorio</h3>
+        <form onSubmit={handleAddAccessory} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nome
+              </label>
+              <input
+                type="text"
+                value={newAccessory.name}
+                onChange={(e) => setNewAccessory({ ...newAccessory, name: e.target.value })}
+                className="w-full p-2 border rounded-md"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prezzo con IVA (€)
+              </label>
+              <input
+                type="number"
+                value={newAccessory.priceWithVAT}
+                onChange={(e) => setNewAccessory({ ...newAccessory, priceWithVAT: Number(e.target.value) })}
+                className="w-full p-2 border rounded-md"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Modelli Compatibili (ID separati da virgola, vuoto = tutti)
+              </label>
+              <input
+                type="text"
+                value={newAccessory.compatibleModels.join(',')}
+                onChange={(e) => setNewAccessory({ 
+                  ...newAccessory, 
+                  compatibleModels: e.target.value ? e.target.value.split(',') : [] 
+                })}
+                className="w-full p-2 border rounded-md"
+                placeholder="1,2,3 (vuoto = tutti)"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Allestimenti Compatibili (ID separati da virgola, vuoto = tutti)
+              </label>
+              <input
+                type="text"
+                value={newAccessory.compatibleTrims.join(',')}
+                onChange={(e) => setNewAccessory({ 
+                  ...newAccessory, 
+                  compatibleTrims: e.target.value ? e.target.value.split(',') : [] 
+                })}
+                className="w-full p-2 border rounded-md"
+                placeholder="1,2,3 (vuoto = tutti)"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-primary text-white rounded-md"
+            >
+              Aggiungi Accessorio
+            </button>
+          </div>
+        </form>
       </div>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Prezzo IVA incl. (€)</TableHead>
-            <TableHead>Prezzo IVA escl. (€)</TableHead>
-            <TableHead>Compatibilità</TableHead>
-            <TableHead className="text-right">Azioni</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {accessories.map((accessory) => (
-            <TableRow key={accessory.id}>
-              <TableCell>{accessory.name}</TableCell>
-              <TableCell>{accessory.priceWithVAT.toLocaleString('it-IT')}</TableCell>
-              <TableCell>{accessory.priceWithoutVAT.toLocaleString('it-IT')}</TableCell>
-              <TableCell className="max-w-xs truncate" title={getCompatibilityText(accessory)}>
-                {getCompatibilityText(accessory)}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => openEditDialog(accessory)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(accessory)}>
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {accessories.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center">Nessun accessorio trovato</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Aggiungi Accessorio</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleAddSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">Nome</label>
-                  <Input
-                    id="name"
-                    value={newAccessory.name}
-                    onChange={(e) => setNewAccessory({...newAccessory, name: e.target.value})}
-                    placeholder="Es. Vetri Privacy"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="priceWithVAT" className="text-sm font-medium">Prezzo IVA inclusa (€)</label>
-                  <Input
-                    id="priceWithVAT"
-                    type="number"
-                    value={newAccessory.priceWithVAT}
-                    onChange={(e) => setNewAccessory({...newAccessory, priceWithVAT: parseInt(e.target.value)})}
-                    placeholder="Es. 200"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Prezzo IVA esclusa (€)</label>
-                  <Input
-                    type="number"
-                    value={calculatePriceWithoutVAT(newAccessory.priceWithVAT)}
-                    disabled
-                    className="bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500">Calcolato automaticamente (IVA al 22%)</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Compatibile con Modelli</label>
-                    <p className="text-xs text-gray-500 mb-2">Se non selezioni nessun modello, l'accessorio sarà compatibile con tutti i modelli.</p>
-                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 border rounded-md p-2">
-                      {models.map((model) => (
-                        <div key={model.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`model-${model.id}`} 
-                            checked={(newAccessory.compatibleModels || []).includes(model.id)}
-                            onCheckedChange={() => toggleModelInNewAccessory(model.id)}
-                          />
-                          <label 
-                            htmlFor={`model-${model.id}`}
-                            className="text-sm"
-                          >
-                            {model.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Compatibile con Allestimenti</label>
-                    <p className="text-xs text-gray-500 mb-2">Se non selezioni nessun allestimento, l'accessorio sarà compatibile con tutti gli allestimenti.</p>
-                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 border rounded-md p-2">
-                      {trims.map((trim) => (
-                        <div key={trim.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`trim-${trim.id}`} 
-                            checked={(newAccessory.compatibleTrims || []).includes(trim.id)}
-                            onCheckedChange={() => toggleTrimInNewAccessory(trim.id)}
-                          />
-                          <label 
-                            htmlFor={`trim-${trim.id}`}
-                            className="text-sm"
-                          >
-                            {trim.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+      {/* Edit accessory form */}
+      {editingAccessory && (
+        <div className="bg-white p-4 rounded-md shadow">
+          <h3 className="text-lg font-semibold mb-4">Modifica Accessorio</h3>
+          <form onSubmit={handleUpdateAccessory} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  value={editingAccessory.name}
+                  onChange={(e) => setEditingAccessory({ ...editingAccessory, name: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prezzo con IVA (€)
+                </label>
+                <input
+                  type="number"
+                  value={editingAccessory.priceWithVAT}
+                  onChange={(e) => setEditingAccessory({ ...editingAccessory, priceWithVAT: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md"
+                  min="0"
+                  required
+                />
               </div>
             </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" type="button">Annulla</Button>
-              </DialogClose>
-              <Button type="submit">Salva</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifica Accessorio</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="edit-name" className="text-sm font-medium">Nome</label>
-                  <Input
-                    id="edit-name"
-                    value={currentAccessory?.name || ''}
-                    onChange={(e) => setCurrentAccessory(current => current ? {...current, name: e.target.value} : null)}
-                    placeholder="Es. Vetri Privacy"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-priceWithVAT" className="text-sm font-medium">Prezzo IVA inclusa (€)</label>
-                  <Input
-                    id="edit-priceWithVAT"
-                    type="number"
-                    value={currentAccessory?.priceWithVAT || 0}
-                    onChange={(e) => {
-                      const priceWithVAT = parseInt(e.target.value);
-                      setCurrentAccessory(current => current ? {
-                        ...current, 
-                        priceWithVAT,
-                        priceWithoutVAT: calculatePriceWithoutVAT(priceWithVAT)
-                      } : null);
-                    }}
-                    placeholder="Es. 200"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Prezzo IVA esclusa (€)</label>
-                  <Input
-                    type="number"
-                    value={currentAccessory?.priceWithoutVAT || 0}
-                    disabled
-                    className="bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500">Calcolato automaticamente (IVA al 22%)</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Compatibile con Modelli</label>
-                    <p className="text-xs text-gray-500 mb-2">Se non selezioni nessun modello, l'accessorio sarà compatibile con tutti i modelli.</p>
-                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 border rounded-md p-2">
-                      {models.map((model) => (
-                        <div key={model.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`edit-model-${model.id}`} 
-                            checked={(currentAccessory?.compatibleModels || []).includes(model.id)}
-                            onCheckedChange={() => toggleModelInCurrentAccessory(model.id)}
-                          />
-                          <label 
-                            htmlFor={`edit-model-${model.id}`}
-                            className="text-sm"
-                          >
-                            {model.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Compatibile con Allestimenti</label>
-                    <p className="text-xs text-gray-500 mb-2">Se non selezioni nessun allestimento, l'accessorio sarà compatibile con tutti gli allestimenti.</p>
-                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 border rounded-md p-2">
-                      {trims.map((trim) => (
-                        <div key={trim.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`edit-trim-${trim.id}`} 
-                            checked={(currentAccessory?.compatibleTrims || []).includes(trim.id)}
-                            onCheckedChange={() => toggleTrimInCurrentAccessory(trim.id)}
-                          />
-                          <label 
-                            htmlFor={`edit-trim-${trim.id}`}
-                            className="text-sm"
-                          >
-                            {trim.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Modelli Compatibili (ID separati da virgola, vuoto = tutti)
+                </label>
+                <input
+                  type="text"
+                  value={editingAccessory.compatibleModels.join(',')}
+                  onChange={(e) => setEditingAccessory({ 
+                    ...editingAccessory, 
+                    compatibleModels: e.target.value ? e.target.value.split(',') : [] 
+                  })}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="1,2,3 (vuoto = tutti)"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Allestimenti Compatibili (ID separati da virgola, vuoto = tutti)
+                </label>
+                <input
+                  type="text"
+                  value={editingAccessory.compatibleTrims.join(',')}
+                  onChange={(e) => setEditingAccessory({ 
+                    ...editingAccessory, 
+                    compatibleTrims: e.target.value ? e.target.value.split(',') : [] 
+                  })}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="1,2,3 (vuoto = tutti)"
+                />
               </div>
             </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" type="button">Annulla</Button>
-              </DialogClose>
-              <Button type="submit">Aggiorna</Button>
-            </DialogFooter>
+            
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-4 py-2 border border-gray-300 rounded-md"
+              >
+                Annulla
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary text-white rounded-md"
+              >
+                Aggiorna
+              </button>
+            </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
       
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Elimina Accessorio</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Sei sicuro di voler eliminare l'accessorio <strong>{currentAccessory?.name}</strong>?</p>
-            <p className="text-red-500 text-sm mt-2">Questa azione non può essere annullata.</p>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" type="button">Annulla</Button>
-            </DialogClose>
-            <Button variant="destructive" onClick={handleDeleteSubmit}>Elimina</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Accessories list */}
+      <div className="bg-white rounded-md shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nome
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Prezzo con IVA
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Prezzo senza IVA
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Modelli Compatibili
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Allestimenti Compatibili
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Azioni
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {accessories.map((accessory) => (
+              <tr key={accessory.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {accessory.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {accessory.priceWithVAT.toFixed(2)} €
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {accessory.priceWithoutVAT.toFixed(2)} €
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {accessory.compatibleModels.length === 0 
+                    ? "Tutti" 
+                    : accessory.compatibleModels.join(', ')}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {accessory.compatibleTrims.length === 0 
+                    ? "Tutti" 
+                    : accessory.compatibleTrims.join(', ')}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button
+                    onClick={() => handleEditClick(accessory)}
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                  >
+                    Modifica
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAccessory(accessory.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Elimina
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

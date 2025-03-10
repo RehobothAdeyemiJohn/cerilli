@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vehicle } from '@/types';
-import { vehiclesApi } from '@/api/localStorage';
+import { vehiclesApi, modelsApi, trimsApi, fuelTypesApi, colorsApi, transmissionsApi } from '@/api/localStorage';
+import { useQuery } from '@tanstack/react-query';
 
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
@@ -30,6 +31,31 @@ interface AddVehicleFormProps {
 }
 
 const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
+  const { data: models = [] } = useQuery({
+    queryKey: ['models'],
+    queryFn: modelsApi.getAll
+  });
+
+  const { data: trims = [] } = useQuery({
+    queryKey: ['trims'],
+    queryFn: trimsApi.getAll
+  });
+
+  const { data: fuelTypes = [] } = useQuery({
+    queryKey: ['fuelTypes'],
+    queryFn: fuelTypesApi.getAll
+  });
+
+  const { data: colors = [] } = useQuery({
+    queryKey: ['colors'],
+    queryFn: colorsApi.getAll
+  });
+
+  const { data: transmissions = [] } = useQuery({
+    queryKey: ['transmissions'],
+    queryFn: transmissionsApi.getAll
+  });
+
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
@@ -101,14 +127,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Cirelli 1">Cirelli 1</SelectItem>
-                    <SelectItem value="Cirelli 2">Cirelli 2</SelectItem>
-                    <SelectItem value="Cirelli 3">Cirelli 3</SelectItem>
-                    <SelectItem value="Cirelli 4">Cirelli 4</SelectItem>
-                    <SelectItem value="Cirelli 5">Cirelli 5</SelectItem>
-                    <SelectItem value="Cirelli 7">Cirelli 7</SelectItem>
-                    <SelectItem value="Cirelli 8">Cirelli 8</SelectItem>
-                    <SelectItem value="Cirelli Sport Coupè">Cirelli Sport Coupè</SelectItem>
+                    {models.map((model) => (
+                      <SelectItem key={model.id} value={model.name}>
+                        {model.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -129,10 +152,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Plus">Plus</SelectItem>
-                    <SelectItem value="Premium">Premium</SelectItem>
-                    <SelectItem value="Cross">Cross</SelectItem>
-                    <SelectItem value="Sport">Sport</SelectItem>
+                    {trims.map((trim) => (
+                      <SelectItem key={trim.id} value={trim.name}>
+                        {trim.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -155,12 +179,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Benzina">Benzina</SelectItem>
-                    <SelectItem value="Gpl">Gpl</SelectItem>
-                    <SelectItem value="Mhev">Mhev</SelectItem>
-                    <SelectItem value="Mhev Gpl">Mhev Gpl</SelectItem>
-                    <SelectItem value="Phev">Phev</SelectItem>
-                    <SelectItem value="EV">EV</SelectItem>
+                    {fuelTypes.map((fuelType) => (
+                      <SelectItem key={fuelType.id} value={fuelType.name}>
+                        {fuelType.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -181,12 +204,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Pure Ice (metallizzato)">Pure Ice (metallizzato)</SelectItem>
-                    <SelectItem value="Obsydian Black (metallizzato)">Obsydian Black (metallizzato)</SelectItem>
-                    <SelectItem value="Metallic Sky (metallizzato)">Metallic Sky (metallizzato)</SelectItem>
-                    <SelectItem value="Red Flame (metallizzato)">Red Flame (metallizzato)</SelectItem>
-                    <SelectItem value="Petrol Green (metallizzato)">Petrol Green (metallizzato)</SelectItem>
-                    <SelectItem value="Solid Green (pastello)">Solid Green (pastello)</SelectItem>
+                    {colors.map((color) => (
+                      <SelectItem key={color.id} value={`${color.name} (${color.type})`}>
+                        {color.name} ({color.type})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -209,10 +231,11 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Manuale">Manuale</SelectItem>
-                    <SelectItem value="Automatico CVT 6">Automatico CVT 6</SelectItem>
-                    <SelectItem value="Automatico DCT 7">Automatico DCT 7</SelectItem>
-                    <SelectItem value="Automatico DCT 8">Automatico DCT 8</SelectItem>
+                    {transmissions.map((transmission) => (
+                      <SelectItem key={transmission.id} value={transmission.name}>
+                        {transmission.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

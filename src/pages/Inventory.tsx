@@ -36,13 +36,6 @@ const Inventory = () => {
     },
   });
   
-  const createMutation = useMutation({
-    mutationFn: (vehicle: Omit<Vehicle, 'id'>) => vehiclesApi.create(vehicle),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-    },
-  });
-  
   const filteredVehicles = activeFilters 
     ? filterVehicles(inventory, activeFilters)
     : inventory;
@@ -178,7 +171,7 @@ const Inventory = () => {
           md:block w-full md:w-64 flex-shrink-0
         `}>
           <VehicleFilters 
-            inventory={inventory} 
+            inventory={inventory}
             onFiltersChange={handleFiltersChange} 
           />
         </div>
