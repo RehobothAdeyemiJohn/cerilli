@@ -1,7 +1,10 @@
 
-// Instead of importing from hooks/use-toast which creates a cycle,
-// import directly from the shadcn toast component
-import { useToast as useToastShadcn, toast as toastShadcn } from "@/components/ui/toast"
+// Re-export from the hooks directory to maintain compatibility
+import { useToast, toast, ToastActionElement, ToastProps } from "@/hooks/use-toast";
 
-export const useToast = useToastShadcn;
-export const toast = toastShadcn;
+export {
+  useToast,
+  toast,
+  type ToastActionElement,
+  type ToastProps,
+};

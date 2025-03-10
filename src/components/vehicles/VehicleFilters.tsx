@@ -146,17 +146,17 @@ const VehicleFilters = () => {
               <div className="space-y-2">
                 {models.map((model) => (
                   <div 
-                    key={model} 
+                    key={model.toString()} 
                     className="flex items-center"
-                    onClick={() => toggleModel(model)}
+                    onClick={() => toggleModel(model.toString())}
                   >
                     <div className={`
                       h-4 w-4 rounded border mr-2 flex items-center justify-center
-                      ${selectedModels.includes(model) 
+                      ${selectedModels.includes(model.toString()) 
                         ? 'bg-primary border-primary' 
                         : 'border-gray-300'}
                     `}>
-                      {selectedModels.includes(model) && (
+                      {selectedModels.includes(model.toString()) && (
                         <Check className="h-3 w-3 text-white" />
                       )}
                     </div>
