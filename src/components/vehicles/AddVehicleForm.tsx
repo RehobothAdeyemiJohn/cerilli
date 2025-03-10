@@ -48,10 +48,17 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
       [];
     
     const newVehicle: Vehicle = {
-      ...data,
-      id: String(Date.now()), // Generazione semplice di ID per demo
+      id: String(Date.now()),
+      model: data.model,
+      trim: data.trim,
+      fuelType: data.fuelType,
+      exteriorColor: data.exteriorColor,
+      price: data.price,
+      location: data.location,
       accessories: accessoriesArray,
+      status: data.status,
       dateAdded: new Date().toISOString().split('T')[0],
+      transmission: data.transmission,
     };
     
     console.log('Nuovo veicolo creato:', newVehicle);
@@ -244,7 +251,7 @@ const AddVehicleForm = ({ onComplete }: AddVehicleFormProps) => {
         <div className="flex justify-end gap-4 pt-4">
           <button 
             type="button" 
-            onClick={onComplete}
+            onClick={() => onComplete(null as any)}
             className="px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50"
           >
             Annulla

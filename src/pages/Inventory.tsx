@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Filter } from 'lucide-react';
 import { vehicles } from '@/data/mockData';
@@ -42,8 +41,12 @@ const Inventory = () => {
   };
   
   const handleVehicleAdd = (newVehicle: Vehicle) => {
+    if (!newVehicle) {
+      setShowAddVehicleDrawer(false);
+      return;
+    }
     setInventory(prev => [...prev, newVehicle]);
-    closeAddVehicleDrawer();
+    setShowAddVehicleDrawer(false);
   };
   
   const handleFiltersChange = (filters: VehicleFilter) => {
@@ -146,40 +149,32 @@ const Inventory = () => {
   );
 };
 
-// Funzione per filtrare i veicoli in base ai filtri attivi
 const filterVehicles = (vehicles: Vehicle[], filters: VehicleFilter): Vehicle[] => {
   return vehicles.filter(vehicle => {
-    // Filtra per modello
     if (filters.models.length > 0 && !filters.models.includes(vehicle.model)) {
       return false;
     }
     
-    // Filtra per allestimento
     if (filters.trims.length > 0 && !filters.trims.includes(vehicle.trim)) {
       return false;
     }
     
-    // Filtra per tipo di carburante
     if (filters.fuelTypes.length > 0 && !filters.fuelTypes.includes(vehicle.fuelType)) {
       return false;
     }
     
-    // Filtra per colore
     if (filters.colors.length > 0 && !filters.colors.includes(vehicle.exteriorColor)) {
       return false;
     }
     
-    // Filtra per posizione
     if (filters.locations.length > 0 && !filters.locations.includes(vehicle.location)) {
       return false;
     }
     
-    // Filtra per prezzo
     if (vehicle.price < filters.priceRange[0] || vehicle.price > filters.priceRange[1]) {
       return false;
     }
     
-    // Filtra per stato
     if (filters.status.length > 0 && !filters.status.includes(vehicle.status)) {
       return false;
     }
