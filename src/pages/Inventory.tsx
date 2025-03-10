@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Filter } from 'lucide-react';
 import { vehicles } from '@/data/mockData';
@@ -40,11 +41,13 @@ const Inventory = () => {
     setInventory(prev => prev.filter(vehicle => vehicle.id !== vehicleId));
   };
   
-  const handleVehicleAdd = (newVehicle: Vehicle) => {
+  const handleVehicleAdd = (newVehicle: Vehicle | null) => {
     if (!newVehicle) {
       setShowAddVehicleDrawer(false);
       return;
     }
+    
+    console.log('Aggiungendo veicolo all\'inventario:', newVehicle);
     setInventory(prev => [...prev, newVehicle]);
     setShowAddVehicleDrawer(false);
   };
