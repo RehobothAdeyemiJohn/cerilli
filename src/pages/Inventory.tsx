@@ -10,6 +10,7 @@ import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -138,13 +139,15 @@ const Inventory = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Inventario Veicoli</h1>
         <div className="flex gap-4 mt-4 md:mt-0">
-          <Link 
-            to="/settings"
-            className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50"
+          <Button 
+            variant="outline"
+            asChild
           >
-            <SettingsIcon className="h-4 w-4 mr-2" />
-            Impostazioni
-          </Link>
+            <Link to="/settings">
+              <SettingsIcon className="h-4 w-4 mr-2" />
+              Impostazioni
+            </Link>
+          </Button>
           
           <button 
             onClick={toggleFilters}
