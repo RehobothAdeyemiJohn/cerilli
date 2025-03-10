@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ const DealerList = () => {
   const [isVendorsOpen, setIsVendorsOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load dealers when component mounts
+  // Load dealers when component mounts or when dealers array changes
   useEffect(() => {
     setDealersList([...dealers]);
   }, []);
@@ -31,7 +30,8 @@ const DealerList = () => {
   const handleDelete = async (id: string) => {
     try {
       deleteDealer(id);
-      setDealersList(dealersList.filter(dealer => dealer.id !== id));
+      // Refresh the list after deletion
+      setDealersList([...dealers]);
       toast({
         title: "Dealer eliminato con successo",
       });
@@ -52,9 +52,7 @@ const DealerList = () => {
       updateDealer(updatedDealer);
       
       // Update the dealers list
-      setDealersList(dealersList.map(d => 
-        d.id === dealer.id ? updatedDealer : d
-      ));
+      setDealersList([...dealers]);
       
       toast({
         title: updatedDealer.isActive 

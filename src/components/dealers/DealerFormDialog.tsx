@@ -99,12 +99,16 @@ const DealerFormDialog = ({
         });
       }
       
+      // Close the dialog
+      onOpenChange(false);
+      
       // Call onSuccess callback to refresh the list
       if (onSuccess) {
-        onSuccess();
+        // Ensure this runs AFTER the dealer has been added to the array
+        setTimeout(() => {
+          onSuccess();
+        }, 0);
       }
-      
-      onOpenChange(false);
     } catch (error) {
       toast({
         title: "Errore durante il salvataggio",
