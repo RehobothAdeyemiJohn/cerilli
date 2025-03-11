@@ -1,28 +1,71 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Info } from 'lucide-react';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/api/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/api/supabase/client';
 
 const DataMigration = () => {
   const [isMigrating, setIsMigrating] = useState<boolean>(false);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [migrationMessage, setMigrationMessage] = useState<string>('');
   const [errorDetails, setErrorDetails] = useState<string>('');
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
   const { toast } = useToast();
+
+  // Check Supabase connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // First check if Supabase is configured
+        if (!isSupabaseConfigured()) {
+          console.error('Supabase non è configurato correttamente');
+          setIsSupabaseConnected(false);
+          return;
+        }
+
+        // Then test the connection
+        const { data, error } = await supabase.from('vehicles').select('count(*)');
+        if (error) {
+          console.error('Errore connessione Supabase:', error);
+          setIsSupabaseConnected(false);
+          setMigrationStatus('error');
+          setMigrationMessage('Impossibile connettersi a Supabase.');
+          setErrorDetails(`Errore di connessione: ${error.message}`);
+          return;
+        }
+        
+        setIsSupabaseConnected(true);
+      } catch (error) {
+        console.error('Errore test connessione:', error);
+        setIsSupabaseConnected(false);
+        setMigrationStatus('error');
+        setMigrationMessage('Errore durante il test di connessione a Supabase.');
+        setErrorDetails(error instanceof Error ? error.message : 'Errore sconosciuto');
+      }
+    };
+
+    checkConnection();
+  }, []);
 
   const testSupabaseConnection = async () => {
     try {
+      // First check if Supabase is configured
+      if (!isSupabaseConfigured()) {
+        console.error('Supabase non è configurato correttamente');
+        return false;
+      }
+      
       const { data, error } = await supabase.from('vehicles').select('count(*)');
       if (error) {
         console.error('Errore connessione Supabase:', error);
         return false;
       }
+      console.log('Connessione Supabase stabilita con successo');
       return true;
     } catch (error) {
       console.error('Errore test connessione:', error);
@@ -37,11 +80,14 @@ const DataMigration = () => {
       setMigrationMessage('');
       setErrorDetails('');
 
+      console.log('Avvio test connessione Supabase...');
       // Test Supabase connection first
       const isConnected = await testSupabaseConnection();
       if (!isConnected) {
-        throw new Error('Impossibile connettersi a Supabase. Verifica la tua connessione o le credenziali.');
+        console.error('Test connessione fallito');
+        throw new Error('Impossibile connettersi a Supabase. Verifica la tua connessione e le credenziali.');
       }
+      console.log('Test connessione completato con successo');
 
       // Migrate dealers first
       console.log('Inizio migrazione dealers...');
@@ -75,10 +121,12 @@ const DataMigration = () => {
         // Add more specific messaging based on error type
         if (error.message.includes('network')) {
           errorMessage = 'Errore di rete durante la connessione a Supabase.';
-        } else if (error.message.includes('authentication')) {
-          errorMessage = 'Errore di autenticazione con Supabase.';
+        } else if (error.message.includes('authentication') || error.message.includes('credenziali')) {
+          errorMessage = 'Errore di autenticazione con Supabase. Verifica le credenziali.';
         } else if (error.message.includes('permission')) {
           errorMessage = 'Errore di autorizzazione. Verifica le policy di Supabase.';
+        } else if (error.message.includes('connettersi')) {
+          errorMessage = 'Impossibile connettersi a Supabase. Verifica la configurazione.';
         }
       }
       
@@ -105,6 +153,21 @@ const DataMigration = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {isSupabaseConnected === false && (
+          <Alert className="mb-4 bg-amber-50 border-amber-600">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-600">Connessione a Supabase non disponibile</AlertTitle>
+            <AlertDescription>
+              Verifica che Supabase sia configurato correttamente nell'applicazione.
+              <ul className="mt-2 list-disc pl-5 text-sm">
+                <li>Controlla che le variabili d'ambiente siano impostate</li>
+                <li>Verifica che l'URL e la chiave API siano corretti</li>
+                <li>Assicurati di avere una connessione internet attiva</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {migrationStatus === 'success' && (
           <Alert className="mb-4 bg-green-50 border-green-600">
             <CheckCircle className="h-4 w-4 text-green-600" />
@@ -142,7 +205,7 @@ const DataMigration = () => {
       <CardFooter>
         <Button 
           onClick={handleMigration} 
-          disabled={isMigrating}
+          disabled={isMigrating || isSupabaseConnected === false}
           className="w-full"
         >
           {isMigrating ? (

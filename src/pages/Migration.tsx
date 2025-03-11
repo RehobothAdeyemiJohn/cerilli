@@ -5,7 +5,7 @@ import DataMigration from '@/components/migration/DataMigration';
 
 const Migration = () => {
   return (
-    <div className="container mx-auto py-8">
+    <div className="container px-4 py-8">
       <Helmet>
         <title>Migrazione Dati - Cirelli Motor Company</title>
       </Helmet>

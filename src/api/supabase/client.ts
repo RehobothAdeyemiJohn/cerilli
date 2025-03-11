@@ -13,5 +13,15 @@ export const supabase = (supabaseUrl && supabaseKey)
 
 // Utility function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return !!supabase;
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase non configurato. Mancano URL o chiave API.');
+    return false;
+  }
+  
+  if (!supabase) {
+    console.error('Cliente Supabase non inizializzato.');
+    return false;
+  }
+  
+  return true;
 };
