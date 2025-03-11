@@ -182,6 +182,8 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       };
       
+      console.log("Preparazione dati veicolo per Supabase:", newVehicleData);
+      
       // Pass the vehicle directly to the callback
       onComplete(newVehicleData as Vehicle);
     } catch (error) {

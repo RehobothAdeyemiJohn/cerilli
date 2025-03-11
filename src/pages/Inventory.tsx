@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -34,15 +33,12 @@ const Inventory = () => {
     addVehicle,
   } = useInventory();
   
-  // Filtra i veicoli in base al concessionario autenticato
   const dealerFilteredInventory = React.useMemo(() => {
     if (!isDealer || !dealerName) return inventory;
     
     return inventory.filter(vehicle => {
-      // Mostra tutti i veicoli disponibili
       if (vehicle.status === 'available') return true;
       
-      // Per i prenotati e venduti, mostra solo quelli del concessionario attuale
       return vehicle.reservedBy === dealerName;
     });
   }, [inventory, isDealer, dealerName]);
@@ -68,7 +64,6 @@ const Inventory = () => {
       if (addVehicle) {
         const result = await addVehicle(newVehicle);
         console.log("Veicolo aggiunto con successo:", result);
-        // Invalidiamo esplicitamente la cache per aggiornare la lista
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       }
       
