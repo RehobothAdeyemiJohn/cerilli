@@ -145,11 +145,13 @@ const DataMigration = () => {
             <AlertTitle className="text-amber-600">Connessione a Supabase non disponibile</AlertTitle>
             <AlertDescription>
               Verifica che Supabase sia configurato correttamente nell'applicazione.
-              <ul className="mt-2 list-disc pl-5 text-sm">
-                <li>Controlla che le variabili d'ambiente siano impostate</li>
-                <li>Verifica che l'URL e la chiave API siano corretti</li>
-                <li>Assicurati di avere una connessione internet attiva</li>
-              </ul>
+              <div className="mt-2">
+                <ul className="list-disc pl-5 text-sm">
+                  <li>Controlla che le variabili d'ambiente siano impostate</li>
+                  <li>Verifica che l'URL e la chiave API siano corretti</li>
+                  <li>Assicurati di avere una connessione internet attiva</li>
+                </ul>
+              </div>
             </AlertDescription>
           </Alert>
         )}
@@ -178,7 +180,7 @@ const DataMigration = () => {
         )}
         
         <div className="py-2">
-          <p className="text-sm text-muted-foreground mb-4">
+          <div className="text-sm text-muted-foreground mb-4">
             Questa operazione migrerà tutti i dati dal localStorage al database Supabase:
             <ul className="list-disc pl-5 mt-2">
               <li>Dealers e venditori</li>
@@ -186,7 +188,7 @@ const DataMigration = () => {
               <li>Preventivi</li>
               <li>Ordini</li>
             </ul>
-          </p>
+          </div>
           <p className="text-sm font-medium text-amber-600 mb-2">
             Nota: I dati verranno migrati solo se non ci sono già dati in Supabase.
           </p>
