@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
@@ -110,6 +109,9 @@ export const vehiclesApi = {
       fueltype: updates.fuelType,
       exteriorcolor: updates.exteriorColor,
       reservedaccessories: updates.reservedAccessories,
+      imageurl: updates.imageUrl,
+      reservedby: updates.reservedBy,
+      virtualconfig: updates.virtualConfig,
       updated_at: new Date().toISOString()
     };
     
@@ -118,6 +120,11 @@ export const vehiclesApi = {
     delete dbUpdates.fuelType;
     delete dbUpdates.exteriorColor;
     delete dbUpdates.reservedAccessories;
+    delete dbUpdates.imageUrl;
+    delete dbUpdates.reservedBy;
+    delete dbUpdates.virtualConfig;
+    
+    console.log("Supabase API: update - Richiesta update:", dbUpdates);
     
     const { data, error } = await supabase
       .from('vehicles')
@@ -131,6 +138,8 @@ export const vehiclesApi = {
       throw error;
     }
     
+    console.log("Supabase API: update - Risposta:", data);
+    
     // Convert database field names back to frontend model
     const formattedVehicle = {
       ...data,
@@ -138,6 +147,9 @@ export const vehiclesApi = {
       fuelType: data.fueltype,
       exteriorColor: data.exteriorcolor,
       reservedAccessories: data.reservedaccessories,
+      imageUrl: data.imageurl,
+      reservedBy: data.reservedby,
+      virtualConfig: data.virtualconfig,
     };
     
     return formattedVehicle as Vehicle;
