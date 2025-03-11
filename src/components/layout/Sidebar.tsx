@@ -12,7 +12,6 @@ import {
   Settings, 
   KeyRound,
   Database,
-  MenuIcon,
   X
 } from 'lucide-react';
 
@@ -31,6 +30,20 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     logout();
     navigate('/login');
   };
+  
+  const menuItems = [
+    { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { title: 'Inventario', icon: ShoppingBag, path: '/inventory' },
+    { title: 'Preventivi', icon: FileText, path: '/quotes' },
+    { title: 'Ordini', icon: ClipboardList, path: '/orders' },
+    { title: 'Dealers', icon: Truck, path: '/dealers' },
+  ];
+  
+  const adminItems = [
+    { title: 'Credenziali', icon: KeyRound, path: '/credentials' },
+    { title: 'Impostazioni', icon: Settings, path: '/settings' },
+    { title: 'Migrazione Dati', icon: Database, path: '/migration' },
+  ];
   
   return (
     <>
@@ -64,121 +77,41 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </div>
           
           <ul className="space-y-2 font-medium">
-            {/* Dashboard */}
-            <li>
-              <Link
-                to="/dashboard"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/dashboard' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <LayoutDashboard className="w-5 h-5 mr-3" />
-                <span>Dashboard</span>
-              </Link>
-            </li>
-            
-            {/* Inventory */}
-            <li>
-              <Link
-                to="/inventory"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/inventory' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <ShoppingBag className="w-5 h-5 mr-3" />
-                <span>Inventario</span>
-              </Link>
-            </li>
-            
-            {/* Quotes */}
-            <li>
-              <Link
-                to="/quotes"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/quotes' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <FileText className="w-5 h-5 mr-3" />
-                <span>Preventivi</span>
-              </Link>
-            </li>
-            
-            {/* Orders */}
-            <li>
-              <Link
-                to="/orders"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/orders' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <ClipboardList className="w-5 h-5 mr-3" />
-                <span>Ordini</span>
-              </Link>
-            </li>
-            
-            {/* Dealers */}
-            <li>
-              <Link
-                to="/dealers"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/dealers' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <Truck className="w-5 h-5 mr-3" />
-                <span>Dealers</span>
-              </Link>
-            </li>
+            {/* Main Menu Items */}
+            {menuItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                    location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
+                  }`}
+                  onClick={isMobile ? toggleSidebar : undefined}
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  <span>{item.title}</span>
+                </Link>
+              </li>
+            ))}
             
             <li className="pt-4 mt-4 border-t border-gray-200">
               <p className="px-2 text-xs font-semibold text-gray-400 uppercase">Amministrazione</p>
             </li>
             
-            {/* Credentials */}
-            <li>
-              <Link
-                to="/credentials"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/credentials' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <KeyRound className="w-5 h-5 mr-3" />
-                <span>Credenziali</span>
-              </Link>
-            </li>
-            
-            {/* Settings */}
-            <li>
-              <Link
-                to="/settings"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/settings' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <Settings className="w-5 h-5 mr-3" />
-                <span>Impostazioni</span>
-              </Link>
-            </li>
-            
-            {/* Migrazione Dati */}
-            <li>
-              <Link
-                to="/migration"
-                className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  location.pathname === '/migration' ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                }`}
-                onClick={isMobile ? toggleSidebar : undefined}
-              >
-                <Database className="w-5 h-5 mr-3" />
-                <span>Migrazione Dati</span>
-              </Link>
-            </li>
+            {/* Admin Menu Items */}
+            {adminItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                    location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
+                  }`}
+                  onClick={isMobile ? toggleSidebar : undefined}
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  <span>{item.title}</span>
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </aside>

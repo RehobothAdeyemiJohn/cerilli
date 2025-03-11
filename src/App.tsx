@@ -2,6 +2,7 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,31 +19,36 @@ import Login from './pages/Login';
 import Index from './pages/Index';
 import Migration from './pages/Migration';
 
+// Create a client
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/quotes" element={<Quotes />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/dealers" element={<Dealers />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/credentials" element={<Credentials />} />
-            <Route path="/migration" element={<Migration />} />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/quotes" element={<Quotes />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/dealers" element={<Dealers />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/credentials" element={<Credentials />} />
+              <Route path="/migration" element={<Migration />} />
+            </Route>
           </Route>
-        </Route>
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-    </AuthProvider>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
