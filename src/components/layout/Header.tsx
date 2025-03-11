@@ -26,8 +26,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   };
   
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 h-16 shadow-sm">
-      <div className="flex items-center justify-between h-full px-4 ml-0 lg:ml-64">
+    <header className="fixed top-0 right-0 left-0 bg-white border-b border-gray-200 h-16 flex items-center px-4 z-30">
+      <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
