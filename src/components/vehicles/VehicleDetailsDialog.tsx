@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Vehicle } from '@/types';
+import { Vehicle, Quote } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { 
   Dialog, 
@@ -31,7 +30,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     try {
       await quotesApi.create({
         ...quoteData,
-        status: 'pending',
+        status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
       });
       

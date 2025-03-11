@@ -39,7 +39,7 @@ const Quotes = () => {
   });
   
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => 
+    mutationFn: ({ id, status }: { id: string; status: Quote['status'] }) => 
       quotesApi.update(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -58,12 +58,12 @@ const Quotes = () => {
   const handleCreateQuote = (data: any) => {
     createMutation.mutate({
       ...data,
-      status: 'pending',
+      status: 'pending' as const,
       createdAt: new Date().toISOString(),
     });
   };
   
-  const handleUpdateStatus = (id: string, status: string) => {
+  const handleUpdateStatus = (id: string, status: Quote['status']) => {
     updateMutation.mutate({ id, status });
   };
   
