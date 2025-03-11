@@ -2,27 +2,10 @@
 import React, { useState } from 'react';
 import VehicleCard from './VehicleCard';
 import { Vehicle, Filter } from '@/types';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import { formatCurrency } from '@/lib/utils';
-import EditVehicleForm from './EditVehicleForm';
 import { toast } from '@/hooks/use-toast';
+import VehicleDetailsDialog from './VehicleDetailsDialog';
+import VehicleEditDialog from './VehicleEditDialog';
+import VehicleDeleteDialog from './VehicleDeleteDialog';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -48,7 +31,7 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     setVehicleToDelete(vehicle);
   };
   
-  const closeDialog = () => {
+  const closeDetailsDialog = () => {
     setSelectedVehicle(null);
   };
   
@@ -112,127 +95,27 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
         </div>
       )}
       
-      {/* Finestra di dialogo per visualizzare i dettagli del veicolo */}
-      <Dialog open={!!selectedVehicle} onOpenChange={closeDialog}>
-        <DialogContent className="sm:max-w-lg">
-          {selectedVehicle && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selectedVehicle.model} {selectedVehicle.trim}</DialogTitle>
-                <DialogDescription>
-                  Dettagli del veicolo e azioni disponibili
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="mt-4">
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Modello</p>
-                    <p>{selectedVehicle.model}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Allestimento</p>
-                    <p>{selectedVehicle.trim}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Alimentazione</p>
-                    <p>{selectedVehicle.fuelType}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Colore</p>
-                    <p>{selectedVehicle.exteriorColor}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Prezzo</p>
-                    <p className="font-bold text-primary">
-                      {formatCurrency(selectedVehicle.price)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Ubicazione</p>
-                    <p>{selectedVehicle.location}</p>
-                  </div>
-                  {selectedVehicle.transmission && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Cambio</p>
-                      <p>{selectedVehicle.transmission}</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-500">Accessori</p>
-                  <ul className="mt-1 space-y-1">
-                    {selectedVehicle.accessories.map((accessory, idx) => (
-                      <li key={idx} className="text-sm flex items-center">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary mr-2"></span>
-                        {accessory}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="flex gap-4 mt-6">
-                  {selectedVehicle.status === 'available' ? (
-                    <>
-                      <button className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90">
-                        Crea Preventivo
-                      </button>
-                      <button className="flex-1 border border-gray-200 py-2 rounded-md hover:bg-gray-50">
-                        Ordina Veicolo
-                      </button>
-                    </>
-                  ) : (
-                    <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
-                      {selectedVehicle.status === 'reserved' ? 'Veicolo Prenotato' : 'Veicolo Venduto'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs for vehicle operations */}
+      <VehicleDetailsDialog 
+        vehicle={selectedVehicle}
+        open={!!selectedVehicle}
+        onOpenChange={open => !open && closeDetailsDialog()}
+      />
       
-      {/* Finestra di dialogo per modificare il veicolo */}
-      <Dialog open={!!vehicleToEdit} onOpenChange={closeEditDialog}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          {vehicleToEdit && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Modifica Veicolo</DialogTitle>
-                <DialogDescription>
-                  Modifica i dettagli del veicolo {vehicleToEdit.model} {vehicleToEdit.trim}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <EditVehicleForm 
-                vehicle={vehicleToEdit}
-                onComplete={handleVehicleUpdate}
-                onCancel={closeEditDialog}
-              />
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <VehicleEditDialog 
+        vehicle={vehicleToEdit}
+        open={!!vehicleToEdit}
+        onOpenChange={open => !open && closeEditDialog()}
+        onComplete={handleVehicleUpdate}
+        onCancel={closeEditDialog}
+      />
       
-      {/* Finestra di dialogo di conferma per eliminare il veicolo */}
-      <AlertDialog open={!!vehicleToDelete} onOpenChange={closeDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro di voler eliminare questo veicolo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. Il veicolo verrà permanentemente rimosso dall'inventario.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleVehicleDelete} className="bg-red-600 hover:bg-red-700">
-              Elimina
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <VehicleDeleteDialog 
+        vehicle={vehicleToDelete}
+        open={!!vehicleToDelete}
+        onOpenChange={open => !open && closeDeleteDialog()}
+        onConfirm={handleVehicleDelete}
+      />
     </>
   );
 };
