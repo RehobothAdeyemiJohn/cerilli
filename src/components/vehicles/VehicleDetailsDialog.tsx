@@ -31,8 +31,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   const { user } = useAuth();
   
   if (!vehicle) return null;
-  
-  const handleCreateQuote = async (quoteData: any) => {
+
+  const handleShowQuoteForm = () => {
     if (!user?.dealerId) {
       toast({
         title: "Errore",
@@ -41,14 +41,17 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
       });
       return;
     }
-
+    setShowQuoteForm(true);
+  };
+  
+  const handleCreateQuote = async (quoteData: any) => {
     try {
       setIsSubmitting(true);
       await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: user.dealerId,
+        dealerId: user!.dealerId,
         vehicleId: vehicle.id
       });
       
@@ -72,7 +75,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
       setIsSubmitting(false);
     }
   };
-  
+
   const handleCancelQuote = () => {
     setShowQuoteForm(false);
   };
@@ -131,7 +134,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     return (
       <VehicleDetailsContent 
         vehicle={vehicle}
-        onCreateQuote={() => setShowQuoteForm(true)}
+        onCreateQuote={handleShowQuoteForm}
         onReserveVehicle={handleReserveVehicle}
         onReserveVirtualVehicle={handleReserveVirtualVehicle}
       />
