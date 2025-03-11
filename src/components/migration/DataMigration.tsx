@@ -6,6 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle, Loader2, Info } from 'lucide-react';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { quotesApi } from '@/api/localStorage/quotesApi';
+import { ordersApi } from '@/api/localStorage/ordersApi';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, isSupabaseConfigured } from '@/api/supabase/client';
 
@@ -19,58 +21,29 @@ const DataMigration = () => {
 
   // Check Supabase connection on component mount
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // First check if Supabase is configured
-        if (!isSupabaseConfigured()) {
-          console.error('Supabase non è configurato correttamente');
-          setIsSupabaseConnected(false);
-          return;
-        }
-
-        // Then test the connection with a simpler query
-        const { data, error } = await supabase.from('vehicles').select('id').limit(1);
-        if (error) {
-          console.error('Errore connessione Supabase:', error);
-          setIsSupabaseConnected(false);
-          setMigrationStatus('error');
-          setMigrationMessage('Impossibile connettersi a Supabase.');
-          setErrorDetails(`Errore di connessione: ${error.message}`);
-          return;
-        }
-        
-        setIsSupabaseConnected(true);
-      } catch (error) {
-        console.error('Errore test connessione:', error);
-        setIsSupabaseConnected(false);
-        setMigrationStatus('error');
-        setMigrationMessage('Errore durante il test di connessione a Supabase.');
-        setErrorDetails(error instanceof Error ? error.message : 'Errore sconosciuto');
-      }
-    };
-
-    checkConnection();
+    checkSupabaseConnection();
   }, []);
 
-  const testSupabaseConnection = async () => {
+  const checkSupabaseConnection = async () => {
     try {
-      // First check if Supabase is configured
       if (!isSupabaseConfigured()) {
-        console.error('Supabase non è configurato correttamente');
-        return false;
+        setIsSupabaseConnected(false);
+        return;
       }
-      
-      // Use a simpler query to test connection
+
       const { data, error } = await supabase.from('vehicles').select('id').limit(1);
+      setIsSupabaseConnected(!error);
+      
       if (error) {
-        console.error('Errore connessione Supabase:', error);
-        return false;
+        setMigrationStatus('error');
+        setMigrationMessage('Impossibile connettersi a Supabase.');
+        setErrorDetails(`Errore di connessione: ${error.message}`);
       }
-      console.log('Connessione Supabase stabilita con successo');
-      return true;
     } catch (error) {
-      console.error('Errore test connessione:', error);
-      return false;
+      setIsSupabaseConnected(false);
+      setMigrationStatus('error');
+      setMigrationMessage('Errore durante il test di connessione a Supabase.');
+      setErrorDetails(error instanceof Error ? error.message : 'Errore sconosciuto');
     }
   };
 
@@ -81,53 +54,65 @@ const DataMigration = () => {
       setMigrationMessage('');
       setErrorDetails('');
 
-      console.log('Avvio test connessione Supabase...');
-      // Test Supabase connection first
-      const isConnected = await testSupabaseConnection();
-      if (!isConnected) {
-        console.error('Test connessione fallito');
-        throw new Error('Impossibile connettersi a Supabase. Verifica la tua connessione e le credenziali.');
-      }
-      console.log('Test connessione completato con successo');
-
-      // Migrate dealers first
+      // 1. Migra prima i dealers
       console.log('Inizio migrazione dealers...');
       await dealersApi.migrateFromMockData();
       console.log('Dealers migrati con successo');
-      
-      // Then migrate vehicles
+
+      // 2. Poi migra i veicoli
       console.log('Inizio migrazione veicoli...');
       await vehiclesApi.migrateFromLocalStorage();
       console.log('Veicoli migrati con successo');
+
+      // 3. Migra i preventivi
+      console.log('Inizio migrazione preventivi...');
+      const quotes = await quotesApi.getAll();
+      const { error: quotesError } = await supabase
+        .from('quotes')
+        .insert(quotes.map(quote => ({
+          ...quote,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })));
       
-      // Set success status
+      if (quotesError) throw new Error(`Errore migrazione preventivi: ${quotesError.message}`);
+      console.log('Preventivi migrati con successo');
+
+      // 4. Migra gli ordini
+      console.log('Inizio migrazione ordini...');
+      const orders = await ordersApi.getAll();
+      const { error: ordersError } = await supabase
+        .from('orders')
+        .insert(orders.map(order => ({
+          ...order,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })));
+      
+      if (ordersError) throw new Error(`Errore migrazione ordini: ${ordersError.message}`);
+      console.log('Ordini migrati con successo');
+
       setMigrationStatus('success');
-      setMigrationMessage('I dati sono stati migrati correttamente a Supabase!');
+      setMigrationMessage('La migrazione è stata completata con successo!');
       
       toast({
         title: "Migrazione completata",
-        description: "I dati sono stati migrati correttamente al database Supabase.",
+        description: "Tutti i dati sono stati migrati correttamente a Supabase.",
       });
     } catch (error) {
       console.error('Errore durante la migrazione:', error);
       setMigrationStatus('error');
       
-      // Create a more detailed error message
       let errorMessage = 'Si è verificato un errore durante la migrazione dei dati.';
       let details = '';
       
       if (error instanceof Error) {
         details = `${error.name}: ${error.message}`;
         
-        // Add more specific messaging based on error type
-        if (error.message.includes('network')) {
-          errorMessage = 'Errore di rete durante la connessione a Supabase.';
-        } else if (error.message.includes('authentication') || error.message.includes('credenziali')) {
-          errorMessage = 'Errore di autenticazione con Supabase. Verifica le credenziali.';
-        } else if (error.message.includes('permission')) {
+        if (error.message.includes('duplicate key')) {
+          errorMessage = 'Alcuni dati sono già presenti in Supabase.';
+        } else if (error.message.includes('permission denied')) {
           errorMessage = 'Errore di autorizzazione. Verifica le policy di Supabase.';
-        } else if (error.message.includes('connettersi')) {
-          errorMessage = 'Impossibile connettersi a Supabase. Verifica la configurazione.';
         }
       }
       
@@ -194,9 +179,13 @@ const DataMigration = () => {
         
         <div className="py-2">
           <p className="text-sm text-muted-foreground mb-4">
-            Questa operazione sposterà tutti i veicoli e i dealer dal localStorage al database Supabase.
-            Non verranno apportate modifiche ai dati locali, quindi potrai continuare a utilizzare
-            l'applicazione come prima nel caso in cui ci fossero problemi.
+            Questa operazione migrerà tutti i dati dal localStorage al database Supabase:
+            <ul className="list-disc pl-5 mt-2">
+              <li>Dealers e venditori</li>
+              <li>Veicoli dell'inventario</li>
+              <li>Preventivi</li>
+              <li>Ordini</li>
+            </ul>
           </p>
           <p className="text-sm font-medium text-amber-600 mb-2">
             Nota: I dati verranno migrati solo se non ci sono già dati in Supabase.
