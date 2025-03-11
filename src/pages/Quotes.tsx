@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuoteForm from '@/components/quotes/QuoteForm';
@@ -17,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { modelsApi } from '@/api/localStorage';
 
 const Quotes = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -26,8 +29,20 @@ const Quotes = () => {
   const [filterDealer, setFilterDealer] = useState<string>('all');
   const [filterModel, setFilterModel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('pending');
   
   const queryClient = useQueryClient();
+  
+  // Check if coming from another page with redirect
+  useEffect(() => {
+    if (location.state?.fromInventory) {
+      const vehicleId = location.state.vehicleId;
+      if (vehicleId) {
+        setSelectedVehicleId(vehicleId);
+        setCreateDialogOpen(true);
+      }
+    }
+  }, [location]);
   
   const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery({
     queryKey: ['quotes'],
@@ -49,6 +64,8 @@ const Quotes = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       setCreateDialogOpen(false);
+      // Set the active tab to 'pending' to show the newly created quote
+      setActiveTab('pending');
       toast({
         title: 'Preventivo Creato',
         description: 'Il preventivo è stato creato con successo',
@@ -346,7 +363,7 @@ const Quotes = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="pending">
+      <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="pending">In Attesa ({pendingQuotes.length})</TabsTrigger>
           <TabsTrigger value="approved">Approvati ({approvedQuotes.length})</TabsTrigger>
@@ -378,7 +395,7 @@ const Quotes = () => {
       
       {/* Dialog per creare un nuovo preventivo */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>Crea Nuovo Preventivo</DialogTitle>
           </DialogHeader>
