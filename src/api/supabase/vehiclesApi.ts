@@ -2,7 +2,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
-import { vehiclesApi as localVehiclesApi } from '../localStorage/vehiclesApi';
 
 export const vehiclesApi = {
   getAll: async (): Promise<Vehicle[]> => {
@@ -132,49 +131,5 @@ export const vehiclesApi = {
     }
     
     return vehiclesApi.update(id, updatedVehicle);
-  },
-
-  // Funzione per migrare i dati dal localStorage a Supabase
-  migrateFromLocalStorage: async (): Promise<void> => {
-    try {
-      // Get all vehicles from localStorage
-      const localVehicles = await localVehiclesApi.getAll();
-      
-      // Check if we already have vehicles in Supabase to avoid duplicates
-      const { data: existingVehicles } = await supabase
-        .from('vehicles')
-        .select('id');
-      
-      if (existingVehicles && existingVehicles.length > 0) {
-        console.log('Dati già presenti in Supabase, migrazione saltata');
-        return;
-      }
-      
-      // Prepare vehicles for insertion
-      const vehiclesToInsert = localVehicles.map(vehicle => ({
-        ...vehicle,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-      
-      // Insert all vehicles in a single batch
-      if (vehiclesToInsert.length > 0) {
-        const { error } = await supabase
-          .from('vehicles')
-          .insert(vehiclesToInsert);
-        
-        if (error) {
-          console.error('Errore durante la migrazione dei veicoli:', error);
-          throw error;
-        }
-        
-        console.log(`${vehiclesToInsert.length} veicoli migrati con successo`);
-      } else {
-        console.log('Nessun veicolo da migrare');
-      }
-    } catch (error) {
-      console.error('Errore durante la migrazione dei dati:', error);
-      throw error;
-    }
   }
 };
