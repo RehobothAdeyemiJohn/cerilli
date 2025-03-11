@@ -29,8 +29,8 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
     pageStyle: '@page { size: auto; margin: 10mm }',
-    // The correct property is called 'content' and it expects a function
-    contentRef: printContentRef,
+    // Use content function instead of contentRef
+    content: () => printContentRef.current,
   });
 
   return (
@@ -39,7 +39,12 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={handlePrint}
+        // Wrap the handlePrint in a function to match the expected MouseEventHandler type
+        onClick={() => {
+          if (handlePrint) {
+            handlePrint();
+          }
+        }}
         className="flex items-center gap-2"
       >
         <Printer className="h-4 w-4" />

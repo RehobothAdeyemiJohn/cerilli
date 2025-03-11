@@ -10,7 +10,7 @@ interface QuotePrintSectionProps {
 
 const QuotePrintSection = ({ quote, vehicle }: QuotePrintSectionProps) => {
   return (
-    <div data-print-content="true" style={{ display: 'none' }}>
+    <div data-print-content="true">
       <QuotePrintContent quote={quote} vehicle={vehicle} />
     </div>
   );
