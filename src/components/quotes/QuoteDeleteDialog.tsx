@@ -16,6 +16,7 @@ interface QuoteDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  quoteId?: string;
 }
 
 const QuoteDeleteDialog = ({
@@ -23,12 +24,18 @@ const QuoteDeleteDialog = ({
   onOpenChange,
   onConfirm,
   onCancel,
+  quoteId,
 }: QuoteDeleteDialogProps) => {
+  // Generate a shorter ID for display (first 6 characters) if available
+  const shortId = quoteId ? quoteId.substring(0, 6).toUpperCase() : '';
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Elimina preventivo</AlertDialogTitle>
+          <AlertDialogTitle>
+            {quoteId ? `Elimina preventivo #${shortId}` : 'Elimina preventivo'}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             Sei sicuro di voler eliminare questo preventivo? Questa azione non può essere annullata.
           </AlertDialogDescription>

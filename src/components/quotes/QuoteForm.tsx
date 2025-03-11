@@ -11,6 +11,8 @@ import { formatCurrency } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { accessoriesApi } from '@/api/localStorage';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   customerName: z.string().min(2, {
@@ -34,12 +36,13 @@ const formSchema = z.object({
 });
 
 interface QuoteFormProps {
-  vehicle: Vehicle;
+  vehicle?: Vehicle;
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
+const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteFormProps) => {
   const [showTradeIn, setShowTradeIn] = useState(false);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   
@@ -50,15 +53,17 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   
   useEffect(() => {
     const getVehicleAccessories = async () => {
-      if (vehicle.model && vehicle.trim) {
+      if (vehicle?.model && vehicle?.trim) {
         // Get accessories compatible with this model
         const modelObj = await accessoriesApi.getCompatible(vehicle.model, vehicle.trim);
         setCompatibleAccessories(modelObj);
       }
     };
     
-    getVehicleAccessories();
-  }, [vehicle.model, vehicle.trim]);
+    if (vehicle) {
+      getVehicleAccessories();
+    }
+  }, [vehicle?.model, vehicle?.trim]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,9 +91,10 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   
   const vatRate = watchReducedVAT ? 0.04 : 0.22;
   const basePrice = useMemo(() => {
+    if (!vehicle) return 0;
     const priceWithoutVAT = vehicle.price / 1.22;
     return Math.round(priceWithoutVAT * (1 + vatRate));
-  }, [vehicle.price, vatRate]);
+  }, [vehicle?.price, vatRate]);
 
   const accessoryTotalPrice = useMemo(() => {
     return watchVehicleAccessories.reduce((total, accName) => {
@@ -100,6 +106,11 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   const finalPrice = Math.max(0, basePrice + accessoryTotalPrice - watchDiscount - (watchHasTradeIn ? watchTradeInValue : 0));
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    if (!vehicle) {
+      // Handle vehicle selection in the future
+      return;
+    }
+    
     const quoteData = {
       ...values,
       vehicleId: vehicle.id,
@@ -111,6 +122,22 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
     };
     onSubmit(quoteData);
   };
+
+  // If no vehicle is provided, we should show a selection screen in the future
+  if (!vehicle) {
+    return (
+      <div className="text-center p-6">
+        <h3 className="text-lg font-medium mb-4">Selezione Veicolo</h3>
+        <p className="text-gray-500 mb-4">
+          In questa sezione sarà possibile selezionare un veicolo per il preventivo.
+          Questa funzionalità è in sviluppo.
+        </p>
+        <Button variant="outline" onClick={onCancel}>
+          Torna Indietro
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full text-sm">
@@ -424,19 +451,27 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
-              className="px-3 py-1 border border-gray-200 rounded-md hover:bg-gray-50 text-sm"
+              disabled={isSubmitting}
             >
               Annulla
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
+              disabled={isSubmitting}
             >
-              Crea Preventivo
-            </button>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creazione...
+                </>
+              ) : (
+                'Crea Preventivo'
+              )}
+            </Button>
           </div>
         </form>
       </Form>

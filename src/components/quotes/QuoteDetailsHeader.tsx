@@ -11,14 +11,12 @@ interface QuoteDetailsHeaderProps {
 
 const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
   // Generate a shorter ID for display (first 6 characters)
-  const getShortId = (id: string) => {
-    return id.substring(0, 6).toUpperCase();
-  };
+  const shortId = quote.id.substring(0, 6).toUpperCase();
 
   return (
     <>
       <DialogTitle className="flex items-center gap-3">
-        <span>Preventivo #{getShortId(quote.id)}</span>
+        <span>Preventivo #{shortId}</span>
         <QuoteStatusBadge status={quote.status} />
       </DialogTitle>
       <DialogDescription className="mt-1 mb-4 flex justify-between">

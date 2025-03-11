@@ -15,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import ReserveVirtualVehicleForm from './ReserveVirtualVehicleForm';
 import VehicleDetailsContent from './details/VehicleDetailsContent';
+import { useAuth } from '@/context/AuthContext';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -26,16 +27,20 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   if (!vehicle) return null;
   
   const handleCreateQuote = async (quoteData: any) => {
     try {
+      setIsSubmitting(true);
       await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
+        dealerId: user?.dealerId || 'current-user-dealer-id',
       });
       
       await queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -54,6 +59,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
         description: "Si è verificato un errore durante la creazione del preventivo",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -81,6 +88,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           vehicle={vehicle}
           onSubmit={handleCreateQuote}
           onCancel={handleCancelQuote}
+          isSubmitting={isSubmitting}
         />
       );
     } 
