@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabase/client';
-import { StatCard } from './StatCard';
+import StatCard from './StatCard';
 import { Car, Users, FileText, ShoppingCart } from 'lucide-react';
 
 export const DashboardStats = () => {
