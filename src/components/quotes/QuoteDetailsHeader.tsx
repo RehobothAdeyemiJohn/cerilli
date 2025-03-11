@@ -11,13 +11,23 @@ interface QuoteDetailsHeaderProps {
 }
 
 const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
+  // Create a ref to store the printable content reference
+  const printContentRef = useRef(null);
+  
+  // When component mounts, set the ref to point to the printable content
+  React.useEffect(() => {
+    if (printContentRef.current === null) {
+      printContentRef.current = document.querySelector('[data-print-content="true"]');
+    }
+  }, []);
+
   const handlePrint = useReactToPrint({
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
     // Use a simple page style with auto margins
     pageStyle: '@page { size: auto; margin: 10mm }',
-    // Use contentRef pattern which is the correct API
-    contentRef: () => document.querySelector('[data-print-content="true"]'),
+    // Pass the ref object directly
+    content: () => printContentRef.current,
   });
 
   return (
