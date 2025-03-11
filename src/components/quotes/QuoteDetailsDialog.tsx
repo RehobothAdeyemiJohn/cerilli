@@ -55,13 +55,13 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
+      <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Dettagli Preventivo</DialogTitle>
         </DialogHeader>
         
-        <div className="mt-4 space-y-6">
-          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-md">
+        <div className="mt-3 space-y-4">
+          <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-md">
             <div>
               <p className="text-sm text-gray-500">Modello</p>
               <p className="font-medium">{vehicle.model}</p>
@@ -88,7 +88,7 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <p className="text-sm text-gray-500">Cliente</p>
               <p className="font-medium">{quote.customerName}</p>
@@ -120,9 +120,9 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           </div>
           
           {quote.hasTradeIn && (
-            <div className="border p-4 rounded-md">
-              <h3 className="font-medium mb-3">Dettagli Permuta</h3>
-              <div className="grid grid-cols-3 gap-4">
+            <div className="border p-3 rounded-md">
+              <h3 className="font-medium mb-2">Dettagli Permuta</h3>
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <p className="text-sm text-gray-500">Marca</p>
                   <p className="font-medium">{quote.tradeInBrand || 'N/D'}</p>
@@ -148,14 +148,14 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           )}
           
           {quote.status === 'rejected' && quote.rejectionReason && (
-            <div className="border-t pt-4">
+            <div className="border-t pt-3">
               <p className="text-sm text-gray-500">Motivo Rifiuto</p>
               <p className="font-medium">{quote.rejectionReason}</p>
             </div>
           )}
         </div>
         
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-4">
           {quote.status === 'pending' && (
             <div className="flex gap-2">
               <Button 

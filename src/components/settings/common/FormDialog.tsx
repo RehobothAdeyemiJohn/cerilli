@@ -24,7 +24,7 @@ const FormDialog: React.FC<FormDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
+      <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -32,7 +32,7 @@ const FormDialog: React.FC<FormDialogProps> = ({
           e.preventDefault();
           onSubmit();
         }}>
-          <div className="py-4">
+          <div className="py-3">
             {children}
           </div>
           <DialogFooter>
