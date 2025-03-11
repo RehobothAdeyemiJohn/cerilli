@@ -12,42 +12,67 @@ import {
 import { dealers } from '@/data/mockData';
 import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
-// Schema for virtual vehicle reservation
-const virtualReservationSchema = z.object({
-  dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
-  trim: z.string().min(1, { message: "È necessario selezionare un allestimento" }),
-  fuelType: z.string().min(1, { message: "È necessario selezionare un'alimentazione" }),
-  exteriorColor: z.string().min(1, { message: "È necessario selezionare un colore" }),
-  transmission: z.string().min(1, { message: "È necessario selezionare un cambio" }),
-  accessories: z.array(z.string()).default([]),
-});
+// Schema per la prenotazione di veicoli virtuali
+const createVirtualReservationSchema = (isAdmin: boolean) => {
+  const baseSchema = {
+    trim: z.string().min(1, { message: "È necessario selezionare un allestimento" }),
+    fuelType: z.string().min(1, { message: "È necessario selezionare un'alimentazione" }),
+    exteriorColor: z.string().min(1, { message: "È necessario selezionare un colore" }),
+    transmission: z.string().min(1, { message: "È necessario selezionare un cambio" }),
+    accessories: z.array(z.string()).default([]),
+  };
+  
+  // Solo gli admin devono selezionare il concessionario
+  if (isAdmin) {
+    return z.object({
+      ...baseSchema,
+      dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
+    });
+  }
+  
+  return z.object(baseSchema);
+};
 
-export type VirtualReservationFormValues = z.infer<typeof virtualReservationSchema>;
+export type VirtualReservationFormValues = z.infer<ReturnType<typeof createVirtualReservationSchema>>;
 
 export const useVirtualReservation = (
   vehicle: Vehicle,
   onCancel: () => void,
   onReservationComplete: () => void
 ) => {
-  // Initialize form
+  // Get user information
+  const { user } = useAuth();
+  const isAdmin = user?.type === 'admin';
+  const dealerId = user?.dealerId || '';
+  const dealerName = user?.dealerName || '';
+  
+  // Initialize form with the appropriate schema
+  const reservationSchema = createVirtualReservationSchema(isAdmin);
+  
+  // Default values depend on user type
+  const defaultValues: any = {
+    trim: '',
+    fuelType: '',
+    exteriorColor: '',
+    transmission: '',
+    accessories: [],
+  };
+  
+  // Add dealerId field only for admins
+  if (isAdmin) {
+    defaultValues.dealerId = '';
+  }
+  
   const form = useForm<VirtualReservationFormValues>({
-    resolver: zodResolver(virtualReservationSchema),
-    defaultValues: {
-      dealerId: '',
-      trim: '',
-      fuelType: '',
-      exteriorColor: '',
-      transmission: '',
-      accessories: [],
-    },
+    resolver: zodResolver(reservationSchema),
+    defaultValues,
   });
 
   // Component state
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [isAdmin, setIsAdmin] = useState(true);
-  const [dealerName, setDealerName] = useState<string>('');
   
   const { handleVehicleUpdate } = useInventory();
   
@@ -246,13 +271,25 @@ export const useVirtualReservation = (
 
   const onSubmit = async (data: VirtualReservationFormValues) => {
     try {
-      const selectedDealer = activeDealers.find(dealer => dealer.id === data.dealerId);
-      const dealerDisplayName = selectedDealer ? selectedDealer.companyName : dealerName || 'Unknown';
+      // Determine dealer ID and name based on user role
+      let selectedDealerId = '';
+      let selectedDealerName = '';
+      
+      if (isAdmin) {
+        // For admin, use selected dealer from dropdown
+        selectedDealerId = (data as any).dealerId;
+        const selectedDealer = activeDealers.find(dealer => dealer.id === selectedDealerId);
+        selectedDealerName = selectedDealer ? selectedDealer.companyName : 'Unknown';
+      } else {
+        // For dealer, use authenticated user's dealer info
+        selectedDealerId = dealerId;
+        selectedDealerName = dealerName;
+      }
       
       const updatedVehicle: Vehicle = {
         ...vehicle,
         status: 'reserved',
-        reservedBy: dealerDisplayName,
+        reservedBy: selectedDealerName,
         virtualConfig: {
           trim: data.trim,
           fuelType: data.fuelType,
@@ -267,7 +304,7 @@ export const useVirtualReservation = (
       
       toast({
         title: "Veicolo Virtuale Prenotato",
-        description: `${vehicle.model} configurato è stato prenotato per ${dealerDisplayName}`,
+        description: `${vehicle.model} configurato è stato prenotato per ${selectedDealerName}`,
       });
       
       onReservationComplete();

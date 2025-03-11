@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dealer } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
 import { VirtualReservationFormValues } from './useVirtualReservation';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 interface VirtualReservationDealerSelectProps {
   form: UseFormReturn<VirtualReservationFormValues>;
@@ -17,6 +19,16 @@ const VirtualReservationDealerSelect = ({
   dealers, 
   isAdmin 
 }: VirtualReservationDealerSelectProps) => {
+  const { user } = useAuth();
+  
+  // Se l'utente è un dealer, impostiamo automaticamente il dealerId
+  useEffect(() => {
+    if (!isAdmin && user?.dealerId) {
+      form.setValue('dealerId', user.dealerId);
+    }
+  }, [isAdmin, user, form]);
+  
+  // Se non è admin, non mostrare il selettore
   if (!isAdmin) return null;
   
   return (

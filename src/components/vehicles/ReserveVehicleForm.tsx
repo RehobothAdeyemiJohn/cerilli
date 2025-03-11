@@ -14,13 +14,26 @@ import { vehiclesApi } from '@/api/localStorage';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useInventory } from '@/hooks/useInventory';
+import { useAuth } from '@/context/AuthContext';
 
-const reservationSchema = z.object({
-  dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
-  accessories: z.array(z.string()).optional(),
-});
+// Schema dinamico in base all'utente (admin o dealer)
+const createReservationSchema = (isAdmin: boolean) => {
+  const baseSchema = {
+    accessories: z.array(z.string()).optional(),
+  };
+  
+  // Solo gli admin devono selezionare il concessionario
+  if (isAdmin) {
+    return z.object({
+      ...baseSchema,
+      dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
+    });
+  }
+  
+  return z.object(baseSchema);
+};
 
-type ReservationFormValues = z.infer<typeof reservationSchema>;
+type ReservationFormValues = z.infer<ReturnType<typeof createReservationSchema>>;
 
 interface ReserveVehicleFormProps {
   vehicle: Vehicle;
@@ -30,8 +43,10 @@ interface ReserveVehicleFormProps {
 
 const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: ReserveVehicleFormProps) => {
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
-  const [isAdmin, setIsAdmin] = useState(true); // For now, assume admin, in real app get from auth
-  const [dealerName, setDealerName] = useState<string>(''); // For dealer view, get from auth
+  const { user } = useAuth();
+  const isAdmin = user?.type === 'admin';
+  const dealerId = user?.dealerId || '';
+  const dealerName = user?.dealerName || '';
   const queryClient = useQueryClient();
   const { handleVehicleUpdate } = useInventory();
   
@@ -54,12 +69,22 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
+  // Creiamo lo schema in base al tipo di utente
+  const reservationSchema = createReservationSchema(isAdmin);
+  
+  // Valori predefiniti del form
+  const defaultValues: any = {
+    accessories: [],
+  };
+  
+  // Se è un dealer, non c'è bisogno di selezionare un dealerId
+  if (isAdmin) {
+    defaultValues.dealerId = '';
+  }
+  
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(reservationSchema),
-    defaultValues: {
-      dealerId: '',
-      accessories: [],
-    },
+    defaultValues,
   });
 
   // Get compatible accessories for this vehicle model/trim
@@ -92,15 +117,26 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
   const onSubmit = async (data: ReservationFormValues) => {
     try {
-      // Get dealer name for display
-      const selectedDealer = activeDealers.find(dealer => dealer.id === data.dealerId);
-      const dealerDisplayName = selectedDealer ? selectedDealer.companyName : dealerName || 'Unknown';
+      // Determina il dealer ID e nome in base al ruolo dell'utente
+      let selectedDealerId = '';
+      let selectedDealerName = '';
+      
+      if (isAdmin) {
+        // Per admin, usa il dealer selezionato dal dropdown
+        selectedDealerId = (data as any).dealerId;
+        const selectedDealer = activeDealers.find(dealer => dealer.id === selectedDealerId);
+        selectedDealerName = selectedDealer ? selectedDealer.companyName : 'Unknown';
+      } else {
+        // Per dealer, usa le info dell'utente autenticato
+        selectedDealerId = dealerId;
+        selectedDealerName = dealerName;
+      }
       
       // Update vehicle status to reserved
       const updatedVehicle: Vehicle = {
         ...vehicle,
         status: 'reserved',
-        reservedBy: dealerDisplayName,
+        reservedBy: selectedDealerName,
         reservedAccessories: data.accessories || [],
       };
       
@@ -108,7 +144,7 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
       
       toast({
         title: "Veicolo Prenotato",
-        description: `${vehicle.model} ${vehicle.trim} è stato prenotato per ${dealerDisplayName}`,
+        description: `${vehicle.model} ${vehicle.trim} è stato prenotato per ${selectedDealerName}`,
       });
       
       onReservationComplete();

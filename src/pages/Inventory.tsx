@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
@@ -11,11 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const dealerName = user?.dealerName || '';
   
   const {
     inventory,
@@ -30,9 +34,22 @@ const Inventory = () => {
     addVehicle,
   } = useInventory();
   
+  // Filtra i veicoli in base al concessionario autenticato
+  const dealerFilteredInventory = React.useMemo(() => {
+    if (!isDealer || !dealerName) return inventory;
+    
+    return inventory.filter(vehicle => {
+      // Mostra tutti i veicoli disponibili
+      if (vehicle.status === 'available') return true;
+      
+      // Per i prenotati e venduti, mostra solo quelli del concessionario attuale
+      return vehicle.reservedBy === dealerName;
+    });
+  }, [inventory, isDealer, dealerName]);
+  
   const filteredVehicles = activeFilters 
-    ? filterVehicles(inventory, activeFilters)
-    : inventory;
+    ? filterVehicles(dealerFilteredInventory, activeFilters)
+    : dealerFilteredInventory;
     
   const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC');
   const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
@@ -101,7 +118,7 @@ const Inventory = () => {
           md:block w-full md:w-64 flex-shrink-0
         `}>
           <VehicleFilters 
-            inventory={inventory}
+            inventory={dealerFilteredInventory}
             onFiltersChange={handleFiltersChange}
           />
         </div>

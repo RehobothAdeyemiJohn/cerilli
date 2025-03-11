@@ -2,6 +2,10 @@
 import { LoginCredentials, AuthUser } from '@/types/auth';
 import { adminUsersApi } from './localStorage';
 import { dealers, vendors } from '@/data/mockData';
+import { v4 as uuidv4 } from 'uuid';
+
+// Chiave per memorizzare il session ID nel localStorage
+const SESSION_ID_KEY = 'cmcSessionId';
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthUser> => {
@@ -86,9 +90,25 @@ export const authService = {
     }
   },
   
+  // Get or create a unique session ID for the current browser
+  getOrCreateSessionId: (): string => {
+    let sessionId = localStorage.getItem(SESSION_ID_KEY);
+    
+    if (!sessionId) {
+      sessionId = uuidv4();
+      localStorage.setItem(SESSION_ID_KEY, sessionId);
+    }
+    
+    return sessionId;
+  },
+  
   // Save the current user to localStorage
   saveUser: (user: AuthUser): void => {
+    // Generate a consistent userId + session key to ensure data is saved consistently
     localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    // Ensure we have a session ID
+    authService.getOrCreateSessionId();
   },
   
   // Clear the current user from localStorage

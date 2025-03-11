@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/api/authService';
 import { AuthUser, LoginCredentials, AuthState } from '@/types/auth';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextProps extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -23,11 +23,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Check if user is already logged in
+  // Verifica se l'utente è già loggato
   useEffect(() => {
     const checkAuth = () => {
       try {
         const user = authService.getCurrentUser();
+        
+        // Assicurati che abbiamo un session ID
+        authService.getOrCreateSessionId();
+        
         setAuthState({
           user,
           isAuthenticated: !!user,
@@ -66,7 +70,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Benvenuto, ${user.firstName} ${user.lastName}!`,
       });
       
-      navigate('/dashboard');
+      // Reindirizza in base al tipo di utente
+      if (user.type === 'dealer' || user.type === 'vendor') {
+        navigate('/inventory');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       let errorMessage = 'Errore durante il login';
       

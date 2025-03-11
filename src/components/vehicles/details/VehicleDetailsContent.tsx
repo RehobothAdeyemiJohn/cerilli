@@ -3,6 +3,7 @@ import React from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
@@ -17,11 +18,17 @@ const VehicleDetailsContent = ({
   onReserveVehicle,
   onReserveVirtualVehicle
 }: VehicleDetailsContentProps) => {
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  
   // Check if vehicle is in virtual stock
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
   
   // Calculate days in stock if vehicle is in physical stock
-  const daysInStock = vehicle.location !== 'Stock Virtuale' ? calculateDaysInStock(vehicle.dateAdded) : null;
+  // Solo gli amministratori possono vedere la giacenza
+  const daysInStock = !isDealer && vehicle.location !== 'Stock Virtuale' 
+    ? calculateDaysInStock(vehicle.dateAdded) 
+    : null;
   
   return (
     <div className="mt-2">
