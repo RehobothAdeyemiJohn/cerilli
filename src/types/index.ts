@@ -13,6 +13,8 @@ export type Vehicle = {
   transmission?: string;
   telaio: string;
   year?: string;
+  reservedBy?: string;
+  reservedAccessories?: string[];
 };
 
 export type User = {

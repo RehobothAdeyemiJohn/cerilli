@@ -2,8 +2,8 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Copy } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { Pencil, Trash2, Copy, Clock } from 'lucide-react';
+import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -26,6 +26,16 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
     available: 'Disponibile',
     reserved: 'Prenotata',
     sold: 'Venduta',
+  };
+
+  // Calculate days in stock if not in virtual stock
+  const daysInStock = vehicle.location !== 'Stock Virtuale' ? calculateDaysInStock(vehicle.dateAdded) : null;
+
+  // Get stock days color
+  const getStockDaysColor = (days: number) => {
+    if (days <= 30) return 'bg-green-500';
+    if (days <= 60) return 'bg-amber-500';
+    return 'bg-red-500';
   };
 
   // Ferma la propagazione degli eventi per evitare che il click sui pulsanti attivi anche il click sulla card
@@ -51,14 +61,18 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
         </div>
         
         <div className="mt-2 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Alimentazione:</span>
-            <span>{vehicle.fuelType}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Colore:</span>
-            <span>{vehicle.exteriorColor}</span>
-          </div>
+          {vehicle.fuelType && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Alimentazione:</span>
+              <span>{vehicle.fuelType}</span>
+            </div>
+          )}
+          {vehicle.exteriorColor && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Colore:</span>
+              <span>{vehicle.exteriorColor}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Posizione:</span>
             <span>{vehicle.location}</span>
@@ -69,13 +83,31 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
               <span>{vehicle.transmission}</span>
             </div>
           )}
+          {vehicle.reservedBy && vehicle.status === 'reserved' && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Prenotato da:</span>
+              <span className="font-medium">{vehicle.reservedBy}</span>
+            </div>
+          )}
         </div>
         
         <div className="mt-4 pt-2 border-t flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            Aggiunto: {new Date(vehicle.dateAdded).toLocaleDateString()}
+          <div className="text-sm text-gray-500 flex items-center">
+            {daysInStock !== null ? (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{daysInStock} giorni</span>
+                <div 
+                  className={`h-2.5 w-2.5 rounded-full ${getStockDaysColor(daysInStock)}`}
+                ></div>
+              </div>
+            ) : (
+              <span>Aggiunto: {new Date(vehicle.dateAdded).toLocaleDateString()}</span>
+            )}
           </div>
-          <div className="font-bold text-primary">{formatCurrency(vehicle.price)}</div>
+          {vehicle.location !== 'Stock Virtuale' && (
+            <div className="font-bold text-primary">{formatCurrency(vehicle.price)}</div>
+          )}
         </div>
         
         <div className="mt-3 pt-2 border-t flex justify-end space-x-2">

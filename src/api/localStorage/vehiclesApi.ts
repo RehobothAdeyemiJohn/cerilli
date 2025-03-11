@@ -89,5 +89,22 @@ export const vehiclesApi = {
       ...vehicleWithoutId,
       dateAdded: new Date().toISOString().split('T')[0], // Use current date
     });
+  },
+  
+  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[]): Promise<Vehicle> => {
+    const vehicle = await vehiclesApi.getById(id);
+    
+    if (vehicle.status !== 'available') {
+      throw new Error('Il veicolo non è disponibile per la prenotazione');
+    }
+    
+    const updatedVehicle = {
+      ...vehicle,
+      status: 'reserved' as const,
+      reservedBy,
+      reservedAccessories: reservedAccessories || [],
+    };
+    
+    return vehiclesApi.update(id, updatedVehicle);
   }
 };

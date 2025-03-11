@@ -14,3 +14,16 @@ export function formatCurrency(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount)
 }
+
+export function calculateDaysInStock(dateAdded: string): number {
+  const addedDate = new Date(dateAdded);
+  const today = new Date();
+  
+  // Reset time component to get precise day difference
+  addedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  // Calculate difference in milliseconds and convert to days
+  const differenceInTime = today.getTime() - addedDate.getTime();
+  return Math.floor(differenceInTime / (1000 * 3600 * 24));
+}

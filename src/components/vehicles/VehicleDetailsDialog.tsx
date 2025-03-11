@@ -14,6 +14,8 @@ import QuoteForm from '@/components/quotes/QuoteForm';
 import { quotesApi } from '@/api/localStorage/quotesApi';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import ReserveVehicleForm from './ReserveVehicleForm';
+import { calculateDaysInStock } from '@/lib/utils';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -23,6 +25,7 @@ interface VehicleDetailsDialogProps {
 
 const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDialogProps) => {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [showReserveForm, setShowReserveForm] = useState(false);
   const queryClient = useQueryClient();
   
   if (!vehicle) return null;
@@ -57,6 +60,17 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   const handleCancelQuote = () => {
     setShowQuoteForm(false);
   };
+
+  const handleReserveVehicle = () => {
+    setShowReserveForm(true);
+  };
+
+  const handleCancelReservation = () => {
+    setShowReserveForm(false);
+  };
+  
+  // Calculate days in stock if vehicle is in physical stock
+  const daysInStock = vehicle.location !== 'Stock Virtuale' ? calculateDaysInStock(vehicle.dateAdded) : null;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -73,6 +87,15 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             vehicle={vehicle}
             onSubmit={handleCreateQuote}
             onCancel={handleCancelQuote}
+          />
+        ) : showReserveForm ? (
+          <ReserveVehicleForm 
+            vehicle={vehicle}
+            onCancel={handleCancelReservation}
+            onReservationComplete={() => {
+              setShowReserveForm(false);
+              onOpenChange(false);
+            }}
           />
         ) : (
           <div className="mt-2">
@@ -93,12 +116,14 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
                 <p className="text-xs font-medium text-gray-500">Colore</p>
                 <p>{vehicle.exteriorColor}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">Prezzo</p>
-                <p className="font-bold text-primary">
-                  {formatCurrency(vehicle.price)}
-                </p>
-              </div>
+              {vehicle.location !== 'Stock Virtuale' && (
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Prezzo</p>
+                  <p className="font-bold text-primary">
+                    {formatCurrency(vehicle.price)}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-medium text-gray-500">Ubicazione</p>
                 <p>{vehicle.location}</p>
@@ -107,6 +132,25 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
                 <div>
                   <p className="text-xs font-medium text-gray-500">Cambio</p>
                   <p>{vehicle.transmission}</p>
+                </div>
+              )}
+              {daysInStock !== null && (
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Giorni in Stock</p>
+                  <div className="flex items-center gap-1">
+                    <span>{daysInStock}</span>
+                    <div className={`h-3 w-3 rounded-full ${
+                      daysInStock <= 30 ? 'bg-green-500' : 
+                      daysInStock <= 60 ? 'bg-amber-500' : 
+                      'bg-red-500'
+                    }`}></div>
+                  </div>
+                </div>
+              )}
+              {vehicle.reservedBy && (
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Prenotato da</p>
+                  <p>{vehicle.reservedBy}</p>
                 </div>
               )}
             </div>
@@ -133,12 +177,15 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
                   >
                     Crea Preventivo
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                  >
-                    Prenota Auto
-                  </Button>
+                  {vehicle.location !== 'Stock Virtuale' && (
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={handleReserveVehicle}
+                    >
+                      Prenota Auto
+                    </Button>
+                  )}
                 </>
               ) : (
                 <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
