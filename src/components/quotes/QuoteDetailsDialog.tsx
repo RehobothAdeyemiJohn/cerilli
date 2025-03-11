@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { formatCurrency } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
@@ -25,7 +24,21 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
   const printRef = useRef<HTMLDivElement>(null);
   
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    documentTitle: `Preventivo_${quote?.id || 'auto'}`,
+    onAfterPrint: () => console.log('Print completed'),
+    removeAfterPrint: true,
+    pageStyle: '@page { size: auto; margin: 0mm }',
+    bodyClass: 'print-body',
+    copyStyles: true,
+    print: async (printIframe) => {
+      const document = printIframe.contentDocument;
+      if (document) {
+        const html = document.getElementsByTagName('html')[0];
+        html.style.scale = '0.7';
+        await window.print();
+      }
+    },
+    ref: printRef,
   });
 
   if (!quote || !vehicle) return null;
@@ -69,7 +82,7 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handlePrint}
+            onClick={() => handlePrint()}
             className="flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
@@ -77,6 +90,10 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           </Button>
         </DialogHeader>
         
+        <div style={{ display: 'none' }}>
+          <QuotePrintContent ref={printRef} quote={quote} vehicle={vehicle} />
+        </div>
+
         <div className="mt-2 space-y-3 text-sm">
           <div className="grid grid-cols-6 gap-2 p-2 bg-gray-50 rounded-md">
             <div>
