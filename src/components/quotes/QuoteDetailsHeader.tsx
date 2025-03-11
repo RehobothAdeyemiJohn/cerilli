@@ -12,15 +12,19 @@ interface QuoteDetailsHeaderProps {
 
 const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
   // Create a ref to store the printable content reference
-  const printContentRef = useRef<HTMLElement | null>(null);
+  const printContentRef = useRef<HTMLDivElement | null>(null);
   
   // When component mounts, set the ref to point to the printable content
   React.useEffect(() => {
     if (printContentRef.current === null) {
-      printContentRef.current = document.querySelector('[data-print-content="true"]');
+      const element = document.querySelector('[data-print-content="true"]');
+      if (element) {
+        printContentRef.current = element as HTMLDivElement;
+      }
     }
   }, []);
 
+  // Setup the print handler with the correct options
   const handlePrint = useReactToPrint({
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
@@ -34,7 +38,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={handlePrint}
+        onClick={() => handlePrint()}
         className="flex items-center gap-2"
       >
         <Printer className="h-4 w-4" />
