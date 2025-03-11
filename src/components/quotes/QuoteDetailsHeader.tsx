@@ -24,10 +24,8 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
   const handlePrint = useReactToPrint({
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
-    // Use a simple page style with auto margins
     pageStyle: '@page { size: auto; margin: 10mm }',
-    // Pass the ref object directly
-    content: () => printContentRef.current,
+    contentRef: printContentRef,
   });
 
   return (
