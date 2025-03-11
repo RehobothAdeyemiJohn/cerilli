@@ -19,7 +19,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {user ? "Modifica utente" : "Crea nuovo utente"}

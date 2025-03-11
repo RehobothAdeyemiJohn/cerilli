@@ -60,7 +60,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{vehicle.model} {vehicle.trim}</DialogTitle>
           <DialogDescription>
@@ -76,7 +76,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           />
         ) : (
           <div className="mt-4">
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-3 gap-4 mt-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Modello</p>
                 <p>{vehicle.model}</p>

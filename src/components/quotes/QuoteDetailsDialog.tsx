@@ -41,13 +41,13 @@ const QuoteDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Dettagli Preventivo</DialogTitle>
         </DialogHeader>
         
         <div className="mt-4 space-y-6">
-          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
+          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-md">
             <div>
               <p className="text-sm text-gray-500">Modello</p>
               <p className="font-medium">{vehicle.model}</p>
@@ -77,7 +77,7 @@ const QuoteDetailsDialog = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-500">Cliente</p>
               <p className="font-medium">{quote.customerName}</p>
