@@ -49,6 +49,18 @@ const ReserveVirtualVehicleForm = ({
   
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
+  const form = useForm<VirtualReservationFormValues>({
+    resolver: zodResolver(virtualReservationSchema),
+    defaultValues: {
+      dealerId: '',
+      trim: '',
+      fuelType: '',
+      exteriorColor: '',
+      transmission: '',
+      accessories: [],
+    },
+  });
+
   // Recupero dati
   const { 
     data: models = [], 
@@ -101,71 +113,66 @@ const ReserveVirtualVehicleForm = ({
   const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
                     isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
 
-  // Aggiunto controllo per verificare se vehicle.model esiste e se models contiene elementi
-  const modelObj = vehicle?.model && models.length > 0 ? models.find(m => m.name === vehicle.model) : undefined;
-  
-  // Aggiunti controlli per evitare undefined
-  const compatibleTrims = modelObj && trims && trims.length > 0 ? trims.filter(trim => 
-    !trim.compatibleModels || !trim.compatibleModels.length || 
-    trim.compatibleModels.includes(modelObj.id)
-  ) : [];
-
-  const compatibleFuelTypes = modelObj && fuelTypes && fuelTypes.length > 0 ? fuelTypes.filter(fuel => 
-    !fuel.compatibleModels || !fuel.compatibleModels.length || 
-    fuel.compatibleModels.includes(modelObj.id)
-  ) : [];
-
-  const compatibleColors = modelObj && colors && colors.length > 0 ? colors.filter(color => 
-    !color.compatibleModels || !color.compatibleModels.length || 
-    color.compatibleModels.includes(modelObj.id)
-  ) : [];
-
-  const compatibleTransmissions = modelObj && transmissions && transmissions.length > 0 ? transmissions.filter(trans => 
-    !trans.compatibleModels || !trans.compatibleModels.length || 
-    trans.compatibleModels.includes(modelObj.id)
-  ) : [];
-
-  // Mostra il loader durante il caricamento o se manca il modello
-  if (isLoading || !modelObj) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const form = useForm<VirtualReservationFormValues>({
-    resolver: zodResolver(virtualReservationSchema),
-    defaultValues: {
-      dealerId: '',
-      trim: '',
-      fuelType: '',
-      exteriorColor: '',
-      transmission: '',
-      accessories: [],
-    },
-  });
-
+  // Watch form fields for updates
   const watchTrim = form.watch('trim');
   const watchFuelType = form.watch('fuelType');
   const watchColor = form.watch('exteriorColor');
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
 
+  // Find model object safely
+  const modelObj = React.useMemo(() => {
+    if (!vehicle?.model || !models.length) return null;
+    return models.find(m => m.name === vehicle.model) || null;
+  }, [vehicle?.model, models]);
+
+  // Compute compatible items safely
+  const compatibleItems = React.useMemo(() => {
+    if (!modelObj) {
+      return {
+        compatibleTrims: [],
+        compatibleFuelTypes: [],
+        compatibleColors: [],
+        compatibleTransmissions: []
+      };
+    }
+
+    return {
+      compatibleTrims: trims.filter(trim => 
+        !trim.compatibleModels || !trim.compatibleModels.length || 
+        trim.compatibleModels.includes(modelObj.id)
+      ),
+      compatibleFuelTypes: fuelTypes.filter(fuel => 
+        !fuel.compatibleModels || !fuel.compatibleModels.length || 
+        fuel.compatibleModels.includes(modelObj.id)
+      ),
+      compatibleColors: colors.filter(color => 
+        !color.compatibleModels || !color.compatibleModels.length || 
+        color.compatibleModels.includes(modelObj.id)
+      ),
+      compatibleTransmissions: transmissions.filter(trans => 
+        !trans.compatibleModels || !trans.compatibleModels.length || 
+        trans.compatibleModels.includes(modelObj.id)
+      )
+    };
+  }, [modelObj, trims, fuelTypes, colors, transmissions]);
+
+  // Update accessories when trim changes
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
-      if (vehicle?.model && watchTrim && modelObj) {
-        const trimObj = trims.find(t => t.name === watchTrim);
-        
-        if (trimObj) {
-          try {
-            const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-            setCompatibleAccessories(compatibles || []);
-          } catch (error) {
-            console.error('Error fetching compatible accessories:', error);
-            setCompatibleAccessories([]);
-          }
-        } else {
+      if (!vehicle?.model || !watchTrim || !modelObj) {
+        setCompatibleAccessories([]);
+        return;
+      }
+
+      const trimObj = trims.find(t => t.name === watchTrim);
+      
+      if (trimObj) {
+        try {
+          const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
+          setCompatibleAccessories(compatibles || []);
+        } catch (error) {
+          console.error('Error fetching compatible accessories:', error);
           setCompatibleAccessories([]);
         }
       } else {
@@ -174,43 +181,49 @@ const ReserveVirtualVehicleForm = ({
     };
 
     updateCompatibleAccessories();
-  }, [vehicle?.model, watchTrim, models, trims, modelObj]);
+  }, [vehicle?.model, watchTrim, modelObj, trims]);
 
+  // Update price calculation
   useEffect(() => {
     const updatePrice = async () => {
-      if (vehicle?.model && watchTrim && watchFuelType && watchColor && watchTransmission && modelObj) {
-        const trimObj = trims.find(t => t.name === watchTrim);
-        const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        
-        const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
-        const colorName = colorParts ? colorParts[1] : watchColor;
-        const colorType = colorParts ? colorParts[2] : '';
-        const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
-        
-        const transmissionObj = transmissions.find(t => t.name === watchTransmission);
+      if (!vehicle?.model || !watchTrim || !watchFuelType || !watchColor || !watchTransmission || !modelObj) {
+        setCalculatedPrice(0);
+        return;
+      }
 
-        if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          try {
-            const selectedAccessoryIds = watchAccessories.map(name => {
-              const acc = accessories.find(a => a.name === name);
-              return acc ? acc.id : '';
-            }).filter(id => id !== '');
+      const trimObj = trims.find(t => t.name === watchTrim);
+      const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
+      
+      const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
+      const colorName = colorParts ? colorParts[1] : watchColor;
+      const colorType = colorParts ? colorParts[2] : '';
+      const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+      
+      const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-            const price = await calculateVehiclePrice(
-              modelObj.id,
-              trimObj.id,
-              fuelTypeObj.id,
-              colorObj.id,
-              transmissionObj.id,
-              selectedAccessoryIds
-            );
-            
-            setCalculatedPrice(price);
-          } catch (error) {
-            console.error('Error calculating price:', error);
-            setCalculatedPrice(0);
-          }
+      if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
+        try {
+          const selectedAccessoryIds = watchAccessories.map(name => {
+            const acc = accessories.find(a => a.name === name);
+            return acc ? acc.id : '';
+          }).filter(id => id !== '');
+
+          const price = await calculateVehiclePrice(
+            modelObj.id,
+            trimObj.id,
+            fuelTypeObj.id,
+            colorObj.id,
+            transmissionObj.id,
+            selectedAccessoryIds
+          );
+          
+          setCalculatedPrice(price);
+        } catch (error) {
+          console.error('Error calculating price:', error);
+          setCalculatedPrice(0);
         }
+      } else {
+        setCalculatedPrice(0);
       }
     };
 
@@ -222,13 +235,12 @@ const ReserveVirtualVehicleForm = ({
     watchColor, 
     watchTransmission, 
     watchAccessories, 
-    models, 
+    modelObj, 
     trims, 
     fuelTypes, 
     colors, 
     transmissions, 
-    accessories,
-    modelObj
+    accessories
   ]);
 
   const onSubmit = async (data: VirtualReservationFormValues) => {
@@ -267,6 +279,29 @@ const ReserveVirtualVehicleForm = ({
       });
     }
   };
+
+  // If loading or missing critical data, show loader
+  if (isLoading || !vehicle) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If model is not found, show error message
+  if (!modelObj) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500">Errore: Modello non trovato o dati non disponibili</p>
+        <Button type="button" variant="outline" onClick={onCancel} className="mt-4">
+          Annulla
+        </Button>
+      </div>
+    );
+  }
+
+  const { compatibleTrims, compatibleFuelTypes, compatibleColors, compatibleTransmissions } = compatibleItems;
 
   return (
     <Form {...form}>
