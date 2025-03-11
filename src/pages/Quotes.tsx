@@ -1,28 +1,37 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import QuoteForm from '@/components/quotes/QuoteForm';
 import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
 import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
+import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Trash2 } from 'lucide-react';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { Quote, Vehicle } from '@/types';
+import { dealersApi } from '@/api/supabase/dealersApi';
+import { Quote, Vehicle, Dealer } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { modelsApi } from '@/api/localStorage';
+import { useAuth } from '@/context/AuthContext';
 
 const Quotes = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin'; // Check if user is admin
+  
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [filterDealer, setFilterDealer] = useState<string>('all');
@@ -50,6 +59,11 @@ const Quotes = () => {
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
+  });
+
+  const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
   });
 
   const { data: models = [] } = useQuery({
@@ -83,6 +97,29 @@ const Quotes = () => {
       });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => quotesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      setDeleteDialogOpen(false);
+      toast({
+        title: 'Preventivo Eliminato',
+        description: 'Il preventivo è stato eliminato con successo',
+      });
+    },
+  });
+  
+  // Generate a shorter ID for display (first 6 characters)
+  const getShortId = (id: string) => {
+    return id.substring(0, 6).toUpperCase();
+  };
+
+  // Get dealer name by ID
+  const getDealerName = (dealerId: string) => {
+    const dealer = dealers.find(d => d.id === dealerId);
+    return dealer ? dealer.companyName : 'N/D';
+  };
   
   const filteredQuotes = quotes.filter(quote => {
     let matchesDealer = filterDealer === 'all' || quote.dealerId === filterDealer;
@@ -131,6 +168,12 @@ const Quotes = () => {
       });
     }
   };
+
+  const handleDeleteQuote = () => {
+    if (selectedQuote) {
+      deleteMutation.mutate(selectedQuote.id);
+    }
+  };
   
   const handleUpdateStatus = (id: string, status: Quote['status']) => {
     if (status === 'rejected') {
@@ -162,6 +205,11 @@ const Quotes = () => {
       });
     }
   };
+
+  const handleDeleteClick = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setDeleteDialogOpen(true);
+  };
   
   const getStatusBadgeClass = (status: string) => {
     switch(status) {
@@ -192,39 +240,41 @@ const Quotes = () => {
   const renderQuoteTable = (filteredQuotes: typeof quotes) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left font-medium">Cliente</th>
-              <th className="p-3 text-left font-medium">Veicolo</th>
-              <th className="p-3 text-left font-medium">Dealer/Venditore</th>
-              <th className="p-3 text-left font-medium">Prezzo Finale</th>
-              <th className="p-3 text-left font-medium">Stato</th>
-              <th className="p-3 text-left font-medium">Data</th>
-              <th className="p-3 text-left font-medium">Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Veicolo</TableHead>
+              <TableHead>Dealer/Venditore</TableHead>
+              <TableHead>Prezzo Finale</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Azioni</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredQuotes.length > 0 ? (
               filteredQuotes.map((quote) => {
                 const vehicle = getVehicleById(quote.vehicleId);
                 return (
-                  <tr key={quote.id} className="border-b">
-                    <td className="p-3">{quote.customerName}</td>
-                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim || ''}` : 'Sconosciuto'}</td>
-                    <td className="p-3">
-                      {quote.dealerId || 'N/D'}
-                    </td>
-                    <td className="p-3">€{quote.finalPrice.toLocaleString()}</td>
-                    <td className="p-3">
+                  <TableRow key={quote.id}>
+                    <TableCell className="font-mono text-xs">{getShortId(quote.id)}</TableCell>
+                    <TableCell>{quote.customerName}</TableCell>
+                    <TableCell>{vehicle ? `${vehicle.model} ${vehicle.trim || ''}` : 'Sconosciuto'}</TableCell>
+                    <TableCell>
+                      {getDealerName(quote.dealerId)}
+                    </TableCell>
+                    <TableCell>€{quote.finalPrice.toLocaleString()}</TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(quote.status)}`}>
                         {quote.status === 'pending' ? 'In attesa' : 
                          quote.status === 'approved' ? 'Approvato' : 
                          quote.status === 'rejected' ? 'Rifiutato' : 'Convertito'}
                       </span>
-                    </td>
-                    <td className="p-3">{formatDate(quote.createdAt)}</td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>{formatDate(quote.createdAt)}</TableCell>
+                    <TableCell>
                       <div className="flex gap-2">
                         <button 
                           className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
@@ -264,25 +314,33 @@ const Quotes = () => {
                             </button>
                           </>
                         )}
+                        {isAdmin && (
+                          <button 
+                            className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-800"
+                            onClick={() => handleDeleteClick(quote)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             ) : (
-              <tr>
-                <td colSpan={7} className="p-3 text-center text-gray-500">
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-gray-500">
                   Nessun preventivo trovato
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
   
-  if (isLoadingQuotes || isLoadingVehicles) {
+  if (isLoadingQuotes || isLoadingVehicles || isLoadingDealers) {
     return <div className="container mx-auto py-6 px-4">Caricamento in corso...</div>;
   }
   
@@ -348,8 +406,9 @@ const Quotes = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tutti i dealer</SelectItem>
-                <SelectItem value="dealer1">Concessionaria A</SelectItem>
-                <SelectItem value="dealer2">Concessionaria B</SelectItem>
+                {dealers.map(dealer => (
+                  <SelectItem key={dealer.id} value={dealer.id}>{dealer.companyName}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -415,6 +474,13 @@ const Quotes = () => {
         onOpenChange={setRejectDialogOpen}
         onConfirm={handleRejectQuote}
         onCancel={() => setRejectDialogOpen(false)}
+      />
+
+      <QuoteDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteQuote}
+        onCancel={() => setDeleteDialogOpen(false)}
       />
     </div>
   );
