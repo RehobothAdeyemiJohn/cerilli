@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import InventoryHeader from '@/components/vehicles/InventoryHeader';
-import { Filter as VehicleFilter } from '@/types';
+import { Filter as VehicleFilter, Vehicle } from '@/types';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
