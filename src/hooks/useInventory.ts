@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { vehiclesApi } from '@/api/localStorage';
-import { Vehicle, Filter as VehicleFilter, Dealer } from '@/types';
+import { vehiclesApi } from '@/api/supabase';
+import { Vehicle, Filter as VehicleFilter } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { dealers } from '@/data/mockData';
 
@@ -47,7 +47,13 @@ export const useInventory = () => {
   });
 
   const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
-    return createMutation.mutateAsync(vehicle);
+    try {
+      const newVehicle = await createMutation.mutateAsync(vehicle);
+      return newVehicle;
+    } catch (error) {
+      console.error('Errore durante l\'aggiunta del veicolo:', error);
+      throw error;
+    }
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
@@ -98,15 +104,13 @@ export const useInventory = () => {
   };
   
   const handleVehicleDuplicate = async (vehicle: Vehicle) => {
-    // Create a duplicate of the vehicle without the ID
     const { id, ...vehicleWithoutId } = vehicle;
     
-    // Add a suffix to indicate it's a copy
     const newVehicle = {
       ...vehicleWithoutId,
       model: vehicle.model,
       trim: vehicle.trim,
-      dateAdded: new Date().toISOString().split('T')[0], // Set today's date
+      dateAdded: new Date().toISOString().split('T')[0],
     };
     
     try {
