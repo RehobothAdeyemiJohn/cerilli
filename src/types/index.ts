@@ -44,6 +44,8 @@ export type Quote = {
   hasTradeIn?: boolean;
   reducedVAT?: boolean;
   vatRate?: number;
+  accessories?: string[];
+  accessoryPrice?: number;
 };
 
 export type Order = {
