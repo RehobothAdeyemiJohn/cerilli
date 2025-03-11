@@ -122,11 +122,26 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     );
   };
   
+  // Adjust dialog title to show status information for reserved vehicles
+  const getDialogTitle = () => {
+    if (vehicle.status === 'reserved') {
+      return (
+        <div className="flex items-center gap-2">
+          <span>{vehicle.model} {vehicle.trim}</span>
+          <span className="text-sm font-normal px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
+            Prenotato
+          </span>
+        </div>
+      );
+    }
+    return vehicle.model + (vehicle.trim ? ` ${vehicle.trim}` : '');
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
-          <DialogTitle>{vehicle.model} {vehicle.trim}</DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
             Dettagli del veicolo e azioni disponibili
           </DialogDescription>

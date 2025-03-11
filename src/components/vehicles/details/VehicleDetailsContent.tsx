@@ -33,6 +33,9 @@ const VehicleDetailsContent = ({
   // Check if vehicle has a virtual configuration
   const hasVirtualConfig = vehicle.virtualConfig !== undefined;
   
+  // Determine if vehicle is reserved and display proper information
+  const isReserved = vehicle.status === 'reserved';
+  
   return (
     <div className="mt-2">
       <div className="grid grid-cols-6 gap-2 mt-2 text-sm">
@@ -85,7 +88,7 @@ const VehicleDetailsContent = ({
             </div>
           </div>
         )}
-        {vehicle.status === 'reserved' && vehicle.reservedBy && (
+        {isReserved && vehicle.reservedBy && (
           <div className="col-span-2">
             <p className="text-xs font-medium text-gray-500">Prenotato da</p>
             <p className="font-medium text-amber-700">{vehicle.reservedBy}</p>
@@ -94,7 +97,7 @@ const VehicleDetailsContent = ({
       </div>
       
       {/* Display reserved accessories if any */}
-      {vehicle.status === 'reserved' && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
+      {isReserved && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
         <div className="mt-4 border-t pt-3">
           <p className="text-sm font-medium text-gray-700">Optional Prenotati</p>
           <div className="mt-1 grid grid-cols-2 gap-1">
@@ -109,7 +112,7 @@ const VehicleDetailsContent = ({
       )}
       
       {/* Display virtual configuration if any */}
-      {vehicle.status === 'reserved' && hasVirtualConfig && (
+      {isReserved && hasVirtualConfig && (
         <div className="mt-4 border-t pt-3">
           <p className="text-sm font-medium text-gray-700 mb-2">Configurazione Virtuale</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-amber-50 p-2 rounded-md">
