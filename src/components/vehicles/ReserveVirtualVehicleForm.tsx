@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Vehicle, Accessory } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -207,29 +206,42 @@ const ReserveVirtualVehicleForm = ({
     }
   };
 
+  // Fix for the "Cannot read properties of undefined (reading 'length')" error
   // Get compatible trims for this model
-  const compatibleTrims = trims.filter(trim => 
-    trim.compatibleModels.length === 0 || 
-    models.some(m => m.name === vehicle.model && trim.compatibleModels.includes(m.id))
-  );
+  const compatibleTrims = trims.filter(trim => {
+    const modelObj = models.find(m => m.name === vehicle.model);
+    if (!modelObj) return false;
+    
+    return trim.compatibleModels.length === 0 || 
+           trim.compatibleModels.includes(modelObj.id);
+  });
 
   // Get compatible fuel types for this model
-  const compatibleFuelTypes = fuelTypes.filter(fuel => 
-    fuel.compatibleModels.length === 0 || 
-    models.some(m => m.name === vehicle.model && fuel.compatibleModels.includes(m.id))
-  );
+  const compatibleFuelTypes = fuelTypes.filter(fuel => {
+    const modelObj = models.find(m => m.name === vehicle.model);
+    if (!modelObj) return false;
+    
+    return fuel.compatibleModels.length === 0 || 
+           fuel.compatibleModels.includes(modelObj.id);
+  });
 
   // Get compatible colors for this model
-  const compatibleColors = colors.filter(color => 
-    color.compatibleModels.length === 0 || 
-    models.some(m => m.name === vehicle.model && color.compatibleModels.includes(m.id))
-  );
+  const compatibleColors = colors.filter(color => {
+    const modelObj = models.find(m => m.name === vehicle.model);
+    if (!modelObj) return false;
+    
+    return color.compatibleModels.length === 0 || 
+           color.compatibleModels.includes(modelObj.id);
+  });
 
   // Get compatible transmissions for this model
-  const compatibleTransmissions = transmissions.filter(trans => 
-    trans.compatibleModels.length === 0 || 
-    models.some(m => m.name === vehicle.model && trans.compatibleModels.includes(m.id))
-  );
+  const compatibleTransmissions = transmissions.filter(trans => {
+    const modelObj = models.find(m => m.name === vehicle.model);
+    if (!modelObj) return false;
+    
+    return trans.compatibleModels.length === 0 || 
+           trans.compatibleModels.includes(modelObj.id);
+  });
 
   return (
     <Form {...form}>

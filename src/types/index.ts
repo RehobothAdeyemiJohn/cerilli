@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
