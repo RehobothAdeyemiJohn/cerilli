@@ -49,17 +49,19 @@ const formSchema = z.object({
   password: z.string().min(8, 'La password deve essere di almeno 8 caratteri.'),
   isActive: z.boolean(),
   role: z.enum(['superAdmin', 'admin', 'operator', 'supervisor'] as const),
-  permissions: z.array(z.string()),
+  permissions: z.array(z.enum(['dashboard', 'inventory', 'quotes', 'orders', 'dealers', 'credentials', 'settings'] as const)),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const permissionItems = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'inventory', label: 'Inventario' },
-  { id: 'quotes', label: 'Preventivi' },
-  { id: 'orders', label: 'Ordini Auto' },
-  { id: 'dealers', label: 'Dealers' },
-  { id: 'credentials', label: 'Credenziali' },
-  { id: 'settings', label: 'Impostazioni' },
+  { id: 'dashboard' as Permission, label: 'Dashboard' },
+  { id: 'inventory' as Permission, label: 'Inventario' },
+  { id: 'quotes' as Permission, label: 'Preventivi' },
+  { id: 'orders' as Permission, label: 'Ordini Auto' },
+  { id: 'dealers' as Permission, label: 'Dealers' },
+  { id: 'credentials' as Permission, label: 'Credenziali' },
+  { id: 'settings' as Permission, label: 'Impostazioni' },
 ];
 
 const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
@@ -70,7 +72,7 @@ const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '',
@@ -79,7 +81,7 @@ const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
       password: '',
       isActive: true,
       role: 'operator' as Role,
-      permissions: [] as string[],
+      permissions: [] as Permission[],
     },
   });
   
@@ -102,12 +104,12 @@ const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
         password: '',
         isActive: true,
         role: 'operator' as Role,
-        permissions: [] as string[],
+        permissions: [] as Permission[],
       });
     }
   }, [user, form]);
   
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       if (user) {
         await adminUsersApi.update(user.id, values);
