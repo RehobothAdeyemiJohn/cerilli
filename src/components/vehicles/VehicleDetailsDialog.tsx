@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { 
@@ -34,13 +33,23 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   if (!vehicle) return null;
   
   const handleCreateQuote = async (quoteData: any) => {
+    if (!user?.dealerId) {
+      toast({
+        title: "Errore",
+        description: "Non hai accesso alla creazione di preventivi",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: user?.dealerId || 'current-user-dealer-id',
+        dealerId: user.dealerId,
+        vehicleId: vehicle.id
       });
       
       await queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -119,7 +128,6 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
       );
     }
     
-    // Default view - vehicle details
     return (
       <VehicleDetailsContent 
         vehicle={vehicle}
@@ -130,7 +138,6 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     );
   };
   
-  // Adjust dialog title to show status information for reserved vehicles
   const getDialogTitle = () => {
     if (vehicle.status === 'reserved') {
       return (
