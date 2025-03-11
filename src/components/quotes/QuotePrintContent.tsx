@@ -104,7 +104,7 @@ const QuotePrintContent = React.forwardRef<HTMLDivElement, QuotePrintContentProp
         </div>
       </div>
 
-      {/* Optional */}
+      {/* Optional & Accessories */}
       {quote.accessories && quote.accessories.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-3 text-primary">Optional e Accessori</h2>

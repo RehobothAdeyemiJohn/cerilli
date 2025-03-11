@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -13,6 +12,7 @@ export type Vehicle = {
   dateAdded: string;
   transmission?: string;
   telaio: string;
+  year?: string;
 };
 
 export type User = {
@@ -46,6 +46,7 @@ export type Quote = {
   vatRate?: number;
   accessories?: string[];
   accessoryPrice?: number;
+  notes?: string;
 };
 
 export type Order = {

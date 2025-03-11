@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
@@ -16,7 +16,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     onAfterPrint: () => console.log('Print completed'),
     // Use a simple page style with auto margins
     pageStyle: '@page { size: auto; margin: 10mm }',
-    content: () => document.querySelector('[data-print-content="true"]'),
+    onBeforeGetContent: () => document.querySelector('[data-print-content="true"]'),
   });
 
   return (
