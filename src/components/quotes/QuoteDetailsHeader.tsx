@@ -16,8 +16,6 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
     pageStyle: '@page { size: auto; margin: 0mm }',
-    bodyClass: 'print-body',
-    copyStyles: true,
     content: () => document.querySelector('[data-print-content="true"]') as HTMLElement,
     print: async (printIframe) => {
       const document = printIframe.contentDocument;
@@ -35,7 +33,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={handlePrint}
+        onClick={() => handlePrint()}
         className="flex items-center gap-2"
       >
         <Printer className="h-4 w-4" />
