@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DashboardStats } from '@/components/dashboard/DashboardStats';
-import { Chart } from '@/components/dashboard/Chart';
+import DashboardStats from '@/components/dashboard/DashboardStats';
+import Chart from '@/components/dashboard/Chart';
 import { 
   dashboardStats, 
   inventoryByModel, 

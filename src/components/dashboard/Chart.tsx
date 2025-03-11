@@ -5,11 +5,22 @@ import { supabase } from '@/api/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-export const Chart = () => {
-  // Query per ottenere i dati dei veicoli
+interface ChartProps {
+  title?: string;
+  data?: any[];
+  color?: string;
+}
+
+export const Chart = ({ title = 'Veicoli per Modello', data, color = 'currentColor' }: ChartProps) => {
+  // If data is provided directly, use it instead of querying
+  const useProvidedData = !!data;
+  
+  // Query to get vehicle data (only if data is not provided)
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['vehiclesChart'],
     queryFn: async () => {
+      if (useProvidedData) return null;
+      
       const { data, error } = await supabase
         .from('vehicles')
         .select('model, status')
@@ -20,11 +31,13 @@ export const Chart = () => {
         throw error;
       }
       return data || [];
-    }
+    },
+    enabled: !useProvidedData
   });
 
-  // Prepara i dati per il grafico
+  // Prepare chart data
   const chartData = useMemo(() => {
+    if (useProvidedData) return data;
     if (!vehicles) return [];
 
     const modelCounts = vehicles.reduce((acc: { [key: string]: number }, vehicle) => {
@@ -36,13 +49,13 @@ export const Chart = () => {
       model,
       total
     }));
-  }, [vehicles]);
+  }, [vehicles, data, useProvidedData]);
 
-  if (isLoading) {
+  if (isLoading && !useProvidedData) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Veicoli per Modello</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <CardDescription>Caricamento in corso...</CardDescription>
         </CardHeader>
       </Card>
@@ -52,9 +65,9 @@ export const Chart = () => {
   return (
     <Card className="col-span-4">
       <CardHeader>
-        <CardTitle>Veicoli per Modello</CardTitle>
+        <CardTitle>{title}</CardTitle>
         <CardDescription>
-          Distribuzione dei veicoli per modello
+          Distribuzione dei dati
         </CardDescription>
       </CardHeader>
       <CardContent className="pl-2">
@@ -62,7 +75,7 @@ export const Chart = () => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <XAxis
-                dataKey="model"
+                dataKey="model" 
                 stroke="#888888"
                 fontSize={12}
                 tickLine={false}
@@ -77,7 +90,7 @@ export const Chart = () => {
               />
               <Bar
                 dataKey="total"
-                fill="currentColor"
+                fill={color}
                 radius={[4, 4, 0, 0]}
                 className="fill-primary"
               />
@@ -88,3 +101,5 @@ export const Chart = () => {
     </Card>
   );
 };
+
+export default Chart;
