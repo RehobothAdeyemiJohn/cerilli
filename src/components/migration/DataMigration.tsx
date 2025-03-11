@@ -28,8 +28,8 @@ const DataMigration = () => {
           return;
         }
 
-        // Then test the connection
-        const { data, error } = await supabase.from('vehicles').select('count(*)');
+        // Then test the connection with a simpler query
+        const { data, error } = await supabase.from('vehicles').select('id').limit(1);
         if (error) {
           console.error('Errore connessione Supabase:', error);
           setIsSupabaseConnected(false);
@@ -60,7 +60,8 @@ const DataMigration = () => {
         return false;
       }
       
-      const { data, error } = await supabase.from('vehicles').select('count(*)');
+      // Use a simpler query to test connection
+      const { data, error } = await supabase.from('vehicles').select('id').limit(1);
       if (error) {
         console.error('Errore connessione Supabase:', error);
         return false;
