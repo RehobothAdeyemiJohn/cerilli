@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_login: string | null
+          last_name: string
+          password: string
+          permissions: string[] | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_login?: string | null
+          last_name: string
+          password: string
+          permissions?: string[] | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_login?: string | null
+          last_name?: string
+          password?: string
+          permissions?: string[] | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dealers: {
         Row: {
           address: string
@@ -51,6 +93,295 @@ export type Database = {
           province?: string
           updated_at?: string | null
           zipcode?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          customername: string
+          dealerid: string
+          deliverydate: string | null
+          id: string
+          notes: string | null
+          orderdate: string | null
+          quoteid: string | null
+          status: string | null
+          updated_at: string | null
+          vehicleid: string
+        }
+        Insert: {
+          customername: string
+          dealerid: string
+          deliverydate?: string | null
+          id?: string
+          notes?: string | null
+          orderdate?: string | null
+          quoteid?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehicleid: string
+        }
+        Update: {
+          customername?: string
+          dealerid?: string
+          deliverydate?: string | null
+          id?: string
+          notes?: string | null
+          orderdate?: string | null
+          quoteid?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehicleid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_dealerid_fkey"
+            columns: ["dealerid"]
+            isOneToOne: false
+            referencedRelation: "dealers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_quoteid_fkey"
+            columns: ["quoteid"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_vehicleid_fkey"
+            columns: ["vehicleid"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          createdat: string | null
+          customeremail: string | null
+          customername: string
+          customerphone: string | null
+          dealerid: string
+          discount: number | null
+          finalprice: number
+          id: string
+          notes: string | null
+          price: number
+          rejectionreason: string | null
+          status: string | null
+          updated_at: string | null
+          vehicleid: string
+        }
+        Insert: {
+          createdat?: string | null
+          customeremail?: string | null
+          customername: string
+          customerphone?: string | null
+          dealerid: string
+          discount?: number | null
+          finalprice: number
+          id?: string
+          notes?: string | null
+          price: number
+          rejectionreason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehicleid: string
+        }
+        Update: {
+          createdat?: string | null
+          customeremail?: string | null
+          customername?: string
+          customerphone?: string | null
+          dealerid?: string
+          discount?: number | null
+          finalprice?: number
+          id?: string
+          notes?: string | null
+          price?: number
+          rejectionreason?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehicleid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_dealerid_fkey"
+            columns: ["dealerid"]
+            isOneToOne: false
+            referencedRelation: "dealers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_vehicleid_fkey"
+            columns: ["vehicleid"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings_accessories: {
+        Row: {
+          compatible_models: string[] | null
+          compatible_trims: string[] | null
+          created_at: string | null
+          id: string
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          compatible_models?: string[] | null
+          compatible_trims?: string[] | null
+          created_at?: string | null
+          id?: string
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          compatible_models?: string[] | null
+          compatible_trims?: string[] | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings_colors: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          price_adjustment: number
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          price_adjustment: number
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          price_adjustment?: number
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings_fuel_types: {
+        Row: {
+          compatible_models: string[] | null
+          created_at: string | null
+          id: string
+          name: string
+          price_adjustment: number
+          updated_at: string | null
+        }
+        Insert: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name: string
+          price_adjustment: number
+          updated_at?: string | null
+        }
+        Update: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          price_adjustment?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings_models: {
+        Row: {
+          base_price: number
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_price: number
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings_transmissions: {
+        Row: {
+          compatible_models: string[] | null
+          created_at: string | null
+          id: string
+          name: string
+          price_adjustment: number
+          updated_at: string | null
+        }
+        Insert: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name: string
+          price_adjustment: number
+          updated_at?: string | null
+        }
+        Update: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          price_adjustment?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      settings_trims: {
+        Row: {
+          compatible_models: string[] | null
+          created_at: string | null
+          id: string
+          name: string
+          price_adjustment: number
+          updated_at: string | null
+        }
+        Insert: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name: string
+          price_adjustment: number
+          updated_at?: string | null
+        }
+        Update: {
+          compatible_models?: string[] | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          price_adjustment?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -138,6 +469,42 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_admin_user: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      delete_dealer: {
+        Args: {
+          p_dealer_id: string
+        }
+        Returns: undefined
+      }
+      delete_model: {
+        Args: {
+          p_model_id: string
+        }
+        Returns: undefined
+      }
+      delete_order: {
+        Args: {
+          p_order_id: string
+        }
+        Returns: undefined
+      }
+      delete_quote: {
+        Args: {
+          p_quote_id: string
+        }
+        Returns: undefined
+      }
+      delete_vehicle: {
+        Args: {
+          p_vehicle_id: string
+        }
+        Returns: undefined
+      }
       drop_dealers_table_if_exists: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -154,11 +521,177 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      insert_admin_user: {
+        Args: {
+          p_first_name: string
+          p_last_name: string
+          p_email: string
+          p_password: string
+          p_role: string
+          p_permissions?: string[]
+          p_active?: boolean
+        }
+        Returns: string
+      }
+      insert_dealer: {
+        Args: {
+          p_companyname: string
+          p_address: string
+          p_city: string
+          p_province: string
+          p_zipcode: string
+          p_contactname: string
+          p_email: string
+          p_password: string
+          p_isactive?: boolean
+        }
+        Returns: string
+      }
+      insert_model: {
+        Args: {
+          p_name: string
+          p_base_price: number
+        }
+        Returns: string
+      }
+      insert_order: {
+        Args: {
+          p_vehicleid: string
+          p_dealerid: string
+          p_customername: string
+          p_quoteid?: string
+          p_status?: string
+          p_orderdate?: string
+          p_deliverydate?: string
+        }
+        Returns: string
+      }
+      insert_quote: {
+        Args: {
+          p_vehicleid: string
+          p_dealerid: string
+          p_customername: string
+          p_price: number
+          p_finalprice: number
+          p_customeremail?: string
+          p_customerphone?: string
+          p_discount?: number
+          p_status?: string
+          p_createdat?: string
+        }
+        Returns: string
+      }
+      insert_vehicle: {
+        Args: {
+          p_model: string
+          p_location: string
+          p_trim?: string
+          p_fueltype?: string
+          p_exteriorcolor?: string
+          p_accessories?: string[]
+          p_price?: number
+          p_imageurl?: string
+          p_status?: string
+          p_dateadded?: string
+          p_telaio?: string
+          p_transmission?: string
+          p_reservedby?: string
+          p_reservedaccessories?: string[]
+          p_virtualconfig?: Json
+        }
+        Returns: string
+      }
       list_tables: {
         Args: Record<PropertyKey, never>
         Returns: {
           table_name: string
         }[]
+      }
+      update_admin_user: {
+        Args: {
+          p_user_id: string
+          p_first_name?: string
+          p_last_name?: string
+          p_email?: string
+          p_password?: string
+          p_role?: string
+          p_permissions?: string[]
+          p_active?: boolean
+          p_last_login?: string
+        }
+        Returns: undefined
+      }
+      update_dealer: {
+        Args: {
+          p_dealer_id: string
+          p_companyname?: string
+          p_address?: string
+          p_city?: string
+          p_province?: string
+          p_zipcode?: string
+          p_contactname?: string
+          p_email?: string
+          p_password?: string
+          p_isactive?: boolean
+        }
+        Returns: undefined
+      }
+      update_model: {
+        Args: {
+          p_model_id: string
+          p_name?: string
+          p_base_price?: number
+        }
+        Returns: undefined
+      }
+      update_order: {
+        Args: {
+          p_order_id: string
+          p_vehicleid?: string
+          p_dealerid?: string
+          p_quoteid?: string
+          p_customername?: string
+          p_status?: string
+          p_orderdate?: string
+          p_deliverydate?: string
+        }
+        Returns: undefined
+      }
+      update_quote: {
+        Args: {
+          p_quote_id: string
+          p_vehicleid?: string
+          p_dealerid?: string
+          p_customername?: string
+          p_customeremail?: string
+          p_customerphone?: string
+          p_price?: number
+          p_discount?: number
+          p_finalprice?: number
+          p_status?: string
+        }
+        Returns: undefined
+      }
+      update_vehicle: {
+        Args: {
+          p_vehicle_id: string
+          p_model?: string
+          p_trim?: string
+          p_fueltype?: string
+          p_exteriorcolor?: string
+          p_accessories?: string[]
+          p_price?: number
+          p_location?: string
+          p_imageurl?: string
+          p_status?: string
+          p_dateadded?: string
+          p_telaio?: string
+          p_transmission?: string
+          p_reservedby?: string
+          p_reservedaccessories?: string[]
+          p_virtualconfig?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
