@@ -16,5 +16,10 @@ export const isSupabaseConfigured = () => {
     return false;
   }
   
+  console.log('Supabase configurato con URL:', supabaseUrl);
   return true;
 };
+
+// Log all'avvio dell'app per verificare la configurazione
+console.log('Inizializzazione client Supabase con URL:', supabaseUrl);
+isSupabaseConfigured();

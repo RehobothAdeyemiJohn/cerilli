@@ -25,12 +25,15 @@ export const useInventoryMutations = () => {
     mutationFn: (vehicle: Omit<Vehicle, 'id'>) => vehiclesApi.create(vehicle),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      console.log("Veicolo creato con successo in Supabase");
     },
   });
 
   const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
     try {
+      console.log("Tentativo di aggiungere veicolo in Supabase:", vehicle);
       const newVehicle = await createMutation.mutateAsync(vehicle);
+      console.log("Risposta da Supabase dopo creazione veicolo:", newVehicle);
       return newVehicle;
     } catch (error) {
       console.error('Errore durante l\'aggiunta del veicolo:', error);

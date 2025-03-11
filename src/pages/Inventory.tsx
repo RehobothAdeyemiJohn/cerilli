@@ -66,7 +66,8 @@ const Inventory = () => {
     
     try {
       if (addVehicle) {
-        await addVehicle(newVehicle);
+        const result = await addVehicle(newVehicle);
+        console.log("Veicolo aggiunto con successo:", result);
         // Invalidiamo esplicitamente la cache per aggiornare la lista
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       }

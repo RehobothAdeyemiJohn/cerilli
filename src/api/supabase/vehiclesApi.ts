@@ -1,10 +1,10 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
 
 export const vehiclesApi = {
   getAll: async (): Promise<Vehicle[]> => {
+    console.log("Supabase API: getAll - Recupero veicoli");
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
@@ -15,6 +15,7 @@ export const vehiclesApi = {
       throw error;
     }
 
+    console.log("Supabase API: getAll - Dati recuperati:", data);
     return data as Vehicle[];
   },
   
@@ -34,6 +35,8 @@ export const vehiclesApi = {
   },
   
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
+    console.log("Supabase API: create - Creazione veicolo:", vehicle);
+    
     const newVehicle = {
       ...vehicle,
       id: uuidv4(),
@@ -51,6 +54,8 @@ export const vehiclesApi = {
       updated_at: new Date().toISOString()
     };
     
+    console.log("Supabase API: create - Richiesta insert:", newVehicle);
+    
     const { data, error } = await supabase
       .from('vehicles')
       .insert(newVehicle)
@@ -62,6 +67,7 @@ export const vehiclesApi = {
       throw error;
     }
     
+    console.log("Supabase API: create - Risposta:", data);
     return data as Vehicle;
   },
   
