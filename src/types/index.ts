@@ -36,7 +36,10 @@ export type Quote = {
   status: 'pending' | 'approved' | 'rejected' | 'converted';
   createdAt: string;
   rejectionReason?: string;
+  tradeInBrand?: string;
   tradeInModel?: string;
+  tradeInYear?: string;
+  tradeInKm?: number;
   tradeInValue?: number;
   hasTradeIn?: boolean;
   reducedVAT?: boolean;

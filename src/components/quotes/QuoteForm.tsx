@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -6,10 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Vehicle } from '@/types';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { formatCurrency } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
 
 const formSchema = z.object({
@@ -25,7 +23,10 @@ const formSchema = z.object({
   discount: z.number().min(0),
   hasTradeIn: z.boolean().default(false),
   tradeInValue: z.number().min(0).optional(),
+  tradeInBrand: z.string().optional(),
   tradeInModel: z.string().optional(),
+  tradeInYear: z.string().optional(),
+  tradeInKm: z.number().min(0).optional(),
   reducedVAT: z.boolean().default(false),
 });
 
@@ -47,7 +48,10 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
       discount: 0,
       hasTradeIn: false,
       tradeInValue: 0,
+      tradeInBrand: "",
       tradeInModel: "",
+      tradeInYear: "",
+      tradeInKm: 0,
       reducedVAT: false,
     },
   });
@@ -59,7 +63,6 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   
   const vatRate = watchReducedVAT ? 0.04 : 0.22;
   const basePrice = useMemo(() => {
-    // Rimuove l'IVA standard e applica l'IVA corretta
     const priceWithoutVAT = vehicle.price / 1.22;
     return Math.round(priceWithoutVAT * (1 + vatRate));
   }, [vehicle.price, vatRate]);
@@ -81,7 +84,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
     <div>
       <div className="mb-6 p-4 bg-gray-50 rounded-md">
         <h3 className="font-medium">Informazioni Veicolo</h3>
-        <div className="mt-2 grid grid-cols-2 gap-4">
+        <div className="mt-2 grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-500">Modello</p>
             <p className="font-medium">{vehicle.model}</p>
@@ -98,12 +101,22 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             <p className="text-sm text-gray-500">Prezzo</p>
             <p className="font-medium text-primary">{formatCurrency(vehicle.price)}</p>
           </div>
+          {vehicle.transmission && (
+            <div>
+              <p className="text-sm text-gray-500">Cambio</p>
+              <p className="font-medium">{vehicle.transmission}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-sm text-gray-500">Carburante</p>
+            <p className="font-medium">{vehicle.fuelType}</p>
+          </div>
         </div>
         
         {vehicle.accessories && vehicle.accessories.length > 0 && (
           <div className="mt-4">
-            <p className="text-sm text-gray-500 mb-1">Accessori</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="text-sm text-gray-500 mb-1">Optional</p>
+            <div className="grid grid-cols-3 gap-2">
               {vehicle.accessories.map((accessory, idx) => (
                 <div key={idx} className="text-sm flex items-center">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary mr-2"></span>
@@ -117,7 +130,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="customerName"
@@ -151,7 +164,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
               name="customerPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Numero Telefono</FormLabel>
+                  <FormLabel>Telefono</FormLabel>
                   <FormControl>
                     <Input placeholder="+39 123 456 7890" {...field} />
                   </FormControl>
@@ -161,7 +174,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+          <div className="grid grid-cols-3 gap-4 border-t pt-4">
             <FormField
               control={form.control}
               name="discount"
@@ -187,9 +200,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between space-x-2 space-y-0 rounded-md border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel>IVA agevolata (Legge 104)</FormLabel>
+                    <FormLabel>IVA agevolata</FormLabel>
                     <p className="text-xs text-muted-foreground">
-                      Applica IVA al 4% anziché al 22%
+                      Applica IVA al 4% (Legge 104)
                     </p>
                   </div>
                   <FormControl>
@@ -220,7 +233,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Aggiungi veicolo in permuta
+                      Permuta
                     </FormLabel>
                   </div>
                 </FormItem>
@@ -228,21 +241,68 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             />
 
             {showTradeIn && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-7 mb-4">
+              <div className="grid grid-cols-3 gap-4 pl-7 mb-4">
                 <FormField
                   control={form.control}
-                  name="tradeInModel"
+                  name="tradeInBrand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Modello veicolo in permuta</FormLabel>
+                      <FormLabel>Marca</FormLabel>
                       <FormControl>
-                        <Input placeholder="Es. Fiat Panda 2018" {...field} />
+                        <Input placeholder="Es. Fiat" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
+                <FormField
+                  control={form.control}
+                  name="tradeInModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modello</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Es. Panda" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tradeInYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Anno</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Es. 2018" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tradeInKm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chilometri</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Es. 50000" 
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="tradeInValue"
