@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { AdminUser, Role, Permission } from '@/types/admin';
+import { AdminUser, Role, Permission, AdminUserFormData } from '@/types/admin';
 import { adminUsersApi } from '@/api/localStorage';
 
 interface AdminUserFormDialogProps {
@@ -111,14 +111,25 @@ const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
   
   const onSubmit = async (values: FormValues) => {
     try {
+      // Create a properly typed AdminUserFormData object
+      const userData: AdminUserFormData = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+        isActive: values.isActive,
+        role: values.role,
+        permissions: values.permissions,
+      };
+      
       if (user) {
-        await adminUsersApi.update(user.id, values);
+        await adminUsersApi.update(user.id, userData);
         toast({
           title: "Utente aggiornato",
           description: "Le informazioni dell'utente sono state aggiornate con successo.",
         });
       } else {
-        await adminUsersApi.create(values);
+        await adminUsersApi.create(userData);
         toast({
           title: "Utente creato",
           description: "Il nuovo utente è stato creato con successo.",

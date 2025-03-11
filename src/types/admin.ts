@@ -24,4 +24,12 @@ export type AdminUser = {
   updatedAt: string;
 };
 
-export type AdminUserFormData = Omit<AdminUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin'>;
+export type AdminUserFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  role: Role;
+  permissions: Permission[];
+};
