@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Vehicle, Accessory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
@@ -41,14 +41,7 @@ const ReserveVirtualVehicleForm = ({
   onCancel, 
   onReservationComplete 
 }: ReserveVirtualVehicleFormProps) => {
-  const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
-  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [isAdmin, setIsAdmin] = useState(true);
-  const [dealerName, setDealerName] = useState<string>('');
-  const { handleVehicleUpdate } = useInventory();
-  
-  const activeDealers = dealers.filter(dealer => dealer.isActive);
-  
+  // Initialize form first to avoid React hook ordering issues
   const form = useForm<VirtualReservationFormValues>({
     resolver: zodResolver(virtualReservationSchema),
     defaultValues: {
@@ -61,7 +54,20 @@ const ReserveVirtualVehicleForm = ({
     },
   });
 
-  // Recupero dati
+  // Component state
+  const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
+  const [isAdmin, setIsAdmin] = useState(true);
+  const [dealerName, setDealerName] = useState<string>('');
+  
+  const { handleVehicleUpdate } = useInventory();
+  
+  // Filter active dealers
+  const activeDealers = useMemo(() => {
+    return dealers.filter(dealer => dealer.isActive);
+  }, []);
+
+  // Queries for data fetching - these won't change order
   const { 
     data: models = [], 
     isLoading: isLoadingModels 
@@ -110,25 +116,26 @@ const ReserveVirtualVehicleForm = ({
     queryFn: accessoriesApi.getAll
   });
 
-  const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
-                    isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
-
-  // Watch form fields for updates
+  // Watch form fields - after form is initialized
   const watchTrim = form.watch('trim');
   const watchFuelType = form.watch('fuelType');
   const watchColor = form.watch('exteriorColor');
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
 
-  // Find model object safely
-  const modelObj = React.useMemo(() => {
-    if (!vehicle?.model || !models.length) return null;
+  // Compute loading state
+  const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
+                    isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
+
+  // Find model object safely with useMemo
+  const modelObj = useMemo(() => {
+    if (!vehicle?.model || !models || models.length === 0) return null;
     return models.find(m => m.name === vehicle.model) || null;
   }, [vehicle?.model, models]);
 
-  // Compute compatible items safely
-  const compatibleItems = React.useMemo(() => {
-    if (!modelObj) {
+  // Compute compatible items safely with useMemo
+  const compatibleItems = useMemo(() => {
+    if (!modelObj || !trims || !fuelTypes || !colors || !transmissions) {
       return {
         compatibleTrims: [],
         compatibleFuelTypes: [],
@@ -139,19 +146,23 @@ const ReserveVirtualVehicleForm = ({
 
     return {
       compatibleTrims: trims.filter(trim => 
-        !trim.compatibleModels || !trim.compatibleModels.length || 
+        !trim.compatibleModels || 
+        trim.compatibleModels.length === 0 || 
         trim.compatibleModels.includes(modelObj.id)
       ),
       compatibleFuelTypes: fuelTypes.filter(fuel => 
-        !fuel.compatibleModels || !fuel.compatibleModels.length || 
+        !fuel.compatibleModels || 
+        fuel.compatibleModels.length === 0 || 
         fuel.compatibleModels.includes(modelObj.id)
       ),
       compatibleColors: colors.filter(color => 
-        !color.compatibleModels || !color.compatibleModels.length || 
+        !color.compatibleModels || 
+        color.compatibleModels.length === 0 || 
         color.compatibleModels.includes(modelObj.id)
       ),
       compatibleTransmissions: transmissions.filter(trans => 
-        !trans.compatibleModels || !trans.compatibleModels.length || 
+        !trans.compatibleModels || 
+        trans.compatibleModels.length === 0 || 
         trans.compatibleModels.includes(modelObj.id)
       )
     };
@@ -186,7 +197,7 @@ const ReserveVirtualVehicleForm = ({
   // Update price calculation
   useEffect(() => {
     const updatePrice = async () => {
-      if (!vehicle?.model || !watchTrim || !watchFuelType || !watchColor || !watchTransmission || !modelObj) {
+      if (!modelObj || !watchTrim || !watchFuelType || !watchColor || !watchTransmission) {
         setCalculatedPrice(0);
         return;
       }
@@ -203,10 +214,12 @@ const ReserveVirtualVehicleForm = ({
 
       if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
         try {
-          const selectedAccessoryIds = watchAccessories.map(name => {
-            const acc = accessories.find(a => a.name === name);
-            return acc ? acc.id : '';
-          }).filter(id => id !== '');
+          const selectedAccessoryIds = watchAccessories
+            .map(name => {
+              const acc = accessories.find(a => a.name === name);
+              return acc ? acc.id : '';
+            })
+            .filter(id => id !== '');
 
           const price = await calculateVehiclePrice(
             modelObj.id,
@@ -229,13 +242,12 @@ const ReserveVirtualVehicleForm = ({
 
     updatePrice();
   }, [
-    vehicle?.model, 
+    modelObj, 
     watchTrim, 
     watchFuelType, 
     watchColor, 
     watchTransmission, 
     watchAccessories, 
-    modelObj, 
     trims, 
     fuelTypes, 
     colors, 
@@ -301,6 +313,7 @@ const ReserveVirtualVehicleForm = ({
     );
   }
 
+  // Get compatible items from the memoized value
   const { compatibleTrims, compatibleFuelTypes, compatibleColors, compatibleTransmissions } = compatibleItems;
 
   return (
