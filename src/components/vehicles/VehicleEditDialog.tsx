@@ -16,6 +16,7 @@ interface VehicleEditDialogProps {
   onOpenChange: (open: boolean) => void;
   onComplete: (updatedVehicle: Vehicle) => void;
   onCancel: () => void;
+  locationOptions?: string[];
 }
 
 const VehicleEditDialog = ({ 
@@ -23,11 +24,12 @@ const VehicleEditDialog = ({
   open, 
   onOpenChange,
   onComplete,
-  onCancel
+  onCancel,
+  locationOptions
 }: VehicleEditDialogProps) => {
   if (!vehicle) return null;
   
-  // Determina se il veicolo è in Stock Virtuale
+  // Determine if the vehicle is in Virtual Stock
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
   
   return (
@@ -48,6 +50,7 @@ const VehicleEditDialog = ({
           vehicle={vehicle}
           onComplete={onComplete}
           onCancel={onCancel}
+          locationOptions={locationOptions}
         />
       </DialogContent>
     </Dialog>
