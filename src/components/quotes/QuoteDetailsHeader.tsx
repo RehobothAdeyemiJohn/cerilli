@@ -16,7 +16,8 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     onAfterPrint: () => console.log('Print completed'),
     // Use a simple page style with auto margins
     pageStyle: '@page { size: auto; margin: 10mm }',
-    content: () => document.querySelector('[data-print-content="true"]'),
+    // Use contentRef pattern which is the correct API
+    contentRef: () => document.querySelector('[data-print-content="true"]'),
   });
 
   return (
