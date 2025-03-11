@@ -1,11 +1,16 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './client';
+import { supabase, isSupabaseConfigured } from './client';
 import { Dealer } from '@/types';
 import { dealers as mockDealers } from '@/data/mockData';
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, uso dati mock');
+      return mockDealers;
+    }
+    
     const { data, error } = await supabase
       .from('dealers')
       .select('*')
@@ -13,13 +18,20 @@ export const dealersApi = {
 
     if (error) {
       console.error('Errore nel recupero dei dealer:', error);
-      throw error;
+      return mockDealers; // Fallback to mock data
     }
 
     return data as Dealer[];
   },
   
   getById: async (id: string): Promise<Dealer> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, uso dati mock');
+      const dealer = mockDealers.find(d => d.id === id);
+      if (!dealer) throw new Error('Dealer non trovato');
+      return dealer;
+    }
+    
     const { data, error } = await supabase
       .from('dealers')
       .select('*')
@@ -28,13 +40,20 @@ export const dealersApi = {
 
     if (error) {
       console.error('Errore nel recupero del dealer:', error);
-      throw error;
+      const dealer = mockDealers.find(d => d.id === id);
+      if (!dealer) throw new Error('Dealer non trovato');
+      return dealer;
     }
 
     return data as Dealer;
   },
   
   create: async (dealer: Omit<Dealer, 'id'>): Promise<Dealer> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, impossibile creare dealer');
+      throw new Error('Supabase non configurato');
+    }
+    
     const newDealer = {
       ...dealer,
       id: uuidv4(),
@@ -58,6 +77,11 @@ export const dealersApi = {
   },
   
   update: async (id: string, updates: Partial<Dealer>): Promise<Dealer> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, impossibile aggiornare dealer');
+      throw new Error('Supabase non configurato');
+    }
+    
     const updatedData = {
       ...updates,
       updated_at: new Date().toISOString()
@@ -79,6 +103,11 @@ export const dealersApi = {
   },
   
   delete: async (id: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, impossibile eliminare dealer');
+      throw new Error('Supabase non configurato');
+    }
+    
     const { error } = await supabase
       .from('dealers')
       .delete()
@@ -92,6 +121,11 @@ export const dealersApi = {
 
   // Funzione per migrare i dati dal mock a Supabase
   migrateFromMockData: async (): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase non configurato, impossibile migrare i dati');
+      throw new Error('Supabase non configurato');
+    }
+    
     try {
       // Check if we already have dealers in Supabase to avoid duplicates
       const { data: existingDealers } = await supabase

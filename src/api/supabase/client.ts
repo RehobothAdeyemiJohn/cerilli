@@ -2,11 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Retrieve environment variables with fallbacks for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Mancano le variabili di ambiente Supabase');
-}
+// Only create the client if we have the required configuration
+export const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient<Database>(supabaseUrl, supabaseKey)
+  : null;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+// Utility function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!supabase;
+};

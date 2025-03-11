@@ -15,7 +15,7 @@ import Credentials from './pages/Credentials';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Index from './pages/Index';
-import Migration from './pages/Migration'; // Aggiungiamo la pagina di migrazione
+import Migration from './pages/Migration';
 
 function App() {
   return (
@@ -33,7 +33,7 @@ function App() {
           <Route path="/dealers" element={<Dealers />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/credentials" element={<Credentials />} />
-          <Route path="/migration" element={<Migration />} /> {/* Aggiungiamo la rotta di migrazione */}
+          <Route path="/migration" element={<Migration />} />
         </Route>
         
         <Route path="*" element={<NotFound />} />
