@@ -15,7 +15,7 @@ const Layout = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${isSidebarOpen ? 'lg:ml-64' : ''}`}>
         <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto p-6 pt-20">
           <Outlet />
