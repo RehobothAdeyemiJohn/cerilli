@@ -3,7 +3,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, AlertTriangle, Database, Info } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Database, Info, Link2 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/api/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,11 @@ const Migration = () => {
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   // Test di connessione a Supabase
-  const { data: connectionStatus, isLoading, refetch } = useQuery({
+  const { 
+    data: connectionStatus, 
+    isLoading, 
+    refetch: refetchConnection
+  } = useQuery({
     queryKey: ['supabaseConnection'],
     queryFn: async () => {
       try {
@@ -74,7 +78,11 @@ const Migration = () => {
   });
 
   // Ottieni informazioni sulle tabelle del database
-  const { data: tablesInfo, isLoading: tablesLoading } = useQuery({
+  const { 
+    data: tablesInfo, 
+    isLoading: tablesLoading,
+    refetch: refetchTables 
+  } = useQuery({
     queryKey: ['supabaseTables'],
     queryFn: async () => {
       if (!connectionStatus?.connected) return null;
@@ -146,16 +154,23 @@ const Migration = () => {
   });
 
   // Funzione per testare manualmente la connessione
-  const handleTestConnection = () => {
-    toast.promise(refetch(), {
+  const handleTestConnection = async () => {
+    toast.promise(refetchConnection(), {
       loading: 'Test di connessione in corso...',
       success: (data) => {
-        return data.data?.connected 
+        return data?.connected 
           ? '✅ Connessione a Supabase verificata con successo!' 
           : '❌ Impossibile connettersi a Supabase';
       },
       error: 'Errore durante il test di connessione'
     });
+  };
+
+  // Funzione per aggiornare tutte le informazioni dopo operazioni sul database
+  const handleDatabaseOperationSuccess = () => {
+    // Aggiorna la connessione e le informazioni sulle tabelle
+    refetchConnection();
+    refetchTables();
   };
 
   // Verifica se tutte le tabelle esistono
@@ -277,7 +292,7 @@ const Migration = () => {
                     onClick={handleTestConnection} 
                     className="w-full"
                   >
-                    <Database className="h-4 w-4 mr-2" />
+                    <Link2 className="h-4 w-4 mr-2" />
                     Verifica Connessione
                   </Button>
                 </div>
@@ -285,8 +300,11 @@ const Migration = () => {
             </CardContent>
           </Card>
           
-          {connectionStatus?.connected && !connectionStatus.tablesExist && !allTablesExist && (
-            <DataMigration />
+          {connectionStatus?.connected && (!connectionStatus.tablesExist || !allTablesExist) && (
+            <DataMigration 
+              tablesInfo={tablesInfo} 
+              onSuccess={handleDatabaseOperationSuccess} 
+            />
           )}
           
           {connectionStatus?.connected && (
