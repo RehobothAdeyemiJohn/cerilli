@@ -105,3 +105,5 @@ export const DashboardStats = () => {
     </div>
   );
 };
+
+export default DashboardStats;

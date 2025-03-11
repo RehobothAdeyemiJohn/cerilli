@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardStats from '@/components/dashboard/DashboardStats';
-import Chart from '@/components/dashboard/Chart';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { Chart } from '@/components/dashboard/Chart';
 import { 
   dashboardStats, 
   inventoryByModel, 
@@ -26,7 +25,7 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <DashboardStats stats={dashboardStats} />
+      <DashboardStats />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <Chart 
