@@ -56,91 +56,104 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pb-2">
           <DialogTitle>Dettagli Preventivo</DialogTitle>
         </DialogHeader>
         
-        <div className="mt-3 space-y-4">
-          <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-md">
+        <div className="mt-2 space-y-3 text-sm">
+          <div className="grid grid-cols-6 gap-2 p-2 bg-gray-50 rounded-md">
             <div>
-              <p className="text-sm text-gray-500">Modello</p>
+              <p className="text-xs text-gray-500">Modello</p>
               <p className="font-medium">{vehicle.model}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Allestimento</p>
+              <p className="text-xs text-gray-500">Allestimento</p>
               <p className="font-medium">{vehicle.trim}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Colore</p>
+              <p className="text-xs text-gray-500">Colore</p>
               <p className="font-medium">{vehicle.exteriorColor}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Prezzo Veicolo</p>
+              <p className="text-xs text-gray-500">Prezzo Veicolo</p>
               <p className="font-medium">{formatCurrency(quote.price)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Prezzo Finale</p>
+              <p className="text-xs text-gray-500">Prezzo Finale</p>
               <p className="font-medium text-primary">{formatCurrency(quote.finalPrice)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">IVA</p>
+              <p className="text-xs text-gray-500">IVA</p>
               <p className="font-medium">{quote.vatRate === 0.04 ? '4% (agevolata)' : '22%'}</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             <div>
-              <p className="text-sm text-gray-500">Cliente</p>
+              <p className="text-xs text-gray-500">Cliente</p>
               <p className="font-medium">{quote.customerName}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Email</p>
+              <p className="text-xs text-gray-500">Email</p>
               <p className="font-medium">{quote.customerEmail}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Telefono</p>
+              <p className="text-xs text-gray-500">Telefono</p>
               <p className="font-medium">{quote.customerPhone}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Data Creazione</p>
+              <p className="text-xs text-gray-500">Data Creazione</p>
               <p className="font-medium">{formatDate(quote.createdAt)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Stato</p>
+              <p className="text-xs text-gray-500">Stato</p>
               <p className="font-medium">
-                <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(quote.status)}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(quote.status)}`}>
                   {getStatusLabel(quote.status)}
                 </span>
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Sconto</p>
+              <p className="text-xs text-gray-500">Sconto</p>
               <p className="font-medium">{formatCurrency(quote.discount || 0)}</p>
             </div>
+            
+            {quote.accessories && quote.accessories.length > 0 && (
+              <div className="col-span-2">
+                <p className="text-xs text-gray-500">Optional Aggiunti</p>
+                <div className="font-medium flex flex-wrap gap-1">
+                  {quote.accessories.map((acc, idx) => (
+                    <span key={idx} className="text-xs bg-gray-100 px-1 py-0.5 rounded">
+                      {acc}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           {quote.hasTradeIn && (
-            <div className="border p-3 rounded-md">
-              <h3 className="font-medium mb-2">Dettagli Permuta</h3>
-              <div className="grid grid-cols-3 gap-3">
+            <div className="border p-2 rounded-md">
+              <h3 className="font-medium mb-1 text-xs">Dettagli Permuta</h3>
+              <div className="grid grid-cols-5 gap-2">
                 <div>
-                  <p className="text-sm text-gray-500">Marca</p>
+                  <p className="text-xs text-gray-500">Marca</p>
                   <p className="font-medium">{quote.tradeInBrand || 'N/D'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Modello</p>
+                  <p className="text-xs text-gray-500">Modello</p>
                   <p className="font-medium">{quote.tradeInModel || 'N/D'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Anno</p>
+                  <p className="text-xs text-gray-500">Anno</p>
                   <p className="font-medium">{quote.tradeInYear || 'N/D'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Chilometri</p>
+                  <p className="text-xs text-gray-500">Chilometri</p>
                   <p className="font-medium">{quote.tradeInKm ? quote.tradeInKm.toLocaleString() : 'N/D'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Valore</p>
+                  <p className="text-xs text-gray-500">Valore</p>
                   <p className="font-medium">{formatCurrency(quote.tradeInValue || 0)}</p>
                 </div>
               </div>
@@ -148,24 +161,26 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           )}
           
           {quote.status === 'rejected' && quote.rejectionReason && (
-            <div className="border-t pt-3">
-              <p className="text-sm text-gray-500">Motivo Rifiuto</p>
+            <div className="border-t pt-2">
+              <p className="text-xs text-gray-500">Motivo Rifiuto</p>
               <p className="font-medium">{quote.rejectionReason}</p>
             </div>
           )}
         </div>
         
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-3">
           {quote.status === 'pending' && (
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
+                size="sm"
                 onClick={() => onStatusChange(quote.id, 'rejected')}
               >
                 Rifiuta
               </Button>
               <Button 
-                variant="default" 
+                variant="default"
+                size="sm"
                 onClick={() => onStatusChange(quote.id, 'approved')}
               >
                 Approva
@@ -176,13 +191,15 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           {quote.status === 'approved' && (
             <div className="flex gap-2">
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={() => onStatusChange(quote.id, 'pending')}
               >
                 Metti in Attesa
               </Button>
               <Button 
-                variant="default" 
+                variant="default"
+                size="sm" 
                 onClick={() => onStatusChange(quote.id, 'converted')}
               >
                 Converti in Vendita

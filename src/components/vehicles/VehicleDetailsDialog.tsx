@@ -60,8 +60,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
-        <DialogHeader>
+      <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
           <DialogTitle>{vehicle.model} {vehicle.trim}</DialogTitle>
           <DialogDescription>
             Dettagli del veicolo e azioni disponibili
@@ -75,55 +75,55 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             onCancel={handleCancelQuote}
           />
         ) : (
-          <div className="mt-4">
-            <div className="grid grid-cols-3 gap-4 mt-4">
+          <div className="mt-2">
+            <div className="grid grid-cols-6 gap-2 mt-2 text-sm">
               <div>
-                <p className="text-sm font-medium text-gray-500">Modello</p>
+                <p className="text-xs font-medium text-gray-500">Modello</p>
                 <p>{vehicle.model}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Allestimento</p>
+                <p className="text-xs font-medium text-gray-500">Allestimento</p>
                 <p>{vehicle.trim}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Alimentazione</p>
+                <p className="text-xs font-medium text-gray-500">Alimentazione</p>
                 <p>{vehicle.fuelType}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Colore</p>
+                <p className="text-xs font-medium text-gray-500">Colore</p>
                 <p>{vehicle.exteriorColor}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Prezzo</p>
+                <p className="text-xs font-medium text-gray-500">Prezzo</p>
                 <p className="font-bold text-primary">
                   {formatCurrency(vehicle.price)}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Ubicazione</p>
+                <p className="text-xs font-medium text-gray-500">Ubicazione</p>
                 <p>{vehicle.location}</p>
               </div>
               {vehicle.transmission && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Cambio</p>
+                  <p className="text-xs font-medium text-gray-500">Cambio</p>
                   <p>{vehicle.transmission}</p>
                 </div>
               )}
             </div>
             
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500">Accessori</p>
-              <ul className="mt-1 space-y-1">
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500">Optional Inclusi</p>
+              <div className="mt-1 grid grid-cols-3 gap-1">
                 {vehicle.accessories.map((accessory, idx) => (
-                  <li key={idx} className="text-sm flex items-center">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary mr-2"></span>
+                  <div key={idx} className="text-xs flex items-center">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
                     {accessory}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
             
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-4 mt-4">
               {vehicle.status === 'available' ? (
                 <>
                   <Button 

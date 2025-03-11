@@ -30,7 +30,7 @@ const VehicleEditDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <DialogHeader className="pb-2">
           <DialogTitle>Modifica Veicolo</DialogTitle>
           <DialogDescription>
             Modifica i dettagli del veicolo {vehicle.model} {vehicle.trim}

@@ -51,7 +51,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   useEffect(() => {
     const getVehicleAccessories = async () => {
       if (vehicle.model && vehicle.trim) {
-        // Get model and trim IDs from names
+        // Get accessories compatible with this model
         const modelObj = await accessoriesApi.getCompatible(vehicle.model, vehicle.trim);
         setCompatibleAccessories(modelObj);
       }
@@ -113,45 +113,45 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-none text-base">
-      <div className="mb-4 p-4 bg-gray-50 rounded-md">
-        <h3 className="font-medium text-lg mb-2">Informazioni Veicolo</h3>
-        <div className="grid grid-cols-3 gap-4">
+    <div className="w-full text-sm">
+      <div className="mb-3 p-2 bg-gray-50 rounded-md">
+        <h3 className="font-medium text-base mb-1">Informazioni Veicolo</h3>
+        <div className="grid grid-cols-6 gap-2">
           <div>
-            <p className="text-gray-500">Modello</p>
-            <p className="font-medium text-lg">{vehicle.model}</p>
+            <p className="text-xs text-gray-500">Modello</p>
+            <p className="font-medium">{vehicle.model}</p>
           </div>
           <div>
-            <p className="text-gray-500">Allestimento</p>
-            <p className="font-medium text-lg">{vehicle.trim}</p>
+            <p className="text-xs text-gray-500">Allestimento</p>
+            <p className="font-medium">{vehicle.trim}</p>
           </div>
           <div>
-            <p className="text-gray-500">Colore</p>
-            <p className="font-medium text-lg">{vehicle.exteriorColor}</p>
+            <p className="text-xs text-gray-500">Colore</p>
+            <p className="font-medium">{vehicle.exteriorColor}</p>
           </div>
           <div>
-            <p className="text-gray-500">Prezzo</p>
-            <p className="font-medium text-lg text-primary">{formatCurrency(vehicle.price)}</p>
+            <p className="text-xs text-gray-500">Prezzo</p>
+            <p className="font-medium text-primary">{formatCurrency(vehicle.price)}</p>
           </div>
           {vehicle.transmission && (
             <div>
-              <p className="text-gray-500">Cambio</p>
-              <p className="font-medium text-lg">{vehicle.transmission}</p>
+              <p className="text-xs text-gray-500">Cambio</p>
+              <p className="font-medium">{vehicle.transmission}</p>
             </div>
           )}
           <div>
-            <p className="text-gray-500">Carburante</p>
-            <p className="font-medium text-lg">{vehicle.fuelType}</p>
+            <p className="text-xs text-gray-500">Carburante</p>
+            <p className="font-medium">{vehicle.fuelType}</p>
           </div>
         </div>
         
         {vehicle.accessories && vehicle.accessories.length > 0 && (
-          <div className="mt-4">
-            <p className="text-gray-500 mb-2">Optional Inclusi</p>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mt-2">
+            <p className="text-xs text-gray-500 mb-1">Optional Inclusi</p>
+            <div className="grid grid-cols-3 gap-1">
               {vehicle.accessories.map((accessory, idx) => (
-                <div key={idx} className="text-base flex items-center">
-                  <span className="h-2 w-2 rounded-full bg-primary mr-2"></span>
+                <div key={idx} className="text-xs flex items-center">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
                   {accessory}
                 </div>
               ))}
@@ -161,16 +161,16 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
             <FormField
               control={form.control}
               name="customerName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Nome Cliente</FormLabel>
+                  <FormLabel className="text-xs">Nome Cliente</FormLabel>
                   <FormControl>
-                    <Input placeholder="Inserisci nome cliente" {...field} className="text-base py-2" />
+                    <Input placeholder="Inserisci nome cliente" {...field} className="text-sm py-1" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,9 +182,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
               name="customerEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Email</FormLabel>
+                  <FormLabel className="text-xs">Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="cliente@esempio.com" {...field} className="text-base py-2" />
+                    <Input type="email" placeholder="cliente@esempio.com" {...field} className="text-sm py-1" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,9 +196,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
               name="customerPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Telefono</FormLabel>
+                  <FormLabel className="text-xs">Telefono</FormLabel>
                   <FormControl>
-                    <Input placeholder="+39 123 456 7890" {...field} className="text-base py-2" />
+                    <Input placeholder="+39 123 456 7890" {...field} className="text-sm py-1" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,20 +206,20 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 border-t pt-4">
+          <div className="grid grid-cols-2 gap-3 border-t pt-2">
             <FormField
               control={form.control}
               name="discount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Sconto (€)</FormLabel>
+                  <FormLabel className="text-xs">Sconto (€)</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
                       placeholder="0" 
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
-                      className="text-base py-2"
+                      className="text-sm py-1"
                     />
                   </FormControl>
                   <FormMessage />
@@ -231,10 +231,10 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
               control={form.control}
               name="reducedVAT"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-md border p-4 h-[calc(100%-8px)]">
+                <FormItem className="flex flex-row items-center justify-between rounded-md border p-3">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">IVA agevolata</FormLabel>
-                    <p className="text-sm text-muted-foreground">
+                    <FormLabel className="text-xs">IVA agevolata</FormLabel>
+                    <p className="text-xs text-muted-foreground">
                       Applica IVA al 4% (Legge 104)
                     </p>
                   </div>
@@ -250,16 +250,16 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
           </div>
 
           {compatibleAccessories.length > 0 && (
-            <div className="border-t pt-4">
-              <h3 className="font-medium mb-3">Optional Disponibili</h3>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="border-t pt-2">
+              <h3 className="font-medium text-sm mb-2">Optional Disponibili</h3>
+              <div className="grid grid-cols-2 gap-2">
                 {compatibleAccessories.map((accessory) => (
                   <FormField
                     key={accessory.id}
                     control={form.control}
                     name="vehicleAccessories"
                     render={({ field }) => (
-                      <FormItem className="flex items-start space-x-3 space-y-0">
+                      <FormItem className="flex items-start space-x-2 space-y-0">
                         <Checkbox
                           checked={field.value?.includes(accessory.name)}
                           onCheckedChange={(checked) => {
@@ -270,10 +270,10 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                             field.onChange(updated);
                           }}
                         />
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
+                        <div className="space-y-0.5 leading-none">
+                          <FormLabel className="text-xs">
                             {accessory.name}
-                            <span className="ml-1 text-sm text-gray-500">
+                            <span className="ml-1 text-xs text-gray-500">
                               (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
                             </span>
                           </FormLabel>
@@ -286,12 +286,12 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             </div>
           )}
 
-          <div className="border-t pt-4">
+          <div className="border-t pt-2">
             <FormField
               control={form.control}
               name="hasTradeIn"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-4">
+                <FormItem className="flex flex-row items-start space-x-2 space-y-0 mb-2">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -301,8 +301,8 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                       }}
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-base">
+                  <div className="space-y-0.5 leading-none">
+                    <FormLabel className="text-xs">
                       Permuta
                     </FormLabel>
                   </div>
@@ -311,15 +311,15 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             />
 
             {showTradeIn && (
-              <div className="grid grid-cols-3 gap-4 pl-6 mb-4">
+              <div className="grid grid-cols-5 gap-2 pl-5 mb-2">
                 <FormField
                   control={form.control}
                   name="tradeInBrand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">Marca</FormLabel>
+                      <FormLabel className="text-xs">Marca</FormLabel>
                       <FormControl>
-                        <Input placeholder="Es. Fiat" {...field} className="text-base py-2" />
+                        <Input placeholder="Es. Fiat" {...field} className="text-sm py-1" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -331,9 +331,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                   name="tradeInModel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">Modello</FormLabel>
+                      <FormLabel className="text-xs">Modello</FormLabel>
                       <FormControl>
-                        <Input placeholder="Es. Panda" {...field} className="text-base py-2" />
+                        <Input placeholder="Es. Panda" {...field} className="text-sm py-1" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -345,9 +345,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                   name="tradeInYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">Anno</FormLabel>
+                      <FormLabel className="text-xs">Anno</FormLabel>
                       <FormControl>
-                        <Input placeholder="Es. 2018" {...field} className="text-base py-2" />
+                        <Input placeholder="Es. 2018" {...field} className="text-sm py-1" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -359,14 +359,14 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                   name="tradeInKm"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">Chilometri</FormLabel>
+                      <FormLabel className="text-xs">Chilometri</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           placeholder="Es. 50000" 
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="text-base py-2"
+                          className="text-sm py-1"
                         />
                       </FormControl>
                       <FormMessage />
@@ -379,14 +379,14 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
                   name="tradeInValue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">Valore permuta (€)</FormLabel>
+                      <FormLabel className="text-xs">Valore permuta (€)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           placeholder="0" 
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="text-base py-2"
+                          className="text-sm py-1"
                         />
                       </FormControl>
                       <FormMessage />
@@ -397,52 +397,43 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel }: QuoteFormProps) => {
             )}
           </div>
 
-          <div className="pt-4 border-t">
-            <div className="grid grid-cols-4 gap-3 border p-3 rounded-md bg-gray-50">
-              <div className="space-y-1">
-                <p className="text-gray-500 text-sm">Prezzo Veicolo {watchReducedVAT ? '(IVA 4%)' : '(IVA 22%)'}</p>
-                <p className="font-medium text-base">{formatCurrency(basePrice)}</p>
+          <div className="pt-2 border-t">
+            <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
+              <div className="space-y-0.5">
+                <p className="text-xs text-gray-500">Prezzo Veicolo {watchReducedVAT ? '(IVA 4%)' : '(IVA 22%)'}</p>
+                <p className="font-medium text-sm">{formatCurrency(basePrice)}</p>
               </div>
               
-              {accessoryTotalPrice > 0 && (
-                <div className="space-y-1">
-                  <p className="text-gray-500 text-sm">Optional Aggiunti</p>
-                  <p className="font-medium text-base">+ {formatCurrency(accessoryTotalPrice)}</p>
-                </div>
-              )}
-              
-              <div className="space-y-1">
-                <p className="text-gray-500 text-sm">Sconto</p>
-                <p className="font-medium text-base">- {formatCurrency(watchDiscount || 0)}</p>
+              <div className="space-y-0.5">
+                <p className="text-xs text-gray-500">Optional Aggiunti</p>
+                <p className="font-medium text-sm">+ {formatCurrency(accessoryTotalPrice)}</p>
               </div>
               
-              {watchHasTradeIn && watchTradeInValue > 0 && (
-                <div className="space-y-1">
-                  <p className="text-gray-500 text-sm">Valore Permuta</p>
-                  <p className="font-medium text-base">- {formatCurrency(watchTradeInValue)}</p>
-                </div>
-              )}
+              <div className="space-y-0.5">
+                <p className="text-xs text-gray-500">Sconto / Permuta</p>
+                <p className="font-medium text-sm">- {formatCurrency((watchDiscount || 0) + (watchHasTradeIn ? watchTradeInValue : 0))}</p>
+              </div>
               
-              <div className="space-y-1">
-                <p className="text-gray-500 text-sm font-semibold">Prezzo Finale</p>
-                <p className="font-bold text-lg text-primary">
+              <div className="space-y-0.5">
+                <p className="text-xs text-gray-500 font-semibold">Prezzo Finale</p>
+                <p className="font-bold text-sm text-primary">
                   {formatCurrency(finalPrice)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-4">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 text-base"
+              className="px-3 py-1 border border-gray-200 rounded-md hover:bg-gray-50 text-sm"
             >
               Annulla
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 text-base"
+              className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary/90 text-sm"
             >
               Crea Preventivo
             </button>
