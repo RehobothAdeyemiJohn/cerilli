@@ -3,23 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
 // Retrieve environment variables with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://idtyeemidnwidsizzwao.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkdHllZW1pZG53aWRzaXp6d2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MTE1MTAsImV4cCI6MjA1NzI4NzUxMH0.D3CExwfUNhBRXDEWjL6FINV445qP7-z5Xs5EHSvYpec';
 
-// Only create the client if we have the required configuration
-export const supabase = (supabaseUrl && supabaseKey) 
-  ? createClient<Database>(supabaseUrl, supabaseKey)
-  : null;
+// Create the Supabase client
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 // Utility function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
   if (!supabaseUrl || !supabaseKey) {
     console.error('Supabase non configurato. Mancano URL o chiave API.');
-    return false;
-  }
-  
-  if (!supabase) {
-    console.error('Cliente Supabase non inizializzato.');
     return false;
   }
   
