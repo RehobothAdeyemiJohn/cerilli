@@ -1,9 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { AdminUser, AdminUserFormData } from '@/types/admin';
-import { getStorageItem, setStorageItem } from './storageUtils';
-
-const STORAGE_KEY = 'adminUsers';
+import { AdminUser, AdminUserFormData, Permission } from '@/types/admin';
+import { getStorageItem, setStorageItem, KEYS } from './storageUtils';
 
 const defaultAdminUsers: AdminUser[] = [
   {
@@ -23,9 +21,9 @@ const defaultAdminUsers: AdminUser[] = [
 
 // Initialize storage with default admin users if empty
 const initializeStorage = () => {
-  const existingUsers = getStorageItem<AdminUser[]>(STORAGE_KEY);
+  const existingUsers = getStorageItem<AdminUser[]>(KEYS.ADMIN_USERS);
   if (!existingUsers) {
-    setStorageItem(STORAGE_KEY, defaultAdminUsers);
+    setStorageItem(KEYS.ADMIN_USERS, defaultAdminUsers);
     return defaultAdminUsers;
   }
   return existingUsers;
@@ -50,7 +48,7 @@ export const adminUsersApi = {
       updatedAt: new Date().toISOString()
     };
     const updatedUsers = [...users, newUser];
-    setStorageItem(STORAGE_KEY, updatedUsers);
+    setStorageItem(KEYS.ADMIN_USERS, updatedUsers);
     return Promise.resolve(newUser);
   },
 
@@ -69,7 +67,7 @@ export const adminUsersApi = {
     };
     
     users[userIndex] = updatedUser;
-    setStorageItem(STORAGE_KEY, users);
+    setStorageItem(KEYS.ADMIN_USERS, users);
     return Promise.resolve(updatedUser);
   },
 
@@ -81,7 +79,7 @@ export const adminUsersApi = {
       return Promise.resolve(false);
     }
     
-    setStorageItem(STORAGE_KEY, updatedUsers);
+    setStorageItem(KEYS.ADMIN_USERS, updatedUsers);
     return Promise.resolve(true);
   }
 };

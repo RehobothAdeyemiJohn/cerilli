@@ -6,6 +6,18 @@ export const KEYS = {
   VEHICLES: 'cirelli_vehicles',
   QUOTES: 'cirelli_quotes',
   ORDERS: 'cirelli_orders',
+  ADMIN_USERS: 'adminUsers'
+};
+
+// Generic function to get item from localStorage
+export const getStorageItem = <T>(key: string): T | null => {
+  const item = localStorage.getItem(key);
+  return item ? JSON.parse(item) : null;
+};
+
+// Generic function to set item in localStorage
+export const setStorageItem = <T>(key: string, value: T): void => {
+  localStorage.setItem(key, JSON.stringify(value));
 };
 
 // Function to initialize local storage with sample data
