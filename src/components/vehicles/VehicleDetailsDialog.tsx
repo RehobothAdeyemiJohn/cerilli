@@ -9,7 +9,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import QuoteForm from '@/components/quotes/QuoteForm';
-import { quotesApi } from '@/api/localStorage/quotesApi';
+import { quotesApi } from '@/api/supabase/quotesApi';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import ReserveVehicleForm from './ReserveVehicleForm';

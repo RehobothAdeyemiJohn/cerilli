@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,8 +9,8 @@ import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Filter } from 'lucide-react';
-import { quotesApi } from '@/api/localStorage/quotesApi';
-import { vehiclesApi } from '@/api/localStorage/vehiclesApi';
+import { quotesApi } from '@/api/supabase/quotesApi';
+import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { Quote, Vehicle } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -33,7 +32,6 @@ const Quotes = () => {
   
   const queryClient = useQueryClient();
   
-  // Check if coming from another page with redirect
   useEffect(() => {
     if (location.state?.fromInventory) {
       const vehicleId = location.state.vehicleId;
@@ -64,7 +62,6 @@ const Quotes = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       setCreateDialogOpen(false);
-      // Set the active tab to 'pending' to show the newly created quote
       setActiveTab('pending');
       toast({
         title: 'Preventivo Creato',
@@ -87,7 +84,6 @@ const Quotes = () => {
     },
   });
   
-  // Filtra i preventivi in base ai filtri attivi
   const filteredQuotes = quotes.filter(quote => {
     let matchesDealer = filterDealer === 'all' || quote.dealerId === filterDealer;
     
@@ -120,7 +116,7 @@ const Quotes = () => {
       ...data,
       status: 'pending' as const,
       createdAt: new Date().toISOString(),
-      dealerId: 'current-user-dealer-id', // Questo dovrebbe essere sostituito con l'ID effettivo del dealer
+      dealerId: 'current-user-dealer-id',
     });
   };
   
@@ -138,7 +134,6 @@ const Quotes = () => {
   
   const handleUpdateStatus = (id: string, status: Quote['status']) => {
     if (status === 'rejected') {
-      // Apri il dialog per inserire il motivo del rifiuto
       const quote = quotes.find(q => q.id === id);
       if (quote) {
         setSelectedQuote(quote);
@@ -216,10 +211,9 @@ const Quotes = () => {
                 return (
                   <tr key={quote.id} className="border-b">
                     <td className="p-3">{quote.customerName}</td>
-                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim}` : 'Sconosciuto'}</td>
+                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim || ''}` : 'Sconosciuto'}</td>
                     <td className="p-3">
                       {quote.dealerId || 'N/D'}
-                      {/* Qui potrebbe essere aggiunto il nome del venditore */}
                     </td>
                     <td className="p-3">€{quote.finalPrice.toLocaleString()}</td>
                     <td className="p-3">
@@ -354,7 +348,6 @@ const Quotes = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tutti i dealer</SelectItem>
-                {/* Qui verrebbero inseriti i dealer da un API */}
                 <SelectItem value="dealer1">Concessionaria A</SelectItem>
                 <SelectItem value="dealer2">Concessionaria B</SelectItem>
               </SelectContent>
@@ -393,7 +386,6 @@ const Quotes = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Dialog per creare un nuovo preventivo */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
           <DialogHeader>
@@ -410,7 +402,6 @@ const Quotes = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per visualizzare i dettagli di un preventivo */}
       <QuoteDetailsDialog
         quote={selectedQuote}
         vehicle={selectedVehicle}
@@ -419,7 +410,6 @@ const Quotes = () => {
         onStatusChange={handleUpdateStatus}
       />
       
-      {/* Dialog per inserire il motivo del rifiuto */}
       <QuoteRejectDialog
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
