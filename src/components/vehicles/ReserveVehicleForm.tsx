@@ -35,10 +35,21 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
   const queryClient = useQueryClient();
   const { handleVehicleUpdate } = useInventory();
   
-  // Get all compatible accessories for this vehicle model
+  // Get all accessories
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
     queryFn: accessoriesApi.getAll
+  });
+
+  // Get vehicle model and trim from models and trims data
+  const { data: models = [] } = useQuery({
+    queryKey: ['models'],
+    queryFn: () => import('@/api/localStorage').then(api => api.modelsApi.getAll())
+  });
+
+  const { data: trims = [] } = useQuery({
+    queryKey: ['trims'],
+    queryFn: () => import('@/api/localStorage').then(api => api.trimsApi.getAll())
   });
 
   const activeDealers = dealers.filter(dealer => dealer.isActive);
@@ -51,20 +62,33 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
     },
   });
 
-  // Get compatible accessories for this vehicle model
+  // Get compatible accessories for this vehicle model/trim
   useEffect(() => {
     const fetchCompatibleAccessories = async () => {
       try {
-        // In a real implementation, you'd get the modelId and trimId
-        // Here we're simplifying by using all accessories
-        setCompatibleAccessories(accessories);
+        if (!vehicle.model || !vehicle.trim) {
+          setCompatibleAccessories([]);
+          return;
+        }
+
+        // Find model and trim IDs
+        const modelObj = models.find(m => m.name === vehicle.model);
+        const trimObj = trims.find(t => t.name === vehicle.trim);
+
+        if (modelObj && trimObj) {
+          const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
+          setCompatibleAccessories(compatibles);
+        } else {
+          setCompatibleAccessories([]);
+        }
       } catch (error) {
         console.error('Error fetching compatible accessories:', error);
+        setCompatibleAccessories([]);
       }
     };
     
     fetchCompatibleAccessories();
-  }, [accessories]);
+  }, [vehicle, accessories, models, trims]);
 
   const onSubmit = async (data: ReservationFormValues) => {
     try {

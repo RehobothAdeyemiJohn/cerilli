@@ -15,6 +15,14 @@ export type Vehicle = {
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];
+  virtualConfig?: {
+    trim: string;
+    fuelType: string;
+    exteriorColor: string;
+    transmission: string;
+    accessories: string[];
+    price: number;
+  };
 };
 
 export type User = {

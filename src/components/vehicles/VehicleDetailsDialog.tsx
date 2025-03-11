@@ -15,6 +15,7 @@ import { quotesApi } from '@/api/localStorage/quotesApi';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import ReserveVehicleForm from './ReserveVehicleForm';
+import ReserveVirtualVehicleForm from './ReserveVirtualVehicleForm';
 import { calculateDaysInStock } from '@/lib/utils';
 
 interface VehicleDetailsDialogProps {
@@ -26,6 +27,7 @@ interface VehicleDetailsDialogProps {
 const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDialogProps) => {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showReserveForm, setShowReserveForm] = useState(false);
+  const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
   const queryClient = useQueryClient();
   
   if (!vehicle) return null;
@@ -65,12 +67,19 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     setShowReserveForm(true);
   };
 
+  const handleReserveVirtualVehicle = () => {
+    setShowVirtualReserveForm(true);
+  };
+
   const handleCancelReservation = () => {
     setShowReserveForm(false);
+    setShowVirtualReserveForm(false);
   };
   
   // Calculate days in stock if vehicle is in physical stock
   const daysInStock = vehicle.location !== 'Stock Virtuale' ? calculateDaysInStock(vehicle.dateAdded) : null;
+
+  const isVirtualStock = vehicle.location === 'Stock Virtuale';
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,6 +106,15 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
               onOpenChange(false);
             }}
           />
+        ) : showVirtualReserveForm ? (
+          <ReserveVirtualVehicleForm
+            vehicle={vehicle}
+            onCancel={handleCancelReservation}
+            onReservationComplete={() => {
+              setShowVirtualReserveForm(false);
+              onOpenChange(false);
+            }}
+          />
         ) : (
           <div className="mt-2">
             <div className="grid grid-cols-6 gap-2 mt-2 text-sm">
@@ -104,31 +122,33 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
                 <p className="text-xs font-medium text-gray-500">Modello</p>
                 <p>{vehicle.model}</p>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">Allestimento</p>
-                <p>{vehicle.trim}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">Alimentazione</p>
-                <p>{vehicle.fuelType}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500">Colore</p>
-                <p>{vehicle.exteriorColor}</p>
-              </div>
-              {vehicle.location !== 'Stock Virtuale' && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Prezzo</p>
-                  <p className="font-bold text-primary">
-                    {formatCurrency(vehicle.price)}
-                  </p>
-                </div>
+              {!isVirtualStock && (
+                <>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Allestimento</p>
+                    <p>{vehicle.trim}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Alimentazione</p>
+                    <p>{vehicle.fuelType}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Colore</p>
+                    <p>{vehicle.exteriorColor}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Prezzo</p>
+                    <p className="font-bold text-primary">
+                      {formatCurrency(vehicle.price)}
+                    </p>
+                  </div>
+                </>
               )}
               <div>
                 <p className="text-xs font-medium text-gray-500">Ubicazione</p>
                 <p>{vehicle.location}</p>
               </div>
-              {vehicle.transmission && (
+              {!isVirtualStock && vehicle.transmission && (
                 <div>
                   <p className="text-xs font-medium text-gray-500">Cambio</p>
                   <p>{vehicle.transmission}</p>
@@ -155,36 +175,48 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
               )}
             </div>
             
-            <div className="mt-3">
-              <p className="text-xs font-medium text-gray-500">Optional Inclusi</p>
-              <div className="mt-1 grid grid-cols-3 gap-1">
-                {vehicle.accessories.map((accessory, idx) => (
-                  <div key={idx} className="text-xs flex items-center">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
-                    {accessory}
-                  </div>
-                ))}
+            {!isVirtualStock && vehicle.accessories && vehicle.accessories.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-gray-500">Optional Inclusi</p>
+                <div className="mt-1 grid grid-cols-3 gap-1">
+                  {vehicle.accessories.map((accessory, idx) => (
+                    <div key={idx} className="text-xs flex items-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
+                      {accessory}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             
             <div className="flex gap-4 mt-4">
               {vehicle.status === 'available' ? (
                 <>
-                  <Button 
-                    variant="default" 
-                    className="flex-1"
-                    onClick={() => setShowQuoteForm(true)}
-                  >
-                    Crea Preventivo
-                  </Button>
-                  {vehicle.location !== 'Stock Virtuale' && (
+                  {isVirtualStock ? (
                     <Button 
-                      variant="outline" 
+                      variant="default" 
                       className="flex-1"
-                      onClick={handleReserveVehicle}
+                      onClick={handleReserveVirtualVehicle}
                     >
-                      Prenota Auto
+                      Prenota Virtuale
                     </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="default" 
+                        className="flex-1"
+                        onClick={() => setShowQuoteForm(true)}
+                      >
+                        Crea Preventivo
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={handleReserveVehicle}
+                      >
+                        Prenota Auto
+                      </Button>
+                    </>
                   )}
                 </>
               ) : (

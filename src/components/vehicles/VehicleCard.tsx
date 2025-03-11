@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Copy, Clock } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Settings } from 'lucide-react';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 
 interface VehicleCardProps {
@@ -28,8 +28,11 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
     sold: 'Venduta',
   };
 
+  // Detect if it's a virtual stock vehicle
+  const isVirtualStock = vehicle.location === 'Stock Virtuale';
+
   // Calculate days in stock if not in virtual stock
-  const daysInStock = vehicle.location !== 'Stock Virtuale' ? calculateDaysInStock(vehicle.dateAdded) : null;
+  const daysInStock = !isVirtualStock ? calculateDaysInStock(vehicle.dateAdded) : null;
 
   // Get stock days color
   const getStockDaysColor = (days: number) => {
@@ -37,6 +40,9 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
     if (days <= 60) return 'bg-amber-500';
     return 'bg-red-500';
   };
+
+  // Check if vehicle has a virtual configuration
+  const hasVirtualConfig = vehicle.virtualConfig !== undefined;
 
   // Ferma la propagazione degli eventi per evitare che il click sui pulsanti attivi anche il click sulla card
   const handleActionClick = (e: React.MouseEvent, action: (vehicle: Vehicle) => void) => {
@@ -53,7 +59,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
         <div className="flex justify-between items-start mb-2">
           <div>
             <h3 className="font-medium">{vehicle.model}</h3>
-            <p className="text-sm text-gray-500">{vehicle.trim}</p>
+            {!isVirtualStock && <p className="text-sm text-gray-500">{vehicle.trim}</p>}
           </div>
           <Badge variant="outline" className={statusColors[vehicle.status]}>
             {statusTranslations[vehicle.status]}
@@ -61,13 +67,13 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
         </div>
         
         <div className="mt-2 space-y-2">
-          {vehicle.fuelType && (
+          {!isVirtualStock && vehicle.fuelType && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Alimentazione:</span>
               <span>{vehicle.fuelType}</span>
             </div>
           )}
-          {vehicle.exteriorColor && (
+          {!isVirtualStock && vehicle.exteriorColor && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Colore:</span>
               <span>{vehicle.exteriorColor}</span>
@@ -77,7 +83,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
             <span className="text-gray-500">Posizione:</span>
             <span>{vehicle.location}</span>
           </div>
-          {vehicle.transmission && (
+          {!isVirtualStock && vehicle.transmission && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Cambio:</span>
               <span>{vehicle.transmission}</span>
@@ -87,6 +93,12 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Prenotato da:</span>
               <span className="font-medium">{vehicle.reservedBy}</span>
+            </div>
+          )}
+          {hasVirtualConfig && vehicle.status === 'reserved' && (
+            <div className="flex items-center text-sm text-primary mt-1">
+              <Settings className="h-3 w-3 mr-1" />
+              <span className="font-medium">Configurato</span>
             </div>
           )}
         </div>
@@ -105,7 +117,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
               <span>Aggiunto: {new Date(vehicle.dateAdded).toLocaleDateString()}</span>
             )}
           </div>
-          {vehicle.location !== 'Stock Virtuale' && (
+          {!isVirtualStock && (
             <div className="font-bold text-primary">{formatCurrency(vehicle.price)}</div>
           )}
         </div>

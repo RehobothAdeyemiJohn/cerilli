@@ -91,19 +91,24 @@ export const vehiclesApi = {
     });
   },
   
-  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[]): Promise<Vehicle> => {
+  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig']): Promise<Vehicle> => {
     const vehicle = await vehiclesApi.getById(id);
     
     if (vehicle.status !== 'available') {
       throw new Error('Il veicolo non è disponibile per la prenotazione');
     }
     
-    const updatedVehicle = {
+    const updatedVehicle: Vehicle = {
       ...vehicle,
       status: 'reserved' as const,
       reservedBy,
       reservedAccessories: reservedAccessories || [],
     };
+    
+    // Add virtual configuration if provided
+    if (virtualConfig) {
+      updatedVehicle.virtualConfig = virtualConfig;
+    }
     
     return vehiclesApi.update(id, updatedVehicle);
   }
