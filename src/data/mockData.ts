@@ -270,6 +270,10 @@ export let dealers: Dealer[] = [
     zipCode: '20100',
     createdAt: '2023-01-15',
     isActive: true,
+    // Added properties for authentication
+    email: 'info@autogalleriarossi.it',
+    password: 'password123',
+    contactName: 'Marco Rossi'
   },
   {
     id: '2',
@@ -280,6 +284,10 @@ export let dealers: Dealer[] = [
     zipCode: '00100',
     createdAt: '2023-03-20',
     isActive: true,
+    // Added properties for authentication
+    email: 'info@motovallebianchi.it',
+    password: 'password123',
+    contactName: 'Giulia Bianchi'
   },
   {
     id: '3',
@@ -290,6 +298,10 @@ export let dealers: Dealer[] = [
     zipCode: '20123',
     createdAt: '2023-05-10',
     isActive: true,
+    // Added properties for authentication
+    email: 'info@centroautomilano.it',
+    password: 'password123',
+    contactName: 'Luigi Verdi'
   },
 ];
 
@@ -390,3 +402,7 @@ export const getCurrentUser = (): User => {
   // In a real app, this would be fetched from auth context
   return users[0]; // Default to admin for demo
 };
+
+
+
+

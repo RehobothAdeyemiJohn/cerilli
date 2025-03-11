@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -103,6 +102,9 @@ export type Dealer = {
   zipCode: string;
   createdAt: string;
   isActive?: boolean;
+  email: string;
+  password: string;
+  contactName: string;
 };
 
 export type Vendor = {

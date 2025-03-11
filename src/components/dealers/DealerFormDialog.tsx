@@ -31,6 +31,10 @@ const formSchema = z.object({
   province: z.string().length(2, 'Inserire la sigla della provincia'),
   zipCode: z.string().length(5, 'CAP non valido'),
   isActive: z.boolean().default(true),
+  // New fields for authentication
+  contactName: z.string().min(1, 'Nome contatto richiesto'),
+  email: z.string().email('Email non valida'),
+  password: z.string().min(6, 'Password deve essere di almeno 6 caratteri'),
 });
 
 interface DealerFormDialogProps {
@@ -56,6 +60,10 @@ const DealerFormDialog = ({
       province: dealer?.province || '',
       zipCode: dealer?.zipCode || '',
       isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
+      // Include new fields
+      contactName: dealer?.contactName || '',
+      email: dealer?.email || '',
+      password: dealer?.password || '',
     },
   });
 
@@ -69,6 +77,10 @@ const DealerFormDialog = ({
         province: dealer?.province || '',
         zipCode: dealer?.zipCode || '',
         isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
+        // Include new fields
+        contactName: dealer?.contactName || '',
+        email: dealer?.email || '',
+        password: dealer?.password || '',
       });
     }
   }, [dealer, open, form]);
@@ -93,6 +105,10 @@ const DealerFormDialog = ({
           province: values.province,
           zipCode: values.zipCode,
           isActive: values.isActive,
+          // Include new fields
+          contactName: values.contactName,
+          email: values.email,
+          password: values.password,
         });
         toast({
           title: "Dealer creato con successo",
@@ -139,6 +155,48 @@ const DealerFormDialog = ({
                   <FormLabel>Nome Azienda</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contactName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome Contatto</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
