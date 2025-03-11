@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vehicle, Accessory } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const ReserveVirtualVehicleForm = ({
   
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
+  // Recupero dati
   const { 
     data: models = [], 
     isLoading: isLoadingModels 
@@ -99,28 +101,31 @@ const ReserveVirtualVehicleForm = ({
   const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
                     isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
 
-  const modelObj = models.find(m => m.name === vehicle.model);
+  // Aggiunto controllo per verificare se vehicle.model esiste e se models contiene elementi
+  const modelObj = vehicle?.model && models.length > 0 ? models.find(m => m.name === vehicle.model) : undefined;
   
-  const compatibleTrims = modelObj && trims ? trims.filter(trim => 
-    trim.compatibleModels.length === 0 || 
+  // Aggiunti controlli per evitare undefined
+  const compatibleTrims = modelObj && trims && trims.length > 0 ? trims.filter(trim => 
+    !trim.compatibleModels || !trim.compatibleModels.length || 
     trim.compatibleModels.includes(modelObj.id)
   ) : [];
 
-  const compatibleFuelTypes = modelObj && fuelTypes ? fuelTypes.filter(fuel => 
-    fuel.compatibleModels.length === 0 || 
+  const compatibleFuelTypes = modelObj && fuelTypes && fuelTypes.length > 0 ? fuelTypes.filter(fuel => 
+    !fuel.compatibleModels || !fuel.compatibleModels.length || 
     fuel.compatibleModels.includes(modelObj.id)
   ) : [];
 
-  const compatibleColors = modelObj && colors ? colors.filter(color => 
-    color.compatibleModels.length === 0 || 
+  const compatibleColors = modelObj && colors && colors.length > 0 ? colors.filter(color => 
+    !color.compatibleModels || !color.compatibleModels.length || 
     color.compatibleModels.includes(modelObj.id)
   ) : [];
 
-  const compatibleTransmissions = modelObj && transmissions ? transmissions.filter(trans => 
-    trans.compatibleModels.length === 0 || 
+  const compatibleTransmissions = modelObj && transmissions && transmissions.length > 0 ? transmissions.filter(trans => 
+    !trans.compatibleModels || !trans.compatibleModels.length || 
     trans.compatibleModels.includes(modelObj.id)
   ) : [];
 
+  // Mostra il loader durante il caricamento o se manca il modello
   if (isLoading || !modelObj) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -149,13 +154,17 @@ const ReserveVirtualVehicleForm = ({
 
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
-      if (vehicle.model && watchTrim) {
-        const modelObj = models.find(m => m.name === vehicle.model);
+      if (vehicle?.model && watchTrim && modelObj) {
         const trimObj = trims.find(t => t.name === watchTrim);
         
-        if (modelObj && trimObj) {
-          const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-          setCompatibleAccessories(compatibles);
+        if (trimObj) {
+          try {
+            const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
+            setCompatibleAccessories(compatibles || []);
+          } catch (error) {
+            console.error('Error fetching compatible accessories:', error);
+            setCompatibleAccessories([]);
+          }
         } else {
           setCompatibleAccessories([]);
         }
@@ -165,12 +174,11 @@ const ReserveVirtualVehicleForm = ({
     };
 
     updateCompatibleAccessories();
-  }, [vehicle.model, watchTrim, models, trims]);
+  }, [vehicle?.model, watchTrim, models, trims, modelObj]);
 
   useEffect(() => {
     const updatePrice = async () => {
-      if (vehicle.model && watchTrim && watchFuelType && watchColor && watchTransmission) {
-        const modelObj = models.find(m => m.name === vehicle.model);
+      if (vehicle?.model && watchTrim && watchFuelType && watchColor && watchTransmission && modelObj) {
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
         
@@ -181,29 +189,34 @@ const ReserveVirtualVehicleForm = ({
         
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-        if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          const selectedAccessoryIds = watchAccessories.map(name => {
-            const acc = accessories.find(a => a.name === name);
-            return acc ? acc.id : '';
-          }).filter(id => id !== '');
+        if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
+          try {
+            const selectedAccessoryIds = watchAccessories.map(name => {
+              const acc = accessories.find(a => a.name === name);
+              return acc ? acc.id : '';
+            }).filter(id => id !== '');
 
-          const price = await calculateVehiclePrice(
-            modelObj.id,
-            trimObj.id,
-            fuelTypeObj.id,
-            colorObj.id,
-            transmissionObj.id,
-            selectedAccessoryIds
-          );
-          
-          setCalculatedPrice(price);
+            const price = await calculateVehiclePrice(
+              modelObj.id,
+              trimObj.id,
+              fuelTypeObj.id,
+              colorObj.id,
+              transmissionObj.id,
+              selectedAccessoryIds
+            );
+            
+            setCalculatedPrice(price);
+          } catch (error) {
+            console.error('Error calculating price:', error);
+            setCalculatedPrice(0);
+          }
         }
       }
     };
 
     updatePrice();
   }, [
-    vehicle.model, 
+    vehicle?.model, 
     watchTrim, 
     watchFuelType, 
     watchColor, 
@@ -214,7 +227,8 @@ const ReserveVirtualVehicleForm = ({
     fuelTypes, 
     colors, 
     transmissions, 
-    accessories
+    accessories,
+    modelObj
   ]);
 
   const onSubmit = async (data: VirtualReservationFormValues) => {
