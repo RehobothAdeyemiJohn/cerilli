@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       <aside
         className={`fixed top-0 left-0 z-30 h-screen transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 w-64 bg-white border-r border-gray-200 pt-16 shadow-md`}
+        } lg:translate-x-0 w-64 bg-white border-r border-gray-200 shadow-md`}
       >
         <div className="absolute top-4 right-4 lg:hidden">
           <button 
@@ -70,49 +70,51 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </button>
         </div>
         
-        <div className="h-full px-3 py-4 overflow-y-auto">
-          <div className="mb-6 px-4">
+        <div className="h-full flex flex-col overflow-hidden">
+          <div className="flex-shrink-0 p-4 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-800">Cirelli Motor</h2>
             <p className="text-sm text-gray-500">Management System</p>
           </div>
           
-          <ul className="space-y-2 font-medium">
-            {/* Main Menu Items */}
-            {menuItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                    location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                  }`}
-                  onClick={isMobile ? toggleSidebar : undefined}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  <span>{item.title}</span>
-                </Link>
+          <div className="flex-1 overflow-y-auto py-4 px-3">
+            <ul className="space-y-2 font-medium">
+              {/* Main Menu Items */}
+              {menuItems.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                      location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
+                    }`}
+                    onClick={isMobile ? toggleSidebar : undefined}
+                  >
+                    <item.icon className="w-5 h-5 mr-3" />
+                    <span>{item.title}</span>
+                  </Link>
+                </li>
+              ))}
+              
+              <li className="pt-4 mt-4 border-t border-gray-200">
+                <p className="px-2 text-xs font-semibold text-gray-400 uppercase">Amministrazione</p>
               </li>
-            ))}
-            
-            <li className="pt-4 mt-4 border-t border-gray-200">
-              <p className="px-2 text-xs font-semibold text-gray-400 uppercase">Amministrazione</p>
-            </li>
-            
-            {/* Admin Menu Items */}
-            {adminItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                    location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
-                  }`}
-                  onClick={isMobile ? toggleSidebar : undefined}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  <span>{item.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+              
+              {/* Admin Menu Items */}
+              {adminItems.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                      location.pathname === item.path ? 'bg-primary text-white hover:bg-primary/90' : 'text-gray-900'
+                    }`}
+                    onClick={isMobile ? toggleSidebar : undefined}
+                  >
+                    <item.icon className="w-5 h-5 mr-3" />
+                    <span>{item.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </aside>
     </>
