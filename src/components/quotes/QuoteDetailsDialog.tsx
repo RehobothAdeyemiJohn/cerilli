@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useRef } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { 
   Dialog, 
@@ -10,6 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Quote, Vehicle } from '@/types';
+import { Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
+import QuotePrintContent from './QuotePrintContent';
 
 interface QuoteDetailsDialogProps {
   quote: Quote | null;
@@ -20,6 +22,12 @@ interface QuoteDetailsDialogProps {
 }
 
 const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange }: QuoteDetailsDialogProps) => {
+  const printRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
+
   if (!quote || !vehicle) return null;
   
   const formatDate = (dateString: string) => {
@@ -56,8 +64,17 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-2">
+        <DialogHeader className="pb-2 flex flex-row justify-between items-center">
           <DialogTitle>Dettagli Preventivo</DialogTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrint}
+            className="flex items-center gap-2"
+          >
+            <Printer className="h-4 w-4" />
+            Stampa PDF
+          </Button>
         </DialogHeader>
         
         <div className="mt-2 space-y-3 text-sm">
