@@ -35,6 +35,12 @@ export type Quote = {
   finalPrice: number;
   status: 'pending' | 'approved' | 'rejected' | 'converted';
   createdAt: string;
+  rejectionReason?: string;
+  tradeInModel?: string;
+  tradeInValue?: number;
+  hasTradeIn?: boolean;
+  reducedVAT?: boolean;
+  vatRate?: number;
 };
 
 export type Order = {
