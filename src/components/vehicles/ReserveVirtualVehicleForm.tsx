@@ -16,6 +16,7 @@ import {
   transmissionsApi, accessoriesApi, calculateVehiclePrice 
 } from '@/api/localStorage';
 import { formatCurrency } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 const virtualReservationSchema = z.object({
   dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
@@ -41,42 +42,91 @@ const ReserveVirtualVehicleForm = ({
 }: ReserveVirtualVehicleFormProps) => {
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [isAdmin, setIsAdmin] = useState(true); // For now, assume admin, in real app get from auth
-  const [dealerName, setDealerName] = useState<string>(''); // For dealer view, get from auth
+  const [isAdmin, setIsAdmin] = useState(true);
+  const [dealerName, setDealerName] = useState<string>('');
   const { handleVehicleUpdate } = useInventory();
   
-  const { data: models = [] } = useQuery({
+  const { 
+    data: models = [], 
+    isLoading: isLoadingModels 
+  } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll
   });
 
-  const { data: trims = [] } = useQuery({
+  const { 
+    data: trims = [], 
+    isLoading: isLoadingTrims 
+  } = useQuery({
     queryKey: ['trims'],
     queryFn: trimsApi.getAll
   });
 
-  const { data: fuelTypes = [] } = useQuery({
+  const { 
+    data: fuelTypes = [], 
+    isLoading: isLoadingFuelTypes 
+  } = useQuery({
     queryKey: ['fuelTypes'],
     queryFn: fuelTypesApi.getAll
   });
 
-  const { data: colors = [] } = useQuery({
+  const { 
+    data: colors = [], 
+    isLoading: isLoadingColors 
+  } = useQuery({
     queryKey: ['colors'],
     queryFn: colorsApi.getAll
   });
 
-  const { data: transmissions = [] } = useQuery({
+  const { 
+    data: transmissions = [], 
+    isLoading: isLoadingTransmissions 
+  } = useQuery({
     queryKey: ['transmissions'],
     queryFn: transmissionsApi.getAll
   });
 
-  const { data: accessories = [] } = useQuery({
+  const { 
+    data: accessories = [], 
+    isLoading: isLoadingAccessories 
+  } = useQuery({
     queryKey: ['accessories'],
     queryFn: accessoriesApi.getAll
   });
 
-  const activeDealers = dealers.filter(dealer => dealer.isActive);
+  const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
+                    isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
+
+  const modelObj = models.find(m => m.name === vehicle.model);
   
+  const compatibleTrims = modelObj && trims ? trims.filter(trim => 
+    trim.compatibleModels.length === 0 || 
+    trim.compatibleModels.includes(modelObj.id)
+  ) : [];
+
+  const compatibleFuelTypes = modelObj && fuelTypes ? fuelTypes.filter(fuel => 
+    fuel.compatibleModels.length === 0 || 
+    fuel.compatibleModels.includes(modelObj.id)
+  ) : [];
+
+  const compatibleColors = modelObj && colors ? colors.filter(color => 
+    color.compatibleModels.length === 0 || 
+    color.compatibleModels.includes(modelObj.id)
+  ) : [];
+
+  const compatibleTransmissions = modelObj && transmissions ? transmissions.filter(trans => 
+    trans.compatibleModels.length === 0 || 
+    trans.compatibleModels.includes(modelObj.id)
+  ) : [];
+
+  if (isLoading || !modelObj) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const form = useForm<VirtualReservationFormValues>({
     resolver: zodResolver(virtualReservationSchema),
     defaultValues: {
@@ -95,7 +145,6 @@ const ReserveVirtualVehicleForm = ({
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
 
-  // Update compatible accessories based on model and trim
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
       if (vehicle.model && watchTrim) {
@@ -116,7 +165,6 @@ const ReserveVirtualVehicleForm = ({
     updateCompatibleAccessories();
   }, [vehicle.model, watchTrim, models, trims]);
 
-  // Update calculated price based on selections
   useEffect(() => {
     const updatePrice = async () => {
       if (vehicle.model && watchTrim && watchFuelType && watchColor && watchTransmission) {
@@ -169,11 +217,9 @@ const ReserveVirtualVehicleForm = ({
 
   const onSubmit = async (data: VirtualReservationFormValues) => {
     try {
-      // Get dealer name for display
       const selectedDealer = activeDealers.find(dealer => dealer.id === data.dealerId);
       const dealerDisplayName = selectedDealer ? selectedDealer.companyName : dealerName || 'Unknown';
       
-      // Update vehicle with virtual configuration and change status to reserved
       const updatedVehicle: Vehicle = {
         ...vehicle,
         status: 'reserved',
@@ -205,43 +251,6 @@ const ReserveVirtualVehicleForm = ({
       });
     }
   };
-
-  // Fix for the "Cannot read properties of undefined (reading 'length')" error
-  // Get compatible trims for this model
-  const compatibleTrims = trims.filter(trim => {
-    const modelObj = models.find(m => m.name === vehicle.model);
-    if (!modelObj) return false;
-    
-    return trim.compatibleModels.length === 0 || 
-           trim.compatibleModels.includes(modelObj.id);
-  });
-
-  // Get compatible fuel types for this model
-  const compatibleFuelTypes = fuelTypes.filter(fuel => {
-    const modelObj = models.find(m => m.name === vehicle.model);
-    if (!modelObj) return false;
-    
-    return fuel.compatibleModels.length === 0 || 
-           fuel.compatibleModels.includes(modelObj.id);
-  });
-
-  // Get compatible colors for this model
-  const compatibleColors = colors.filter(color => {
-    const modelObj = models.find(m => m.name === vehicle.model);
-    if (!modelObj) return false;
-    
-    return color.compatibleModels.length === 0 || 
-           color.compatibleModels.includes(modelObj.id);
-  });
-
-  // Get compatible transmissions for this model
-  const compatibleTransmissions = transmissions.filter(trans => {
-    const modelObj = models.find(m => m.name === vehicle.model);
-    if (!modelObj) return false;
-    
-    return trans.compatibleModels.length === 0 || 
-           trans.compatibleModels.includes(modelObj.id);
-  });
 
   return (
     <Form {...form}>
