@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      dealers: {
+        Row: {
+          address: string
+          city: string
+          companyname: string
+          contactname: string
+          created_at: string | null
+          email: string
+          id: string
+          isactive: boolean | null
+          password: string
+          province: string
+          updated_at: string | null
+          zipcode: string
+        }
+        Insert: {
+          address: string
+          city: string
+          companyname: string
+          contactname: string
+          created_at?: string | null
+          email: string
+          id: string
+          isactive?: boolean | null
+          password: string
+          province: string
+          updated_at?: string | null
+          zipcode: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          companyname?: string
+          contactname?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          isactive?: boolean | null
+          password?: string
+          province?: string
+          updated_at?: string | null
+          zipcode?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          accessories: string[] | null
+          created_at: string | null
+          dateadded: string
+          exteriorcolor: string | null
+          fueltype: string | null
+          id: string
+          imageurl: string | null
+          location: string
+          model: string
+          price: number | null
+          reservedaccessories: string[] | null
+          reservedby: string | null
+          status: string | null
+          telaio: string | null
+          transmission: string | null
+          trim: string | null
+          updated_at: string | null
+          virtualconfig: Json | null
+        }
+        Insert: {
+          accessories?: string[] | null
+          created_at?: string | null
+          dateadded: string
+          exteriorcolor?: string | null
+          fueltype?: string | null
+          id: string
+          imageurl?: string | null
+          location: string
+          model: string
+          price?: number | null
+          reservedaccessories?: string[] | null
+          reservedby?: string | null
+          status?: string | null
+          telaio?: string | null
+          transmission?: string | null
+          trim?: string | null
+          updated_at?: string | null
+          virtualconfig?: Json | null
+        }
+        Update: {
+          accessories?: string[] | null
+          created_at?: string | null
+          dateadded?: string
+          exteriorcolor?: string | null
+          fueltype?: string | null
+          id?: string
+          imageurl?: string | null
+          location?: string
+          model?: string
+          price?: number | null
+          reservedaccessories?: string[] | null
+          reservedby?: string | null
+          status?: string | null
+          telaio?: string | null
+          transmission?: string | null
+          trim?: string | null
+          updated_at?: string | null
+          virtualconfig?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

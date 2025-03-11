@@ -54,3 +54,4 @@ SELECT * FROM vehicles LIMIT 5;
 ```
 
 Dovresti vedere le tabelle create e alcuni dati di esempio.
+
