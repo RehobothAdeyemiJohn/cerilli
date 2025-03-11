@@ -21,12 +21,21 @@ export const vehiclesApi = {
   
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
     const vehicles = await vehiclesApi.getAll();
+    
+    // Impostazione dei valori di default
     const newVehicle = {
       ...vehicle,
       id: uuidv4(),
       imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
       accessories: vehicle.accessories || [],
+      // Per Stock Virtuale, lasciamo alcuni campi vuoti o con valori predefiniti
+      trim: vehicle.trim || '',
+      fuelType: vehicle.fuelType || '',
+      exteriorColor: vehicle.exteriorColor || '',
+      transmission: vehicle.transmission || '',
+      telaio: vehicle.telaio || '',
+      price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
     };
     
     const updatedVehicles = [...vehicles, newVehicle];

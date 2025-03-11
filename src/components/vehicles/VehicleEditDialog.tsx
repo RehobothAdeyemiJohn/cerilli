@@ -27,13 +27,20 @@ const VehicleEditDialog = ({
 }: VehicleEditDialogProps) => {
   if (!vehicle) return null;
   
+  // Determina se il veicolo è in Stock Virtuale
+  const isVirtualStock = vehicle.location === 'Stock Virtuale';
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
-          <DialogTitle>Modifica Veicolo</DialogTitle>
+          <DialogTitle>
+            {isVirtualStock ? 'Modifica Veicolo (Stock Virtuale)' : 'Modifica Veicolo'}
+          </DialogTitle>
           <DialogDescription>
-            Modifica i dettagli del veicolo {vehicle.model} {vehicle.trim}
+            {isVirtualStock 
+              ? 'Modifica il modello del veicolo in stock virtuale' 
+              : `Modifica i dettagli del veicolo ${vehicle.model} ${vehicle.trim}`}
           </DialogDescription>
         </DialogHeader>
         
