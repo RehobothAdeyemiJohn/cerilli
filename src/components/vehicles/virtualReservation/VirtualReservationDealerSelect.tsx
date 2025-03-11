@@ -21,26 +21,27 @@ const VirtualReservationDealerSelect = ({
 }: VirtualReservationDealerSelectProps) => {
   const { user } = useAuth();
   
-  // Se l'utente è un dealer, impostiamo automaticamente il dealerId
+  // If user is a dealer, automatically set the dealerId
   useEffect(() => {
     if (!isAdmin && user?.dealerId) {
-      form.setValue('dealerId', user.dealerId);
+      // Type assertion to handle the extended FormValues with optional dealerId
+      form.setValue('dealerId' as any, user.dealerId);
     }
   }, [isAdmin, user, form]);
   
-  // Se non è admin, non mostrare il selettore
+  // If not admin, don't show the selector
   if (!isAdmin) return null;
   
   return (
     <FormField
       control={form.control}
-      name="dealerId"
+      name={'dealerId' as any}
       render={({ field }) => (
         <FormItem>
           <FormLabel>Concessionario</FormLabel>
           <Select 
             onValueChange={field.onChange} 
-            defaultValue={field.value}
+            defaultValue={field.value as string}
           >
             <FormControl>
               <SelectTrigger>

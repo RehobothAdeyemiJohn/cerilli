@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,7 +13,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 
-// Schema per la prenotazione di veicoli virtuali
+// Schema for virtual reservation
 const createVirtualReservationSchema = (isAdmin: boolean) => {
   const baseSchema = {
     trim: z.string().min(1, { message: "È necessario selezionare un allestimento" }),
@@ -24,7 +23,7 @@ const createVirtualReservationSchema = (isAdmin: boolean) => {
     accessories: z.array(z.string()).default([]),
   };
   
-  // Solo gli admin devono selezionare il concessionario
+  // Only admins need to select the dealer
   if (isAdmin) {
     return z.object({
       ...baseSchema,
@@ -35,7 +34,10 @@ const createVirtualReservationSchema = (isAdmin: boolean) => {
   return z.object(baseSchema);
 };
 
-export type VirtualReservationFormValues = z.infer<ReturnType<typeof createVirtualReservationSchema>>;
+// This type definition now explicitly allows for both base fields and optional dealerId
+export type VirtualReservationFormValues = z.infer<ReturnType<typeof createVirtualReservationSchema>> & {
+  dealerId?: string;
+};
 
 export const useVirtualReservation = (
   vehicle: Vehicle,

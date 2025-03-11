@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Vehicle, Accessory } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -16,13 +15,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useInventory } from '@/hooks/useInventory';
 import { useAuth } from '@/context/AuthContext';
 
-// Schema dinamico in base all'utente (admin o dealer)
+// Dynamic schema based on user type (admin or dealer)
 const createReservationSchema = (isAdmin: boolean) => {
   const baseSchema = {
     accessories: z.array(z.string()).optional(),
   };
   
-  // Solo gli admin devono selezionare il concessionario
+  // Only admins need to select the dealer
   if (isAdmin) {
     return z.object({
       ...baseSchema,
@@ -33,7 +32,11 @@ const createReservationSchema = (isAdmin: boolean) => {
   return z.object(baseSchema);
 };
 
-type ReservationFormValues = z.infer<ReturnType<typeof createReservationSchema>>;
+// This type definition now explicitly allows for both base fields and optional dealerId
+type ReservationFormValues = z.infer<ReturnType<typeof createReservationSchema>> & {
+  dealerId?: string;
+  accessories?: string[];
+};
 
 interface ReserveVehicleFormProps {
   vehicle: Vehicle;
@@ -69,15 +72,15 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
-  // Creiamo lo schema in base al tipo di utente
+  // Create schema based on user type
   const reservationSchema = createReservationSchema(isAdmin);
   
-  // Valori predefiniti del form
+  // Default form values
   const defaultValues: any = {
     accessories: [],
   };
   
-  // Se è un dealer, non c'è bisogno di selezionare un dealerId
+  // If dealer, no need to select a dealerId
   if (isAdmin) {
     defaultValues.dealerId = '';
   }
@@ -117,17 +120,17 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
   const onSubmit = async (data: ReservationFormValues) => {
     try {
-      // Determina il dealer ID e nome in base al ruolo dell'utente
+      // Determine dealer ID and name based on user role
       let selectedDealerId = '';
       let selectedDealerName = '';
       
       if (isAdmin) {
-        // Per admin, usa il dealer selezionato dal dropdown
-        selectedDealerId = (data as any).dealerId;
+        // For admin, use selected dealer from dropdown
+        selectedDealerId = data.dealerId as string;
         const selectedDealer = activeDealers.find(dealer => dealer.id === selectedDealerId);
         selectedDealerName = selectedDealer ? selectedDealer.companyName : 'Unknown';
       } else {
-        // Per dealer, usa le info dell'utente autenticato
+        // For dealer, use authenticated user's dealer info
         selectedDealerId = dealerId;
         selectedDealerName = dealerName;
       }
@@ -166,13 +169,13 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
         {isAdmin && (
           <FormField
             control={form.control}
-            name="dealerId"
+            name={"dealerId" as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Concessionario</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  defaultValue={field.value}
+                  defaultValue={field.value as string}
                 >
                   <FormControl>
                     <SelectTrigger>
