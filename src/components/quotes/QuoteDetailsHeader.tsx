@@ -16,7 +16,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     onAfterPrint: () => console.log('Print completed'),
     // Use a simple page style with auto margins
     pageStyle: '@page { size: auto; margin: 10mm }',
-    onBeforeGetContent: () => document.querySelector('[data-print-content="true"]'),
+    content: () => document.querySelector('[data-print-content="true"]'),
   });
 
   return (
