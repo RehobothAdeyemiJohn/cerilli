@@ -8,6 +8,7 @@ import { supabase, isSupabaseConfigured } from '@/api/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { DataMigration } from '@/components/migration/DataMigration';
 
 const Migration = () => {
   // Ottieni i valori delle variabili d'ambiente
@@ -33,7 +34,7 @@ const Migration = () => {
         // Prova a fare una richiesta a Supabase per verificare la connessione
         const { data, error } = await supabase.from('vehicles').select('id').limit(1);
         
-        if (error) {
+        if (error && error.code !== '42P01') { // 42P01 is "relation does not exist", which is expected if tables don't exist yet
           console.error('Errore nel test di connessione a Supabase:', error);
           return { 
             connected: false, 
@@ -51,6 +52,7 @@ const Migration = () => {
           connected: true, 
           error: null,
           hasData: Array.isArray(data) && data.length > 0,
+          tablesExist: error?.code !== '42P01',
           envStatus: {
             url: !!supabaseUrl,
             key: !!supabaseKey && supabaseKey.length > 20
@@ -78,32 +80,63 @@ const Migration = () => {
       if (!connectionStatus?.connected) return null;
       
       try {
-        // Controlla il numero di veicoli
-        const { count: vehiclesCount, error: vehiclesError } = await supabase
-          .from('vehicles')
-          .select('*', { count: 'exact', head: true });
+        // Controlla se le tabelle esistono prima di contare i record
+        const { data: tables, error: tablesError } = await supabase.rpc('list_tables');
         
-        // Controlla il numero di concessionari
-        const { count: dealersCount, error: dealersError } = await supabase
-          .from('dealers')
-          .select('*', { count: 'exact', head: true });
+        if (tablesError) {
+          console.error('Errore nel recupero delle tabelle:', tablesError);
+          return null;
+        }
         
-        // Controlla il numero di preventivi
-        const { count: quotesCount, error: quotesError } = await supabase
-          .from('quotes')
-          .select('*', { count: 'exact', head: true });
+        const tableExists = (tableName: string) => 
+          Array.isArray(tables) && tables.some(t => t.table_name === tableName);
         
-        // Controlla il numero di ordini
-        const { count: ordersCount, error: ordersError } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true });
-        
-        return {
-          vehicles: { count: vehiclesCount || 0, error: vehiclesError },
-          dealers: { count: dealersCount || 0, error: dealersError },
-          quotes: { count: quotesCount || 0, error: quotesError },
-          orders: { count: ordersCount || 0, error: ordersError }
+        // Inizializza i conteggi
+        const counts = {
+          vehicles: { count: 0, error: null, exists: tableExists('vehicles') },
+          dealers: { count: 0, error: null, exists: tableExists('dealers') },
+          quotes: { count: 0, error: null, exists: tableExists('quotes') },
+          orders: { count: 0, error: null, exists: tableExists('orders') }
         };
+        
+        // Conta i record solo se le tabelle esistono
+        if (counts.vehicles.exists) {
+          const { count: vehiclesCount, error: vehiclesError } = await supabase
+            .from('vehicles')
+            .select('*', { count: 'exact', head: true });
+          
+          counts.vehicles.count = vehiclesCount || 0;
+          counts.vehicles.error = vehiclesError;
+        }
+        
+        if (counts.dealers.exists) {
+          const { count: dealersCount, error: dealersError } = await supabase
+            .from('dealers')
+            .select('*', { count: 'exact', head: true });
+          
+          counts.dealers.count = dealersCount || 0;
+          counts.dealers.error = dealersError;
+        }
+        
+        if (counts.quotes.exists) {
+          const { count: quotesCount, error: quotesError } = await supabase
+            .from('quotes')
+            .select('*', { count: 'exact', head: true });
+          
+          counts.quotes.count = quotesCount || 0;
+          counts.quotes.error = quotesError;
+        }
+        
+        if (counts.orders.exists) {
+          const { count: ordersCount, error: ordersError } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true });
+          
+          counts.orders.count = ordersCount || 0;
+          counts.orders.error = ordersError;
+        }
+        
+        return counts;
       } catch (error) {
         console.error('Errore nel recupero delle informazioni sulle tabelle:', error);
         return null;
@@ -124,6 +157,14 @@ const Migration = () => {
       error: 'Errore durante il test di connessione'
     });
   };
+
+  // Verifica se tutte le tabelle esistono
+  const allTablesExist = 
+    tablesInfo && 
+    tablesInfo.vehicles.exists && 
+    tablesInfo.dealers.exists && 
+    tablesInfo.quotes.exists && 
+    tablesInfo.orders.exists;
 
   return (
     <div className="container px-4 py-8">
@@ -244,11 +285,22 @@ const Migration = () => {
             </CardContent>
           </Card>
           
+          {connectionStatus?.connected && !connectionStatus.tablesExist && !allTablesExist && (
+            <DataMigration />
+          )}
+          
           {connectionStatus?.connected && (
             <div className="mt-4">
               <h3 className="text-sm font-medium mb-2">Status del Database:</h3>
               <div className="text-sm text-muted-foreground">
-                {connectionStatus.hasData ? (
+                {!allTablesExist ? (
+                  <span className="text-amber-600 font-medium">Database vuoto o tabelle mancanti</span>
+                ) : connectionStatus.hasData || (tablesInfo && (
+                    tablesInfo.vehicles.count > 0 || 
+                    tablesInfo.dealers.count > 0 || 
+                    tablesInfo.quotes.count > 0 || 
+                    tablesInfo.orders.count > 0
+                  )) ? (
                   <span className="text-green-600 font-medium">Database contiene dati</span>
                 ) : (
                   <span className="text-amber-600 font-medium">Database vuoto - Nessun dato presente</span>
@@ -263,35 +315,51 @@ const Migration = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span>Veicoli:</span>
-                  <span className={tablesInfo.vehicles.count > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
-                    {tablesInfo.vehicles.count > 0 
-                      ? `${tablesInfo.vehicles.count} record presenti` 
-                      : "Nessun dato"}
-                  </span>
+                  {!tablesInfo.vehicles.exists ? (
+                    <span className="text-red-600">Tabella non presente</span>
+                  ) : tablesInfo.vehicles.count > 0 ? (
+                    <span className="text-green-600 font-medium">
+                      {tablesInfo.vehicles.count} record presenti
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Nessun dato</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span>Concessionari:</span>
-                  <span className={tablesInfo.dealers.count > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
-                    {tablesInfo.dealers.count > 0 
-                      ? `${tablesInfo.dealers.count} record presenti` 
-                      : "Nessun dato"}
-                  </span>
+                  {!tablesInfo.dealers.exists ? (
+                    <span className="text-red-600">Tabella non presente</span>
+                  ) : tablesInfo.dealers.count > 0 ? (
+                    <span className="text-green-600 font-medium">
+                      {tablesInfo.dealers.count} record presenti
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Nessun dato</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span>Preventivi:</span>
-                  <span className={tablesInfo.quotes.count > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
-                    {tablesInfo.quotes.count > 0 
-                      ? `${tablesInfo.quotes.count} record presenti` 
-                      : "Nessun dato"}
-                  </span>
+                  {!tablesInfo.quotes.exists ? (
+                    <span className="text-red-600">Tabella non presente</span>
+                  ) : tablesInfo.quotes.count > 0 ? (
+                    <span className="text-green-600 font-medium">
+                      {tablesInfo.quotes.count} record presenti
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Nessun dato</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span>Ordini:</span>
-                  <span className={tablesInfo.orders.count > 0 ? "text-green-600 font-medium" : "text-amber-600"}>
-                    {tablesInfo.orders.count > 0 
-                      ? `${tablesInfo.orders.count} record presenti` 
-                      : "Nessun dato"}
-                  </span>
+                  {!tablesInfo.orders.exists ? (
+                    <span className="text-red-600">Tabella non presente</span>
+                  ) : tablesInfo.orders.count > 0 ? (
+                    <span className="text-green-600 font-medium">
+                      {tablesInfo.orders.count} record presenti
+                    </span>
+                  ) : (
+                    <span className="text-amber-600">Nessun dato</span>
+                  )}
                 </div>
               </div>
             </div>
