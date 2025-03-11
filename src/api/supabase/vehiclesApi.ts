@@ -16,8 +16,17 @@ export const vehiclesApi = {
       throw error;
     }
 
-    console.log("Supabase API: getAll - Dati recuperati:", data);
-    return data as Vehicle[];
+    // Format the data to match our frontend model
+    const formattedVehicles = data.map(vehicle => ({
+      ...vehicle,
+      dateAdded: vehicle.dateadded,
+      fuelType: vehicle.fueltype,
+      exteriorColor: vehicle.exteriorcolor,
+      reservedAccessories: vehicle.reservedaccessories,
+    }));
+
+    console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);
+    return formattedVehicles as Vehicle[];
   },
   
   getById: async (id: string): Promise<Vehicle> => {
@@ -32,25 +41,36 @@ export const vehiclesApi = {
       throw error;
     }
 
-    return data as Vehicle;
+    // Format the data to match our frontend model
+    const formattedVehicle = {
+      ...data,
+      dateAdded: data.dateadded,
+      fuelType: data.fueltype,
+      exteriorColor: data.exteriorcolor,
+      reservedAccessories: data.reservedaccessories,
+    };
+
+    return formattedVehicle as Vehicle;
   },
   
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
     console.log("Supabase API: create - Creazione veicolo:", vehicle);
     
+    // Map frontend field names to database column names
     const newVehicle = {
-      ...vehicle,
       id: uuidv4(),
-      imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
-      dateadded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
-      accessories: vehicle.accessories || [],
-      // Per Stock Virtuale, lasciamo solo il modello obbligatorio
+      model: vehicle.model,
       trim: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.trim || ''),
       fueltype: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.fuelType || ''),
       exteriorcolor: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.exteriorColor || ''),
       transmission: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.transmission || ''),
       telaio: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.telaio || ''),
+      accessories: vehicle.accessories || [],
       price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
+      location: vehicle.location,
+      imageurl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+      dateadded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
+      status: vehicle.status || 'available',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
