@@ -60,7 +60,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>{vehicle.model} {vehicle.trim}</DialogTitle>
           <DialogDescription>

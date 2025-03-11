@@ -1,33 +1,27 @@
 
 import React from 'react';
 import { formatCurrency } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
   DialogTitle,
-  DialogFooter,
+  DialogFooter
 } from '@/components/ui/dialog';
-import { Quote, Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Quote, Vehicle } from '@/types';
 
 interface QuoteDetailsDialogProps {
   quote: Quote | null;
   vehicle: Vehicle | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStatusChange?: (id: string, status: Quote['status']) => void;
+  onStatusChange: (id: string, status: Quote['status']) => void;
 }
 
-const QuoteDetailsDialog = ({ 
-  quote, 
-  vehicle, 
-  open, 
-  onOpenChange,
-  onStatusChange
-}: QuoteDetailsDialogProps) => {
+const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange }: QuoteDetailsDialogProps) => {
   if (!quote || !vehicle) return null;
-
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('it-IT', {
@@ -38,10 +32,30 @@ const QuoteDetailsDialog = ({
       minute: '2-digit'
     }).format(date);
   };
+  
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'pending': return 'In attesa';
+      case 'approved': return 'Approvato';
+      case 'rejected': return 'Rifiutato';
+      case 'converted': return 'Convertito in vendita';
+      default: return status;
+    }
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'converted': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>Dettagli Preventivo</DialogTitle>
         </DialogHeader>
@@ -61,19 +75,16 @@ const QuoteDetailsDialog = ({
               <p className="font-medium">{vehicle.exteriorColor}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Stato Preventivo</p>
-              <p className="font-medium">
-                <span className={`px-2 py-1 text-xs rounded-full 
-                  ${quote.status === 'pending' ? 'bg-blue-100 text-blue-800' : 
-                  quote.status === 'approved' ? 'bg-green-100 text-green-800' : 
-                  quote.status === 'rejected' ? 'bg-red-100 text-red-800' : 
-                  'bg-gray-100 text-gray-800'}`}
-                >
-                  {quote.status === 'pending' ? 'In attesa' : 
-                   quote.status === 'approved' ? 'Approvato' : 
-                   quote.status === 'rejected' ? 'Rifiutato' : 'Convertito'}
-                </span>
-              </p>
+              <p className="text-sm text-gray-500">Prezzo Veicolo</p>
+              <p className="font-medium">{formatCurrency(quote.price)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Prezzo Finale</p>
+              <p className="font-medium text-primary">{formatCurrency(quote.finalPrice)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">IVA</p>
+              <p className="font-medium">{quote.vatRate === 0.04 ? '4% (agevolata)' : '22%'}</p>
             </div>
           </div>
           
@@ -94,96 +105,89 @@ const QuoteDetailsDialog = ({
               <p className="text-sm text-gray-500">Data Creazione</p>
               <p className="font-medium">{formatDate(quote.createdAt)}</p>
             </div>
+            <div>
+              <p className="text-sm text-gray-500">Stato</p>
+              <p className="font-medium">
+                <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(quote.status)}`}>
+                  {getStatusLabel(quote.status)}
+                </span>
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Sconto</p>
+              <p className="font-medium">{formatCurrency(quote.discount || 0)}</p>
+            </div>
           </div>
-
-          <div className="border-t pt-4">
-            <div className="flex justify-between mb-2">
-              <span>Prezzo Veicolo:</span>
-              <span>{formatCurrency(quote.price)}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>Sconto:</span>
-              <span>- {formatCurrency(quote.discount || 0)}</span>
-            </div>
-            {quote.tradeInValue > 0 && (
-              <div className="flex justify-between mb-2">
-                <span>Valore Permuta ({quote.tradeInModel || 'Veicolo usato'}):</span>
-                <span>- {formatCurrency(quote.tradeInValue)}</span>
+          
+          {quote.hasTradeIn && (
+            <div className="border p-4 rounded-md">
+              <h3 className="font-medium mb-3">Dettagli Permuta</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Marca</p>
+                  <p className="font-medium">{quote.tradeInBrand || 'N/D'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Modello</p>
+                  <p className="font-medium">{quote.tradeInModel || 'N/D'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Anno</p>
+                  <p className="font-medium">{quote.tradeInYear || 'N/D'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Chilometri</p>
+                  <p className="font-medium">{quote.tradeInKm ? quote.tradeInKm.toLocaleString() : 'N/D'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Valore</p>
+                  <p className="font-medium">{formatCurrency(quote.tradeInValue || 0)}</p>
+                </div>
               </div>
-            )}
-            <div className="flex justify-between font-bold border-t pt-2 mt-2">
-              <span>Prezzo Finale:</span>
-              <span className="text-primary">
-                {formatCurrency(quote.finalPrice)}
-              </span>
             </div>
-          </div>
-
-          {quote.rejectionReason && (
+          )}
+          
+          {quote.status === 'rejected' && quote.rejectionReason && (
             <div className="border-t pt-4">
               <p className="text-sm text-gray-500">Motivo Rifiuto</p>
-              <p className="font-medium text-red-600">{quote.rejectionReason}</p>
+              <p className="font-medium">{quote.rejectionReason}</p>
             </div>
           )}
         </div>
-
-        <DialogFooter className="flex justify-end gap-2 pt-4">
-          {quote.status === 'pending' && onStatusChange && (
-            <>
+        
+        <DialogFooter className="mt-6">
+          {quote.status === 'pending' && (
+            <div className="flex gap-2">
               <Button 
-                variant="outline"
-                onClick={() => onOpenChange(false)}
+                variant="outline" 
+                onClick={() => onStatusChange(quote.id, 'rejected')}
               >
-                Chiudi
+                Rifiuta
               </Button>
-              <Button
-                variant="default"
+              <Button 
+                variant="default" 
                 onClick={() => onStatusChange(quote.id, 'approved')}
               >
                 Approva
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  // La gestione del rifiuto verrà delegata al componente padre
-                  onStatusChange(quote.id, 'rejected');
-                }}
-              >
-                Rifiuta
-              </Button>
-            </>
+            </div>
           )}
           
-          {quote.status === 'approved' && onStatusChange && (
-            <>
+          {quote.status === 'approved' && (
+            <div className="flex gap-2">
               <Button 
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Chiudi
-              </Button>
-              <Button 
-                variant="secondary"
+                variant="outline" 
                 onClick={() => onStatusChange(quote.id, 'pending')}
               >
-                Riporta In Attesa
+                Metti in Attesa
               </Button>
-              <Button
-                variant="default"
+              <Button 
+                variant="default" 
                 onClick={() => onStatusChange(quote.id, 'converted')}
               >
-                Converti in Ordine
+                Converti in Vendita
               </Button>
-            </>
-          )}
-
-          {!onStatusChange && (
-            <Button 
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Chiudi
-            </Button>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>

@@ -24,7 +24,7 @@ const FormDialog: React.FC<FormDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

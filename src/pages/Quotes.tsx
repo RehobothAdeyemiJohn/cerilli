@@ -395,7 +395,7 @@ const Quotes = () => {
       
       {/* Dialog per creare un nuovo preventivo */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-5xl">
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
           <DialogHeader>
             <DialogTitle>Crea Nuovo Preventivo</DialogTitle>
           </DialogHeader>
