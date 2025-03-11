@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
@@ -11,21 +11,12 @@ interface QuoteDetailsHeaderProps {
 }
 
 const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
-  // We need to properly use useReactToPrint according to its type definition
   const handlePrint = useReactToPrint({
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
-    pageStyle: '@page { size: auto; margin: 0mm }',
-    // The content property should return the element to be printed
-    // Use a function that returns the element with the data-print-content attribute
-    contentRef: null, // We're not using a ref directly
-    // Instead we'll use a function in onBeforeGetContent
-    onBeforeGetContent: () => {
-      return document.querySelector('[data-print-content="true"]') as HTMLElement;
-    },
-    onPrintError: (errorLocation, error) => {
-      console.error(`Print error: ${errorLocation}`, error);
-    },
+    // Use a simple page style with auto margins
+    pageStyle: '@page { size: auto; margin: 10mm }',
+    content: () => document.querySelector('[data-print-content="true"]'),
   });
 
   return (
