@@ -12,7 +12,7 @@ interface QuoteDetailsHeaderProps {
 
 const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
   // Create a ref to store the printable content reference
-  const printContentRef = useRef(null);
+  const printContentRef = useRef<HTMLElement | null>(null);
   
   // When component mounts, set the ref to point to the printable content
   React.useEffect(() => {
@@ -25,7 +25,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
     pageStyle: '@page { size: auto; margin: 10mm }',
-    contentRef: printContentRef,
+    content: () => printContentRef.current,
   });
 
   return (
@@ -34,7 +34,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={() => handlePrint()}
+        onClick={handlePrint}
         className="flex items-center gap-2"
       >
         <Printer className="h-4 w-4" />
