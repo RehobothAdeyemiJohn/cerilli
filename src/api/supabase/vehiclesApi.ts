@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
@@ -17,11 +18,22 @@ export const vehiclesApi = {
 
     // Format the data to match our frontend model
     const formattedVehicles = data.map(vehicle => ({
-      ...vehicle,
-      dateAdded: vehicle.dateadded,
+      id: vehicle.id,
+      model: vehicle.model,
+      trim: vehicle.trim,
       fuelType: vehicle.fueltype,
       exteriorColor: vehicle.exteriorcolor,
-      reservedAccessories: vehicle.reservedaccessories,
+      accessories: vehicle.accessories || [],
+      price: vehicle.price,
+      location: vehicle.location,
+      imageUrl: vehicle.imageurl,
+      status: vehicle.status,
+      dateAdded: vehicle.dateadded,
+      transmission: vehicle.transmission,
+      telaio: vehicle.telaio,
+      reservedBy: vehicle.reservedby,
+      reservedAccessories: vehicle.reservedaccessories || [],
+      virtualConfig: vehicle.virtualconfig,
     }));
 
     console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);
@@ -42,13 +54,25 @@ export const vehiclesApi = {
 
     // Format the data to match our frontend model
     const formattedVehicle = {
-      ...data,
-      dateAdded: data.dateadded,
+      id: data.id,
+      model: data.model,
+      trim: data.trim,
       fuelType: data.fueltype,
       exteriorColor: data.exteriorcolor,
-      reservedAccessories: data.reservedaccessories,
+      accessories: data.accessories || [],
+      price: data.price,
+      location: data.location,
+      imageUrl: data.imageurl,
+      status: data.status,
+      dateAdded: data.dateadded,
+      transmission: data.transmission,
+      telaio: data.telaio,
+      reservedBy: data.reservedby,
+      reservedAccessories: data.reservedaccessories || [],
+      virtualConfig: data.virtualconfig,
     };
 
+    console.log("Supabase API: getById - Veicolo recuperato:", formattedVehicle);
     return formattedVehicle as Vehicle;
   },
   
@@ -91,11 +115,22 @@ export const vehiclesApi = {
     
     // Convert database field names to match our frontend model
     const formattedVehicle = {
-      ...data,
-      dateAdded: data.dateadded,
+      id: data.id,
+      model: data.model,
+      trim: data.trim,
       fuelType: data.fueltype,
       exteriorColor: data.exteriorcolor,
-      reservedAccessories: data.reservedaccessories,
+      accessories: data.accessories || [],
+      price: data.price,
+      location: data.location,
+      imageUrl: data.imageurl,
+      status: data.status,
+      dateAdded: data.dateadded,
+      transmission: data.transmission,
+      telaio: data.telaio,
+      reservedBy: data.reservedby,
+      reservedAccessories: data.reservedaccessories || [],
+      virtualConfig: data.virtualconfig,
     };
     
     return formattedVehicle as Vehicle;
@@ -103,26 +138,31 @@ export const vehiclesApi = {
   
   update: async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
     // Convert frontend field names to match database column names
-    const dbUpdates = {
-      ...updates,
-      dateadded: updates.dateAdded,
+    const dbUpdates: any = {
+      model: updates.model,
+      trim: updates.trim,
       fueltype: updates.fuelType,
       exteriorcolor: updates.exteriorColor,
-      reservedaccessories: updates.reservedAccessories,
+      accessories: updates.accessories,
+      price: updates.price,
+      location: updates.location,
       imageurl: updates.imageUrl,
+      status: updates.status,
+      dateadded: updates.dateAdded,
+      transmission: updates.transmission,
+      telaio: updates.telaio,
       reservedby: updates.reservedBy,
+      reservedaccessories: updates.reservedAccessories,
       virtualconfig: updates.virtualConfig,
       updated_at: new Date().toISOString()
     };
     
-    // Remove frontend fields that don't match database columns
-    delete dbUpdates.dateAdded;
-    delete dbUpdates.fuelType;
-    delete dbUpdates.exteriorColor;
-    delete dbUpdates.reservedAccessories;
-    delete dbUpdates.imageUrl;
-    delete dbUpdates.reservedBy;
-    delete dbUpdates.virtualConfig;
+    // Remove undefined fields
+    Object.keys(dbUpdates).forEach(key => {
+      if (dbUpdates[key] === undefined) {
+        delete dbUpdates[key];
+      }
+    });
     
     console.log("Supabase API: update - Richiesta update:", dbUpdates);
     
@@ -142,13 +182,21 @@ export const vehiclesApi = {
     
     // Convert database field names back to frontend model
     const formattedVehicle = {
-      ...data,
-      dateAdded: data.dateadded,
+      id: data.id,
+      model: data.model,
+      trim: data.trim,
       fuelType: data.fueltype,
       exteriorColor: data.exteriorcolor,
-      reservedAccessories: data.reservedaccessories,
+      accessories: data.accessories || [],
+      price: data.price,
+      location: data.location,
       imageUrl: data.imageurl,
+      status: data.status,
+      dateAdded: data.dateadded,
+      transmission: data.transmission,
+      telaio: data.telaio,
       reservedBy: data.reservedby,
+      reservedAccessories: data.reservedaccessories || [],
       virtualConfig: data.virtualconfig,
     };
     
@@ -182,6 +230,10 @@ export const vehiclesApi = {
   },
   
   reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig']): Promise<Vehicle> => {
+    console.log("Supabase API: reserve - Prenotazione veicolo:", {
+      id, dealerId, reservedBy, reservedAccessories, virtualConfig
+    });
+    
     const vehicle = await vehiclesApi.getById(id);
     
     if (vehicle.status !== 'available') {
