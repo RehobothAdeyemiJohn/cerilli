@@ -1,38 +1,90 @@
 
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChartData } from '@/types';
+import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/api/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-interface ChartProps {
-  title: string;
-  data: ChartData;
-  type?: 'bar' | 'line';
-  color?: string;
-}
+export const Chart = () => {
+  // Query per ottenere i dati dei veicoli
+  const { data: vehicles, isLoading } = useQuery({
+    queryKey: ['vehiclesChart'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('model, status')
+        .order('model');
+      
+      if (error) {
+        console.error('Error fetching vehicles data:', error);
+        throw error;
+      }
+      return data || [];
+    }
+  });
 
-const Chart = ({ title, data, type = 'bar', color = '#3B82F6' }: ChartProps) => {
+  // Prepara i dati per il grafico
+  const chartData = useMemo(() => {
+    if (!vehicles) return [];
+
+    const modelCounts = vehicles.reduce((acc: { [key: string]: number }, vehicle) => {
+      acc[vehicle.model] = (acc[vehicle.model] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(modelCounts).map(([model, total]) => ({
+      model,
+      total
+    }));
+  }, [vehicles]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Veicoli per Modello</CardTitle>
+          <CardDescription>Caricamento in corso...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-      <h3 className="text-lg font-medium mb-4">{title}</h3>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-            <XAxis dataKey="name" axisLine={false} tickLine={false} />
-            <YAxis axisLine={false} tickLine={false} />
-            <Tooltip 
-              formatter={(value) => [Number(value).toLocaleString(), '']}
-              contentStyle={{ 
-                borderRadius: '8px',
-                border: 'none',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-              }}
-            />
-            <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <Card className="col-span-4">
+      <CardHeader>
+        <CardTitle>Veicoli per Modello</CardTitle>
+        <CardDescription>
+          Distribuzione dei veicoli per modello
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pl-2">
+        <div className="h-[200px] mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis
+                dataKey="model"
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}`}
+              />
+              <Bar
+                dataKey="total"
+                fill="currentColor"
+                radius={[4, 4, 0, 0]}
+                className="fill-primary"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
-
-export default Chart;

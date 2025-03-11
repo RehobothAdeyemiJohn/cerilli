@@ -122,7 +122,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_dealers_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_orders_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_quotes_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_vehicles_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      list_tables: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
