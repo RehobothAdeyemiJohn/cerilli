@@ -3,21 +3,34 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, AlertTriangle, Database } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Database, Info } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/api/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const Migration = () => {
-  // Check if Supabase is properly configured
-  const { data: connectionStatus, isLoading } = useQuery({
+  // Ottieni i valori delle variabili d'ambiente
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  // Test di connessione a Supabase
+  const { data: connectionStatus, isLoading, refetch } = useQuery({
     queryKey: ['supabaseConnection'],
     queryFn: async () => {
       try {
         if (!isSupabaseConfigured()) {
-          return { connected: false, error: 'Supabase non è configurato correttamente' };
+          return { 
+            connected: false, 
+            error: 'Supabase non è configurato correttamente',
+            envStatus: {
+              url: !!supabaseUrl,
+              key: !!supabaseKey && supabaseKey.length > 20
+            }
+          };
         }
         
-        // Try to fetch a test record from vehicles table
+        // Prova a fare una richiesta a Supabase per verificare la connessione
         const { data, error } = await supabase.from('vehicles').select('id').limit(1);
         
         if (error) {
@@ -25,49 +38,62 @@ const Migration = () => {
           return { 
             connected: false, 
             error: error.message, 
-            details: error.details || 'Nessun dettaglio disponibile'
+            details: error.details || 'Nessun dettaglio disponibile',
+            errorCode: error.code,
+            envStatus: {
+              url: !!supabaseUrl,
+              key: !!supabaseKey && supabaseKey.length > 20
+            }
           };
         }
         
         return { 
           connected: true, 
           error: null,
-          hasData: Array.isArray(data) && data.length > 0
+          hasData: Array.isArray(data) && data.length > 0,
+          envStatus: {
+            url: !!supabaseUrl,
+            key: !!supabaseKey && supabaseKey.length > 20
+          }
         };
       } catch (error) {
         console.error('Errore nel test di connessione a Supabase:', error);
         return { 
           connected: false, 
           error: error instanceof Error ? error.message : 'Errore sconosciuto',
-          details: error instanceof Error ? error.stack : 'Nessun dettaglio disponibile'
+          details: error instanceof Error ? error.stack : 'Nessun dettaglio disponibile',
+          envStatus: {
+            url: !!supabaseUrl,
+            key: !!supabaseKey && supabaseKey.length > 20
+          }
         };
       }
     }
   });
 
-  // Get database tables information
+  // Ottieni informazioni sulle tabelle del database
   const { data: tablesInfo, isLoading: tablesLoading } = useQuery({
     queryKey: ['supabaseTables'],
     queryFn: async () => {
       if (!connectionStatus?.connected) return null;
       
       try {
-        // Check vehicles count
+        // Controlla il numero di veicoli
         const { count: vehiclesCount, error: vehiclesError } = await supabase
           .from('vehicles')
           .select('*', { count: 'exact', head: true });
         
-        // Check dealers count
+        // Controlla il numero di concessionari
         const { count: dealersCount, error: dealersError } = await supabase
           .from('dealers')
           .select('*', { count: 'exact', head: true });
         
-        // Check quotes count (may not exist yet)
+        // Controlla il numero di preventivi
         const { count: quotesCount, error: quotesError } = await supabase
           .from('quotes')
           .select('*', { count: 'exact', head: true });
         
-        // Check orders count (may not exist yet)
+        // Controlla il numero di ordini
         const { count: ordersCount, error: ordersError } = await supabase
           .from('orders')
           .select('*', { count: 'exact', head: true });
@@ -85,6 +111,19 @@ const Migration = () => {
     },
     enabled: !!connectionStatus?.connected
   });
+
+  // Funzione per testare manualmente la connessione
+  const handleTestConnection = () => {
+    toast.promise(refetch(), {
+      loading: 'Test di connessione in corso...',
+      success: (data) => {
+        return data.data?.connected 
+          ? '✅ Connessione a Supabase verificata con successo!' 
+          : '❌ Impossibile connettersi a Supabase';
+      },
+      error: 'Errore durante il test di connessione'
+    });
+  };
 
   return (
     <div className="container px-4 py-8">
@@ -142,11 +181,68 @@ const Migration = () => {
                         Dettagli: {connectionStatus.details}
                       </div>
                     )}
+                    {connectionStatus.errorCode && (
+                      <div className="mt-1 text-xs">
+                        Codice: {connectionStatus.errorCode}
+                      </div>
+                    )}
                   </div>
                 )}
               </AlertDescription>
             </Alert>
           )}
+          
+          <Card className="mt-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Stato Variabili d'Ambiente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span>VITE_SUPABASE_URL:</span>
+                  <span className={connectionStatus?.envStatus?.url ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                    {connectionStatus?.envStatus?.url ? "Configurata ✓" : "Non configurata ✗"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>VITE_SUPABASE_ANON_KEY:</span>
+                  <span className={connectionStatus?.envStatus?.key ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                    {connectionStatus?.envStatus?.key ? "Configurata ✓" : "Non configurata o invalida ✗"}
+                  </span>
+                </div>
+                
+                {supabaseUrl && (
+                  <div className="mt-3 text-xs overflow-hidden text-ellipsis">
+                    <div className="text-muted-foreground">URL configurato:</div>
+                    <div className="font-mono bg-gray-100 p-1 rounded mt-1 overflow-auto">
+                      {supabaseUrl}
+                    </div>
+                  </div>
+                )}
+                
+                {supabaseKey && (
+                  <div className="mt-3 text-xs">
+                    <div className="text-muted-foreground">Chiave configurata:</div>
+                    <div className="font-mono bg-gray-100 p-1 rounded mt-1 overflow-auto">
+                      {supabaseKey.substring(0, 16)}...{supabaseKey.substring(supabaseKey.length - 6)}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-3 pt-3 border-t">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleTestConnection} 
+                    className="w-full"
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    Verifica Connessione
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           
           {connectionStatus?.connected && (
             <div className="mt-4">
@@ -201,16 +297,25 @@ const Migration = () => {
             </div>
           )}
           
-          <div className="mt-4 pt-4 border-t">
-            <div className="text-sm text-muted-foreground">
-              <p className="mb-2">Per utilizzare correttamente l'applicazione con Supabase, assicurati che:</p>
-              <ul className="list-disc pl-5">
-                <li>Le variabili d'ambiente di Supabase siano configurate correttamente nel file .env</li>
-                <li>La connessione a internet sia attiva</li>
-                <li>Il progetto Supabase sia attivo e accessibile</li>
-              </ul>
-            </div>
-          </div>
+          <Alert className="mt-6 bg-blue-50 border-blue-600">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-600">Informazioni di Risoluzione Problemi</AlertTitle>
+            <AlertDescription>
+              <div className="mt-2 text-sm">
+                <p className="mb-2">Se riscontri problemi con la connessione a Supabase, verifica che:</p>
+                <ul className="list-disc pl-5">
+                  <li>Il file <code className="bg-blue-100 px-1 rounded">.env</code> nella cartella principale contenga le variabili corrette:
+                    <pre className="bg-blue-100 p-2 rounded text-xs mt-1 overflow-auto">
+                      VITE_SUPABASE_URL=https://il-tuo-progetto.supabase.co{'\n'}
+                      VITE_SUPABASE_ANON_KEY=la-tua-chiave-anonima
+                    </pre>
+                  </li>
+                  <li className="mt-2">Se stai utilizzando Vite in modalità di sviluppo, riavvialo dopo aver modificato il file .env</li>
+                  <li className="mt-2">Il tuo progetto Supabase sia attivo e accessibile</li>
+                </ul>
+              </div>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
       
