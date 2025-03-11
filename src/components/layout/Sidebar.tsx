@@ -1,130 +1,156 @@
-
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  FileText, 
-  Car, 
-  Users, 
-  Settings, 
-  LogOut,
-  Menu,
-  X,
-  Key
-} from 'lucide-react';
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Permission } from '@/types/admin';
+import { useMobile } from '@/hooks/use-mobile';
+import { 
+  Layout, 
+  ShoppingBag, 
+  BarChart, 
+  ListChecks, 
+  Truck, 
+  Settings, 
+  KeyRound,
+  DatabaseIcon
+} from 'lucide-react';
 
-interface NavItem {
-  name: string;
-  path: string;
-  icon: React.ComponentType<any>;
-  permission?: Permission;
+interface SidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
 }
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const { user, logout } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
-  
-  const navItems: NavItem[] = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-    { name: 'Stock', path: '/inventory', icon: ShoppingBag, permission: 'inventory' },
-    { name: 'Preventivi', path: '/quotes', icon: FileText, permission: 'quotes' },
-    { name: 'Ordini Auto', path: '/orders', icon: Car, permission: 'orders' },
-    { name: 'Dealers', path: '/dealers', icon: Users, permission: 'dealers' },
-    { name: 'Credenziali', path: '/credentials', icon: Key, permission: 'credentials' },
-    { name: 'Impostazioni', path: '/settings', icon: Settings, permission: 'settings' },
-  ];
+  const isMobile = useMobile();
   
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
   
-  const toggleSidebar = () => setIsOpen(!isOpen);
-  
-  const filterNavItems = () => {
-    if (!user) return [];
-    
-    if (user.type === 'admin' && user.permissions) {
-      // Filter items based on user permissions
-      return navItems.filter(item => 
-        !item.permission || user.permissions?.includes(item.permission)
-      );
-    } else if (user.type === 'dealer' || user.type === 'vendor') {
-      // For dealers and vendors, show only dashboard, inventory, quotes, orders
-      return navItems.filter(item => 
-        ['dashboard', 'inventory', 'quotes', 'orders'].includes(item.permission || '')
-      );
-    }
-    
-    return [];
-  };
-  
-  const filteredNavItems = filterNavItems();
-  
   return (
-    <>
-      {/* Mobile menu button */}
-      <button 
-        onClick={toggleSidebar} 
-        className="fixed bottom-4 right-4 md:hidden z-50 bg-primary text-white p-3 rounded-full shadow-lg"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-      
-      <aside className={`
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        md:translate-x-0 
-        fixed top-0 left-0 h-full w-64 
-        bg-gray-900 text-white 
-        transform transition-transform duration-200 ease-in-out 
-        md:sticky md:top-0 z-40
-      `}>
-        <div className="flex flex-col h-full">
-          <div className="px-6 py-5">
-            <div className="flex items-center gap-3">
-              <ShoppingBag className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">Gestionale CMC</span>
-            </div>
-          </div>
-          
-          <nav className="flex-1 px-3 py-3">
-            <ul className="space-y-1">
-              {filteredNavItems.map((item) => (
-                <li key={item.name}>
-                  <NavLink 
-                    to={item.path} 
-                    className={({ isActive }) => `
-                      flex items-center gap-3 px-3 py-2 rounded-md
-                      ${isActive 
-                        ? 'bg-gray-800 text-primary' 
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'}
-                    `}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.name}</span>
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          
-          <div className="px-3 py-4 border-t border-gray-800">
-            <button 
-              className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md"
-              onClick={handleLogout}
+    <aside
+      className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } ${isMobile ? "w-64" : "w-64 md:translate-x-0"} bg-white border-r border-gray-200 pt-16`}
+    >
+      <div className="h-full px-3 py-4 overflow-y-auto">
+        <ul className="space-y-2 font-medium">
+          {/* Dashboard */}
+          <li>
+            <Link
+              to="/dashboard"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/dashboard' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-    </>
+              <Layout className="w-5 h-5 mr-2" />
+              <span>Dashboard</span>
+            </Link>
+          </li>
+          
+          {/* Inventory */}
+          <li>
+            <Link
+              to="/inventory"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/inventory' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <ShoppingBag className="w-5 h-5 mr-2" />
+              <span>Inventario</span>
+            </Link>
+          </li>
+          
+          {/* Quotes */}
+          <li>
+            <Link
+              to="/quotes"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/quotes' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <BarChart className="w-5 h-5 mr-2" />
+              <span>Preventivi</span>
+            </Link>
+          </li>
+          
+          {/* Orders */}
+          <li>
+            <Link
+              to="/orders"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/orders' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <ListChecks className="w-5 h-5 mr-2" />
+              <span>Ordini</span>
+            </Link>
+          </li>
+          
+          {/* Dealers */}
+          <li>
+            <Link
+              to="/dealers"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/dealers' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <Truck className="w-5 h-5 mr-2" />
+              <span>Dealers</span>
+            </Link>
+          </li>
+          
+          {/* Credentials */}
+          <li>
+            <Link
+              to="/credentials"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/credentials' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <KeyRound className="w-5 h-5 mr-2" />
+              <span>Credenziali</span>
+            </Link>
+          </li>
+          
+          {/* Settings */}
+          <li>
+            <Link
+              to="/settings"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/settings' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <Settings className="w-5 h-5 mr-2" />
+              <span>Impostazioni</span>
+            </Link>
+          </li>
+          
+          {/* Migrazione Dati - Aggiungiamo questa voce */}
+          <li>
+            <Link
+              to="/migration"
+              className={`flex items-center p-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                location.pathname === '/migration' ? 'bg-gray-100 text-primary' : 'text-gray-900'
+              }`}
+              onClick={isMobile ? toggleSidebar : undefined}
+            >
+              <DatabaseIcon className="w-5 h-5 mr-2" />
+              <span>Migrazione Dati</span>
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </aside>
   );
 };
 
