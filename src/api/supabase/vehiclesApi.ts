@@ -9,7 +9,7 @@ export const vehiclesApi = {
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
-      .order('dateAdded', { ascending: false });
+      .order('dateadded', { ascending: false });
 
     if (error) {
       console.error('Errore nel recupero dei veicoli:', error);
@@ -42,12 +42,12 @@ export const vehiclesApi = {
       ...vehicle,
       id: uuidv4(),
       imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
-      dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
+      dateadded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
       accessories: vehicle.accessories || [],
       // Per Stock Virtuale, lasciamo solo il modello obbligatorio
       trim: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.trim || ''),
-      fuelType: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.fuelType || ''),
-      exteriorColor: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.exteriorColor || ''),
+      fueltype: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.fuelType || ''),
+      exteriorcolor: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.exteriorColor || ''),
       transmission: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.transmission || ''),
       telaio: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.telaio || ''),
       price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
@@ -69,18 +69,39 @@ export const vehiclesApi = {
     }
     
     console.log("Supabase API: create - Risposta:", data);
-    return data as Vehicle;
+    
+    // Convert database field names to match our frontend model
+    const formattedVehicle = {
+      ...data,
+      dateAdded: data.dateadded,
+      fuelType: data.fueltype,
+      exteriorColor: data.exteriorcolor,
+      reservedAccessories: data.reservedaccessories,
+    };
+    
+    return formattedVehicle as Vehicle;
   },
   
   update: async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
-    const updatedData = {
+    // Convert frontend field names to match database column names
+    const dbUpdates = {
       ...updates,
+      dateadded: updates.dateAdded,
+      fueltype: updates.fuelType,
+      exteriorcolor: updates.exteriorColor,
+      reservedaccessories: updates.reservedAccessories,
       updated_at: new Date().toISOString()
     };
     
+    // Remove frontend fields that don't match database columns
+    delete dbUpdates.dateAdded;
+    delete dbUpdates.fuelType;
+    delete dbUpdates.exteriorColor;
+    delete dbUpdates.reservedAccessories;
+    
     const { data, error } = await supabase
       .from('vehicles')
-      .update(updatedData)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -90,7 +111,16 @@ export const vehiclesApi = {
       throw error;
     }
     
-    return data as Vehicle;
+    // Convert database field names back to frontend model
+    const formattedVehicle = {
+      ...data,
+      dateAdded: data.dateadded,
+      fuelType: data.fueltype,
+      exteriorColor: data.exteriorcolor,
+      reservedAccessories: data.reservedaccessories,
+    };
+    
+    return formattedVehicle as Vehicle;
   },
   
   delete: async (id: string): Promise<void> => {

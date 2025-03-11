@@ -35,7 +35,8 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   
   const handleDuplicateClick = async (vehicle: Vehicle) => {
     try {
-      await handleVehicleDuplicate(vehicle);
+      // Pass the vehicle ID instead of the whole vehicle object
+      await handleVehicleDuplicate(vehicle.id);
       toast({
         title: "Veicolo Duplicato",
         description: `${vehicle.model} ${vehicle.trim} è stato duplicato con successo.`,
