@@ -6,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import VehicleDetailsDialog from './VehicleDetailsDialog';
 import VehicleEditDialog from './VehicleEditDialog';
 import VehicleDeleteDialog from './VehicleDeleteDialog';
+import { useInventory } from '@/hooks/useInventory';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -18,6 +19,7 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const { handleVehicleDuplicate } = useInventory();
   
   const handleVehicleClick = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
@@ -32,15 +34,19 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   };
   
   const handleDuplicateClick = async (vehicle: Vehicle) => {
-    if (onVehicleUpdated) {
-      try {
-        // We'll reuse the update handler since it already refreshes the list
-        // In a real app, you might want to create a specific handler
-        const { handleVehicleDuplicate } = require('@/hooks/useInventory').useInventory();
-        await handleVehicleDuplicate(vehicle);
-      } catch (error) {
-        console.error("Error duplicating vehicle:", error);
-      }
+    try {
+      await handleVehicleDuplicate(vehicle);
+      toast({
+        title: "Veicolo Duplicato",
+        description: `${vehicle.model} ${vehicle.trim} è stato duplicato con successo.`,
+      });
+    } catch (error) {
+      console.error("Error duplicating vehicle:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la duplicazione del veicolo.",
+        variant: "destructive",
+      });
     }
   };
   
