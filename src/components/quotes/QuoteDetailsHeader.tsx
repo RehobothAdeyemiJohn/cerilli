@@ -29,8 +29,7 @@ const QuoteDetailsHeader = ({ quote }: QuoteDetailsHeaderProps) => {
     documentTitle: `Preventivo_${quote?.id || 'auto'}`,
     onAfterPrint: () => console.log('Print completed'),
     pageStyle: '@page { size: auto; margin: 10mm }',
-    // Use content function instead of contentRef
-    content: () => printContentRef.current,
+    contentRef: printContentRef,
   });
 
   return (
