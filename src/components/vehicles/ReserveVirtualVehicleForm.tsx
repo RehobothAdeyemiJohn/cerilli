@@ -46,6 +46,8 @@ const ReserveVirtualVehicleForm = ({
   const [dealerName, setDealerName] = useState<string>('');
   const { handleVehicleUpdate } = useInventory();
   
+  const activeDealers = dealers.filter(dealer => dealer.isActive);
+  
   const { 
     data: models = [], 
     isLoading: isLoadingModels 
