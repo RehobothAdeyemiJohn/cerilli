@@ -155,15 +155,20 @@ const Migration = () => {
 
   // Funzione per testare manualmente la connessione
   const handleTestConnection = async () => {
-    toast.promise(refetchConnection(), {
-      loading: 'Test di connessione in corso...',
-      success: (data) => {
-        return data?.connected 
-          ? '✅ Connessione a Supabase verificata con successo!' 
-          : '❌ Impossibile connettersi a Supabase';
-      },
-      error: 'Errore durante il test di connessione'
-    });
+    try {
+      toast.loading('Test di connessione in corso...');
+      const result = await refetchConnection();
+      toast.dismiss();
+      
+      if (result.data?.connected) {
+        toast.success('✅ Connessione a Supabase verificata con successo!');
+      } else {
+        toast.error('❌ Impossibile connettersi a Supabase');
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Errore durante il test di connessione');
+    }
   };
 
   // Funzione per aggiornare tutte le informazioni dopo operazioni sul database

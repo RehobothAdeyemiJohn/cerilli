@@ -138,6 +138,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      drop_dealers_table_if_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      drop_orders_table_if_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      drop_quotes_table_if_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      drop_vehicles_table_if_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       list_tables: {
         Args: Record<PropertyKey, never>
         Returns: {

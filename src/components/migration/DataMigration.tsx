@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/api/supabase/client';
 import { 
   Database, 
-  TableCells, 
+  Table, 
   RefreshCcw, 
   AlertTriangle
 } from 'lucide-react';
@@ -65,7 +65,7 @@ const TableCreationButton: React.FC<TableCreationProps> = ({
       size="sm"
       className="w-full mb-2"
     >
-      <TableCells className="mr-2 h-4 w-4" />
+      <Table className="mr-2 h-4 w-4" />
       {exists 
         ? `${tableName} (già presente)` 
         : isCreating 
