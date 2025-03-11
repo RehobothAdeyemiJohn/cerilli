@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -13,21 +13,57 @@ import {
   X,
   Key
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Permission } from '@/types/admin';
+
+interface NavItem {
+  name: string;
+  path: string;
+  icon: React.ComponentType<any>;
+  permission?: Permission;
+}
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Stock', path: '/inventory', icon: ShoppingBag },
-    { name: 'Preventivi', path: '/quotes', icon: FileText },
-    { name: 'Ordini Auto', path: '/orders', icon: Car },
-    { name: 'Dealers', path: '/dealers', icon: Users },
-    { name: 'Credenziali', path: '/credentials', icon: Key },
-    { name: 'Impostazioni', path: '/settings', icon: Settings },
+  const navItems: NavItem[] = [
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: 'dashboard' },
+    { name: 'Stock', path: '/inventory', icon: ShoppingBag, permission: 'inventory' },
+    { name: 'Preventivi', path: '/quotes', icon: FileText, permission: 'quotes' },
+    { name: 'Ordini Auto', path: '/orders', icon: Car, permission: 'orders' },
+    { name: 'Dealers', path: '/dealers', icon: Users, permission: 'dealers' },
+    { name: 'Credenziali', path: '/credentials', icon: Key, permission: 'credentials' },
+    { name: 'Impostazioni', path: '/settings', icon: Settings, permission: 'settings' },
   ];
   
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+  
   const toggleSidebar = () => setIsOpen(!isOpen);
+  
+  const filterNavItems = () => {
+    if (!user) return [];
+    
+    if (user.type === 'admin' && user.permissions) {
+      // Filter items based on user permissions
+      return navItems.filter(item => 
+        !item.permission || user.permissions?.includes(item.permission)
+      );
+    } else if (user.type === 'dealer' || user.type === 'vendor') {
+      // For dealers and vendors, show only dashboard, inventory, quotes, orders
+      return navItems.filter(item => 
+        ['dashboard', 'inventory', 'quotes', 'orders'].includes(item.permission || '')
+      );
+    }
+    
+    return [];
+  };
+  
+  const filteredNavItems = filterNavItems();
   
   return (
     <>
@@ -57,7 +93,7 @@ const Sidebar = () => {
           
           <nav className="flex-1 px-3 py-3">
             <ul className="space-y-1">
-              {navItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <li key={item.name}>
                   <NavLink 
                     to={item.path} 
@@ -78,7 +114,10 @@ const Sidebar = () => {
           </nav>
           
           <div className="px-3 py-4 border-t border-gray-800">
-            <button className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md">
+            <button 
+              className="w-full flex items-center gap-3 px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-md"
+              onClick={handleLogout}
+            >
               <LogOut className="h-5 w-5" />
               <span>Logout</span>
             </button>

@@ -3,8 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
@@ -36,45 +39,62 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={
-            <AppLayout>
-              <Dashboard />
-            </AppLayout>
-          } />
-          <Route path="/inventory" element={
-            <AppLayout>
-              <Inventory />
-            </AppLayout>
-          } />
-          <Route path="/quotes" element={
-            <AppLayout>
-              <Quotes />
-            </AppLayout>
-          } />
-          <Route path="/orders" element={
-            <AppLayout>
-              <Orders />
-            </AppLayout>
-          } />
-          <Route path="/dealers" element={
-            <AppLayout>
-              <Dealers />
-            </AppLayout>
-          } />
-          <Route path="/credentials" element={
-            <AppLayout>
-              <Credentials />
-            </AppLayout>
-          } />
-          <Route path="/settings" element={
-            <AppLayout>
-              <Settings />
-            </AppLayout>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/inventory" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Inventory />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/quotes" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Quotes />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Orders />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dealers" element={
+              <ProtectedRoute permissions={['dealers']}>
+                <AppLayout>
+                  <Dealers />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/credentials" element={
+              <ProtectedRoute permissions={['credentials']}>
+                <AppLayout>
+                  <Credentials />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute permissions={['settings']}>
+                <AppLayout>
+                  <Settings />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,17 +1,46 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, User, ShoppingBag, Search } from 'lucide-react';
+import { Bell, User, ShoppingBag, Search, LogOut, BarChart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { getCurrentUser } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
 
 const Header = () => {
-  const currentUser = getCurrentUser();
+  const { user, logout } = useAuth();
+  
+  const getUserRoleLabel = () => {
+    if (!user) return '';
+    
+    if (user.type === 'admin') {
+      switch (user.role) {
+        case 'superAdmin': return 'Super Amministratore';
+        case 'admin': return 'Amministratore';
+        case 'supervisor': return 'Supervisore';
+        case 'operator': return 'Operatore';
+        default: return 'Amministratore';
+      }
+    } else if (user.type === 'dealer') {
+      return 'Dealer';
+    } else if (user.type === 'vendor') {
+      return 'Venditore';
+    }
+    
+    return '';
+  };
   
   return (
     <header className="w-full h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6">
       <div className="flex items-center gap-3">
-        <Link to="/" className="items-center hidden md:flex">
+        <Link to="/dashboard" className="items-center hidden md:flex">
           <ShoppingBag className="h-6 w-6 text-primary" />
           <span className="text-xl font-semibold ml-2">Gestionale CMC</span>
         </Link>
@@ -36,15 +65,44 @@ const Header = () => {
           </span>
         </button>
         
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <User className="h-4 w-4 text-gray-600" />
-          </div>
-          <div className="hidden md:block">
-            <p className="text-sm font-medium">{currentUser.name}</p>
-            <p className="text-xs text-gray-500">{currentUser.role === 'admin' ? 'Administrator' : currentUser.dealerName}</p>
-          </div>
-        </div>
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="h-4 w-4 text-gray-600" />
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium">{`${user.firstName} ${user.lastName}`}</p>
+                  <p className="text-xs text-gray-500">
+                    {user.type === 'admin' ? getUserRoleLabel() : user.dealerName}
+                  </p>
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                Account
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {user.type === 'admin' && (
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profilo
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem>
+                <BarChart className="mr-2 h-4 w-4" />
+                Dashboard
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );
