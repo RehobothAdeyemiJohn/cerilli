@@ -1,14 +1,54 @@
 
 import React, { useState } from 'react';
-import { quotes, vehicles } from '@/data/mockData';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuoteForm from '@/components/quotes/QuoteForm';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { quotesApi } from '@/api/localStorage/quotesApi';
+import { vehiclesApi } from '@/api/localStorage/vehiclesApi';
+import { Quote, Vehicle } from '@/types';
 
 const Quotes = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+  
+  const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ['quotes'],
+    queryFn: quotesApi.getAll,
+  });
+  
+  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: vehiclesApi.getAll,
+  });
+  
+  const createMutation = useMutation({
+    mutationFn: (quoteData: Omit<Quote, 'id'>) => quotesApi.create(quoteData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      setDialogOpen(false);
+      toast({
+        title: 'Preventivo Creato',
+        description: 'Il preventivo è stato creato con successo',
+      });
+    },
+  });
+  
+  const updateMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => 
+      quotesApi.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast({
+        title: 'Preventivo Aggiornato',
+        description: 'Lo stato del preventivo è stato aggiornato con successo',
+      });
+    },
+  });
   
   const pendingQuotes = quotes.filter(q => q.status === 'pending');
   const approvedQuotes = quotes.filter(q => q.status === 'approved');
@@ -16,12 +56,15 @@ const Quotes = () => {
   const convertedQuotes = quotes.filter(q => q.status === 'converted');
   
   const handleCreateQuote = (data: any) => {
-    console.log('Quote created:', data);
-    setDialogOpen(false);
-    toast({
-      title: 'Quote Created',
-      description: 'The quote has been successfully created',
+    createMutation.mutate({
+      ...data,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
     });
+  };
+  
+  const handleUpdateStatus = (id: string, status: string) => {
+    updateMutation.mutate({ id, status });
   };
   
   const getVehicleById = (id: string) => {
@@ -49,12 +92,12 @@ const Quotes = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left font-medium">Customer</th>
-              <th className="p-3 text-left font-medium">Vehicle</th>
-              <th className="p-3 text-left font-medium">Final Price</th>
-              <th className="p-3 text-left font-medium">Status</th>
-              <th className="p-3 text-left font-medium">Date</th>
-              <th className="p-3 text-left font-medium">Actions</th>
+              <th className="p-3 text-left font-medium">Cliente</th>
+              <th className="p-3 text-left font-medium">Veicolo</th>
+              <th className="p-3 text-left font-medium">Prezzo Finale</th>
+              <th className="p-3 text-left font-medium">Stato</th>
+              <th className="p-3 text-left font-medium">Data</th>
+              <th className="p-3 text-left font-medium">Azioni</th>
             </tr>
           </thead>
           <tbody>
@@ -64,32 +107,43 @@ const Quotes = () => {
                 return (
                   <tr key={quote.id} className="border-b">
                     <td className="p-3">{quote.customerName}</td>
-                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim}` : 'Unknown'}</td>
+                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim}` : 'Sconosciuto'}</td>
                     <td className="p-3">€{quote.finalPrice.toLocaleString()}</td>
                     <td className="p-3">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(quote.status)}`}>
-                        {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                        {quote.status === 'pending' ? 'In attesa' : 
+                         quote.status === 'approved' ? 'Approvato' : 
+                         quote.status === 'rejected' ? 'Rifiutato' : 'Convertito'}
                       </span>
                     </td>
                     <td className="p-3">{new Date(quote.createdAt).toLocaleDateString()}</td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
-                          View
+                          Visualizza
                         </button>
                         {quote.status === 'pending' && (
                           <>
-                            <button className="text-xs bg-green-100 hover:bg-green-200 px-2 py-1 rounded text-green-800">
-                              Approve
+                            <button 
+                              className="text-xs bg-green-100 hover:bg-green-200 px-2 py-1 rounded text-green-800"
+                              onClick={() => handleUpdateStatus(quote.id, 'approved')}
+                            >
+                              Approva
                             </button>
-                            <button className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-800">
-                              Reject
+                            <button 
+                              className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-800"
+                              onClick={() => handleUpdateStatus(quote.id, 'rejected')}
+                            >
+                              Rifiuta
                             </button>
                           </>
                         )}
                         {quote.status === 'approved' && (
-                          <button className="text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-blue-800">
-                            Convert
+                          <button 
+                            className="text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-blue-800"
+                            onClick={() => handleUpdateStatus(quote.id, 'converted')}
+                          >
+                            Converti
                           </button>
                         )}
                       </div>
@@ -100,7 +154,7 @@ const Quotes = () => {
             ) : (
               <tr>
                 <td colSpan={6} className="p-3 text-center text-gray-500">
-                  No quotes found
+                  Nessun preventivo trovato
                 </td>
               </tr>
             )}
@@ -110,30 +164,42 @@ const Quotes = () => {
     </div>
   );
   
+  if (isLoadingQuotes || isLoadingVehicles) {
+    return <div className="container mx-auto py-6 px-4">Caricamento in corso...</div>;
+  }
+  
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Quotes</h1>
+        <h1 className="text-2xl font-bold">Preventivi</h1>
         <div className="mt-4 md:mt-0">
-          <button 
+          <Button 
             onClick={() => {
-              setSelectedVehicleId(vehicles[0].id);
-              setDialogOpen(true);
+              if (vehicles.length > 0) {
+                setSelectedVehicleId(vehicles[0].id);
+                setDialogOpen(true);
+              } else {
+                toast({
+                  title: "Errore",
+                  description: "Non ci sono veicoli disponibili per creare un preventivo",
+                  variant: "destructive",
+                });
+              }
             }}
-            className="px-4 py-2 bg-primary text-white rounded-md"
           >
-            Create New Quote
-          </button>
+            <Plus className="mr-2 h-4 w-4" />
+            Crea Nuovo Preventivo
+          </Button>
         </div>
       </div>
       
       <Tabs defaultValue="pending">
         <TabsList className="mb-6">
-          <TabsTrigger value="pending">Pending ({pendingQuotes.length})</TabsTrigger>
-          <TabsTrigger value="approved">Approved ({approvedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected ({rejectedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="converted">Converted ({convertedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="all">All ({quotes.length})</TabsTrigger>
+          <TabsTrigger value="pending">In Attesa ({pendingQuotes.length})</TabsTrigger>
+          <TabsTrigger value="approved">Approvati ({approvedQuotes.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rifiutati ({rejectedQuotes.length})</TabsTrigger>
+          <TabsTrigger value="converted">Convertiti ({convertedQuotes.length})</TabsTrigger>
+          <TabsTrigger value="all">Tutti ({quotes.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="pending">
@@ -160,7 +226,7 @@ const Quotes = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Quote</DialogTitle>
+            <DialogTitle>Crea Nuovo Preventivo</DialogTitle>
           </DialogHeader>
           
           {selectedVehicleId && (
