@@ -21,11 +21,10 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { dealers } from '@/data/mockData';
 
-// Schema modificato per rendere opzionali la maggior parte dei campi quando si seleziona Stock Virtuale
+// Schema semplificato che richiede solo il modello per veicoli in Stock Virtuale
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
   location: z.string().min(1, { message: "La posizione è obbligatoria." }),
-  // I campi seguenti sono condizionalmente obbligatori in base al valore di location
   trim: z.string().optional(),
   fuelType: z.string().optional(),
   exteriorColor: z.string().optional(),
@@ -33,17 +32,6 @@ const vehicleSchema = z.object({
   status: z.enum(["available", "reserved", "sold"]).default("available"),
   telaio: z.string().optional(),
   accessories: z.array(z.string()).default([])
-}).refine((data) => {
-  // Se la location è "Stock Virtuale", allora tutti i campi sono opzionali tranne model e location
-  if (data.location === 'Stock Virtuale') {
-    return true;
-  }
-  
-  // Altrimenti, verifichiamo che tutti i campi siano compilati
-  return data.trim && data.fuelType && data.exteriorColor && data.transmission && data.telaio;
-}, {
-  message: "Tutti i campi sono obbligatori per veicoli non in Stock Virtuale",
-  path: ["trim"] // Questo è solo un campo di esempio a cui associare il messaggio
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -59,6 +47,7 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [locations, setLocations] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
   const [isVirtualStock, setIsVirtualStock] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (locationOptions) {
@@ -142,7 +131,10 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
         const modelObj = models.find(m => m.name === watchModel);
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        const colorObj = colors.find(c => `${c.name} (${c.type})` === watchColor);
+        const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
+        const colorName = colorParts ? colorParts[1] : watchColor;
+        const colorType = colorParts ? colorParts[2] : '';
+        const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
@@ -185,39 +177,34 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
 
   const onSubmit = async (data: VehicleFormValues) => {
     try {
-      // Validazione minima per Stock Virtuale
+      setValidationError(null);
+      
+      // Validazione personalizzata in base alla location
       if (isVirtualStock) {
-        if (!data.model || !data.location) {
-          toast({
-            title: "Errore",
-            description: "Modello e posizione sono obbligatori.",
-            variant: "destructive",
-          });
+        // Per Stock Virtuale, solo il modello è obbligatorio
+        if (!data.model) {
+          setValidationError("Il modello è obbligatorio.");
           return;
         }
       } else {
-        // Validazione completa per altre posizioni
+        // Per altre locations, tutti i campi principali sono obbligatori
         if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
             !data.location || !data.transmission || !data.status || !data.telaio) {
-          toast({
-            title: "Errore",
-            description: "Tutti i campi sono obbligatori.",
-            variant: "destructive",
-          });
+          setValidationError("Tutti i campi sono obbligatori per veicoli non in Stock Virtuale");
           return;
         }
       }
       
       const newVehicleData: Omit<Vehicle, 'id'> = {
         model: data.model,
-        trim: data.trim || '',
-        fuelType: data.fuelType || '',
-        exteriorColor: data.exteriorColor || '',
+        trim: isVirtualStock ? '' : (data.trim || ''),
+        fuelType: isVirtualStock ? '' : (data.fuelType || ''),
+        exteriorColor: isVirtualStock ? '' : (data.exteriorColor || ''),
         location: data.location,
-        transmission: data.transmission || '',
+        transmission: isVirtualStock ? '' : (data.transmission || ''),
         status: data.status,
-        telaio: data.telaio || '',
-        accessories: data.accessories || [],
+        telaio: isVirtualStock ? '' : (data.telaio || ''),
+        accessories: isVirtualStock ? [] : (data.accessories || []),
         price: isVirtualStock ? 0 : calculatedPrice,
         dateAdded: new Date().toISOString().split('T')[0],
         imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
@@ -480,6 +467,11 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
               </div>
             </div>
           </>
+        )}
+        
+        {/* Mostra eventuali errori di validazione */}
+        {validationError && (
+          <div className="text-red-500 text-sm mt-2">{validationError}</div>
         )}
         
         <div className="flex justify-end gap-4 pt-4">

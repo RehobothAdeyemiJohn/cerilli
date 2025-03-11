@@ -21,11 +21,10 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { dealers } from '@/data/mockData';
 
-// Schema modificato per rendere opzionali la maggior parte dei campi quando si seleziona Stock Virtuale
+// Schema modificato per gestire correttamente i veicoli in Stock Virtuale
 const vehicleSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio." }),
   location: z.string().min(1, { message: "La posizione è obbligatoria." }),
-  // I campi seguenti sono condizionalmente obbligatori in base al valore di location
   trim: z.string().optional(),
   fuelType: z.string().optional(),
   exteriorColor: z.string().optional(),
@@ -33,17 +32,6 @@ const vehicleSchema = z.object({
   status: z.enum(["available", "reserved", "sold"]).default("available"),
   telaio: z.string().optional(),
   accessories: z.array(z.string()).default([])
-}).refine((data) => {
-  // Se la location è "Stock Virtuale", allora tutti i campi sono opzionali tranne model e location
-  if (data.location === 'Stock Virtuale') {
-    return true;
-  }
-  
-  // Altrimenti, verifichiamo che tutti i campi siano compilati
-  return data.trim && data.fuelType && data.exteriorColor && data.transmission && data.telaio;
-}, {
-  message: "Tutti i campi sono obbligatori per veicoli non in Stock Virtuale",
-  path: ["trim"] // Questo è solo un campo di esempio a cui associare il messaggio
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -60,6 +48,7 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [locations, setLocations] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
   const [isVirtualStock, setIsVirtualStock] = useState<boolean>(vehicle.location === 'Stock Virtuale');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (locationOptions) {
@@ -188,25 +177,20 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
   }, [watchModel, watchTrim, models, trims]);
 
   const onSubmit = (data: VehicleFormValues) => {
-    // Validazione minima per Stock Virtuale
+    setValidationError(null);
+    
+    // Validazione personalizzata in base alla location
     if (isVirtualStock) {
-      if (!data.model || !data.location) {
-        toast({
-          title: "Errore",
-          description: "Modello e posizione sono obbligatori.",
-          variant: "destructive",
-        });
+      // Per Stock Virtuale, solo il modello è obbligatorio
+      if (!data.model) {
+        setValidationError("Il modello è obbligatorio.");
         return;
       }
     } else {
-      // Validazione completa per altre posizioni
+      // Per altre locations, tutti i campi principali sono obbligatori
       if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
           !data.location || !data.transmission || !data.status || !data.telaio) {
-        toast({
-          title: "Errore",
-          description: "Tutti i campi sono obbligatori.",
-          variant: "destructive",
-        });
+        setValidationError("Tutti i campi sono obbligatori per veicoli non in Stock Virtuale");
         return;
       }
     }
@@ -214,14 +198,14 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
     const updatedVehicle: Vehicle = {
       ...vehicle,
       model: data.model,
-      trim: data.trim || '',
-      fuelType: data.fuelType || '',
-      exteriorColor: data.exteriorColor || '',
+      trim: isVirtualStock ? '' : data.trim || '',
+      fuelType: isVirtualStock ? '' : data.fuelType || '',
+      exteriorColor: isVirtualStock ? '' : data.exteriorColor || '',
       location: data.location,
-      transmission: data.transmission || '',
+      transmission: isVirtualStock ? '' : data.transmission || '',
       status: data.status,
-      telaio: data.telaio || '',
-      accessories: data.accessories || [],
+      telaio: isVirtualStock ? '' : data.telaio || '',
+      accessories: isVirtualStock ? [] : data.accessories || [],
       price: isVirtualStock ? 0 : calculatedPrice
     };
     
@@ -473,6 +457,11 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
               </div>
             </div>
           </>
+        )}
+        
+        {/* Mostra eventuali errori di validazione */}
+        {validationError && (
+          <div className="text-red-500 text-sm mt-2">{validationError}</div>
         )}
         
         <div className="flex justify-end gap-4 pt-4">

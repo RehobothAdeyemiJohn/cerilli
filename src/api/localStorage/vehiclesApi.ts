@@ -29,12 +29,12 @@ export const vehiclesApi = {
       imageUrl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
       accessories: vehicle.accessories || [],
-      // Per Stock Virtuale, lasciamo alcuni campi vuoti o con valori predefiniti
-      trim: vehicle.trim || '',
-      fuelType: vehicle.fuelType || '',
-      exteriorColor: vehicle.exteriorColor || '',
-      transmission: vehicle.transmission || '',
-      telaio: vehicle.telaio || '',
+      // Per Stock Virtuale, lasciamo solo il modello obbligatorio
+      trim: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.trim || ''),
+      fuelType: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.fuelType || ''),
+      exteriorColor: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.exteriorColor || ''),
+      transmission: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.transmission || ''),
+      telaio: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.telaio || ''),
       price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
     };
     
