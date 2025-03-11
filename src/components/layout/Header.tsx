@@ -1,108 +1,68 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, User, ShoppingBag, Search, LogOut, BarChart } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { 
+import { MenuIcon, UserCircle, LogOut } from 'lucide-react';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/dropdown-menu';
 
-const Header = () => {
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+const Header = ({ toggleSidebar }: HeaderProps) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
-  const getUserRoleLabel = () => {
-    if (!user) return '';
-    
-    if (user.type === 'admin') {
-      switch (user.role) {
-        case 'superAdmin': return 'Super Amministratore';
-        case 'admin': return 'Amministratore';
-        case 'supervisor': return 'Supervisore';
-        case 'operator': return 'Operatore';
-        default: return 'Amministratore';
-      }
-    } else if (user.type === 'dealer') {
-      return 'Dealer';
-    } else if (user.type === 'vendor') {
-      return 'Venditore';
-    }
-    
-    return '';
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
   
   return (
-    <header className="w-full h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6">
-      <div className="flex items-center gap-3">
-        <Link to="/dashboard" className="items-center hidden md:flex">
-          <ShoppingBag className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold ml-2">Gestionale CMC</span>
-        </Link>
-      </div>
-      
-      <div className="hidden sm:block flex-1 max-w-md mx-4">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input 
-            type="search" 
-            placeholder="Cerca veicoli, ordini..." 
-            className="pl-9 bg-gray-50 w-full"
-          />
+    <header className="fixed top-0 left-0 w-full z-30 bg-white border-b border-gray-200 h-16">
+      <div className="flex items-center justify-between h-full px-4">
+        <div className="flex items-center">
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+          >
+            <MenuIcon className="h-6 w-6" />
+          </button>
+          
+          <div className="ml-4 font-semibold text-lg md:text-xl text-gray-800">
+            Cirelli Motor Company
+          </div>
         </div>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <button className="text-gray-500 hover:text-gray-700 relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 flex items-center justify-center text-xs text-white">
-            3
-          </span>
-        </button>
         
-        {user && (
+        <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="h-4 w-4 text-gray-600" />
-                </div>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium">{`${user.firstName} ${user.lastName}`}</p>
-                  <p className="text-xs text-gray-500">
-                    {user.type === 'admin' ? getUserRoleLabel() : user.dealerName}
-                  </p>
-                </div>
-              </div>
+              <button className="flex items-center space-x-2 hover:bg-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200">
+                <UserCircle className="h-6 w-6 text-gray-600" />
+                <span className="hidden md:inline text-sm text-gray-700">
+                  {user?.firstName} {user?.lastName}
+                </span>
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end">
               <DropdownMenuLabel>
-                Account
+                {user?.firstName} {user?.lastName}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {user.type === 'admin' && (
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profilo
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem>
-                <BarChart className="mr-2 h-4 w-4" />
-                Dashboard
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        </div>
       </div>
     </header>
   );
