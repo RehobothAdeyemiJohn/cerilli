@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Key
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -22,6 +23,7 @@ const Sidebar = () => {
     { name: 'Preventivi', path: '/quotes', icon: FileText },
     { name: 'Ordini Auto', path: '/orders', icon: Car },
     { name: 'Dealers', path: '/dealers', icon: Users },
+    { name: 'Credenziali', path: '/credentials', icon: Key },
     { name: 'Impostazioni', path: '/settings', icon: Settings },
   ];
   

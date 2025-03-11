@@ -1,4 +1,3 @@
-
 import { initLocalStorage } from './storageUtils';
 import { vehiclesApi } from './vehiclesApi';
 import { quotesApi } from './quotesApi';
@@ -13,6 +12,7 @@ import {
   accessoriesApi,
   calculateVehiclePrice
 } from './settingsApi';
+import { adminUsersApi } from './adminUsersApi';
 
 // Initialize data
 initLocalStorage();
@@ -29,5 +29,6 @@ export {
   colorsApi,
   transmissionsApi,
   accessoriesApi,
-  calculateVehiclePrice
+  calculateVehiclePrice,
+  adminUsersApi
 };

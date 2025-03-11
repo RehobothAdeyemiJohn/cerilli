@@ -12,6 +12,7 @@ import Quotes from "./pages/Quotes";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
 import Dealers from "./pages/Dealers";
+import Credentials from "./pages/Credentials";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 
@@ -60,6 +61,11 @@ const App = () => (
           <Route path="/dealers" element={
             <AppLayout>
               <Dealers />
+            </AppLayout>
+          } />
+          <Route path="/credentials" element={
+            <AppLayout>
+              <Credentials />
             </AppLayout>
           } />
           <Route path="/settings" element={
