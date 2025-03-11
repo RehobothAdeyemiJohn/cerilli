@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -9,10 +10,12 @@ import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddVehicleDrawer, setShowAddVehicleDrawer] = useState(false);
+  const queryClient = useQueryClient();
   
   const {
     inventory,
@@ -23,6 +26,7 @@ const Inventory = () => {
     locationOptions,
     handleVehicleUpdate,
     handleVehicleDelete,
+    addVehicle,
   } = useInventory();
   
   const filteredVehicles = activeFilters 
@@ -36,17 +40,32 @@ const Inventory = () => {
   
   const toggleFilters = () => setShowFilters(!showFilters);
   
-  const handleVehicleAdd = (newVehicle: Vehicle | null) => {
+  const handleVehicleAdd = async (newVehicle: Vehicle | null) => {
     if (!newVehicle) {
       setShowAddVehicleDrawer(false);
       return;
     }
     
-    setShowAddVehicleDrawer(false);
-    toast({
-      title: "Veicolo Aggiunto",
-      description: `${newVehicle.model} ${newVehicle.trim} è stato aggiunto all'inventario.`,
-    });
+    try {
+      if (addVehicle) {
+        await addVehicle(newVehicle);
+        // Invalidiamo esplicitamente la cache per aggiornare la lista
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      }
+      
+      setShowAddVehicleDrawer(false);
+      toast({
+        title: "Veicolo Aggiunto",
+        description: `${newVehicle.model} ${newVehicle.trim} è stato aggiunto all'inventario.`,
+      });
+    } catch (error) {
+      console.error('Errore durante l\'aggiunta del veicolo:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta del veicolo.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleFiltersChange = (filters: VehicleFilter) => {

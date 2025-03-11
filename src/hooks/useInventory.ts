@@ -38,6 +38,17 @@ export const useInventory = () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     },
   });
+  
+  const createMutation = useMutation({
+    mutationFn: (vehicle: Omit<Vehicle, 'id'>) => vehiclesApi.create(vehicle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
+  });
+
+  const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
+    return createMutation.mutateAsync(vehicle);
+  };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
     updateMutation.mutate(updatedVehicle, {
@@ -95,5 +106,6 @@ export const useInventory = () => {
     locationOptions,
     handleVehicleUpdate,
     handleVehicleDelete,
+    addVehicle,
   };
 };

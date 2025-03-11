@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -9,7 +10,6 @@ import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vehicle, Accessory } from '@/types';
 import { 
-  vehiclesApi, 
   modelsApi, 
   trimsApi, 
   fuelTypesApi, 
@@ -181,12 +181,12 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
         accessories: data.accessories || [],
         price: calculatedPrice,
         dateAdded: new Date().toISOString().split('T')[0],
+        imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       };
       
-      const savedVehicle = await vehiclesApi.create(newVehicleData);
-      console.log('Veicolo salvato con successo:', savedVehicle);
-      
-      onComplete(savedVehicle);
+      // Passare il veicolo direttamente alla callback onComplete
+      // Ora lasciamo che il componente padre gestisca la chiamata API
+      onComplete(newVehicleData as Vehicle);
     } catch (error) {
       console.error('Errore durante il salvataggio del veicolo:', error);
       toast({

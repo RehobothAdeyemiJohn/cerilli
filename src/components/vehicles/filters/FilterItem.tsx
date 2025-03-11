@@ -10,11 +10,15 @@ interface FilterItemProps {
 }
 
 const FilterItem = ({ id, name, isSelected, onToggle }: FilterItemProps) => {
+  const handleToggle = () => {
+    onToggle(name);
+  };
+
   return (
     <div 
       key={id} 
-      className="flex items-center"
-      onClick={() => onToggle(name)}
+      className="flex items-center cursor-pointer"
+      onClick={handleToggle}
     >
       <div className={`
         h-4 w-4 rounded border mr-2 flex items-center justify-center
