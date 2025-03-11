@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Copy } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface VehicleCardProps {
@@ -10,9 +10,10 @@ interface VehicleCardProps {
   onClick: (vehicle: Vehicle) => void;
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (vehicle: Vehicle) => void;
+  onDuplicate: (vehicle: Vehicle) => void;
 }
 
-const VehicleCard = ({ vehicle, onClick, onEdit, onDelete }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: VehicleCardProps) => {
   // Status colors
   const statusColors = {
     available: 'bg-green-100 text-green-800',
@@ -78,6 +79,13 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete }: VehicleCardProps) =
         </div>
         
         <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
+          <button 
+            onClick={(e) => handleActionClick(e, onDuplicate)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            aria-label="Duplica veicolo"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
           <button 
             onClick={(e) => handleActionClick(e, onEdit)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"

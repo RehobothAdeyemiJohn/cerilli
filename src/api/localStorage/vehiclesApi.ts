@@ -75,5 +75,19 @@ export const vehiclesApi = {
     }
     
     localStorage.setItem(KEYS.VEHICLES, JSON.stringify(filteredVehicles));
+  },
+  
+  duplicate: async (id: string): Promise<Vehicle> => {
+    // Get the vehicle to duplicate
+    const vehicle = await vehiclesApi.getById(id);
+    
+    // Create a new vehicle with the same properties but a new ID
+    const { id: _, ...vehicleWithoutId } = vehicle;
+    
+    // Add the duplicated vehicle
+    return vehiclesApi.create({
+      ...vehicleWithoutId,
+      dateAdded: new Date().toISOString().split('T')[0], // Use current date
+    });
   }
 };

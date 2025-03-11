@@ -96,6 +96,36 @@ export const useInventory = () => {
       }
     });
   };
+  
+  const handleVehicleDuplicate = async (vehicle: Vehicle) => {
+    // Create a duplicate of the vehicle without the ID
+    const { id, ...vehicleWithoutId } = vehicle;
+    
+    // Add a suffix to indicate it's a copy
+    const newVehicle = {
+      ...vehicleWithoutId,
+      model: vehicle.model,
+      trim: vehicle.trim,
+      dateAdded: new Date().toISOString().split('T')[0], // Set today's date
+    };
+    
+    try {
+      const duplicatedVehicle = await createMutation.mutateAsync(newVehicle);
+      toast({
+        title: "Veicolo Duplicato",
+        description: `${duplicatedVehicle.model} ${duplicatedVehicle.trim} è stato duplicato con successo.`,
+      });
+      return duplicatedVehicle;
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la duplicazione del veicolo.",
+        variant: "destructive",
+      });
+      console.error("Errore durante la duplicazione:", error);
+      throw error;
+    }
+  };
 
   return {
     inventory,
@@ -106,6 +136,7 @@ export const useInventory = () => {
     locationOptions,
     handleVehicleUpdate,
     handleVehicleDelete,
+    handleVehicleDuplicate,
     addVehicle,
   };
 };

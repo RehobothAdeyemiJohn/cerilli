@@ -26,6 +26,7 @@ const Inventory = () => {
     locationOptions,
     handleVehicleUpdate,
     handleVehicleDelete,
+    handleVehicleDuplicate,
     addVehicle,
   } = useInventory();
   

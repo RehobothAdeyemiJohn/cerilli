@@ -31,6 +31,19 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     setVehicleToDelete(vehicle);
   };
   
+  const handleDuplicateClick = async (vehicle: Vehicle) => {
+    if (onVehicleUpdated) {
+      try {
+        // We'll reuse the update handler since it already refreshes the list
+        // In a real app, you might want to create a specific handler
+        const { handleVehicleDuplicate } = require('@/hooks/useInventory').useInventory();
+        await handleVehicleDuplicate(vehicle);
+      } catch (error) {
+        console.error("Error duplicating vehicle:", error);
+      }
+    }
+  };
+  
   const closeDetailsDialog = () => {
     setSelectedVehicle(null);
   };
@@ -85,6 +98,7 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
             onClick={handleVehicleClick}
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
+            onDuplicate={handleDuplicateClick}
           />
         ))}
       </div>
