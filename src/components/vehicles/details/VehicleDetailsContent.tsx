@@ -36,6 +36,7 @@ const VehicleDetailsContent = ({
   useEffect(() => {
     if (vehicle.status !== 'reserved' || !vehicle.reservationTimestamp) return;
     
+    console.log('Setting up countdown timer for vehicle:', vehicle.id, 'Timestamp:', vehicle.reservationTimestamp);
     const timer = setInterval(() => {
       setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
     }, 1000);
@@ -58,6 +59,10 @@ const VehicleDetailsContent = ({
   // Determine if vehicle is reserved and display proper information
   const isReserved = vehicle.status === 'reserved';
   const isOrdered = vehicle.status === 'ordered';
+  
+  console.log('Vehicle status:', vehicle.status, 'Reserved:', isReserved);
+  console.log('Reservation timestamp:', vehicle.reservationTimestamp);
+  console.log('Expiration:', expiration);
   
   return (
     <div className="mt-2">
@@ -136,7 +141,7 @@ const VehicleDetailsContent = ({
       </div>
       
       {/* Reservation expiration countdown */}
-      {isReserved && vehicle.reservationTimestamp && !expiration.expired && (
+      {isReserved && (
         <div className="mt-4 bg-amber-50 p-3 rounded-md border border-amber-200">
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-sm font-medium text-amber-800">Scadenza prenotazione</h4>

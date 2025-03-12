@@ -40,6 +40,10 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   // Now all users can create quotes
   const userCanCreateQuotes = true;
   
+  console.log('Rendering VehicleDetailsDialog for vehicle:', vehicle.id);
+  console.log('Vehicle status:', vehicle.status);
+  console.log('Reservation timestamp:', vehicle.reservationTimestamp);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
