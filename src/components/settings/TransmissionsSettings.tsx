@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { transmissionsApi } from '@/api/localStorage';
+import { transmissionsApi } from '@/api/supabase/settingsApi';
 import { Transmission } from '@/types';
 import FormDialog from './common/FormDialog';
 import TransmissionForm from './transmissions/TransmissionForm';
@@ -22,7 +22,10 @@ const TransmissionsSettings = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (transmission: Omit<Transmission, 'id'>) => transmissionsApi.create(transmission),
+    mutationFn: (transmission: Omit<Transmission, 'id'>) => {
+      console.log('Creating transmission:', transmission);
+      return transmissionsApi.create(transmission);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transmissions'] });
       toast({
@@ -32,11 +35,21 @@ const TransmissionsSettings = () => {
       setIsAddDialogOpen(false);
       setCurrentTransmission({});
     },
+    onError: (error) => {
+      console.error('Error creating transmission:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta del cambio.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, transmission }: { id: string; transmission: Transmission }) => 
-      transmissionsApi.update(id, transmission),
+    mutationFn: ({ id, transmission }: { id: string; transmission: Transmission }) => {
+      console.log('Updating transmission:', { id, transmission });
+      return transmissionsApi.update(id, transmission);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transmissions'] });
       toast({
@@ -46,6 +59,14 @@ const TransmissionsSettings = () => {
       setIsEditDialogOpen(false);
       setCurrentTransmission({});
     },
+    onError: (error) => {
+      console.error('Error updating transmission:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del cambio.",
+        variant: "destructive",
+      });
+    }
   });
 
   const deleteMutation = useMutation({
@@ -57,6 +78,14 @@ const TransmissionsSettings = () => {
         description: "Il tipo di cambio è stato eliminato con successo.",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting transmission:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del cambio.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAddTransmission = () => {
@@ -86,19 +115,24 @@ const TransmissionsSettings = () => {
     if (!currentTransmission.name || currentTransmission.priceAdjustment === undefined) {
       toast({
         title: "Errore",
-        description: "Tutti i campi sono obbligatori.",
+        description: "Nome e adeguamento prezzo sono obbligatori.",
         variant: "destructive",
       });
       return;
     }
 
-    if (currentTransmission.id) {
+    const transmissionToSave = {
+      ...currentTransmission,
+      compatibleModels: currentTransmission.compatibleModels || []
+    };
+
+    if (transmissionToSave.id) {
       updateMutation.mutate({
-        id: currentTransmission.id,
-        transmission: currentTransmission as Transmission,
+        id: transmissionToSave.id,
+        transmission: transmissionToSave as Transmission,
       });
     } else {
-      createMutation.mutate(currentTransmission as Omit<Transmission, 'id'>);
+      createMutation.mutate(transmissionToSave as Omit<Transmission, 'id'>);
     }
   };
 
