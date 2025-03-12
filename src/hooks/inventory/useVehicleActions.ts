@@ -27,8 +27,11 @@ export const useVehicleActions = () => {
   const handleVehicleDelete = async (vehicleId: string, inventory: Vehicle[]) => {
     setIsDeleting(true);
     try {
+      console.log('Deleting vehicle with ID:', vehicleId);
       // Get the vehicle details before deletion for better user feedback
       const vehicleToDelete = inventory.find(v => v.id === vehicleId);
+      
+      // Call the deleteMutation directly with the vehicleId
       await deleteMutation.mutateAsync(vehicleId);
       
       if (vehicleToDelete) {

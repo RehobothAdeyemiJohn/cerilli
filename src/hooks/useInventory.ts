@@ -26,7 +26,7 @@ export const useInventory = () => {
 
   // Wrap the handleVehicleDelete to provide the inventory
   const handleVehicleDelete = (vehicleId: string) => {
-    handleVehicleDeleteBase(vehicleId, inventory);
+    return handleVehicleDeleteBase(vehicleId, inventory);
   };
 
   return {

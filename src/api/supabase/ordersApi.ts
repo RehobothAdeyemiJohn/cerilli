@@ -1,7 +1,5 @@
-
 import { Order } from '@/types';
 import { supabase } from './client';
-import { useAuth } from '@/context/AuthContext';
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
@@ -13,7 +11,7 @@ export const ordersApi = {
     
     let query = supabase
       .from('orders')
-      .select('*, vehicles(*), dealers(*))')
+      .select('*, vehicles(*), dealers(*)')
       .order('orderdate', { ascending: false });
     
     // If user is a dealer, only show their orders

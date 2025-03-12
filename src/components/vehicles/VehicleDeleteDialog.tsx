@@ -27,6 +27,11 @@ const VehicleDeleteDialog = ({
 }: VehicleDeleteDialogProps) => {
   if (!vehicle) return null;
   
+  const handleConfirm = () => {
+    console.log('Delete confirmation for vehicle ID:', vehicle.id);
+    onConfirm();
+  };
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -38,7 +43,7 @@ const VehicleDeleteDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annulla</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction onClick={handleConfirm} className="bg-red-600 hover:bg-red-700">
             Elimina
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -19,14 +19,26 @@ export const useInventoryMutations = () => {
   });
   
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => vehiclesApi.delete(id),
+    mutationFn: (id: string) => {
+      console.log('Delete mutation called for ID:', id);
+      return vehiclesApi.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast({
         title: "Veicolo eliminato",
         description: "Il veicolo è stato eliminato con successo",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting vehicle:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del veicolo",
+        variant: "destructive",
+      });
+    }
   });
   
   const createMutation = useMutation({
