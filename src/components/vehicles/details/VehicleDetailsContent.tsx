@@ -105,7 +105,8 @@ const VehicleDetailsContent = ({
             <p>{vehicle.transmission}</p>
           </div>
         )}
-        {daysInStock !== null && (
+        {/* Giorni in stock visibili solo agli amministratori */}
+        {daysInStock !== null && !isDealer && (
           <div>
             <p className="text-xs font-medium text-gray-500">Giorni in Stock</p>
             <div className="flex items-center gap-1">

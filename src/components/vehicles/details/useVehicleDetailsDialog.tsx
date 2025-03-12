@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi'; // Using Supabase API
@@ -213,6 +214,7 @@ export function useVehicleDetailsDialog(
         description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
       });
       
+      // Chiudiamo il popup dopo la trasformazione in ordine
       onOpenChange(false);
     } catch (error) {
       console.error('Error transforming to order:', error);

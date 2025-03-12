@@ -7,6 +7,7 @@ import VehicleDetailsDialog from './VehicleDetailsDialog';
 import VehicleEditDialog from './VehicleEditDialog';
 import VehicleDeleteDialog from './VehicleDeleteDialog';
 import { useInventory } from '@/hooks/useInventory';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -20,6 +21,7 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const { handleVehicleDuplicate } = useInventory();
+  const queryClient = useQueryClient();
   
   const handleVehicleClick = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
@@ -37,6 +39,10 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     try {
       // Pass the vehicle ID instead of the whole vehicle object
       await handleVehicleDuplicate(vehicle.id);
+      
+      // Forzare il refresh dei dati
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      
       toast({
         title: "Veicolo Duplicato",
         description: `${vehicle.model} ${vehicle.trim} è stato duplicato con successo.`,
@@ -53,10 +59,14 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   
   const closeDetailsDialog = () => {
     setSelectedVehicle(null);
+    // Forzare il refresh dei dati quando si chiude il dialog
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
   
   const closeEditDialog = () => {
     setVehicleToEdit(null);
+    // Forzare il refresh dei dati quando si chiude il dialog di modifica
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
   
   const closeDeleteDialog = () => {
@@ -67,6 +77,9 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     if (onVehicleUpdated) {
       onVehicleUpdated(updatedVehicle);
     }
+    
+    // Forzare il refresh dei dati dopo l'aggiornamento
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     
     // Mostra un toast per confermare l'aggiornamento
     toast({
@@ -80,6 +93,9 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   const handleVehicleDelete = () => {
     if (vehicleToDelete && onVehicleDeleted) {
       onVehicleDeleted(vehicleToDelete.id);
+      
+      // Forzare il refresh dei dati dopo l'eliminazione
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       // Mostra un toast per confermare l'eliminazione
       toast({
@@ -120,7 +136,13 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
       <VehicleDetailsDialog 
         vehicle={selectedVehicle}
         open={!!selectedVehicle}
-        onOpenChange={open => !open && closeDetailsDialog()}
+        onOpenChange={open => {
+          if (!open) {
+            closeDetailsDialog();
+            // Forzare il refresh dei dati quando si chiude il dialog
+            queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+          }
+        }}
       />
       
       <VehicleEditDialog 

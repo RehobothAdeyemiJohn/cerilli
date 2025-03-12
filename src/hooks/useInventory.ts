@@ -12,9 +12,11 @@ export const useInventory = () => {
   const locationOptions = useLocationOptions();
   const { addVehicle } = useInventoryMutations();
   
-  const { data: inventory = [], isLoading, error } = useQuery({
+  const { data: inventory = [], isLoading, error, refetch } = useQuery({
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
+    // Riduciamo il staleTime per migliorare l'aggiornamento dei dati
+    staleTime: 5000,
   });
   
   const { 
@@ -32,6 +34,7 @@ export const useInventory = () => {
     inventory,
     isLoading,
     error,
+    refetch,
     activeFilters,
     setActiveFilters,
     locationOptions,

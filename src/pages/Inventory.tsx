@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -24,6 +25,7 @@ const Inventory = () => {
     inventory,
     isLoading,
     error,
+    refetch,
     activeFilters,
     setActiveFilters,
     locationOptions,
@@ -52,6 +54,15 @@ const Inventory = () => {
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   const soldVehicles = filteredVehicles.filter(v => v.status === 'sold');
   
+  // Periodicamente aggiorniamo i dati per mantenere l'inventario fresco
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // Aggiorna ogni 30 secondi
+    
+    return () => clearInterval(interval);
+  }, [refetch]);
+  
   const toggleFilters = () => setShowFilters(!showFilters);
   
   const handleVehicleAdd = async (newVehicle: Vehicle | null) => {
@@ -64,7 +75,10 @@ const Inventory = () => {
       if (addVehicle) {
         const result = await addVehicle(newVehicle);
         console.log("Veicolo aggiunto con successo:", result);
+        
+        // Forziamo l'aggiornamento dei dati dopo l'aggiunta
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        refetch();
       }
       
       setShowAddVehicleDrawer(false);
