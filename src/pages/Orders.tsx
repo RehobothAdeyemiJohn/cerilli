@@ -328,6 +328,7 @@ const Orders = () => {
                       {renderFilterStatus('hasConformity')}
                     </div>
                   </TableHead>
+                  <TableHead>Plafond</TableHead>
                 </>
               )}
               <TableHead>Azioni</TableHead>
@@ -336,13 +337,13 @@ const Orders = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10">
+                <TableCell colSpan={isAdmin ? 13 : 7} className="text-center py-10">
                   Caricamento ordini...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10 text-red-500">
+                <TableCell colSpan={isAdmin ? 13 : 7} className="text-center py-10 text-red-500">
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
@@ -361,6 +362,7 @@ const Orders = () => {
                 );
                 
                 const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
+                const dealerLimit = order.dealer?.creditLimit;
                 
                 return (
                   <TableRow key={order.id}>
@@ -417,6 +419,17 @@ const Orders = () => {
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {dealerLimit !== undefined && dealerLimit !== null ? (
+                            <span>
+                              {new Intl.NumberFormat('it-IT', {
+                                style: 'currency',
+                                currency: 'EUR',
+                                maximumFractionDigits: 0,
+                              }).format(dealerLimit)}
+                            </span>
+                          ) : 'N/A'}
                         </TableCell>
                       </>
                     )}
@@ -496,7 +509,7 @@ const Orders = () => {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={isAdmin ? 13 : 7} className="text-center py-10 text-gray-500">
                   Nessun ordine trovato
                 </TableCell>
               </TableRow>
