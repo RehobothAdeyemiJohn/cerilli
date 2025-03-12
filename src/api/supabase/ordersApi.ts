@@ -1,15 +1,29 @@
 
 import { Order } from '@/types';
 import { supabase } from './client';
+import { useAuth } from '@/context/AuthContext';
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
-    const { data, error } = await supabase
+    
+    // Get current user from localStorage since we can't use hooks in a regular function
+    const userJson = localStorage.getItem('currentUser');
+    const currentUser = userJson ? JSON.parse(userJson) : null;
+    
+    let query = supabase
       .from('orders')
-      .select('*, vehicles(*), dealers(*)')
+      .select('*, vehicles(*), dealers(*))')
       .order('orderdate', { ascending: false });
-
+    
+    // If user is a dealer, only show their orders
+    if (currentUser?.type === 'dealer') {
+      console.log("Filtering orders for dealer:", currentUser.dealerId);
+      query = query.eq('dealerid', currentUser.dealerId);
+    }
+    
+    const { data, error } = await query;
+    
     if (error) {
       console.error('Error fetching orders:', error);
       throw error;
