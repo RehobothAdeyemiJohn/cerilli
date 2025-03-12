@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Quote } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -86,25 +85,14 @@ export const quotesApi = {
   create: async (quote: Omit<Quote, 'id'>): Promise<Quote> => {
     console.log("Supabase API: create - Creazione preventivo:", quote);
     
-    // Get the first dealer for now - in a real app, this would be the current user's dealer
-    const { data: dealers, error: dealerError } = await supabase
-      .from('dealers')
-      .select('id')
-      .limit(1);
-      
-    if (dealerError || !dealers || dealers.length === 0) {
-      console.error('Errore nel recupero dei dealer:', dealerError);
-      throw new Error('Nessun dealer trovato per assegnare il preventivo');
-    }
-    
-    const dealerId = quote.dealerId === 'current-user-dealer-id' ? 
-      dealers[0].id : quote.dealerId;
+    // Generate a UUID for the quote instead of getting it from the dealer
+    const quoteId = uuidv4();
     
     // Map frontend field names to database column names
     const newQuote = {
-      id: uuidv4(),
+      id: quoteId,
       vehicleid: quote.vehicleId,
-      dealerid: dealerId, // Use the actual UUID from the database
+      dealerid: quote.dealerId, // Use the dealerId from the quote (which could be null)
       customername: quote.customerName,
       customeremail: quote.customerEmail || null,
       customerphone: quote.customerPhone || null,
