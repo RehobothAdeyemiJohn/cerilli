@@ -40,8 +40,8 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
       // Pass the vehicle ID instead of the whole vehicle object
       await handleVehicleDuplicate(vehicle.id);
       
-      // Forzare il refresh dei dati
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      // Forzare il refresh dei dati immediatamente
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       toast({
         title: "Veicolo Duplicato",

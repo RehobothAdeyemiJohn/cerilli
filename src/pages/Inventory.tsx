@@ -54,13 +54,29 @@ const Inventory = () => {
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   const orderedVehicles = filteredVehicles.filter(v => v.status === 'ordered');
   
-  // Periodicamente aggiorniamo i dati per mantenere l'inventario fresco
+  // Periodicamente aggiorniamo i dati più frequentemente
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 15000); // Update every 15 seconds (reduced from 30 seconds)
+    }, 5000); // Update every 5 seconds (reduced from 15 seconds)
     
     return () => clearInterval(interval);
+  }, [refetch]);
+  
+  // Aggiungi un effetto per forzare l'aggiornamento dei dati quando la pagina diventa attiva
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page became visible, refreshing data');
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [refetch]);
   
   const toggleFilters = () => setShowFilters(!showFilters);

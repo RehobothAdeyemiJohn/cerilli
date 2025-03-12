@@ -6,8 +6,31 @@ import { Database } from './database.types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://idtyeemidnwidsizzwao.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkdHllZW1pZG53aWRzaXp6d2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MTE1MTAsImV4cCI6MjA1NzI4NzUxMH0.D3CExwfUNhBRXDEWjL6FINV445qP7-z5Xs5EHSvYpec';
 
-// Create the Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+// Create the Supabase client with enhanced options for performance
+export const supabase = createClient<Database>(
+  supabaseUrl, 
+  supabaseKey,
+  {
+    db: {
+      schema: 'public',
+    },
+    global: {
+      // Ottimizzazioni per ridurre il tempo di risposta
+      fetch: (...args) => fetch(...args),
+      headers: { 'x-application-name': 'cirelli-inventory' },
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10, // Aumenta la frequenza degli eventi
+      },
+    },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
 
 // Utility function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {

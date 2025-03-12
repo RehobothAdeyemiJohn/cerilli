@@ -27,7 +27,7 @@ export function useVehicleDetailsDialog(
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
-    staleTime: 60000,
+    staleTime: 10000, // Reduced from 60000 to 10000 for more frequent updates
   });
 
   const handleShowQuoteForm = () => {
@@ -71,6 +71,7 @@ export function useVehicleDetailsDialog(
       console.log("Quote created successfully:", result);
       
       await queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       toast({
         title: "Quote Created",
@@ -217,7 +218,7 @@ export function useVehicleDetailsDialog(
         }
       }
       
-      // Make sure to update the cache
+      // Make sure to update the cache immediately
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
