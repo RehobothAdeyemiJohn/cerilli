@@ -9,6 +9,11 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/context/AuthContext';
 
+// Define a type for the form submission data to match component props
+type CancellationFormData = {
+  cancellationReason: string;
+};
+
 // Create the form schema - only dealers need to provide a reason
 const createCancelReservationSchema = (isDealer: boolean) => {
   if (isDealer) {
@@ -49,13 +54,29 @@ const CancelReservationForm = ({
     cancellationReason: '',
   };
   
-  const form = useForm<z.infer<typeof cancelReservationSchema>>({
+  // Use inferred type from the schema
+  type FormValues = z.infer<ReturnType<typeof createCancelReservationSchema>>;
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(cancelReservationSchema),
     defaultValues,
   });
   
-  const handleSubmit = (data: z.infer<typeof cancelReservationSchema>) => {
-    onSubmit(data);
+  const handleSubmit = (data: FormValues) => {
+    // For dealers, we ensure the data has the required cancellationReason
+    if (isDealer && data.cancellationReason) {
+      onSubmit({ cancellationReason: data.cancellationReason });
+    } 
+    // For admins, we pass the data as is, which might have optional cancellationReason
+    else if (isAdmin) {
+      // If there's a reason provided, pass it
+      if (data.cancellationReason) {
+        onSubmit({ cancellationReason: data.cancellationReason });
+      } else {
+        // If no reason, call onSubmit without parameters
+        onSubmit();
+      }
+    }
   };
   
   // For admin users, allow direct cancellation without reason

@@ -61,6 +61,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           onCancelReservationShow={handleShowCancelReservationForm}
           onCancelReservationSubmit={handleCancelReservationSubmit}
           onCancelReservationCancel={handleCancelReservation}
+          onReservationCancel={handleCancelReservation}
           onReservationComplete={() => {
             handleCancelReservation();
             onOpenChange(false);
