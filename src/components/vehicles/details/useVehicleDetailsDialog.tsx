@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi'; // Using Supabase API
@@ -7,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { vehiclesApi } from '@/api/supabase';
 
 export function useVehicleDetailsDialog(
   vehicle: Vehicle | null,
@@ -143,10 +143,8 @@ export function useVehicleDetailsDialog(
         reservationDestination: undefined
       };
       
-      // Get the inventory hook to update the vehicle
-      const { handleVehicleUpdate } = await import('@/hooks/useInventory').then(module => ({ handleVehicleUpdate: module.useInventory().handleVehicleUpdate }));
-      
-      await handleVehicleUpdate(updatedVehicle);
+      // Instead of using useInventory, we'll directly use the vehiclesApi
+      await vehiclesApi.update(vehicle.id, updatedVehicle);
       
       // Log the cancellation reason if provided
       if (data?.cancellationReason) {
