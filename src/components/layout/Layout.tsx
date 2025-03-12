@@ -12,11 +12,11 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-auto p-4 bg-white">
+        <main className="flex-1 overflow-auto p-4">
           <Outlet />
         </main>
       </div>

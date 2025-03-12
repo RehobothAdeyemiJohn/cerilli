@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
           ))}
         </nav>
         
-        <div className="mt-2 border-t border-gray-200 pt-2 px-2">
+        <div className="pt-2 px-2">
           {isOpen && (
             <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-1">
               AMMINISTRAZIONE
