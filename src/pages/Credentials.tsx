@@ -1,15 +1,57 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import AdminUserList from '@/components/credentials/AdminUserList';
+import AdminUserFormDialog from '@/components/credentials/AdminUserFormDialog';
+import { adminUsersApi } from '@/api/supabase/adminUsersApi';
+import { AdminUser } from '@/types/admin';
 
 const Credentials = () => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  
+  const { data: users = [], isLoading, refetch } = useQuery({
+    queryKey: ['adminUsers'],
+    queryFn: adminUsersApi.getAll,
+  });
+  
+  const handleEditUser = (user: AdminUser) => {
+    setEditUser(user);
+    setIsAddDialogOpen(true);
+  };
+  
+  const handleCloseDialog = () => {
+    setIsAddDialogOpen(false);
+    setEditUser(null);
+  };
+  
+  const handleUserSaved = () => {
+    refetch();
+    handleCloseDialog();
+  };
+  
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Gestione Credenziali</h1>
       <Card className="p-6">
-        <AdminUserList />
+        {isLoading ? (
+          <div className="text-center py-12">Caricamento in corso...</div>
+        ) : (
+          <AdminUserList
+            users={users}
+            onEdit={handleEditUser}
+            onRefetch={refetch}
+          />
+        )}
       </Card>
+      
+      <AdminUserFormDialog
+        isOpen={isAddDialogOpen}
+        user={editUser}
+        onClose={handleCloseDialog}
+        onSaved={handleUserSaved}
+      />
     </div>
   );
 };
