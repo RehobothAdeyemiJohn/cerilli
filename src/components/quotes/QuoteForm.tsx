@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Form, FormProvider } from '@/components/ui/form';
+import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types';
 import { useQuoteForm } from './form/useQuoteForm';

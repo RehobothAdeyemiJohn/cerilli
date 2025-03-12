@@ -37,7 +37,7 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
   const [showTradeIn, setShowTradeIn] = useState(false);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
@@ -65,7 +65,7 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
       tradeInKm: 0,
       reducedVAT: false,
       vehicleAccessories: [],
-      dealerId: user?.dealerId || (dealers && dealers.length > 0 ? dealers[0].id : undefined),
+      dealerId: user?.dealerId || undefined,
     },
   });
 
@@ -86,14 +86,17 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
   
   // Update dealerId when dealers data is loaded and user is not a dealer
   useEffect(() => {
-    if (dealers && dealers.length > 0 && !user?.dealerId) {
-      form.setValue('dealerId', dealers[0].id);
-    } else if (user?.dealerId) {
-      form.setValue('dealerId', user.dealerId);
-    } else if (isAdmin) {
-      form.setValue('dealerId', "CMC");
+    if (dealers && dealers.length > 0) {
+      // Se l'utente è un dealer, usa il suo ID
+      if (user?.dealerId) {
+        form.setValue('dealerId', user.dealerId);
+      } 
+      // Altrimenti, usa il primo dealer disponibile
+      else {
+        form.setValue('dealerId', dealers[0].id);
+      }
     }
-  }, [dealers, user?.dealerId, form, isAdmin]);
+  }, [dealers, user?.dealerId, form]);
 
   // Watch form values
   const watchDiscount = form.watch('discount') || 0;

@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/api/supabase/client';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
@@ -60,6 +59,39 @@ export const useQuotesData = () => {
     queryFn: () => dealersApi.getAll(),
   });
 
+  // Helper functions
+  const getVehicleById = (id: string) => {
+    return vehicles.find(vehicle => vehicle.id === id);
+  };
+  
+  const getDealerName = (id: string) => {
+    const dealer = dealers.find(dealer => dealer.id === id);
+    return dealer ? dealer.companyName : 'N/A';
+  };
+  
+  const getShortId = (id: string) => {
+    return id.substring(0, 8);
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+  
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'converted': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
   // Generate models array from vehicles
   const models = Array.from(new Set(vehicles.map(vehicle => vehicle.model)))
     .map(model => ({ id: model, name: model }));
@@ -114,39 +146,6 @@ export const useQuotesData = () => {
   // Get selected vehicle details
   const selectedVehicle = selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null;
   
-  // Helper functions
-  const getVehicleById = (id: string) => {
-    return vehicles.find(vehicle => vehicle.id === id);
-  };
-  
-  const getDealerName = (id: string) => {
-    const dealer = dealers.find(dealer => dealer.id === id);
-    return dealer ? dealer.companyName : 'N/A';
-  };
-  
-  const getShortId = (id: string) => {
-    return id.substring(0, 8);
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-  
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'converted': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
   // Event handlers
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -200,22 +199,24 @@ export const useQuotesData = () => {
   
   const handleCreateQuote = async (data: any) => {
     try {
-      // If the user is an admin or superadmin, set dealerId to "CMC"
-      if (user?.role === 'admin' || user?.role === 'superadmin') {
-        data.dealerId = "CMC";
+      // Se l'utente è un admin o superadmin, usa un dealerId valido dal primo dealer disponibile
+      if ((user?.role === 'admin' || user?.role === 'superAdmin') && dealers.length > 0) {
+        data.dealerId = dealers[0].id;
       }
       
-      // For dealers, ensure their ID is used
+      // Per dealers, assicuriamo che venga usato il loro ID
       if (user?.role === 'dealer' && user?.dealerId) {
         data.dealerId = user.dealerId;
       }
       
-      // If still no dealerId, use the one from the form or the first one available
+      // Se ancora non c'è dealerId, usa quello dal form o il primo disponibile
       if (!data.dealerId && dealers.length > 0) {
         data.dealerId = dealers[0].id;
       }
       
-      // Set creation date and initial status
+      console.log("Creazione preventivo con dealerId:", data.dealerId);
+      
+      // Imposta data di creazione e stato iniziale
       data.createdAt = new Date().toISOString();
       data.status = 'pending';
       

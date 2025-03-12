@@ -39,11 +39,12 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
+      // Per il dealerId, usiamo un UUID valido
       let dealerId: string | null = null;
       
-      // Se l'utente è admin o superadmin, usa "CMC" come dealerId
-      if (isAdmin) {
-        dealerId = "CMC";
+      // Se l'utente è admin o superadmin, usa il primo dealer disponibile
+      if (isAdmin && dealers.length > 0) {
+        dealerId = dealers[0].id;
       } else {
         // Altrimenti usa la logica esistente
         dealerId = user?.dealerId;
@@ -59,11 +60,13 @@ export function useVehicleDetailsDialog(
         throw new Error("Nessun dealer disponibile per associare il preventivo");
       }
       
+      console.log("Creazione preventivo con dealerId:", dealerId);
+      
       await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: dealerId, // Usa il dealerId determinato sopra
+        dealerId: dealerId,
         vehicleId: vehicle.id
       });
       
