@@ -23,7 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { Image } from 'lucide-react';
+import { Image, Euro } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const formSchema = z.object({
   companyName: z.string().min(1, 'Nome azienda richiesto'),
@@ -36,6 +37,10 @@ const formSchema = z.object({
   email: z.string().email('Email non valida'),
   password: z.string().min(6, 'Password deve essere di almeno 6 caratteri'),
   logo: z.any().optional(),
+  creditLimit: z.preprocess(
+    (val) => (val === '' ? 0 : Number(val)),
+    z.number().min(0, 'Il plafond non può essere negativo')
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,6 +62,8 @@ const DealerFormDialog = ({
   const [logoPreview, setLogoPreview] = React.useState<string | null>(dealer?.logo || null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.type === 'admin';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -71,6 +78,7 @@ const DealerFormDialog = ({
       email: dealer?.email || '',
       password: dealer?.password || '',
       logo: undefined,
+      creditLimit: dealer?.creditLimit || 0,
     },
   });
 
@@ -87,6 +95,7 @@ const DealerFormDialog = ({
         email: dealer?.email || '',
         password: dealer?.password || '',
         logo: undefined,
+        creditLimit: dealer?.creditLimit || 0,
       });
       setLogoPreview(dealer?.logo || null);
     }
@@ -137,6 +146,7 @@ const DealerFormDialog = ({
         email: values.email,
         password: values.password,
         logo: logoUrl,
+        creditLimit: values.creditLimit,
       };
 
       console.log('Submitting dealer data:', dealerData);
@@ -337,6 +347,32 @@ const DealerFormDialog = ({
                 />
               </div>
             </div>
+
+            {isAdmin && (
+              <FormField
+                control={form.control}
+                name="creditLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plafond (€)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} 
+                          value={field.value}
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <Euro className="h-4 w-4 text-gray-400" />
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end gap-4 pt-4">
               <Button

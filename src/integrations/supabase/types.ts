@@ -58,6 +58,7 @@ export type Database = {
           companyname: string
           contactname: string
           created_at: string | null
+          credit_limit: number | null
           email: string
           id: string
           isactive: boolean | null
@@ -73,6 +74,7 @@ export type Database = {
           companyname: string
           contactname: string
           created_at?: string | null
+          credit_limit?: number | null
           email: string
           id: string
           isactive?: boolean | null
@@ -88,6 +90,7 @@ export type Database = {
           companyname?: string
           contactname?: string
           created_at?: string | null
+          credit_limit?: number | null
           email?: string
           id?: string
           isactive?: boolean | null
@@ -98,6 +101,77 @@ export type Database = {
           zipcode?: string
         }
         Relationships: []
+      }
+      order_details: {
+        Row: {
+          chassis: string | null
+          created_at: string | null
+          funding_type: string | null
+          has_conformity: boolean | null
+          has_proforma: boolean | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          is_invoiced: boolean | null
+          is_licensable: boolean | null
+          is_paid: boolean | null
+          odl_generated: boolean | null
+          order_id: string | null
+          payment_date: string | null
+          previous_chassis: string | null
+          restoration_costs: number | null
+          transport_costs: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          chassis?: string | null
+          created_at?: string | null
+          funding_type?: string | null
+          has_conformity?: boolean | null
+          has_proforma?: boolean | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          is_invoiced?: boolean | null
+          is_licensable?: boolean | null
+          is_paid?: boolean | null
+          odl_generated?: boolean | null
+          order_id?: string | null
+          payment_date?: string | null
+          previous_chassis?: string | null
+          restoration_costs?: number | null
+          transport_costs?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          chassis?: string | null
+          created_at?: string | null
+          funding_type?: string | null
+          has_conformity?: boolean | null
+          has_proforma?: boolean | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          is_invoiced?: boolean | null
+          is_licensable?: boolean | null
+          is_paid?: boolean | null
+          odl_generated?: boolean | null
+          order_id?: string | null
+          payment_date?: string | null
+          previous_chassis?: string | null
+          restoration_costs?: number | null
+          transport_costs?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_details_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -405,6 +479,8 @@ export type Database = {
           imageurl: string | null
           location: string
           model: string
+          original_stock: string | null
+          previous_chassis: string | null
           price: number | null
           reservedaccessories: string[] | null
           reservedby: string | null
@@ -425,6 +501,8 @@ export type Database = {
           imageurl?: string | null
           location: string
           model: string
+          original_stock?: string | null
+          previous_chassis?: string | null
           price?: number | null
           reservedaccessories?: string[] | null
           reservedby?: string | null
@@ -445,6 +523,8 @@ export type Database = {
           imageurl?: string | null
           location?: string
           model?: string
+          original_stock?: string | null
+          previous_chassis?: string | null
           price?: number | null
           reservedaccessories?: string[] | null
           reservedby?: string | null

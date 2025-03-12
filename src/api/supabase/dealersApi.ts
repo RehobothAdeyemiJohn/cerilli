@@ -27,7 +27,8 @@ export const dealersApi = {
       contactName: dealer.contactname,
       createdAt: dealer.created_at,
       isActive: dealer.isactive,
-      logo: dealer.logo
+      logo: dealer.logo,
+      creditLimit: dealer.credit_limit
     })) as Dealer[];
   },
   
@@ -55,7 +56,8 @@ export const dealersApi = {
       contactName: data.contactname,
       createdAt: data.created_at,
       isActive: data.isactive,
-      logo: data.logo
+      logo: data.logo,
+      creditLimit: data.credit_limit
     } as Dealer;
   },
 
@@ -108,7 +110,8 @@ export const dealersApi = {
         password: dealer.password,
         contactname: dealer.contactName,
         isactive: dealer.isActive,
-        logo: dealer.logo
+        logo: dealer.logo,
+        credit_limit: dealer.creditLimit || 0
       })
       .select()
       .single();
@@ -130,7 +133,8 @@ export const dealersApi = {
       contactName: data.contactname,
       createdAt: data.created_at,
       isActive: data.isactive,
-      logo: data.logo
+      logo: data.logo,
+      creditLimit: data.credit_limit
     } as Dealer;
   },
   
@@ -149,7 +153,8 @@ export const dealersApi = {
         password: dealer.password,
         contactname: dealer.contactName,
         isactive: dealer.isActive,
-        logo: dealer.logo
+        logo: dealer.logo,
+        credit_limit: dealer.creditLimit || 0
       })
       .eq('id', dealer.id);
     

@@ -12,6 +12,8 @@ export type Vehicle = {
   dateAdded: string;
   transmission?: string;
   telaio: string;
+  previousChassis?: string; // New field for RIF (previous chassis) in virtual stock
+  originalStock?: 'Cina' | 'Germania'; // New field for stock origin in virtual stock
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];
@@ -73,6 +75,28 @@ export type Order = {
   deliveryDate?: string;
   vehicle?: Vehicle;
   dealer?: any; // Using any temporarily as we don't have a complete Dealer type defined
+  details?: OrderDetails; // New field for order administrative details
+};
+
+export type OrderDetails = {
+  id: string;
+  orderId: string;
+  previousChassis?: string;
+  chassis?: string;
+  isLicensable: boolean;
+  hasProforma: boolean;
+  isPaid: boolean;
+  paymentDate?: string;
+  isInvoiced: boolean;
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  hasConformity: boolean;
+  fundingType?: 'Factor' | 'Captive' | 'Acquisto Diretto';
+  transportCosts: number;
+  restorationCosts: number;
+  odlGenerated: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Filter = {

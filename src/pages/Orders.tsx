@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { Order, Vehicle } from '@/types';
+import { Order, Vehicle, OrderDetails } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -17,12 +17,41 @@ import {
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
+import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
+import { Badge } from '@/components/ui/badge';
+import {
+  Check,
+  X,
+  Filter
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const isAdmin = user?.type === 'admin';
+
+  // Filter state
+  const [filters, setFilters] = useState({
+    isLicensable: null as boolean | null,
+    hasProforma: null as boolean | null,
+    isPaid: null as boolean | null,
+    isInvoiced: null as boolean | null,
+    hasConformity: null as boolean | null,
+    dealerId: null as string | null,
+    model: null as string | null,
+  });
   
   // Fetch all orders from Supabase
   const { 
@@ -35,10 +64,54 @@ const Orders = () => {
     staleTime: 0, // Set to 0 to always consider data stale
   });
   
+  // Filter orders by status and apply admin filters
+  const filterOrders = (orders: Order[], status?: string) => {
+    let filtered = orders;
+    
+    // Filter by status if provided
+    if (status && status !== 'all') {
+      filtered = filtered.filter(o => o.status === status);
+    }
+    
+    // Apply admin filters
+    if (isAdmin) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== null) {
+          switch (key) {
+            case 'isLicensable':
+            case 'hasProforma':
+            case 'isPaid':
+            case 'isInvoiced':
+            case 'hasConformity':
+              filtered = filtered.filter(order => 
+                order.details && order.details[key as keyof OrderDetails] === value
+              );
+              break;
+            case 'dealerId':
+              if (value) {
+                filtered = filtered.filter(order => order.dealerId === value);
+              }
+              break;
+            case 'model':
+              if (value) {
+                filtered = filtered.filter(order => 
+                  order.vehicle && order.vehicle.model === value
+                );
+              }
+              break;
+          }
+        }
+      });
+    }
+    
+    return filtered;
+  };
+  
   // Filter orders by status
-  const processingOrders = ordersData.filter(o => o.status === 'processing');
-  const deliveredOrders = ordersData.filter(o => o.status === 'delivered');
-  const cancelledOrders = ordersData.filter(o => o.status === 'cancelled');
+  const processingOrders = filterOrders(ordersData, 'processing');
+  const deliveredOrders = filterOrders(ordersData, 'delivered');
+  const cancelledOrders = filterOrders(ordersData, 'cancelled');
+  const allOrders = filterOrders(ordersData);
   
   // Mutation for marking an order as delivered
   const markAsDeliveredMutation = useMutation({
@@ -47,7 +120,12 @@ const Orders = () => {
         // 1. Get current order
         const order = await ordersApi.getById(orderId);
         
-        // 2. Update vehicle status to 'delivered' and change location to 'Stock Dealer'
+        // 2. Check if ODL has been generated
+        if (!order.details?.odlGenerated) {
+          throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
+        }
+        
+        // 3. Update vehicle status to 'delivered' and change location to 'Stock Dealer'
         if (order.vehicle && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
             status: 'delivered' as Vehicle['status'],
@@ -55,7 +133,7 @@ const Orders = () => {
           });
         }
         
-        // 3. Update order with delivered status
+        // 4. Update order with delivered status
         return ordersApi.update(orderId, {
           ...order,
           status: 'delivered',
@@ -74,11 +152,11 @@ const Orders = () => {
         description: "L'ordine è stato marcato come consegnato con successo",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error marking order as delivered:', error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante l'aggiornamento dell'ordine",
+        description: error.message || "Si è verificato un errore durante l'aggiornamento dell'ordine",
         variant: "destructive"
       });
     }
@@ -147,6 +225,17 @@ const Orders = () => {
     }
   };
   
+  const handleViewOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setOrderDetailsOpen(true);
+  };
+  
+  const handleGenerateODL = (details: OrderDetails) => {
+    // Refresh orders data
+    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
+  };
+  
   const getStatusBadgeClass = (status: string) => {
     switch(status) {
       case 'processing':
@@ -165,6 +254,36 @@ const Orders = () => {
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
   
+  // Get unique models and dealers for filters
+  const uniqueModels = React.useMemo(() => {
+    const models = new Set<string>();
+    ordersData.forEach(order => {
+      if (order.vehicle?.model) {
+        models.add(order.vehicle.model);
+      }
+    });
+    return Array.from(models);
+  }, [ordersData]);
+  
+  const uniqueDealers = React.useMemo(() => {
+    const dealers = new Set<string>();
+    ordersData.forEach(order => {
+      if (order.dealer?.id) {
+        dealers.add(order.dealer.id);
+      }
+    });
+    return Array.from(dealers);
+  }, [ordersData]);
+  
+  // Helper function to render filter indicator icons
+  const renderFilterStatus = (key: keyof typeof filters) => {
+    const value = filters[key];
+    if (value === null) return null;
+    return value ? 
+      <Check className="h-4 w-4 text-green-600" /> : 
+      <X className="h-4 w-4 text-red-600" />;
+  };
+  
   const renderOrderTable = (filteredOrders: Order[], tabName: string) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
@@ -177,19 +296,53 @@ const Orders = () => {
               <TableHead>Stato</TableHead>
               <TableHead>Data Ordine</TableHead>
               <TableHead>Data Consegna</TableHead>
-              {!isDealer && <TableHead>Azioni</TableHead>}
+              {isAdmin && (
+                <>
+                  <TableHead>
+                    <div className="flex items-center space-x-1">
+                      <span>Targabile</span>
+                      {renderFilterStatus('isLicensable')}
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center space-x-1">
+                      <span>Proformata</span>
+                      {renderFilterStatus('hasProforma')}
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center space-x-1">
+                      <span>Saldata</span>
+                      {renderFilterStatus('isPaid')}
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center space-x-1">
+                      <span>Fatturata</span>
+                      {renderFilterStatus('isInvoiced')}
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center space-x-1">
+                      <span>Conformità</span>
+                      {renderFilterStatus('hasConformity')}
+                    </div>
+                  </TableHead>
+                </>
+              )}
+              <TableHead>Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10">
+                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10">
                   Caricamento ordini...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10 text-red-500">
+                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10 text-red-500">
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
@@ -206,6 +359,8 @@ const Orders = () => {
                   tabName === 'delivered' ? deliveredOrders.indexOf(order) :
                   cancelledOrders.indexOf(order)
                 );
+                
+                const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
                 
                 return (
                   <TableRow key={order.id}>
@@ -226,41 +381,83 @@ const Orders = () => {
                       {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
                     </TableCell>
                     
-                    {!isDealer && (
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8"
-                          >
-                            Visualizza
-                          </Button>
-                          
-                          {order.status === 'processing' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
-                                onClick={() => handleMarkAsDelivered(order.id)}
-                                disabled={markAsDeliveredMutation.isPending}
-                              >
-                                Consegnato
-                              </Button>
-                              
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
-                                onClick={() => handleCancelOrder(order.id)}
-                                disabled={cancelOrderMutation.isPending}
-                              >
-                                Cancella
-                              </Button>
-                            </>
+                    {isAdmin && (
+                      <>
+                        <TableCell>
+                          {order.details?.isLicensable ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
                           )}
-                          
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.hasProforma ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.isPaid ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.isInvoiced ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.hasConformity ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                      </>
+                    )}
+                    
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => handleViewOrderDetails(order)}
+                        >
+                          Visualizza
+                        </Button>
+                        
+                        {order.status === 'processing' && !isDealer && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
+                              onClick={() => handleMarkAsDelivered(order.id)}
+                              disabled={markAsDeliveredMutation.isPending || !canDeliverOrder}
+                              title={!canDeliverOrder ? "Genera ODL prima di consegnare" : ""}
+                            >
+                              Consegnato
+                            </Button>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
+                              onClick={() => handleCancelOrder(order.id)}
+                              disabled={cancelOrderMutation.isPending}
+                            >
+                              Cancella
+                            </Button>
+                          </>
+                        )}
+                        
+                        {!isDealer && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 
@@ -291,15 +488,15 @@ const Orders = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={isAdmin ? 12 : 7} className="text-center py-10 text-gray-500">
                   Nessun ordine trovato
                 </TableCell>
               </TableRow>
@@ -310,10 +507,134 @@ const Orders = () => {
     </div>
   );
   
+  // Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      isLicensable: null,
+      hasProforma: null,
+      isPaid: null,
+      isInvoiced: null,
+      hasConformity: null,
+      dealerId: null,
+      model: null,
+    });
+  };
+  
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Ordini</h1>
+        
+        {isAdmin && (
+          <div className="flex space-x-2 mt-4 md:mt-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtri
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>Filtri Amministrativi</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel className="text-xs font-medium pt-2">Targabile</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isLicensable === true}
+                  onCheckedChange={() => setFilters({...filters, isLicensable: filters.isLicensable !== true ? true : null})}
+                >
+                  Sì
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isLicensable === false}
+                  onCheckedChange={() => setFilters({...filters, isLicensable: filters.isLicensable !== false ? false : null})}
+                >
+                  No
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuLabel className="text-xs font-medium pt-2">Proformata</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={filters.hasProforma === true}
+                  onCheckedChange={() => setFilters({...filters, hasProforma: filters.hasProforma !== true ? true : null})}
+                >
+                  Sì
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.hasProforma === false}
+                  onCheckedChange={() => setFilters({...filters, hasProforma: filters.hasProforma !== false ? false : null})}
+                >
+                  No
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuLabel className="text-xs font-medium pt-2">Saldata</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isPaid === true}
+                  onCheckedChange={() => setFilters({...filters, isPaid: filters.isPaid !== true ? true : null})}
+                >
+                  Sì
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isPaid === false}
+                  onCheckedChange={() => setFilters({...filters, isPaid: filters.isPaid !== false ? false : null})}
+                >
+                  No
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuLabel className="text-xs font-medium pt-2">Fatturata</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isInvoiced === true}
+                  onCheckedChange={() => setFilters({...filters, isInvoiced: filters.isInvoiced !== true ? true : null})}
+                >
+                  Sì
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.isInvoiced === false}
+                  onCheckedChange={() => setFilters({...filters, isInvoiced: filters.isInvoiced !== false ? false : null})}
+                >
+                  No
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuLabel className="text-xs font-medium pt-2">Conformità</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={filters.hasConformity === true}
+                  onCheckedChange={() => setFilters({...filters, hasConformity: filters.hasConformity !== true ? true : null})}
+                >
+                  Sì
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.hasConformity === false}
+                  onCheckedChange={() => setFilters({...filters, hasConformity: filters.hasConformity !== false ? false : null})}
+                >
+                  No
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-medium">Modello</DropdownMenuLabel>
+                {uniqueModels.map(model => (
+                  <DropdownMenuCheckboxItem
+                    key={model}
+                    checked={filters.model === model}
+                    onCheckedChange={() => setFilters({...filters, model: filters.model !== model ? model : null})}
+                  >
+                    {model}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                <div className="p-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={resetFilters}
+                  >
+                    Reimposta Filtri
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
       
       <Tabs defaultValue="processing">
@@ -345,9 +666,21 @@ const Orders = () => {
         </TabsContent>
         
         <TabsContent value="all">
-          {renderOrderTable(ordersData, 'all')}
+          {renderOrderTable(allOrders, 'all')}
         </TabsContent>
       </Tabs>
+      
+      {selectedOrder && (
+        <OrderDetailsDialog
+          order={selectedOrder}
+          open={orderDetailsOpen}
+          onOpenChange={setOrderDetailsOpen}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+          }}
+          onGenerateODL={handleGenerateODL}
+        />
+      )}
     </div>
   );
 };
