@@ -26,7 +26,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   };
   
   return (
-    <header className="fixed top-0 right-0 left-0 bg-background border-b border-border h-16 flex items-center px-4 z-30">
+    <header className="bg-background border-b border-border h-16 flex items-center px-4">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <button

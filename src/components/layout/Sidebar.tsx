@@ -17,7 +17,7 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+const Sidebar = ({ isOpen }: SidebarProps) => {
   const location = useLocation();
   
   const menuItems = [
@@ -34,11 +34,13 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     { title: 'Migrazione Dati', icon: Database, path: '/migration' },
   ];
   
+  const isActive = (path: string) => location.pathname === path;
+  
   return (
     <div 
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-border fixed z-20`}
+      } h-screen bg-sidebar flex flex-col flex-shrink-0 transition-all duration-300 border-r border-border`}
     >
       <div className="flex items-center justify-between p-4 h-16 border-b border-border">
         <h2 className={`text-xl font-bold text-foreground transition-opacity duration-300 ${
@@ -53,15 +55,15 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         )}
       </div>
       
-      <div className="flex flex-col h-[calc(100%-4rem)] overflow-y-auto py-4">
+      <div className="flex flex-col flex-1 overflow-y-auto py-4">
         <nav className="flex-1 px-2 space-y-1">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={`flex items-center p-2 rounded-md transition-colors ${
-                location.pathname === item.path
-                  ? 'bg-accent text-accent-foreground'
+                isActive(item.path)
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-sidebar-foreground hover:bg-accent hover:text-accent-foreground'
               }`}
             >
@@ -88,8 +90,8 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 key={item.path}
                 to={item.path}
                 className={`flex items-center p-2 rounded-md transition-colors ${
-                  location.pathname === item.path
-                    ? 'bg-accent text-accent-foreground'
+                  isActive(item.path)
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-sidebar-foreground hover:bg-accent hover:text-accent-foreground'
                 }`}
               >
