@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Quote } from '@/types';
@@ -29,7 +28,7 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
   handleDeleteClick
 }) => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.type === 'admin';
   
   return (
     <div className="rounded-md border">
