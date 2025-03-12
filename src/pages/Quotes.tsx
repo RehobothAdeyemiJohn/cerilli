@@ -77,7 +77,7 @@ const Quotes = () => {
 
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
-    queryFn: dealersApi.getAll,
+    queryFn: () => dealersApi.getAll(),
     staleTime: 60000, // 1 minute
   });
 
