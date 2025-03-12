@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { MenuIcon, UserCircle, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
@@ -30,7 +29,12 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     <header className="fixed top-0 right-0 left-0 bg-background border-b border-border h-16 flex items-center px-4 z-30">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
-          <SidebarTrigger />
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-md text-foreground hover:bg-accent focus:outline-none"
+          >
+            <MenuIcon className="h-5 w-5" />
+          </button>
           
           <div className="ml-4 font-semibold text-lg md:text-xl text-foreground">
             Cirelli Motor Company

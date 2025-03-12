@@ -11,7 +11,6 @@ import {
   KeyRound,
   Database
 } from 'lucide-react';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -36,43 +35,74 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   ];
   
   return (
-    <div className="flex flex-col h-full">
-      <SidebarMenu>
-        {menuItems.map((item) => (
-          <SidebarMenuItem key={item.path}>
-            <Link to={item.path} className="w-full">
-              <SidebarMenuButton 
-                isActive={location.pathname === item.path}
-                tooltip={item.title}
-              >
-                <item.icon className="w-5 h-5 mr-3" />
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
+    <div 
+      className={`${
+        isOpen ? 'w-64' : 'w-16'
+      } h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-border fixed z-20`}
+    >
+      <div className="flex items-center justify-between p-4 h-16 border-b border-border">
+        <h2 className={`text-xl font-bold text-foreground transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 hidden'
+        }`}>
+          Cirelli Motor
+        </h2>
+        {!isOpen && (
+          <div className="mx-auto">
+            <span className="text-xl font-bold">CM</span>
+          </div>
+        )}
+      </div>
       
-      <div className="pt-4 mt-4 border-t border-border">
-        <p className="px-2 text-xs font-semibold text-muted-foreground uppercase mb-2">
-          Amministrazione
-        </p>
-        
-        <SidebarMenu>
-          {adminItems.map((item) => (
-            <SidebarMenuItem key={item.path}>
-              <Link to={item.path} className="w-full">
-                <SidebarMenuButton 
-                  isActive={location.pathname === item.path}
-                  tooltip={item.title}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+      <div className="flex flex-col h-[calc(100%-4rem)] overflow-y-auto py-4">
+        <nav className="flex-1 px-2 space-y-1">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center p-2 rounded-md transition-colors ${
+                location.pathname === item.path
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-sidebar-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className={`ml-3 transition-opacity duration-300 ${
+                isOpen ? 'opacity-100' : 'opacity-0 hidden'
+              }`}>
+                {item.title}
+              </span>
+            </Link>
           ))}
-        </SidebarMenu>
+        </nav>
+        
+        <div className="pt-4 mt-4 border-t border-border px-2">
+          <p className={`px-2 text-xs font-semibold text-muted-foreground uppercase mb-2 transition-opacity duration-300 ${
+            isOpen ? 'opacity-100' : 'opacity-0 hidden'
+          }`}>
+            Amministrazione
+          </p>
+          
+          <nav className="space-y-1">
+            {adminItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center p-2 rounded-md transition-colors ${
+                  location.pathname === item.path
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-sidebar-foreground hover:bg-accent hover:text-accent-foreground'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className={`ml-3 transition-opacity duration-300 ${
+                  isOpen ? 'opacity-100' : 'opacity-0 hidden'
+                }`}>
+                  {item.title}
+                </span>
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );
