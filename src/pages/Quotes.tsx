@@ -54,7 +54,7 @@ const Quotes = () => {
 
   const { data: statusCounts = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 } } = useQuery({
     queryKey: ['quotes-counts'],
-    queryFn: quotesApi.getCountByStatus,
+    queryFn: () => quotesApi.getCountByStatus(),
     staleTime: 30000, // 30 seconds
   });
   
