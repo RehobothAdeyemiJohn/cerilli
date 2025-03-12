@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -211,7 +210,7 @@ export const useQuotesData = () => {
         discount: data.discount || 0,
         finalPrice: data.finalPrice || 0,
         createdAt: new Date().toISOString(),
-        status: 'pending',
+        status: 'pending' as Quote['status'],
         notes: data.notes || '',
         manualEntry: data.manualEntry || false
       };

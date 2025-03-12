@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -60,6 +59,7 @@ export type Quote = {
   accessories?: string[];
   accessoryPrice?: number;
   notes?: string;
+  manualEntry?: boolean; // Added the manualEntry property
 };
 
 export type Order = {

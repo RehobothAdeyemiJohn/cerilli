@@ -131,6 +131,9 @@ export interface Database {
           createdAt: string
           created_at: string
           updated_at: string
+          notes?: string
+          rejectionreason?: string
+          manualentry?: boolean
         }
         Insert: {
           id?: string
@@ -146,6 +149,9 @@ export interface Database {
           createdAt?: string
           created_at?: string
           updated_at?: string
+          notes?: string
+          rejectionreason?: string
+          manualentry?: boolean
         }
         Update: {
           id?: string
@@ -161,6 +167,9 @@ export interface Database {
           createdAt?: string
           created_at?: string
           updated_at?: string
+          notes?: string
+          rejectionreason?: string
+          manualentry?: boolean
         }
       }
       orders: {
