@@ -8,14 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { dealers } from '@/data/mockData';
 import { accessoriesApi } from '@/api/localStorage';
-import { vehiclesApi } from '@/api/localStorage';
 import { toast } from '@/hooks/use-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useInventory } from '@/hooks/useInventory';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/utils';
+import { dealersApi } from '@/api/supabase/dealersApi';
 
 // Dynamic schema based on user type (admin or dealer)
 const createReservationSchema = (isAdmin: boolean) => {
@@ -56,7 +55,6 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
   const isAdmin = user?.type === 'admin';
   const dealerId = user?.dealerId || '';
   const dealerName = user?.dealerName || '';
-  const queryClient = useQueryClient();
   const { handleVehicleUpdate } = useInventory();
   
   // Get all accessories
@@ -76,7 +74,14 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
     queryFn: () => import('@/api/localStorage').then(api => api.trimsApi.getAll())
   });
 
-  const activeDealers = dealers.filter(dealer => dealer.isActive);
+  // Fetch active dealers from Supabase
+  const { data: supabaseDealers = [], isLoading: isLoadingDealers } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll
+  });
+
+  // Filter active dealers
+  const activeDealers = supabaseDealers.filter(dealer => dealer.isActive);
   
   // Create schema based on user type
   const reservationSchema = createReservationSchema(isAdmin);

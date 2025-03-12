@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dealer } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
-import { VirtualReservationFormValues } from './useVirtualReservation';
+import { VirtualReservationFormValues } from './schema';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
