@@ -15,6 +15,7 @@ export function useVehicleDetailsDialog(
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
+  const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -108,12 +109,76 @@ export function useVehicleDetailsDialog(
   const handleCancelReservation = () => {
     setShowReserveForm(false);
     setShowVirtualReserveForm(false);
+    setShowCancelReservationForm(false);
+  };
+  
+  const handleShowCancelReservationForm = () => {
+    setShowCancelReservationForm(true);
+  };
+  
+  const handleCancelReservationSubmit = async (data?: { cancellationReason: string }) => {
+    if (!vehicle) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // If the user is a dealer, they must provide a reason
+      if (!isAdmin && (!data || !data.cancellationReason)) {
+        toast({
+          title: "Errore",
+          description: "È necessario fornire una motivazione per cancellare la prenotazione",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Create a copy of the vehicle and restore it to available status
+      const updatedVehicle: Vehicle = {
+        ...vehicle,
+        status: 'available',
+        reservedBy: undefined,
+        reservedAccessories: [],
+        virtualConfig: vehicle.location === 'Stock Virtuale' ? undefined : vehicle.virtualConfig,
+        reservationDestination: undefined
+      };
+      
+      // Get the inventory hook to update the vehicle
+      const { handleVehicleUpdate } = await import('@/hooks/useInventory').then(module => ({ handleVehicleUpdate: module.useInventory().handleVehicleUpdate }));
+      
+      await handleVehicleUpdate(updatedVehicle);
+      
+      // Log the cancellation reason if provided
+      if (data?.cancellationReason) {
+        console.log("Reservation canceled with reason:", data.cancellationReason);
+      }
+      
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      
+      toast({
+        title: "Prenotazione Cancellata",
+        description: `La prenotazione per ${vehicle.model} ${vehicle.trim || ''} è stata cancellata.`,
+      });
+      
+      setShowCancelReservationForm(false);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error canceling reservation:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la cancellazione della prenotazione",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {
     showQuoteForm,
     showReserveForm,
     showVirtualReserveForm,
+    showCancelReservationForm,
     isSubmitting,
     user,
     handleShowQuoteForm,
@@ -121,6 +186,8 @@ export function useVehicleDetailsDialog(
     handleCancelQuote,
     handleReserveVehicle,
     handleReserveVirtualVehicle,
-    handleCancelReservation
+    handleCancelReservation,
+    handleShowCancelReservationForm,
+    handleCancelReservationSubmit
   };
 }

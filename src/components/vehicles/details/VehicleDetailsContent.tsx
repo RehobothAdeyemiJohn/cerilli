@@ -10,6 +10,7 @@ interface VehicleDetailsContentProps {
   onCreateQuote: () => void;
   onReserveVehicle: () => void;
   onReserveVirtualVehicle: () => void;
+  onCancelReservation: () => void;
   userCanCreateQuotes: boolean;
 }
 
@@ -18,6 +19,7 @@ const VehicleDetailsContent = ({
   onCreateQuote, 
   onReserveVehicle,
   onReserveVirtualVehicle,
+  onCancelReservation,
   userCanCreateQuotes
 }: VehicleDetailsContentProps) => {
   const { user } = useAuth();
@@ -94,6 +96,16 @@ const VehicleDetailsContent = ({
           <div className="col-span-2">
             <p className="text-xs font-medium text-gray-500">Prenotato da</p>
             <p className="font-medium text-amber-700">{vehicle.reservedBy}</p>
+          </div>
+        )}
+        {isReserved && vehicle.reservationDestination && (
+          <div className="col-span-2">
+            <p className="text-xs font-medium text-gray-500">Destinazione</p>
+            <p className="font-medium text-amber-700">
+              {vehicle.reservationDestination === 'contratto_abbinato' ? 'Contratto Abbinato' : 
+               vehicle.reservationDestination === 'stock_dealer' ? 'Stock Dealer' : 
+               vehicle.reservationDestination}
+            </p>
           </div>
         )}
       </div>
@@ -213,9 +225,22 @@ const VehicleDetailsContent = ({
             )}
           </>
         ) : (
-          <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
-            {vehicle.status === 'reserved' ? 'Veicolo Prenotato' : 'Veicolo Venduto'}
-          </div>
+          <>
+            {vehicle.status === 'reserved' && (
+              <Button 
+                variant="destructive" 
+                className="flex-1"
+                onClick={onCancelReservation}
+              >
+                Annulla Prenotazione
+              </Button>
+            )}
+            {vehicle.status !== 'reserved' && (
+              <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
+                {vehicle.status === 'sold' ? 'Veicolo Venduto' : 'Veicolo Non Disponibile'}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

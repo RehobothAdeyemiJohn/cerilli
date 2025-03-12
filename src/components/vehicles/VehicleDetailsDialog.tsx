@@ -21,6 +21,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     showQuoteForm,
     showReserveForm,
     showVirtualReserveForm,
+    showCancelReservationForm,
     isSubmitting,
     user,
     handleShowQuoteForm,
@@ -28,7 +29,9 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     handleCancelQuote,
     handleReserveVehicle,
     handleReserveVirtualVehicle,
-    handleCancelReservation
+    handleCancelReservation,
+    handleShowCancelReservationForm,
+    handleCancelReservationSubmit
   } = useVehicleDetailsDialog(vehicle, onOpenChange);
   
   if (!vehicle) return null;
@@ -48,13 +51,16 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           showQuoteForm={showQuoteForm}
           showReserveForm={showReserveForm}
           showVirtualReserveForm={showVirtualReserveForm}
+          showCancelReservationForm={showCancelReservationForm}
           isSubmitting={isSubmitting}
           onCreateQuote={handleShowQuoteForm}
           onQuoteSubmit={handleCreateQuote}
           onQuoteCancel={handleCancelQuote}
           onReserveVehicle={handleReserveVehicle}
           onReserveVirtualVehicle={handleReserveVirtualVehicle}
-          onReservationCancel={handleCancelReservation}
+          onCancelReservationShow={handleShowCancelReservationForm}
+          onCancelReservationSubmit={handleCancelReservationSubmit}
+          onCancelReservationCancel={handleCancelReservation}
           onReservationComplete={() => {
             handleCancelReservation();
             onOpenChange(false);

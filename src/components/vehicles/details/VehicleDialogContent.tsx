@@ -5,18 +5,23 @@ import QuoteForm from '@/components/quotes/QuoteForm';
 import ReserveVehicleForm from '../ReserveVehicleForm';
 import ReserveVirtualVehicleForm from '../ReserveVirtualVehicleForm';
 import VehicleDetailsContent from './VehicleDetailsContent';
+import CancelReservationForm from '../CancelReservationForm';
 
 interface VehicleDialogContentProps {
   vehicle: Vehicle;
   showQuoteForm: boolean;
   showReserveForm: boolean;
   showVirtualReserveForm: boolean;
+  showCancelReservationForm: boolean;
   isSubmitting: boolean;
   onCreateQuote: () => void;
   onQuoteSubmit: (quoteData: any) => void;
   onQuoteCancel: () => void;
   onReserveVehicle: () => void;
   onReserveVirtualVehicle: () => void;
+  onCancelReservationShow: () => void;
+  onCancelReservationSubmit: (data?: { cancellationReason: string }) => void;
+  onCancelReservationCancel: () => void;
   onReservationCancel: () => void;
   onReservationComplete: () => void;
   userCanCreateQuotes: boolean;
@@ -27,12 +32,16 @@ const VehicleDialogContent = ({
   showQuoteForm,
   showReserveForm,
   showVirtualReserveForm,
+  showCancelReservationForm,
   isSubmitting,
   onCreateQuote,
   onQuoteSubmit,
   onQuoteCancel,
   onReserveVehicle,
   onReserveVirtualVehicle,
+  onCancelReservationShow,
+  onCancelReservationSubmit,
+  onCancelReservationCancel,
   onReservationCancel,
   onReservationComplete,
   userCanCreateQuotes
@@ -69,12 +78,24 @@ const VehicleDialogContent = ({
     );
   }
   
+  if (showCancelReservationForm) {
+    return (
+      <CancelReservationForm
+        vehicle={vehicle}
+        onSubmit={onCancelReservationSubmit}
+        onCancel={onCancelReservationCancel}
+        isSubmitting={isSubmitting}
+      />
+    );
+  }
+  
   return (
     <VehicleDetailsContent 
       vehicle={vehicle}
       onCreateQuote={onCreateQuote}
       onReserveVehicle={onReserveVehicle}
       onReserveVirtualVehicle={onReserveVirtualVehicle}
+      onCancelReservation={onCancelReservationShow}
       userCanCreateQuotes={userCanCreateQuotes}
     />
   );
