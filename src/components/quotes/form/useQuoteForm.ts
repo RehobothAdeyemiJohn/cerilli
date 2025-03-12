@@ -58,7 +58,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const compatibleAccessories: Accessory[] = vehicleAccessories.map(accessoryName => ({
     id: accessoryName, // Use the accessory name as ID
     name: accessoryName,
-    price: 0, // Default price, adjust if needed
+    // Use priceWithVAT and priceWithoutVAT instead of price
     priceWithVAT: 0,
     priceWithoutVAT: 0,
     compatibleModels: [],
@@ -70,7 +70,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     .reduce((total, [id, isSelected]) => {
       if (isSelected) {
         const accessory = compatibleAccessories.find(acc => acc.id === id);
-        return total + (accessory?.price || 0);
+        return total + (accessory?.priceWithVAT || 0); // Use priceWithVAT instead of price
       }
       return total;
     }, 0);
@@ -99,7 +99,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
         return {
           id,
           name: accessory?.name || '',
-          price: accessory?.price || 0
+          price: accessory?.priceWithVAT || 0 // Use priceWithVAT instead of price
         };
       });
     
