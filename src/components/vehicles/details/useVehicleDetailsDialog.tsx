@@ -7,8 +7,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { vehiclesApi, supabase } from '@/api/supabase';
+import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { ordersApi } from '@/api/supabase/ordersApi';
+import { supabase } from '@/api/supabase/client';
 
 export function useVehicleDetailsDialog(
   vehicle: Vehicle | null,

@@ -37,7 +37,15 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { title: 'Migrazione Dati', icon: Database, path: '/migration' },
   ];
   
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    // For exact matches
+    if (location.pathname === path) return true;
+    
+    // For the inventory path with routes like /inventory/123
+    if (path === '/inventory' && location.pathname.startsWith('/inventory/')) return true;
+    
+    return false;
+  };
   
   return (
     <div 

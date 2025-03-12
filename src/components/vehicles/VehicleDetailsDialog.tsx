@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import { 
   Dialog, 
@@ -46,7 +47,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   return (
     <Dialog open={open} onOpenChange={(value) => {
-      if (!isTransforming) {
+      if (!isTransforming && !isSubmitting) {
         onOpenChange(value);
       }
     }}>
@@ -76,6 +77,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             onOpenChange(false);
           }}
           onTransformToOrder={async () => {
+            if (isTransforming) return; // Prevent multiple clicks
+            
             setIsTransforming(true);
             try {
               await handleTransformToOrder();
