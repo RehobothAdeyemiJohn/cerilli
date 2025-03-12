@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -179,14 +178,25 @@ export function useVehicleDetailsDialog(
       // Create a new order record if reservedBy is available
       if (vehicle.reservedBy) {
         console.log("Creating order record for vehicle:", vehicle.id);
-        await ordersApi.create({
-          vehicleId: vehicle.id,
-          dealerId: user?.dealerId || dealers[0]?.id,
-          customerName: vehicle.reservedBy,
-          status: 'processing',
-          orderDate: new Date().toISOString()
-        });
-        console.log("Order created successfully");
+        const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+        
+        if (!dealerId) {
+          console.error("No dealer ID available for order creation");
+          toast({
+            title: "Avviso",
+            description: "Veicolo trasformato in ordine ma non è stato possibile creare il record dell'ordine senza un rivenditore associato",
+            variant: "destructive",
+          });
+        } else {
+          await ordersApi.create({
+            vehicleId: vehicle.id,
+            dealerId,
+            customerName: vehicle.reservedBy,
+            status: 'processing',
+            orderDate: new Date().toISOString()
+          });
+          console.log("Order created successfully");
+        }
       }
       
       // Make sure to update the cache
@@ -200,8 +210,19 @@ export function useVehicleDetailsDialog(
       
       console.log("Closing dialog after order transformation");
       
-      // Ensure the dialog closes after transformation is complete
-      onOpenChange(false);
+      // First reset local state
+      setShowQuoteForm(false);
+      setShowReserveForm(false);
+      setShowVirtualReserveForm(false);
+      setShowCancelReservationForm(false);
+      
+      // Then ensure the dialog closes after transformation is complete
+      // Force a small delay to ensure state updates are processed
+      setTimeout(() => {
+        console.log("Executing dialog close");
+        onOpenChange(false);
+      }, 100);
+      
     } catch (error) {
       console.error('Error transforming to order:', error);
       toast({

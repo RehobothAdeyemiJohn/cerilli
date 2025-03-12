@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Vehicle } from '@/types';
-import { formatCurrency, calculateDaysInStock, calculateReservationExpiration } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Plus, Check, Clock, Package, FileCheck, X, Truck } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
@@ -16,315 +17,195 @@ interface VehicleDetailsContentProps {
   userCanCreateQuotes: boolean;
 }
 
-const VehicleDetailsContent = ({ 
-  vehicle, 
-  onCreateQuote, 
+const VehicleDetailsContent = ({
+  vehicle,
+  onCreateQuote,
   onReserveVehicle,
   onReserveVirtualVehicle,
   onCancelReservation,
   onTransformToOrder,
   userCanCreateQuotes
 }: VehicleDetailsContentProps) => {
-  const { user } = useAuth();
-  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
-  
-  // Initialize state for countdown timer
-  const [expiration, setExpiration] = useState(() => 
-    calculateReservationExpiration(vehicle.reservationTimestamp)
-  );
-  
-  // Timer reference to ensure proper cleanup
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
-  
-  // Update countdown every second for reserved vehicles
-  useEffect(() => {
-    // Clean up any existing timer first
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
-    
-    // Only set up timer for reserved vehicles
-    if (vehicle.status !== 'reserved' || !vehicle.reservationTimestamp) {
-      return;
-    }
-    
-    // Set initial value
-    setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
-    
-    // Set up new timer that updates every second
-    const timer = setInterval(() => {
-      setExpiration(current => {
-        // Use latest vehicle reservation timestamp
-        const updated = calculateReservationExpiration(vehicle.reservationTimestamp);
-        return updated;
-      });
-    }, 1000);
-    
-    // Store timer reference
-    setTimerInterval(timer);
-    
-    // Clean up on unmount or when dependencies change
-    return () => {
-      clearInterval(timer);
-    };
-  }, [vehicle.status, vehicle.reservationTimestamp]);
-  
-  // Check if vehicle is in virtual stock
-  const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  
-  // Calculate days in stock if vehicle is in physical stock
-  // Solo gli amministratori possono vedere la giacenza
-  const daysInStock = !isDealer && vehicle.location !== 'Stock Virtuale' 
-    ? calculateDaysInStock(vehicle.dateAdded) 
-    : null;
-  
-  // Check if vehicle has a virtual configuration
-  const hasVirtualConfig = vehicle.virtualConfig !== undefined;
-  
-  // Determine if vehicle is reserved and display proper information
-  const isReserved = vehicle.status === 'reserved';
-  const isOrdered = vehicle.status === 'ordered';
+  console.log("Rendering VehicleDetailsContent with status:", vehicle.status);
+  console.log("Transform to order function available:", !!onTransformToOrder);
   
   return (
-    <div className="mt-2">
-      <div className="grid grid-cols-6 gap-2 mt-2 text-sm">
-        <div>
-          <p className="text-xs font-medium text-gray-500">Modello</p>
-          <p>{vehicle.model}</p>
-        </div>
-        {!isVirtualStock && (
-          <>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Allestimento</p>
-              <p>{vehicle.trim}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Alimentazione</p>
-              <p>{vehicle.fuelType}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Colore</p>
-              <p>{vehicle.exteriorColor}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Prezzo</p>
-              <p className="font-bold text-primary">
-                {formatCurrency(vehicle.price)}
-              </p>
-            </div>
-          </>
-        )}
-        <div>
-          <p className="text-xs font-medium text-gray-500">Ubicazione</p>
-          <p>{vehicle.location}</p>
-        </div>
-        {!isVirtualStock && vehicle.transmission && (
+    <div className="space-y-6">
+      {/* Vehicle Basic Info Section */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold">Informazioni Veicolo</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs font-medium text-gray-500">Cambio</p>
-            <p>{vehicle.transmission}</p>
+            <p className="text-muted-foreground">Modello</p>
+            <p className="font-medium">{vehicle.model}</p>
           </div>
-        )}
-        {/* Giorni in stock visibili solo agli amministratori */}
-        {daysInStock !== null && !isDealer && (
-          <div>
-            <p className="text-xs font-medium text-gray-500">Giorni in Stock</p>
-            <div className="flex items-center gap-1">
-              <span>{daysInStock}</span>
-              <div className={`h-3 w-3 rounded-full ${
-                daysInStock <= 30 ? 'bg-green-500' : 
-                daysInStock <= 60 ? 'bg-amber-500' : 
-                'bg-red-500'
-              }`}></div>
+          {vehicle.trim && (
+            <div>
+              <p className="text-muted-foreground">Versione</p>
+              <p className="font-medium">{vehicle.trim}</p>
             </div>
+          )}
+          {vehicle.fuelType && (
+            <div>
+              <p className="text-muted-foreground">Alimentazione</p>
+              <p className="font-medium">{vehicle.fuelType}</p>
+            </div>
+          )}
+          {vehicle.exteriorColor && (
+            <div>
+              <p className="text-muted-foreground">Colore Esterno</p>
+              <p className="font-medium">{vehicle.exteriorColor}</p>
+            </div>
+          )}
+          {vehicle.transmission && (
+            <div>
+              <p className="text-muted-foreground">Trasmissione</p>
+              <p className="font-medium">{vehicle.transmission}</p>
+            </div>
+          )}
+          {vehicle.telaio && (
+            <div>
+              <p className="text-muted-foreground">Telaio</p>
+              <p className="font-medium">{vehicle.telaio}</p>
+            </div>
+          )}
+          <div>
+            <p className="text-muted-foreground">Ubicazione</p>
+            <p className="font-medium">{vehicle.location}</p>
           </div>
-        )}
-        {isReserved && vehicle.reservedBy && (
-          <div className="col-span-2">
-            <p className="text-xs font-medium text-gray-500">Prenotato da</p>
-            <p className="font-medium text-amber-700">{vehicle.reservedBy}</p>
+          <div>
+            <p className="text-muted-foreground">Stato</p>
+            <Badge className={`${
+              vehicle.status === 'available' ? 'bg-green-500' : 
+              vehicle.status === 'reserved' ? 'bg-amber-500' : 
+              vehicle.status === 'ordered' ? 'bg-blue-500' : 
+              vehicle.status === 'sold' ? 'bg-purple-500' : 'bg-gray-500'
+            }`}>
+              {vehicle.status === 'available' ? 'Disponibile' : 
+               vehicle.status === 'reserved' ? 'Prenotato' : 
+               vehicle.status === 'ordered' ? 'Ordinato' : 
+               vehicle.status === 'sold' ? 'Venduto' : vehicle.status}
+            </Badge>
           </div>
-        )}
-        {isOrdered && vehicle.reservedBy && (
-          <div className="col-span-2">
-            <p className="text-xs font-medium text-gray-500">Ordinato da</p>
-            <p className="font-medium text-green-700">{vehicle.reservedBy}</p>
-          </div>
-        )}
-        {(isReserved || isOrdered) && vehicle.reservationDestination && (
-          <div className="col-span-2">
-            <p className="text-xs font-medium text-gray-500">Destinazione</p>
-            <p className="font-medium text-amber-700">
-              {vehicle.reservationDestination === 'contratto_abbinato' ? 'Contratto Abbinato' : 
-               vehicle.reservationDestination === 'stock_dealer' ? 'Stock Dealer' : 
-               vehicle.reservationDestination}
-            </p>
-          </div>
-        )}
-      </div>
-      
-      {/* Reservation expiration countdown */}
-      {isReserved && (
-        <div className="mt-4 bg-amber-50 p-3 rounded-md border border-amber-200">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-medium text-amber-800">Scadenza prenotazione</h4>
-            <p className="text-sm font-bold text-amber-800">
-              {expiration.timeRemaining && (
-                `${String(expiration.timeRemaining.hours).padStart(2, '0')}:${String(expiration.timeRemaining.minutes).padStart(2, '0')}:${String(expiration.timeRemaining.seconds).padStart(2, '0')}`
-              )}
-            </p>
-          </div>
-          <Progress value={expiration.percentRemaining} className="h-2 bg-amber-200" />
-          <p className="text-xs text-amber-700 mt-1">
-            La prenotazione scadrà automaticamente se non viene trasformata in ordine
-          </p>
-        </div>
-      )}
-      
-      {/* Display reserved accessories if any */}
-      {(isReserved || isOrdered) && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
-        <div className="mt-4 border-t pt-3">
-          <p className="text-sm font-medium text-gray-700">Optional Prenotati</p>
-          <div className="mt-1 grid grid-cols-2 gap-1">
-            {vehicle.reservedAccessories.map((accessory, idx) => (
-              <div key={idx} className="text-xs flex items-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 mr-1"></span>
-                {accessory}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Display virtual configuration if any */}
-      {(isReserved || isOrdered) && hasVirtualConfig && (
-        <div className="mt-4 border-t pt-3">
-          <p className="text-sm font-medium text-gray-700 mb-2">Configurazione Virtuale</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-amber-50 p-2 rounded-md">
-            {vehicle.virtualConfig?.trim && (
-              <div>
-                <p className="text-xs font-medium text-gray-500">Allestimento</p>
-                <p>{vehicle.virtualConfig.trim}</p>
-              </div>
-            )}
-            {vehicle.virtualConfig?.fuelType && (
-              <div>
-                <p className="text-xs font-medium text-gray-500">Alimentazione</p>
-                <p>{vehicle.virtualConfig.fuelType}</p>
-              </div>
-            )}
-            {vehicle.virtualConfig?.exteriorColor && (
-              <div>
-                <p className="text-xs font-medium text-gray-500">Colore</p>
-                <p>{vehicle.virtualConfig.exteriorColor}</p>
-              </div>
-            )}
-            {vehicle.virtualConfig?.transmission && (
-              <div>
-                <p className="text-xs font-medium text-gray-500">Cambio</p>
-                <p>{vehicle.virtualConfig.transmission}</p>
-              </div>
-            )}
-            {vehicle.virtualConfig?.price && (
-              <div>
-                <p className="text-xs font-medium text-gray-500">Prezzo configurato</p>
-                <p className="font-bold text-primary">{formatCurrency(vehicle.virtualConfig.price)}</p>
-              </div>
-            )}
-          </div>
-          
-          {/* Display virtual configuration accessories */}
-          {vehicle.virtualConfig?.accessories && vehicle.virtualConfig.accessories.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-medium text-gray-500">Optional Configurati</p>
-              <div className="mt-1 grid grid-cols-2 gap-1">
-                {vehicle.virtualConfig.accessories.map((accessory, idx) => (
-                  <div key={idx} className="text-xs flex items-center">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 mr-1"></span>
-                    {accessory}
-                  </div>
-                ))}
-              </div>
+          {vehicle.price > 0 && (
+            <div>
+              <p className="text-muted-foreground">Prezzo</p>
+              <p className="font-medium">{formatCurrency(vehicle.price)}</p>
             </div>
           )}
         </div>
-      )}
+      </div>
       
-      {!isVirtualStock && vehicle.accessories && vehicle.accessories.length > 0 && (
-        <div className="mt-3">
-          <p className="text-xs font-medium text-gray-500">Optional Inclusi</p>
-          <div className="mt-1 grid grid-cols-3 gap-1">
-            {vehicle.accessories.map((accessory, idx) => (
-              <div key={idx} className="text-xs flex items-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
-                {accessory}
+      {/* Accessories Section */}
+      {vehicle.accessories && vehicle.accessories.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Accessori</h3>
+          <div className="grid grid-cols-1 gap-1">
+            {vehicle.accessories.map((accessory, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500" />
+                <span>{accessory}</span>
               </div>
             ))}
           </div>
         </div>
       )}
       
-      <div className="flex gap-4 mt-4">
-        {vehicle.status === 'available' ? (
-          <>
-            {isVirtualStock ? (
-              <Button 
-                variant="default" 
-                className="flex-1"
-                onClick={onReserveVirtualVehicle}
-              >
-                Prenota Virtuale
-              </Button>
-            ) : (
-              <>
-                <Button 
-                  variant="default" 
-                  className="flex-1"
-                  onClick={onCreateQuote}
-                  disabled={!userCanCreateQuotes}
-                >
-                  Crea Preventivo
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={onReserveVehicle}
-                >
-                  Prenota Auto
-                </Button>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            {vehicle.status === 'reserved' && (
-              <>
-                <Button 
-                  variant="destructive" 
-                  className="flex-1"
-                  onClick={onCancelReservation}
-                >
-                  Annulla Prenotazione
-                </Button>
-                <Button 
-                  variant="default" 
-                  className="flex-1"
-                  onClick={onTransformToOrder}
-                >
-                  Trasforma in Ordine
-                </Button>
-              </>
-            )}
-            {vehicle.status === 'ordered' && (
-              <div className="w-full text-center py-2 bg-green-100 rounded-md text-green-700 font-medium">
-                Veicolo Ordinato
+      {/* Reserved Info Section */}
+      {vehicle.status === 'reserved' && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Informazioni Prenotazione</h3>
+          <div className="grid grid-cols-1 gap-2">
+            {vehicle.reservedBy && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <span>Prenotato da: <strong>{vehicle.reservedBy}</strong></span>
               </div>
             )}
-            {vehicle.status === 'sold' && (
-              <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
-                Veicolo Venduto
+            {vehicle.reservationDestination && (
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-amber-500" />
+                <span>Destinazione: <strong>{vehicle.reservationDestination}</strong></span>
               </div>
             )}
-          </>
+            {vehicle.reservationTimestamp && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <span>Data: <strong>{new Date(vehicle.reservationTimestamp).toLocaleDateString()}</strong></span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Reserved Accessories Section */}
+      {vehicle.status === 'reserved' && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Accessori Prenotati</h3>
+          <div className="grid grid-cols-1 gap-1">
+            {vehicle.reservedAccessories.map((accessory, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-amber-500" />
+                <span>{accessory}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      <Separator />
+      
+      {/* Action Buttons Section */}
+      <div className="flex flex-wrap gap-2">
+        {/* Quote Button */}
+        {vehicle.status === 'available' && userCanCreateQuotes && (
+          <Button onClick={onCreateQuote} className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4" />
+            <span>Crea Preventivo</span>
+          </Button>
+        )}
+        
+        {/* Reserve Button */}
+        {vehicle.status === 'available' && vehicle.location !== 'Stock Virtuale' && (
+          <Button onClick={onReserveVehicle} className="flex items-center gap-2" variant="secondary">
+            <Plus className="h-4 w-4" />
+            <span>Prenota Veicolo</span>
+          </Button>
+        )}
+        
+        {/* Reserve Virtual Button */}
+        {vehicle.status === 'available' && vehicle.location === 'Stock Virtuale' && (
+          <Button onClick={onReserveVirtualVehicle} className="flex items-center gap-2" variant="secondary">
+            <Plus className="h-4 w-4" />
+            <span>Prenota Config. Virtuale</span>
+          </Button>
+        )}
+        
+        {/* Transform to Order Button */}
+        {vehicle.status === 'reserved' && (
+          <Button 
+            onClick={() => {
+              console.log("Transform to order button clicked");
+              if (onTransformToOrder) {
+                onTransformToOrder();
+              } else {
+                console.error("No transform to order handler provided");
+              }
+            }} 
+            className="flex items-center gap-2" 
+            variant="default"
+          >
+            <Truck className="h-4 w-4" />
+            <span>Trasforma in Ordine</span>
+          </Button>
+        )}
+        
+        {/* Cancel Reservation Button */}
+        {vehicle.status === 'reserved' && (
+          <Button onClick={onCancelReservation} className="flex items-center gap-2" variant="destructive">
+            <X className="h-4 w-4" />
+            <span>Cancella Prenotazione</span>
+          </Button>
         )}
       </div>
     </div>

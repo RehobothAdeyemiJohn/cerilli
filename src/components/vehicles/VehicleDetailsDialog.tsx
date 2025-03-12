@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Vehicle } from '@/types';
 import { 
   Dialog, 
@@ -30,7 +30,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     handleReserveVehicle,
     handleReserveVirtualVehicle,
     handleCancelReservation,
-    handleShowCancelReservationForm,
+    handleShowCancelReservationShow,
     handleCancelReservationSubmit,
     handleTransformToOrder
   } = useVehicleDetailsDialog(vehicle, onOpenChange);
@@ -45,7 +45,10 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   console.log('Reservation timestamp:', vehicle.reservationTimestamp);
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(value) => {
+      console.log('Dialog onOpenChange called with value:', value);
+      onOpenChange(value);
+    }}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
           <VehicleDialogHeader vehicle={vehicle} />
@@ -63,15 +66,19 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           onQuoteCancel={handleCancelQuote}
           onReserveVehicle={handleReserveVehicle}
           onReserveVirtualVehicle={handleReserveVirtualVehicle}
-          onCancelReservationShow={handleShowCancelReservationForm}
+          onCancelReservationShow={handleShowCancelReservationShow}
           onCancelReservationSubmit={handleCancelReservationSubmit}
           onCancelReservationCancel={handleCancelReservation}
           onReservationCancel={handleCancelReservation}
           onReservationComplete={() => {
+            console.log('Reservation complete, closing dialog');
             handleCancelReservation();
             onOpenChange(false);
           }}
-          onTransformToOrder={handleTransformToOrder}
+          onTransformToOrder={() => {
+            console.log('Transform to order clicked, calling handler');
+            handleTransformToOrder();
+          }}
           userCanCreateQuotes={userCanCreateQuotes}
         />
       </DialogContent>
