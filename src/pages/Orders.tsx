@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -346,7 +347,6 @@ const Orders = () => {
                 );
                 
                 const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
-                const dealerLimit = order.dealer?.creditLimit;
                 
                 return (
                   <TableRow key={order.id}>
@@ -405,13 +405,13 @@ const Orders = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {dealerLimit !== undefined && dealerLimit !== null ? (
+                          {order.dealer && order.dealer.credit_limit !== undefined ? (
                             <span>
                               {new Intl.NumberFormat('it-IT', {
                                 style: 'currency',
                                 currency: 'EUR',
                                 maximumFractionDigits: 0,
-                              }).format(dealerLimit)}
+                              }).format(order.dealer.credit_limit)}
                             </span>
                           ) : 'N/A'}
                         </TableCell>
