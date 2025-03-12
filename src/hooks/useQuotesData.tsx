@@ -200,7 +200,7 @@ export const useQuotesData = () => {
       console.log("Creazione preventivo con dealerId:", data.dealerId);
       
       // Required fields for a quote in Supabase
-      const quoteData = {
+      const quoteData: Omit<Quote, 'id'> = {
         vehicleId: data.vehicleId,
         dealerId: data.dealerId,
         customerName: data.customerName,
@@ -212,7 +212,7 @@ export const useQuotesData = () => {
         createdAt: new Date().toISOString(),
         status: 'pending' as Quote['status'],
         notes: data.notes || '',
-        manualEntry: data.manualEntry || false
+        manualEntry: Boolean(data.manualEntry)
       };
       
       // For manual quotes, check if we need to create a temporary vehicle first
@@ -220,7 +220,6 @@ export const useQuotesData = () => {
         console.log("Creating manual quote with vehicleData:", data.vehicleData);
         
         try {
-          // If it's a manual quote, the vehicleId is already a UUID from ManualQuoteForm
           await quotesApi.create(quoteData);
           
           toast({

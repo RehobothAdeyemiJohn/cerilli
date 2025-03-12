@@ -95,18 +95,14 @@ export const quotesApi = {
     console.log("Supabase API: getById - Preventivo recuperato:", formattedQuote);
     return formattedQuote as Quote;
   },
-  
+
   create: async (quote: Omit<Quote, 'id'>): Promise<Quote> => {
-    console.log("Supabase API: create - Creazione preventivo:", quote);
-    
-    // Generate a UUID for the quote instead of getting it from the dealer
-    const quoteId = uuidv4();
+    console.log("Creating quote with data:", quote);
     
     // Map frontend field names to database column names
     const newQuote = {
-      id: quoteId,
       vehicleid: quote.vehicleId,
-      dealerid: quote.dealerId, // Use the dealerId from the quote (which could be null)
+      dealerid: quote.dealerId,
       customername: quote.customerName,
       customeremail: quote.customerEmail || null,
       customerphone: quote.customerPhone || null,
@@ -117,7 +113,7 @@ export const quotesApi = {
       createdat: quote.createdAt || new Date().toISOString(),
       notes: quote.notes || null,
       rejectionreason: quote.rejectionReason || null,
-      manualentry: quote.manualEntry || false  // Properly handle manualEntry
+      manualentry: quote.manualEntry || false
     };
     
     console.log("Supabase API: create - Richiesta insert:", newQuote);
@@ -129,7 +125,7 @@ export const quotesApi = {
       .single();
 
     if (error) {
-      console.error('Errore nella creazione del preventivo:', error);
+      console.error('Error creating quote:', error);
       throw error;
     }
     
@@ -150,12 +146,12 @@ export const quotesApi = {
       createdAt: data.createdat,
       notes: data.notes || '',
       rejectionReason: data.rejectionreason || '',
-      manualEntry: data.manualentry || false  // Include manualEntry in returned data
+      manualEntry: data.manualentry || false
     };
     
     return formattedQuote as Quote;
   },
-  
+
   update: async (id: string, updates: Partial<Quote>): Promise<Quote> => {
     // Convert frontend field names to match database column names
     const dbUpdates: any = {
@@ -170,7 +166,7 @@ export const quotesApi = {
       status: updates.status,
       notes: updates.notes,
       rejectionreason: updates.rejectionReason,
-      manualentry: updates.manualEntry  // Properly handle manualEntry
+      manualentry: updates.manualEntry
     };
     
     // Remove undefined fields
@@ -190,7 +186,7 @@ export const quotesApi = {
       .single();
 
     if (error) {
-      console.error('Errore nell\'aggiornamento del preventivo:', error);
+      console.error('Error updating quote:', error);
       throw error;
     }
     
@@ -211,12 +207,12 @@ export const quotesApi = {
       createdAt: data.createdat,
       notes: data.notes || '',
       rejectionReason: data.rejectionreason || '',
-      manualEntry: data.manualentry || false  // Include manualEntry in returned data
+      manualEntry: data.manualentry || false
     };
     
     return formattedQuote as Quote;
   },
-  
+
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
       .from('quotes')

@@ -167,6 +167,7 @@ export type Database = {
           discount: number | null
           finalprice: number
           id: string
+          manualentry: boolean | null
           notes: string | null
           price: number
           rejectionreason: string | null
@@ -183,6 +184,7 @@ export type Database = {
           discount?: number | null
           finalprice: number
           id?: string
+          manualentry?: boolean | null
           notes?: string | null
           price: number
           rejectionreason?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           discount?: number | null
           finalprice?: number
           id?: string
+          manualentry?: boolean | null
           notes?: string | null
           price?: number
           rejectionreason?: string | null
