@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         isOpen ? 'w-64' : 'w-16'
       } h-screen bg-white border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
     >
-      <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4">
+      <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4 flex-shrink-0">
         {isOpen ? (
           <h2 className="text-xl font-bold text-gray-800">Cirelli Motor</h2>
         ) : (
@@ -49,8 +49,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         )}
       </div>
       
-      <div className="flex flex-col flex-1 overflow-y-auto py-4">
-        <nav className="flex-1 px-2 space-y-1">
+      <div className="flex flex-col flex-1 py-4 overflow-hidden">
+        <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
           ))}
         </nav>
         
-        <div className="pt-4 mt-4 border-t border-gray-200 px-2">
+        <div className="pt-4 mt-4 border-t border-gray-200 px-2 overflow-y-auto">
           {isOpen && (
             <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-2">
               AMMINISTRAZIONE
