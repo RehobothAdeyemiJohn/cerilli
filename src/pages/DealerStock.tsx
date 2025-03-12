@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { Vehicle } from '@/types';
@@ -12,10 +13,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { FileText, Eye } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const DealerStock = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Fetch all vehicles from Supabase
   const { 
@@ -39,6 +44,22 @@ const DealerStock = () => {
     // If user is dealer or vendor, only show vehicles reserved by this dealer
     return v.reservedBy === user?.dealerName;
   });
+  
+  const handleCreateQuote = (vehicle: Vehicle) => {
+    // Navigate to quotes page with the selected vehicle info
+    navigate('/quotes', { 
+      state: { 
+        fromInventory: true,
+        vehicleId: vehicle.id 
+      } 
+    });
+  };
+  
+  const handleViewVehicle = (vehicleId: string) => {
+    // Open vehicle details dialog logic would go here
+    // For now, we'll just navigate to the inventory with a filter
+    navigate(`/inventory?vehicleId=${vehicleId}`);
+  };
   
   return (
     <div className="container mx-auto py-6 px-4">
@@ -91,13 +112,26 @@ const DealerStock = () => {
                       € {vehicle.price?.toLocaleString('it-IT') || '-'}
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8"
-                      >
-                        Visualizza
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => handleViewVehicle(vehicle.id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Visualizza
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => handleCreateQuote(vehicle)}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Preventivo
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

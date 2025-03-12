@@ -10,7 +10,8 @@ import {
   Users,
   KeyRound,
   Settings,
-  Database
+  Database,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -28,6 +29,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
     { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
+    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
     { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
