@@ -29,6 +29,15 @@ const formSchema = z.object({
   tradeInValue: z.number().optional(),
   notes: z.string().optional(),
   finalPrice: z.number(),
+  // Add these fields to the schema to fix the TypeScript errors
+  selectedAccessories: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      price: z.number()
+    })
+  ).optional(),
+  accessoryTotalPrice: z.number().optional(),
 });
 
 export type QuoteFormValues = z.infer<typeof formSchema>;
@@ -69,6 +78,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       tradeInValue: 0,
       notes: '',
       finalPrice: basePrice,
+      selectedAccessories: [], // Initialize the new field
+      accessoryTotalPrice: 0, // Initialize the new field
     },
   });
   
@@ -77,8 +88,6 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const watchDiscount = form.watch('discount');
   const watchTradeInValue = form.watch('tradeInValue');
   const watchVehicleAccessories = form.watch('vehicleAccessories');
-  // Remove this line as location is not in the form's defaultValues
-  // const watchLocation = form.watch('location');
 
   // Use vehicle.accessories or an empty array if it doesn't exist
   const vehicleAccessories = vehicle?.accessories || [];
@@ -128,20 +137,24 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       };
     });
     
-    data.selectedAccessories = selectedAccessories;
-    data.accessoryTotalPrice = accessoryTotalPrice;
+    // Create a new object with the form data and additional calculated properties
+    const submitData = {
+      ...data,
+      selectedAccessories: selectedAccessories,
+      accessoryTotalPrice: accessoryTotalPrice,
+    };
     
     // Set trade-in info
-    if (!data.hasTradeIn) {
-      data.tradeInBrand = '';
-      data.tradeInModel = '';
-      data.tradeInYear = '';
-      data.tradeInKm = 0;
-      data.tradeInValue = 0;
+    if (!submitData.hasTradeIn) {
+      submitData.tradeInBrand = '';
+      submitData.tradeInModel = '';
+      submitData.tradeInYear = '';
+      submitData.tradeInKm = 0;
+      submitData.tradeInValue = 0;
     }
     
     // Call parent onSubmit
-    onSubmit(data);
+    onSubmit(submitData);
   };
   
   return {
