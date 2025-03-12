@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import Chart from '@/components/dashboard/Chart';
@@ -11,8 +11,13 @@ import {
 } from '@/data/mockData';
 
 const Dashboard = () => {
-  // Add a key to force re-render when component mounts
-  const renderKey = React.useId();
+  // Use state to force re-render when component mounts or route changes
+  const [renderKey, setRenderKey] = useState(Date.now().toString());
+  
+  // Reset the key whenever the component mounts or remounts
+  useEffect(() => {
+    setRenderKey(Date.now().toString());
+  }, []);
   
   return (
     <div className="container mx-auto py-6 px-4" key={renderKey}>

@@ -90,14 +90,14 @@ export const DashboardStats = () => {
       />
       <StatCard
         title="Preventivi"
-        value={quotesCount}
+        value={typeof quotesCount === 'object' ? 0 : quotesCount}
         description="Preventivi totali"
         icon={FileText}
         loading={loadingQuotes}
       />
       <StatCard
         title="Ordini"
-        value={ordersCount}
+        value={typeof ordersCount === 'object' ? 0 : ordersCount}
         description="Ordini totali"
         icon={ShoppingCart}
         loading={loadingOrders}
