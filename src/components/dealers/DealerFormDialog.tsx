@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { Image } from 'lucide-react';
 
 const formSchema = z.object({
   companyName: z.string().min(1, 'Nome azienda richiesto'),
@@ -31,13 +31,12 @@ const formSchema = z.object({
   province: z.string().length(2, 'Inserire la sigla della provincia'),
   zipCode: z.string().length(5, 'CAP non valido'),
   isActive: z.boolean().default(true),
-  // New fields for authentication
   contactName: z.string().min(1, 'Nome contatto richiesto'),
   email: z.string().email('Email non valida'),
   password: z.string().min(6, 'Password deve essere di almeno 6 caratteri'),
+  logo: z.any().optional(),
 });
 
-// Define the form values type based on the schema
 type FormValues = z.infer<typeof formSchema>;
 
 interface DealerFormDialogProps {
@@ -54,6 +53,9 @@ const DealerFormDialog = ({
   onSuccess,
 }: DealerFormDialogProps) => {
   const { toast } = useToast();
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(dealer?.logo || null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -63,14 +65,13 @@ const DealerFormDialog = ({
       province: dealer?.province || '',
       zipCode: dealer?.zipCode || '',
       isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
-      // Include new fields
       contactName: dealer?.contactName || '',
       email: dealer?.email || '',
       password: dealer?.password || '',
+      logo: undefined,
     },
   });
 
-  // Reset form when dealer changes or dialog opens
   React.useEffect(() => {
     if (open) {
       form.reset({
@@ -80,47 +81,67 @@ const DealerFormDialog = ({
         province: dealer?.province || '',
         zipCode: dealer?.zipCode || '',
         isActive: dealer?.isActive !== undefined ? dealer.isActive : true,
-        // Include new fields
         contactName: dealer?.contactName || '',
         email: dealer?.email || '',
         password: dealer?.password || '',
+        logo: undefined,
       });
+      setLogoPreview(dealer?.logo || null);
     }
   }, [dealer, open, form]);
 
+  const handleLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      form.setValue('logo', file);
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     try {
+      let logoUrl = dealer?.logo;
+      
+      if (values.logo instanceof File) {
+        try {
+          logoUrl = await dealersApi.uploadLogo(values.logo, dealer?.id || 'temp');
+        } catch (error) {
+          console.error('Error uploading logo:', error);
+          toast({
+            title: "Errore nel caricamento del logo",
+            description: "Controlla il file e riprova",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       if (dealer) {
-        // Update existing dealer
         await dealersApi.update({
           ...dealer,
           ...values,
+          logo: logoUrl,
         });
         toast({
           title: "Dealer aggiornato con successo",
         });
       } else {
-        // Create new dealer with required fields
         await dealersApi.create({
-          companyName: values.companyName,
-          address: values.address,
-          city: values.city,
-          province: values.province,
-          zipCode: values.zipCode,
-          isActive: values.isActive,
-          contactName: values.contactName,
-          email: values.email,
-          password: values.password,
+          ...values,
+          logo: logoUrl,
         });
         toast({
           title: "Dealer creato con successo",
         });
       }
       
-      // Close the dialog
       onOpenChange(false);
       
-      // Call onSuccess callback to refresh the list
       if (onSuccess) {
         onSuccess();
       }
@@ -148,7 +169,36 @@ const DealerFormDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Prima riga - Nome Azienda (occupa tutta la larghezza) */}
+            <div className="flex items-center gap-4">
+              {logoPreview ? (
+                <img 
+                  src={logoPreview} 
+                  alt="Logo preview" 
+                  className="w-24 h-24 object-contain border rounded-lg"
+                />
+              ) : (
+                <div className="w-24 h-24 border rounded-lg flex items-center justify-center bg-gray-50">
+                  <Image className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {logoPreview ? 'Cambia Logo' : 'Carica Logo'}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+              </div>
+            </div>
+
             <FormField
               control={form.control}
               name="companyName"
@@ -163,7 +213,6 @@ const DealerFormDialog = ({
               )}
             />
 
-            {/* Due colonne per i campi di autenticazione */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -194,7 +243,6 @@ const DealerFormDialog = ({
               />
             </div>
 
-            {/* Password (occupa tutta la larghezza) */}
             <FormField
               control={form.control}
               name="password"
@@ -209,7 +257,6 @@ const DealerFormDialog = ({
               )}
             />
 
-            {/* Indirizzo (occupa tutta la larghezza) */}
             <FormField
               control={form.control}
               name="address"
@@ -224,7 +271,6 @@ const DealerFormDialog = ({
               )}
             />
 
-            {/* Due colonne per Città e Provincia/CAP */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

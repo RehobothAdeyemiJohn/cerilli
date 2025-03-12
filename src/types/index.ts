@@ -110,6 +110,7 @@ export type Dealer = {
   email: string;
   password: string;
   contactName: string;
+  logo?: string;
 };
 
 export type Vendor = {

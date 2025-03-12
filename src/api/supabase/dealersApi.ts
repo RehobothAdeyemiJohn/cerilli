@@ -1,11 +1,9 @@
-
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
-    // Use companyname, not companyName - the Supabase column name is lowercase
     const { data, error } = await supabase
       .from('dealers')
       .select('*')
@@ -16,17 +14,16 @@ export const dealersApi = {
       throw error;
     }
     
-    // Map the Supabase column names to our frontend model property names
     return data.map(dealer => ({
       id: dealer.id,
-      companyName: dealer.companyname, // Map from DB companyname to frontend companyName
+      companyName: dealer.companyname,
       address: dealer.address,
       city: dealer.city,
       province: dealer.province,
-      zipCode: dealer.zipcode, // Map from DB zipcode to frontend zipCode
+      zipCode: dealer.zipcode,
       email: dealer.email,
       password: dealer.password,
-      contactName: dealer.contactname, // Map from DB contactname to frontend contactName
+      contactName: dealer.contactname,
       createdAt: dealer.created_at,
       isActive: dealer.isactive
     })) as Dealer[];
@@ -59,15 +56,34 @@ export const dealersApi = {
     } as Dealer;
   },
 
+  uploadLogo: async (file: File, dealerId: string): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${dealerId}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('dealer_logos')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error('Errore nel caricamento del logo:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('dealer_logos')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  },
+
   create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer> => {
-    // Generate a UUID for the new dealer
     const newId = uuidv4();
     
-    // Map from frontend model property names to DB column names
     const { data, error } = await supabase
       .from('dealers')
       .insert({
-        id: newId, // Explicitly set the ID
+        id: newId,
         companyname: dealer.companyName,
         address: dealer.address,
         city: dealer.city,
@@ -76,7 +92,8 @@ export const dealersApi = {
         email: dealer.email,
         password: dealer.password,
         contactname: dealer.contactName,
-        isactive: dealer.isActive
+        isactive: dealer.isActive,
+        logo: dealer.logo
       })
       .select()
       .single();
@@ -97,7 +114,8 @@ export const dealersApi = {
       password: data.password,
       contactName: data.contactname,
       createdAt: data.created_at,
-      isActive: data.isactive
+      isActive: data.isactive,
+      logo: data.logo
     } as Dealer;
   },
   
@@ -113,7 +131,8 @@ export const dealersApi = {
         email: dealer.email,
         password: dealer.password,
         contactname: dealer.contactName,
-        isactive: dealer.isActive
+        isactive: dealer.isActive,
+        logo: dealer.logo
       })
       .eq('id', dealer.id);
     

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,14 +30,12 @@ const DealerList = ({ dealerId }: DealerListProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer';
 
-  // Fetch dealers using React Query
   const { data: dealersList = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
-    staleTime: 60000, // 1 minute
+    staleTime: 60000,
   });
 
-  // Filter dealers if dealerId is provided (for dealer users)
   const filteredDealers = dealerId 
     ? dealersList.filter(dealer => dealer.id === dealerId)
     : dealersList;
@@ -46,7 +43,6 @@ const DealerList = ({ dealerId }: DealerListProps) => {
   const handleDelete = async (id: string) => {
     try {
       await dealersApi.delete(id);
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       toast({
         title: "Dealer eliminato con successo",
@@ -65,7 +61,6 @@ const DealerList = ({ dealerId }: DealerListProps) => {
       const newStatus = !dealer.isActive;
       await dealersApi.toggleStatus(dealer.id, newStatus);
       
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       
       toast({
@@ -82,7 +77,6 @@ const DealerList = ({ dealerId }: DealerListProps) => {
     }
   };
 
-  // Function to refresh dealers list
   const refreshDealers = () => {
     queryClient.invalidateQueries({ queryKey: ['dealers'] });
   };
@@ -101,6 +95,7 @@ const DealerList = ({ dealerId }: DealerListProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Logo</TableHead>
               {!isDealer && <TableHead>Stato</TableHead>}
               <TableHead>Azienda</TableHead>
               <TableHead>Indirizzo</TableHead>
@@ -120,6 +115,19 @@ const DealerList = ({ dealerId }: DealerListProps) => {
             ) : (
               filteredDealers.map((dealer) => (
                 <TableRow key={dealer.id}>
+                  <TableCell>
+                    {dealer.logo ? (
+                      <img 
+                        src={dealer.logo} 
+                        alt={`${dealer.companyName} logo`}
+                        className="w-10 h-10 object-contain"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Image className="w-6 h-6 text-gray-400" />
+                      </div>
+                    )}
+                  </TableCell>
                   {!isDealer && (
                     <TableCell>
                       <Button
