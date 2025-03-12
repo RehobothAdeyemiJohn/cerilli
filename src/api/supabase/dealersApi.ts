@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,7 +26,8 @@ export const dealersApi = {
       password: dealer.password,
       contactName: dealer.contactname,
       createdAt: dealer.created_at,
-      isActive: dealer.isactive
+      isActive: dealer.isactive,
+      logo: dealer.logo
     })) as Dealer[];
   },
   
@@ -52,7 +54,8 @@ export const dealersApi = {
       password: data.password,
       contactName: data.contactname,
       createdAt: data.created_at,
-      isActive: data.isactive
+      isActive: data.isactive,
+      logo: data.logo
     } as Dealer;
   },
 
@@ -61,24 +64,36 @@ export const dealersApi = {
     const fileName = `${dealerId}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('dealer_logos')
-      .upload(filePath, file, { upsert: true });
+    console.log('Uploading logo:', filePath);
 
-    if (uploadError) {
-      console.error('Errore nel caricamento del logo:', uploadError);
-      throw uploadError;
+    try {
+      const { error: uploadError, data } = await supabase.storage
+        .from('dealer_logos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Errore nel caricamento del logo:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful, getting public URL');
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('dealer_logos')
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', publicUrl);
+      return publicUrl;
+    } catch (error) {
+      console.error('Error in uploadLogo function:', error);
+      throw error;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('dealer_logos')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
   },
 
   create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer> => {
     const newId = uuidv4();
+    
+    console.log('Creating dealer with data:', dealer);
     
     const { data, error } = await supabase
       .from('dealers')
@@ -120,6 +135,8 @@ export const dealersApi = {
   },
   
   update: async (dealer: Dealer): Promise<void> => {
+    console.log('Updating dealer with data:', dealer);
+    
     const { error } = await supabase
       .from('dealers')
       .update({
@@ -140,6 +157,8 @@ export const dealersApi = {
       console.error('Errore nell\'aggiornamento del dealer:', error);
       throw error;
     }
+    
+    console.log('Dealer updated successfully');
   },
   
   delete: async (id: string): Promise<void> => {

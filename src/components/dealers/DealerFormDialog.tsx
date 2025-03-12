@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,6 +56,7 @@ const DealerFormDialog = ({
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = React.useState<string | null>(dealer?.logo || null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -105,11 +107,13 @@ const DealerFormDialog = ({
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setIsSubmitting(true);
       let logoUrl = dealer?.logo;
       
       if (values.logo instanceof File) {
         try {
           logoUrl = await dealersApi.uploadLogo(values.logo, dealer?.id || 'temp');
+          console.log('Logo uploaded successfully:', logoUrl);
         } catch (error) {
           console.error('Error uploading logo:', error);
           toast({
@@ -117,11 +121,12 @@ const DealerFormDialog = ({
             description: "Controlla il file e riprova",
             variant: "destructive",
           });
+          setIsSubmitting(false);
           return;
         }
       }
 
-      const dealerData = {
+      const dealerData: Omit<Dealer, 'id' | 'createdAt'> = {
         companyName: values.companyName,
         address: values.address,
         city: values.city,
@@ -134,15 +139,20 @@ const DealerFormDialog = ({
         logo: logoUrl,
       };
 
+      console.log('Submitting dealer data:', dealerData);
+
       if (dealer) {
+        console.log('Updating dealer with ID:', dealer.id);
         await dealersApi.update({
-          ...dealer,
+          id: dealer.id,
+          createdAt: dealer.createdAt,
           ...dealerData,
         });
         toast({
           title: "Dealer aggiornato con successo",
         });
       } else {
+        console.log('Creating new dealer');
         await dealersApi.create(dealerData);
         toast({
           title: "Dealer creato con successo",
@@ -161,6 +171,8 @@ const DealerFormDialog = ({
         description: "Controlla i dati inseriti e riprova",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -331,11 +343,12 @@ const DealerFormDialog = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
               >
                 Annulla
               </Button>
-              <Button type="submit">
-                {dealer ? 'Aggiorna' : 'Crea'}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Salvataggio...' : dealer ? 'Aggiorna' : 'Crea'}
               </Button>
             </div>
           </form>
