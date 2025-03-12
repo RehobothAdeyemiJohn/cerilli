@@ -60,7 +60,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           onOpenChange(value);
         }
       }}>
-        <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[1200px] w-[95%] max-h-[90vh] overflow-y-auto grid grid-cols-1">
           <DialogHeader className="pb-2">
             <VehicleDialogHeader vehicle={vehicle} />
           </DialogHeader>

@@ -30,8 +30,9 @@ import {
 initLocalStorage();
 initSettingsData();
 
-// Check if we should use Supabase or localStorage
-const useSupabase = localStorage.getItem('useSupabaseSettings') === 'true';
+// Always use Supabase for settings
+localStorage.setItem('useSupabaseSettings', 'true');
+const useSupabase = true;
 console.log('Using Supabase for settings:', useSupabase);
 
 // Export the appropriate APIs based on the setting

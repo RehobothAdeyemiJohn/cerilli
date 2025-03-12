@@ -144,7 +144,7 @@ const Quotes = () => {
       
       {/* Create Quote Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
+        <DialogContent className="w-full max-w-[1200px] max-h-[90vh] overflow-y-auto grid grid-cols-1">
           <DialogHeader>
             <DialogTitle>
               {isManualQuote ? 'Crea Nuovo Preventivo Manuale' : 'Crea Nuovo Preventivo'}

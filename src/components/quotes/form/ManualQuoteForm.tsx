@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { modelsApi, trimsApi, fuelTypesApi, colorsApi, calculateVehiclePrice } from '@/api/localStorage';
+import { modelsApi, trimsApi, fuelTypesApi, colorsApi } from '@/api/supabase/settingsApi';
 import { useAuth } from '@/context/AuthContext';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import QuoteCustomerInfo from './QuoteCustomerInfo';
@@ -67,24 +67,24 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   
   // Fetch all required data
-  const { data: models = [] } = useQuery({
+  const { data: models = [], isLoading: isLoadingModels } = useQuery({
     queryKey: ['models'],
-    queryFn: modelsApi.getAll
+    queryFn: modelsApi.getAll,
   });
   
-  const { data: trims = [] } = useQuery({
+  const { data: trims = [], isLoading: isLoadingTrims } = useQuery({
     queryKey: ['trims'],
-    queryFn: trimsApi.getAll
+    queryFn: trimsApi.getAll,
   });
   
-  const { data: fuelTypes = [] } = useQuery({
+  const { data: fuelTypes = [], isLoading: isLoadingFuelTypes } = useQuery({
     queryKey: ['fuelTypes'],
-    queryFn: fuelTypesApi.getAll
+    queryFn: fuelTypesApi.getAll,
   });
   
-  const { data: colors = [] } = useQuery({
+  const { data: colors = [], isLoading: isLoadingColors } = useQuery({
     queryKey: ['colors'],
-    queryFn: colorsApi.getAll
+    queryFn: colorsApi.getAll,
   });
   
   // Get all dealers for admin users
@@ -93,6 +93,11 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     queryFn: dealersApi.getAll,
     enabled: isAdmin, // Only fetch if user is admin
   });
+
+  console.log('Loaded models:', models);
+  console.log('Loaded trims:', trims);
+  console.log('Loaded fuelTypes:', fuelTypes);
+  console.log('Loaded colors:', colors);
   
   const form = useForm<ManualQuoteFormValues>({
     resolver: zodResolver(manualQuoteSchema),
@@ -129,7 +134,9 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   // Get model-compatible trims
   const filteredTrims = trims.filter(trim => {
     if (!watchModel) return true;
-    return trim.compatibleModels.length === 0 || trim.compatibleModels.includes(watchModel);
+    return trim.compatibleModels.length === 0 || 
+           trim.compatibleModels.includes(watchModel) || 
+           trim.compatibleModels.includes(models.find(m => m.name === watchModel)?.id || '');
   });
   
   // Calculate final price
@@ -172,6 +179,12 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
           
           const total = baseModelPrice + trimAdjustment + fuelTypeAdjustment + colorAdjustment;
           setCalculatedPrice(total);
+          console.log('Calculated price:', total, 'based on', { 
+            baseModelPrice, 
+            trimAdjustment, 
+            fuelTypeAdjustment, 
+            colorAdjustment 
+          });
         }
       } catch (error) {
         console.error("Error calculating price:", error);
@@ -217,6 +230,11 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     // Call parent onSubmit
     onSubmit(submitData);
   };
+
+  // Loading state
+  if (isLoadingModels || isLoadingTrims || isLoadingFuelTypes || isLoadingColors) {
+    return <div className="text-center p-4">Caricamento configurazioni...</div>;
+  }
   
   return (
     <div className="w-full text-sm">
