@@ -1,8 +1,9 @@
 
 import { LoginCredentials, AuthUser } from '@/types/auth';
 import { supabase } from './supabase/client';
-import { dealers, vendors } from '@/data/mockData';
+import { vendors } from '@/data/mockData';
 import { v4 as uuidv4 } from 'uuid';
+import { dealersApi } from '@/api/supabase/dealersApi';
 
 // Key to store the session ID in localStorage
 const SESSION_ID_KEY = 'cmcSessionId';
@@ -47,48 +48,60 @@ export const authService = {
       };
     }
     
-    // Check dealers
-    const dealer = dealers.find(d => 
-      d.email.toLowerCase() === email.toLowerCase() && 
-      d.password === password && 
-      d.isActive
-    );
-    
-    if (dealer) {
-      return {
-        id: dealer.id,
-        type: 'dealer',
-        firstName: dealer.contactName.split(' ')[0] || '',
-        lastName: dealer.contactName.split(' ').slice(1).join(' ') || '',
-        email: dealer.email,
-        dealerId: dealer.id,
-        dealerName: dealer.companyName
-      };
-    }
-    
-    // Check vendors
-    const vendor = vendors.find(v => 
-      v.email.toLowerCase() === email.toLowerCase() && 
-      v.password === password
-    );
-    
-    if (vendor) {
-      const vendorDealer = dealers.find(d => d.id === vendor.dealerId);
+    // Check dealers using Supabase, not mock data
+    try {
+      const allDealers = await dealersApi.getAll();
       
-      if (vendorDealer && vendorDealer.isActive) {
+      // Trova il dealer corrispondente alle credenziali
+      const dealer = allDealers.find(d => 
+        d.email.toLowerCase() === email.toLowerCase() && 
+        d.password === password && 
+        d.isActive
+      );
+      
+      if (dealer) {
         return {
-          id: vendor.id,
-          type: 'vendor',
-          firstName: vendor.name.split(' ')[0] || '',
-          lastName: vendor.name.split(' ').slice(1).join(' ') || '',
-          email: vendor.email,
-          dealerId: vendor.dealerId,
-          dealerName: vendorDealer.companyName
+          id: dealer.id,
+          type: 'dealer',
+          firstName: dealer.contactName.split(' ')[0] || '',
+          lastName: dealer.contactName.split(' ').slice(1).join(' ') || '',
+          email: dealer.email,
+          dealerId: dealer.id,
+          dealerName: dealer.companyName
         };
       }
+      
+      // Se non è un dealer, controlla se è un vendor
+      // Per ora i vendor sono ancora in mockData
+      const vendor = vendors.find(v => 
+        v.email.toLowerCase() === email.toLowerCase() && 
+        v.password === password
+      );
+      
+      if (vendor) {
+        // Verifica che il dealer associato esista e sia attivo
+        const vendorDealer = allDealers.find(d => d.id === vendor.dealerId);
+        
+        if (vendorDealer && vendorDealer.isActive) {
+          return {
+            id: vendor.id,
+            type: 'vendor',
+            firstName: vendor.name.split(' ')[0] || '',
+            lastName: vendor.name.split(' ').slice(1).join(' ') || '',
+            email: vendor.email,
+            dealerId: vendor.dealerId,
+            dealerName: vendorDealer.companyName
+          };
+        }
+      }
+      
+      // Se arriviamo qui, le credenziali non sono valide o l'account è disattivato
+      throw new Error('Credenziali non valide o account disattivato');
+      
+    } catch (error) {
+      console.error('Error during dealer/vendor authentication:', error);
+      throw new Error('Errore durante l\'autenticazione. Riprova più tardi.');
     }
-    
-    throw new Error('Credenziali non valide o account disattivato');
   },
   
   // Get the current logged in user from localStorage
