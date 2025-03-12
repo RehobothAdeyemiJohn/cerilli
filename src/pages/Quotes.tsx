@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,7 +10,7 @@ import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
 import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
@@ -38,6 +37,8 @@ const Quotes = () => {
   const [filterModel, setFilterModel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('pending');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   
   const queryClient = useQueryClient();
   
@@ -50,25 +51,40 @@ const Quotes = () => {
       }
     }
   }, [location]);
+
+  const { data: statusCounts = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 } } = useQuery({
+    queryKey: ['quotes-counts'],
+    queryFn: quotesApi.getCountByStatus,
+    staleTime: 30000, // 30 seconds
+  });
   
   const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery({
-    queryKey: ['quotes'],
-    queryFn: quotesApi.getAll,
+    queryKey: ['quotes', activeTab, currentPage, itemsPerPage],
+    queryFn: () => quotesApi.getAll({ 
+      limit: itemsPerPage, 
+      page: currentPage 
+    }),
+    staleTime: 10000, // 10 seconds
   });
   
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: vehiclesApi.getAll,
+    queryKey: ['vehicles-basic'],
+    queryFn: () => vehiclesApi.getAll({
+      select: 'id,model,trim',
+    }),
+    staleTime: 60000, // 1 minute
   });
 
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
+    staleTime: 60000, // 1 minute
   });
 
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll,
+    staleTime: 60000, // 1 minute
   });
   
   const createMutation = useMutation({
@@ -110,18 +126,17 @@ const Quotes = () => {
     },
   });
   
-  // Generate a shorter ID for display (first 6 characters)
   const getShortId = (id: string) => {
     return id.substring(0, 6).toUpperCase();
   };
 
-  // Get dealer name by ID
   const getDealerName = (dealerId: string) => {
     const dealer = dealers.find(d => d.id === dealerId);
     return dealer ? dealer.companyName : 'N/D';
   };
   
   const filteredQuotes = quotes.filter(quote => {
+    let matchesStatus = activeTab === 'all' || quote.status === activeTab;
     let matchesDealer = filterDealer === 'all' || quote.dealerId === filterDealer;
     
     let matchesModel = true;
@@ -140,13 +155,12 @@ const Quotes = () => {
         (vehicle && vehicle.model.toLowerCase().includes(lowerSearch));
     }
     
-    return matchesDealer && matchesModel && matchesSearch;
+    return matchesStatus && matchesDealer && matchesModel && matchesSearch;
   });
   
-  const pendingQuotes = filteredQuotes.filter(q => q.status === 'pending');
-  const approvedQuotes = filteredQuotes.filter(q => q.status === 'approved');
-  const rejectedQuotes = filteredQuotes.filter(q => q.status === 'rejected');
-  const convertedQuotes = filteredQuotes.filter(q => q.status === 'converted');
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, filterDealer, filterModel, searchQuery]);
   
   const handleCreateQuote = (data: any) => {
     createMutation.mutate({
@@ -340,6 +354,20 @@ const Quotes = () => {
     </div>
   );
   
+  const totalPages = Math.ceil(statusCounts[activeTab === 'all' ? 'all' : activeTab] / itemsPerPage);
+  
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+  
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+  
   if (isLoadingQuotes || isLoadingVehicles || isLoadingDealers) {
     return <div className="container mx-auto py-6 px-4">Caricamento in corso...</div>;
   }
@@ -417,33 +445,74 @@ const Quotes = () => {
       
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="pending">In Attesa ({pendingQuotes.length})</TabsTrigger>
-          <TabsTrigger value="approved">Approvati ({approvedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="rejected">Rifiutati ({rejectedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="converted">Convertiti ({convertedQuotes.length})</TabsTrigger>
-          <TabsTrigger value="all">Tutti ({filteredQuotes.length})</TabsTrigger>
+          <TabsTrigger value="pending">In Attesa ({statusCounts.pending})</TabsTrigger>
+          <TabsTrigger value="approved">Approvati ({statusCounts.approved})</TabsTrigger>
+          <TabsTrigger value="rejected">Rifiutati ({statusCounts.rejected})</TabsTrigger>
+          <TabsTrigger value="converted">Convertiti ({statusCounts.converted})</TabsTrigger>
+          <TabsTrigger value="all">Tutti ({statusCounts.all})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="pending">
-          {renderQuoteTable(pendingQuotes)}
+          {renderQuoteTable(filteredQuotes)}
         </TabsContent>
         
         <TabsContent value="approved">
-          {renderQuoteTable(approvedQuotes)}
+          {renderQuoteTable(filteredQuotes)}
         </TabsContent>
         
         <TabsContent value="rejected">
-          {renderQuoteTable(rejectedQuotes)}
+          {renderQuoteTable(filteredQuotes)}
         </TabsContent>
         
         <TabsContent value="converted">
-          {renderQuoteTable(convertedQuotes)}
+          {renderQuoteTable(filteredQuotes)}
         </TabsContent>
         
         <TabsContent value="all">
           {renderQuoteTable(filteredQuotes)}
         </TabsContent>
       </Tabs>
+      
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-500">
+          Mostrando pagina {currentPage} di {totalPages || 1}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrevPage}
+            disabled={currentPage <= 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="text-sm">
+            Pagina {currentPage}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Select 
+            value={itemsPerPage.toString()} 
+            onValueChange={(value) => setItemsPerPage(Number(value))}
+          >
+            <SelectTrigger className="w-[110px]">
+              <SelectValue placeholder="Righe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 righe</SelectItem>
+              <SelectItem value="20">20 righe</SelectItem>
+              <SelectItem value="50">50 righe</SelectItem>
+              <SelectItem value="100">100 righe</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">

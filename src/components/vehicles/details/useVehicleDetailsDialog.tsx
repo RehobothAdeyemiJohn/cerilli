@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -29,7 +30,7 @@ export function useVehicleDetailsDialog(
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: user?.dealerId || null,
+        dealerId: quoteData.dealerId || (user?.dealerId || null),
         vehicleId: vehicle.id
       });
       

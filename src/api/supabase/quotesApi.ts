@@ -4,12 +4,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/context/AuthContext';
 
 export const quotesApi = {
-  getAll: async (): Promise<Quote[]> => {
-    console.log("Supabase API: getAll - Recupero preventivi");
-    const { data, error } = await supabase
+  getAll: async (options?: { limit?: number; page?: number }): Promise<Quote[]> => {
+    console.log("Supabase API: getAll - Recupero preventivi", options);
+    
+    // Setup pagination
+    const limit = options?.limit || 50; // Default to 50 items per page
+    const page = options?.page || 1;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    
+    let query = supabase
       .from('quotes')
       .select('*, vehicles(model, trim, imageurl, location)')
       .order('createdat', { ascending: false });
+      
+    // Add pagination if specified
+    if (options?.limit) {
+      query = query.range(from, to);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Errore nel recupero dei preventivi:', error);
@@ -39,7 +53,7 @@ export const quotesApi = {
       } : undefined
     }));
 
-    console.log("Supabase API: getAll - Dati preventivi recuperati:", formattedQuotes);
+    console.log("Supabase API: getAll - Dati preventivi recuperati:", formattedQuotes.length);
     return formattedQuotes as Quote[];
   },
   
@@ -209,5 +223,48 @@ export const quotesApi = {
       console.error('Errore nell\'eliminazione del preventivo:', error);
       throw error;
     }
+  },
+  
+  getCountByStatus: async (): Promise<Record<string, number>> => {
+    console.log("Supabase API: getCountByStatus - Conteggio preventivi per stato");
+    
+    const statuses = ['pending', 'approved', 'rejected', 'converted'];
+    const counts: Record<string, number> = {
+      all: 0,
+      pending: 0,
+      approved: 0, 
+      rejected: 0,
+      converted: 0
+    };
+    
+    // Get total count
+    const { count: totalCount, error: totalError } = await supabase
+      .from('quotes')
+      .select('*', { count: 'exact', head: true });
+    
+    if (totalError) {
+      console.error('Errore nel conteggio totale dei preventivi:', totalError);
+      throw totalError;
+    }
+    
+    counts.all = totalCount || 0;
+    
+    // Get counts by status
+    for (const status of statuses) {
+      const { count, error } = await supabase
+        .from('quotes')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', status);
+      
+      if (error) {
+        console.error(`Errore nel conteggio dei preventivi con stato ${status}:`, error);
+        throw error;
+      }
+      
+      counts[status] = count || 0;
+    }
+    
+    console.log("Supabase API: getCountByStatus - Conteggi ottenuti:", counts);
+    return counts;
   }
 };

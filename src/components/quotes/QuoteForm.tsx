@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Vehicle, Accessory } from '@/types';
+import { Vehicle, Accessory, Dealer } from '@/types';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -13,6 +12,9 @@ import { accessoriesApi } from '@/api/localStorage';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { dealersApi } from '@/api/supabase/dealersApi';
+import { useAuth } from '@/context/AuthContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   customerName: z.string().min(2, {
@@ -33,6 +35,7 @@ const formSchema = z.object({
   tradeInKm: z.number().min(0).optional(),
   reducedVAT: z.boolean().default(false),
   vehicleAccessories: z.array(z.string()).default([]),
+  dealerId: z.string().optional(),
 });
 
 interface QuoteFormProps {
@@ -45,10 +48,17 @@ interface QuoteFormProps {
 const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteFormProps) => {
   const [showTradeIn, setShowTradeIn] = useState(false);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
     queryFn: accessoriesApi.getAll
+  });
+  
+  const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll
   });
   
   useEffect(() => {
@@ -80,8 +90,18 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
       tradeInKm: 0,
       reducedVAT: false,
       vehicleAccessories: [],
+      dealerId: user?.dealerId || (dealers && dealers.length > 0 ? dealers[0].id : undefined),
     },
   });
+
+  // Update dealerId when dealers data is loaded and user is not a dealer
+  useEffect(() => {
+    if (dealers && dealers.length > 0 && !user?.dealerId) {
+      form.setValue('dealerId', dealers[0].id);
+    } else if (user?.dealerId) {
+      form.setValue('dealerId', user.dealerId);
+    }
+  }, [dealers, user?.dealerId, form]);
 
   const watchDiscount = form.watch('discount') || 0;
   const watchTradeInValue = form.watch('tradeInValue') || 0;
@@ -189,6 +209,49 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+          {/* Dealer Selection for Admin Users */}
+          {isAdmin && (
+            <FormField
+              control={form.control}
+              name="dealerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Dealer</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="text-sm py-1">
+                        <SelectValue placeholder="Seleziona Dealer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {dealers.map((dealer) => (
+                        <SelectItem key={dealer.id} value={dealer.id}>
+                          {dealer.companyName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          
+          {/* Non-admin users with a dealerId - show readonly field */}
+          {!isAdmin && user?.dealerId && dealers && (
+            <div className="mb-4">
+              <FormLabel className="text-xs">Dealer</FormLabel>
+              <div className="border rounded-md p-2 bg-gray-50 text-sm">
+                {dealers.find(d => d.id === user.dealerId)?.companyName || 'Dealer assegnato'}
+              </div>
+              <input type="hidden" {...form.register('dealerId')} value={user.dealerId} />
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-3">
             <FormField
               control={form.control}
