@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateReservationExpiration } from '@/lib/utils';
@@ -27,24 +28,45 @@ const VehicleDetailsContent = ({
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
-  // State for countdown timer
+  // Initialize state for countdown timer
   const [expiration, setExpiration] = useState(() => 
     calculateReservationExpiration(vehicle.reservationTimestamp)
   );
   
+  // Timer reference to ensure proper cleanup
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  
   // Update countdown every second for reserved vehicles
   useEffect(() => {
-    if (vehicle.status !== 'reserved') return;
+    // Clean up any existing timer first
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+    
+    // Only set up timer for reserved vehicles
+    if (vehicle.status !== 'reserved' || !vehicle.reservationTimestamp) {
+      return;
+    }
     
     // Set initial value
     setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
     
-    // Update timer every second
+    // Set up new timer that updates every second
     const timer = setInterval(() => {
-      setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
+      setExpiration(current => {
+        // Use latest vehicle reservation timestamp
+        const updated = calculateReservationExpiration(vehicle.reservationTimestamp);
+        return updated;
+      });
     }, 1000);
     
-    return () => clearInterval(timer);
+    // Store timer reference
+    setTimerInterval(timer);
+    
+    // Clean up on unmount or when dependencies change
+    return () => {
+      clearInterval(timer);
+    };
   }, [vehicle.status, vehicle.reservationTimestamp]);
   
   // Check if vehicle is in virtual stock
@@ -310,4 +332,3 @@ const VehicleDetailsContent = ({
 };
 
 export default VehicleDetailsContent;
-

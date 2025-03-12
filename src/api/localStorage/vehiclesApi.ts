@@ -103,7 +103,9 @@ export const vehiclesApi = {
       status: 'reserved' as const,
       reservedBy,
       reservedAccessories: reservedAccessories || [],
-      reservationDestination // Add the destination field
+      reservationDestination,
+      // Set the current timestamp when reserving a vehicle
+      reservationTimestamp: new Date().toISOString()
     };
     
     // Add virtual configuration if provided

@@ -33,55 +33,43 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   timeRemaining: { hours: number; minutes: number; seconds: number } | null;
   percentRemaining: number;
 } {
-  // Set default start time (24 hours)
-  const totalDurationMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  // Set default duration (24 hours in milliseconds)
+  const totalDurationMs = 24 * 60 * 60 * 1000;
   
-  // If no reservation timestamp is provided, return default values with 24 hours remaining
+  // If no reservation timestamp is provided, return default values
   if (!reservationTimestamp) {
     console.log('No reservation timestamp provided, setting default 24 hours');
     return { 
       expired: false, 
-      timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
+      timeRemaining: null,
       percentRemaining: 100 
     };
   }
   
-  console.log('Calculating expiration for timestamp:', reservationTimestamp);
-  let reservationDate;
+  // Parse the reservation timestamp
+  const reservationDate = new Date(reservationTimestamp);
   
-  try {
-    reservationDate = new Date(reservationTimestamp);
-    
-    // Check if the date is valid
-    if (isNaN(reservationDate.getTime())) {
-      console.log('Invalid reservation date, using default 24 hours');
-      return { 
-        expired: false, 
-        timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
-        percentRemaining: 100 
-      };
-    }
-  } catch (error) {
-    console.error('Error parsing reservation date:', error);
+  // Check if the date is valid
+  if (isNaN(reservationDate.getTime())) {
+    console.error('Invalid reservation date');
     return { 
       expired: false, 
-      timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
+      timeRemaining: null,
       percentRemaining: 100 
     };
   }
   
+  // Get current time
   const now = new Date();
   
   // Calculate expiration date (24 hours after reservation)
-  const expirationDate = new Date(reservationDate);
-  expirationDate.setHours(expirationDate.getHours() + 24);
+  const expirationDate = new Date(reservationDate.getTime() + totalDurationMs);
   
-  // Calculate time remaining
+  // Calculate time remaining in milliseconds
   const timeRemainingMs = expirationDate.getTime() - now.getTime();
   
   // Check if reservation is expired
   if (timeRemainingMs <= 0) {
-    console.log('Reservation is expired');
     return { 
       expired: true, 
       timeRemaining: { hours: 0, minutes: 0, seconds: 0 },
@@ -89,15 +77,13 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
     };
   }
   
-  // Calculate percentage remaining
+  // Calculate percentage remaining (inverse of elapsed percentage)
   const percentRemaining = Math.max(0, Math.min(100, (timeRemainingMs / totalDurationMs) * 100));
   
   // Calculate hours, minutes, seconds
   const hours = Math.floor(timeRemainingMs / (1000 * 60 * 60));
   const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeRemainingMs % (1000 * 60)) / 1000);
-  
-  console.log('Time remaining:', { hours, minutes, seconds, percentRemaining });
   
   return { 
     expired: false, 

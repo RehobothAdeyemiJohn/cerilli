@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
-import { quotesApi } from '@/api/supabase/quotesApi'; // Using Supabase API
+import { quotesApi } from '@/api/supabase/quotesApi';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
@@ -118,22 +117,11 @@ export function useVehicleDetailsDialog(
     setShowCancelReservationForm(true);
   };
   
-  const handleCancelReservationSubmit = async (data?: { cancellationReason: string }) => {
+  const handleCancelReservationSubmit = async () => {
     if (!vehicle) return;
     
     try {
       setIsSubmitting(true);
-      
-      // If the user is a dealer, they must provide a reason
-      if (!isAdmin && (!data || !data.cancellationReason)) {
-        toast({
-          title: "Errore",
-          description: "È necessario fornire una motivazione per cancellare la prenotazione",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
       
       // Create a copy of the vehicle and restore it to available status
       const updatedVehicle: Vehicle = {
@@ -146,13 +134,8 @@ export function useVehicleDetailsDialog(
         reservationTimestamp: undefined
       };
       
-      // Instead of using useInventory, we'll directly use the vehiclesApi
+      // Use the vehiclesApi to update the vehicle
       await vehiclesApi.update(vehicle.id, updatedVehicle);
-      
-      // Log the cancellation reason if provided
-      if (data?.cancellationReason) {
-        console.log("Reservation canceled with reason:", data.cancellationReason);
-      }
       
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
