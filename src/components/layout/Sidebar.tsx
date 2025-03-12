@@ -39,7 +39,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     <div 
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } h-screen bg-white border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300`}
+      } h-screen bg-white border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
     >
       <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4">
         {isOpen ? (
