@@ -2,7 +2,6 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Form } from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
 import { useVirtualReservation } from './virtualReservation/useVirtualReservation';
 import VirtualReservationDealerSelect from './virtualReservation/VirtualReservationDealerSelect';
 import VirtualReservationConfigurator from './virtualReservation/VirtualReservationConfigurator';
@@ -11,6 +10,7 @@ import VirtualReservationPrice from './virtualReservation/VirtualReservationPric
 import VirtualReservationActions from './virtualReservation/VirtualReservationActions';
 import VirtualReservationLoading from './virtualReservation/VirtualReservationLoading';
 import VirtualReservationError from './virtualReservation/VirtualReservationError';
+import VirtualReservationDestination from './virtualReservation/VirtualReservationDestination';
 
 interface ReserveVirtualVehicleFormProps {
   vehicle: Vehicle;
@@ -58,6 +58,8 @@ const ReserveVirtualVehicleForm = ({
           dealers={activeDealers} 
           isAdmin={isAdmin} 
         />
+        
+        <VirtualReservationDestination form={form} />
         
         <VirtualReservationConfigurator 
           form={form} 
