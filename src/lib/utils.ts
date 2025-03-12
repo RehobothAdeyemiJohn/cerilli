@@ -33,14 +33,40 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   timeRemaining: { hours: number; minutes: number; seconds: number } | null;
   percentRemaining: number;
 } {
-  // If no reservation timestamp is provided, return default values
+  // If no reservation timestamp is provided, return default values with 24 hours remaining
   if (!reservationTimestamp) {
-    console.log('No reservation timestamp provided');
-    return { expired: false, timeRemaining: null, percentRemaining: 0 };
+    console.log('No reservation timestamp provided, setting default 24 hours');
+    return { 
+      expired: false, 
+      timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
+      percentRemaining: 100 
+    };
   }
   
   console.log('Calculating expiration for timestamp:', reservationTimestamp);
-  const reservationDate = new Date(reservationTimestamp);
+  let reservationDate;
+  
+  try {
+    reservationDate = new Date(reservationTimestamp);
+    
+    // Check if the date is valid
+    if (isNaN(reservationDate.getTime())) {
+      console.log('Invalid reservation date, using default 24 hours');
+      return { 
+        expired: false, 
+        timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
+        percentRemaining: 100 
+      };
+    }
+  } catch (error) {
+    console.error('Error parsing reservation date:', error);
+    return { 
+      expired: false, 
+      timeRemaining: { hours: 24, minutes: 0, seconds: 0 },
+      percentRemaining: 100 
+    };
+  }
+  
   const now = new Date();
   
   // For testing/debugging
@@ -56,7 +82,11 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   // Check if reservation is expired
   if (now >= expirationDate) {
     console.log('Reservation is expired');
-    return { expired: true, timeRemaining: null, percentRemaining: 0 };
+    return { 
+      expired: true, 
+      timeRemaining: { hours: 0, minutes: 0, seconds: 0 },
+      percentRemaining: 0 
+    };
   }
   
   // Calculate time remaining

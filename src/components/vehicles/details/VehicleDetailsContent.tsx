@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateReservationExpiration } from '@/lib/utils';
@@ -27,14 +28,15 @@ const VehicleDetailsContent = ({
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
-  // State for countdown timer
+  // State for countdown timer - initialize with calculation
   const [expiration, setExpiration] = useState(() => 
     calculateReservationExpiration(vehicle.reservationTimestamp)
   );
   
   // Update countdown every second
   useEffect(() => {
-    if (vehicle.status !== 'reserved' || !vehicle.reservationTimestamp) return;
+    // Always set up a timer for reserved vehicles, even if reservationTimestamp is undefined
+    if (vehicle.status !== 'reserved') return;
     
     console.log('Setting up countdown timer for vehicle:', vehicle.id, 'Timestamp:', vehicle.reservationTimestamp);
     const timer = setInterval(() => {
@@ -148,7 +150,7 @@ const VehicleDetailsContent = ({
             <p className="text-sm font-bold text-amber-800">
               {expiration.timeRemaining ? (
                 `${String(expiration.timeRemaining.hours).padStart(2, '0')}:${String(expiration.timeRemaining.minutes).padStart(2, '0')}:${String(expiration.timeRemaining.seconds).padStart(2, '0')}`
-              ) : '00:00:00'}
+              ) : '24:00:00'}
             </p>
           </div>
           <Progress value={expiration.percentRemaining} className="h-2 bg-amber-200" />
