@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -151,8 +152,8 @@ export function useVehicleDetailsDialog(
     }
   };
 
-  const handleTransformToOrder = async () => {
-    if (!vehicle) return;
+  const handleTransformToOrder = async (): Promise<void> => {
+    if (!vehicle) return Promise.reject(new Error("No vehicle provided"));
     
     try {
       console.log("Starting Transform to Order process");
@@ -165,10 +166,27 @@ export function useVehicleDetailsDialog(
           variant: "destructive",
         });
         setIsSubmitting(false);
-        return;
+        return Promise.reject(new Error("Vehicle not in reserved status"));
       }
       
       console.log("Starting transformation to order for vehicle:", vehicle.id);
+      
+      // Check if the vehicle is already ordered to prevent duplicate orders
+      const vehicles = await vehiclesApi.getAll();
+      const currentVehicle = vehicles.find(v => v.id === vehicle.id);
+      
+      if (!currentVehicle) {
+        throw new Error("Vehicle not found in database");
+      }
+      
+      if (currentVehicle.status === 'ordered') {
+        console.log("Vehicle is already ordered, preventing duplicate orders");
+        toast({
+          title: "Avviso",
+          description: "Questo veicolo è già stato trasformato in ordine",
+        });
+        return Promise.resolve();
+      }
       
       // Transform the vehicle to ordered status
       const updatedVehicle = await vehiclesApi.transformToOrder(vehicle.id);
@@ -208,21 +226,10 @@ export function useVehicleDetailsDialog(
         description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
       });
       
-      console.log("Closing dialog after order transformation");
+      console.log("Transform to order process completed successfully");
+      setIsSubmitting(false);
       
-      // First reset local state
-      setShowQuoteForm(false);
-      setShowReserveForm(false);
-      setShowVirtualReserveForm(false);
-      setShowCancelReservationForm(false);
-      
-      // Then ensure the dialog closes after transformation is complete
-      // Force a small delay to ensure state updates are processed
-      setTimeout(() => {
-        console.log("Executing dialog close");
-        onOpenChange(false);
-      }, 100);
-      
+      return Promise.resolve();
     } catch (error) {
       console.error('Error transforming to order:', error);
       toast({
@@ -230,8 +237,8 @@ export function useVehicleDetailsDialog(
         description: "Si è verificato un errore durante la trasformazione in ordine",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
+      return Promise.reject(error);
     }
   };
 

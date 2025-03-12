@@ -76,8 +76,17 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             onOpenChange(false);
           }}
           onTransformToOrder={() => {
-            console.log('Transform to order clicked, calling handler');
-            handleTransformToOrder();
+            console.log('Transform to order clicked, calling handler and will close dialog');
+            // Disable button or show loading state here if needed
+            handleTransformToOrder()
+              .then(() => {
+                console.log('Transform to order completed successfully, closing dialog');
+                onOpenChange(false);
+              })
+              .catch(error => {
+                console.error('Transform to order failed:', error);
+                // Handle error if needed
+              });
           }}
           userCanCreateQuotes={userCanCreateQuotes}
         />
