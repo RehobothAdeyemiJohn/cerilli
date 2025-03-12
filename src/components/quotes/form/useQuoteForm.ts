@@ -51,7 +51,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const watchDiscount = form.watch('discount');
   const watchTradeInValue = form.watch('tradeInValue');
   const watchVehicleAccessories = form.watch('vehicleAccessories');
-  const watchLocation = form.watch('location');
+  // Remove this line as location is not in the form's defaultValues
+  // const watchLocation = form.watch('location');
 
   // Use vehicle.accessories or an empty array if it doesn't exist
   const vehicleAccessories = vehicle?.accessories || [];
