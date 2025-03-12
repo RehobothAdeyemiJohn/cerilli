@@ -9,14 +9,15 @@ export type Vehicle = {
   price: number;
   location: string;
   imageUrl?: string;
-  status: 'available' | 'reserved' | 'sold';
+  status: 'available' | 'reserved' | 'sold' | 'ordered';
   dateAdded: string;
   transmission?: string;
   telaio: string;
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];
-  reservationDestination?: string; // New field for destination
+  reservationDestination?: string;
+  reservationTimestamp?: string; // Timestamp when reservation was made
   virtualConfig?: {
     trim: string;
     fuelType: string;

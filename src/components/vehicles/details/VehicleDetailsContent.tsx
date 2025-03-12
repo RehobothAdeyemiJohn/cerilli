@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
-import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
+import { formatCurrency, calculateDaysInStock, calculateReservationExpiration } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { Progress } from '@/components/ui/progress';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
@@ -11,6 +11,7 @@ interface VehicleDetailsContentProps {
   onReserveVehicle: () => void;
   onReserveVirtualVehicle: () => void;
   onCancelReservation: () => void;
+  onTransformToOrder: () => void;
   userCanCreateQuotes: boolean;
 }
 
@@ -20,10 +21,27 @@ const VehicleDetailsContent = ({
   onReserveVehicle,
   onReserveVirtualVehicle,
   onCancelReservation,
+  onTransformToOrder,
   userCanCreateQuotes
 }: VehicleDetailsContentProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  
+  // State for countdown timer
+  const [expiration, setExpiration] = useState(() => 
+    calculateReservationExpiration(vehicle.reservationTimestamp)
+  );
+  
+  // Update countdown every second
+  useEffect(() => {
+    if (vehicle.status !== 'reserved' || !vehicle.reservationTimestamp) return;
+    
+    const timer = setInterval(() => {
+      setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [vehicle.reservationTimestamp, vehicle.status]);
   
   // Check if vehicle is in virtual stock
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
@@ -39,6 +57,7 @@ const VehicleDetailsContent = ({
   
   // Determine if vehicle is reserved and display proper information
   const isReserved = vehicle.status === 'reserved';
+  const isOrdered = vehicle.status === 'ordered';
   
   return (
     <div className="mt-2">
@@ -98,7 +117,13 @@ const VehicleDetailsContent = ({
             <p className="font-medium text-amber-700">{vehicle.reservedBy}</p>
           </div>
         )}
-        {isReserved && vehicle.reservationDestination && (
+        {isOrdered && vehicle.reservedBy && (
+          <div className="col-span-2">
+            <p className="text-xs font-medium text-gray-500">Ordinato da</p>
+            <p className="font-medium text-green-700">{vehicle.reservedBy}</p>
+          </div>
+        )}
+        {(isReserved || isOrdered) && vehicle.reservationDestination && (
           <div className="col-span-2">
             <p className="text-xs font-medium text-gray-500">Destinazione</p>
             <p className="font-medium text-amber-700">
@@ -110,8 +135,26 @@ const VehicleDetailsContent = ({
         )}
       </div>
       
+      {/* Reservation expiration countdown */}
+      {isReserved && vehicle.reservationTimestamp && !expiration.expired && (
+        <div className="mt-4 bg-amber-50 p-3 rounded-md border border-amber-200">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium text-amber-800">Scadenza prenotazione</h4>
+            <p className="text-sm font-bold text-amber-800">
+              {expiration.timeRemaining ? (
+                `${String(expiration.timeRemaining.hours).padStart(2, '0')}:${String(expiration.timeRemaining.minutes).padStart(2, '0')}:${String(expiration.timeRemaining.seconds).padStart(2, '0')}`
+              ) : '00:00:00'}
+            </p>
+          </div>
+          <Progress value={expiration.percentRemaining} className="h-2 bg-amber-200" />
+          <p className="text-xs text-amber-700 mt-1">
+            La prenotazione scadrà automaticamente se non viene trasformata in ordine
+          </p>
+        </div>
+      )}
+      
       {/* Display reserved accessories if any */}
-      {isReserved && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
+      {(isReserved || isOrdered) && vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
         <div className="mt-4 border-t pt-3">
           <p className="text-sm font-medium text-gray-700">Optional Prenotati</p>
           <div className="mt-1 grid grid-cols-2 gap-1">
@@ -126,7 +169,7 @@ const VehicleDetailsContent = ({
       )}
       
       {/* Display virtual configuration if any */}
-      {isReserved && hasVirtualConfig && (
+      {(isReserved || isOrdered) && hasVirtualConfig && (
         <div className="mt-4 border-t pt-3">
           <p className="text-sm font-medium text-gray-700 mb-2">Configurazione Virtuale</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-amber-50 p-2 rounded-md">
@@ -227,17 +270,31 @@ const VehicleDetailsContent = ({
         ) : (
           <>
             {vehicle.status === 'reserved' && (
-              <Button 
-                variant="destructive" 
-                className="flex-1"
-                onClick={onCancelReservation}
-              >
-                Annulla Prenotazione
-              </Button>
+              <>
+                <Button 
+                  variant="destructive" 
+                  className="flex-1"
+                  onClick={onCancelReservation}
+                >
+                  Annulla Prenotazione
+                </Button>
+                <Button 
+                  variant="default" 
+                  className="flex-1"
+                  onClick={onTransformToOrder}
+                >
+                  Trasforma in Ordine
+                </Button>
+              </>
             )}
-            {vehicle.status !== 'reserved' && (
+            {vehicle.status === 'ordered' && (
+              <div className="w-full text-center py-2 bg-green-100 rounded-md text-green-700 font-medium">
+                Veicolo Ordinato
+              </div>
+            )}
+            {vehicle.status === 'sold' && (
               <div className="w-full text-center py-2 bg-gray-100 rounded-md text-gray-500">
-                {vehicle.status === 'sold' ? 'Veicolo Venduto' : 'Veicolo Non Disponibile'}
+                Veicolo Venduto
               </div>
             )}
           </>

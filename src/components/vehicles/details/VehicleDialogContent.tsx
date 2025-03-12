@@ -24,6 +24,7 @@ interface VehicleDialogContentProps {
   onCancelReservationCancel: () => void;
   onReservationCancel: () => void;
   onReservationComplete: () => void;
+  onTransformToOrder: () => void;
   userCanCreateQuotes: boolean;
 }
 
@@ -44,6 +45,7 @@ const VehicleDialogContent = ({
   onCancelReservationCancel,
   onReservationCancel,
   onReservationComplete,
+  onTransformToOrder,
   userCanCreateQuotes
 }: VehicleDialogContentProps) => {
   
@@ -96,6 +98,7 @@ const VehicleDialogContent = ({
       onReserveVehicle={onReserveVehicle}
       onReserveVirtualVehicle={onReserveVirtualVehicle}
       onCancelReservation={onCancelReservationShow}
+      onTransformToOrder={onTransformToOrder}
       userCanCreateQuotes={userCanCreateQuotes}
     />
   );

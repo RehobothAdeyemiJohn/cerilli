@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
@@ -229,7 +228,7 @@ export const vehiclesApi = {
     });
   },
   
-  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig']): Promise<Vehicle> => {
+  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig'], reservationDestination?: string): Promise<Vehicle> => {
     console.log("Supabase API: reserve - Prenotazione veicolo:", {
       id, dealerId, reservedBy, reservedAccessories, virtualConfig
     });
@@ -244,12 +243,30 @@ export const vehiclesApi = {
       status: 'reserved',
       reservedBy,
       reservedAccessories: reservedAccessories || [],
+      reservationTimestamp: new Date().toISOString(), // Add reservation timestamp
+      reservationDestination
     };
     
     // Add virtual configuration if provided
     if (virtualConfig) {
       updatedVehicle.virtualConfig = virtualConfig;
     }
+    
+    return vehiclesApi.update(id, updatedVehicle);
+  },
+  
+  transformToOrder: async (id: string): Promise<Vehicle> => {
+    console.log("Supabase API: transformToOrder - Trasforma prenotazione in ordine:", id);
+    
+    const vehicle = await vehiclesApi.getById(id);
+    
+    if (vehicle.status !== 'reserved') {
+      throw new Error('Il veicolo non è prenotato e non può essere trasformato in ordine');
+    }
+    
+    const updatedVehicle: Partial<Vehicle> = {
+      status: 'ordered',
+    };
     
     return vehiclesApi.update(id, updatedVehicle);
   }

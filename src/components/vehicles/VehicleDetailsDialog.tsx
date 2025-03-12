@@ -31,7 +31,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     handleReserveVirtualVehicle,
     handleCancelReservation,
     handleShowCancelReservationForm,
-    handleCancelReservationSubmit
+    handleCancelReservationSubmit,
+    handleTransformToOrder
   } = useVehicleDetailsDialog(vehicle, onOpenChange);
   
   if (!vehicle) return null;
@@ -66,6 +67,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             handleCancelReservation();
             onOpenChange(false);
           }}
+          onTransformToOrder={handleTransformToOrder}
           userCanCreateQuotes={userCanCreateQuotes}
         />
       </DialogContent>

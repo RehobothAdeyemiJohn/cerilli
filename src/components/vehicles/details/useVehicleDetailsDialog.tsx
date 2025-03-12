@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { vehiclesApi } from '@/api/supabase';
+import { ordersApi } from '@/api/supabase/ordersApi';
 
 export function useVehicleDetailsDialog(
   vehicle: Vehicle | null,
@@ -140,7 +141,8 @@ export function useVehicleDetailsDialog(
         reservedBy: undefined,
         reservedAccessories: [],
         virtualConfig: vehicle.location === 'Stock Virtuale' ? undefined : vehicle.virtualConfig,
-        reservationDestination: undefined
+        reservationDestination: undefined,
+        reservationTimestamp: undefined
       };
       
       // Instead of using useInventory, we'll directly use the vehiclesApi
@@ -172,6 +174,58 @@ export function useVehicleDetailsDialog(
     }
   };
 
+  const handleTransformToOrder = async () => {
+    if (!vehicle) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Verify that the vehicle is currently reserved
+      if (vehicle.status !== 'reserved') {
+        toast({
+          title: "Errore",
+          description: "Solo i veicoli prenotati possono essere trasformati in ordini",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Transform the vehicle to ordered status
+      const updatedVehicle = await vehiclesApi.transformToOrder(vehicle.id);
+      
+      // Create a new order record
+      if (vehicle.reservedBy) {
+        await ordersApi.create({
+          vehicleId: vehicle.id,
+          dealerId: user?.dealerId || dealers[0]?.id, // Use user's dealer if available, otherwise use first dealer
+          customerName: vehicle.reservedBy,
+          status: 'processing',
+          orderDate: new Date().toISOString()
+        });
+      }
+      
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      
+      toast({
+        title: "Ordine Creato",
+        description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error transforming to order:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la trasformazione in ordine",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     showQuoteForm,
     showReserveForm,
@@ -186,6 +240,7 @@ export function useVehicleDetailsDialog(
     handleReserveVirtualVehicle,
     handleCancelReservation,
     handleShowCancelReservationForm,
-    handleCancelReservationSubmit
+    handleCancelReservationSubmit,
+    handleTransformToOrder
   };
 }
