@@ -44,7 +44,8 @@ export type QuoteFormValues = z.infer<typeof formSchema>;
 
 export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any) => void) => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  // Properly check admin role
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   
   const [showTradeIn, setShowTradeIn] = useState(false);
   
@@ -152,6 +153,17 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       submitData.tradeInKm = 0;
       submitData.tradeInValue = 0;
     }
+    
+    // Ensure dealerId is set
+    if (!submitData.dealerId && user?.dealerId) {
+      submitData.dealerId = user.dealerId;
+      console.log("Setting dealerId from user:", submitData.dealerId);
+    } else if (!submitData.dealerId && dealers.length > 0) {
+      submitData.dealerId = dealers[0].id;
+      console.log("Setting dealerId from first dealer:", submitData.dealerId);
+    }
+    
+    console.log("Form submission data:", submitData);
     
     // Call parent onSubmit
     onSubmit(submitData);

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
-import { quotesApi } from '@/api/supabase/quotesApi'; // Change back to Supabase API
+import { quotesApi } from '@/api/supabase/quotesApi'; // Using Supabase API
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
@@ -22,7 +22,7 @@ export function useVehicleDetailsDialog(
   // Check if the user is an admin or superadmin
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
 
-  // Ottieni tutti i dealer disponibili
+  // Get all available dealers
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
@@ -39,40 +39,53 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
-      // Verifica se abbiamo un dealerId valido
+      // Make sure we have a dealerId - use the first available if none provided
       if (!quoteData.dealerId && dealers.length > 0) {
         quoteData.dealerId = dealers[0].id;
-        console.log("Usando il primo dealer disponibile:", quoteData.dealerId);
+        console.log("Using first available dealer:", quoteData.dealerId);
       }
       
-      // Se ancora non abbiamo un dealerId, mostra un errore
+      // If still no dealerId and user has a dealerId, use that
+      if (!quoteData.dealerId && user?.dealerId) {
+        quoteData.dealerId = user.dealerId;
+        console.log("Using user's dealer ID:", quoteData.dealerId);
+      }
+      
+      // If we still don't have a dealerId, show error
       if (!quoteData.dealerId) {
-        throw new Error("Nessun dealer disponibile per associare il preventivo");
+        throw new Error("No dealer available to associate with the quote");
       }
       
-      console.log("Creazione preventivo con:", quoteData);
+      console.log("Creating quote with data:", {
+        ...quoteData,
+        vehicleId: vehicle.id,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
       
-      await quotesApi.create({
+      const result = await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
         vehicleId: vehicle.id
       });
       
+      console.log("Quote created successfully:", result);
+      
       await queryClient.invalidateQueries({ queryKey: ['quotes'] });
       
       toast({
-        title: "Preventivo Creato",
-        description: "Il preventivo è stato creato con successo",
+        title: "Quote Created",
+        description: "The quote has been created successfully",
       });
       
       setShowQuoteForm(false);
       onOpenChange(false);
     } catch (error) {
-      console.error('Errore durante la creazione del preventivo:', error);
+      console.error('Error creating quote:', error);
       toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la creazione del preventivo",
+        title: "Error",
+        description: "An error occurred while creating the quote",
         variant: "destructive",
       });
     } finally {

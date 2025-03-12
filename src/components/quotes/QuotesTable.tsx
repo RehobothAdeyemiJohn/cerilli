@@ -29,7 +29,8 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
   handleDeleteClick
 }) => {
   const { user } = useAuth();
-  const isAdmin = user?.type === 'admin';
+  // Check if user is admin or superAdmin
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   
   return (
     <div className="rounded-md border">
