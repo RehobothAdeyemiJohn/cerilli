@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { OrderDetails, Vehicle } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { orderDetailsApi } from '@/api/supabase/orderDetailsApi';
+import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Card,

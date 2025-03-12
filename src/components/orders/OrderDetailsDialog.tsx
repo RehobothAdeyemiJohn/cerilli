@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useQuery } from '@tanstack/react-query';
-import { orderDetailsApi } from '@/api/supabase/orderDetailsApi';
+import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { Order, OrderDetails, Vehicle, Dealer } from '@/types';
