@@ -26,6 +26,7 @@ export const useQuotesData = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [isManualQuote, setIsManualQuote] = useState<boolean>(false);
   
   useEffect(() => {
     setCurrentPage(1);
@@ -150,6 +151,17 @@ export const useQuotesData = () => {
     setDeleteDialogOpen(true);
   };
   
+  const handleOpenCreateQuoteDialog = (vehicleId?: string) => {
+    if (vehicleId) {
+      setSelectedVehicleId(vehicleId);
+      setIsManualQuote(false);
+    } else {
+      setSelectedVehicleId(null);
+      setIsManualQuote(true);
+    }
+    setCreateDialogOpen(true);
+  };
+  
   const handleUpdateStatus = async (quoteId: string, newStatus: Quote['status'], rejectionReason?: string) => {
     try {
       const updates: Partial<Quote> = { status: newStatus };
@@ -198,6 +210,7 @@ export const useQuotesData = () => {
       
       refetchQuotes();
       setCreateDialogOpen(false);
+      setIsManualQuote(false);
     } catch (error) {
       console.error("Error creating quote:", error);
       toast({
@@ -263,6 +276,8 @@ export const useQuotesData = () => {
     setDeleteDialogOpen,
     selectedQuote,
     selectedVehicle,
+    isManualQuote,
+    setIsManualQuote,
     
     filteredQuotes: paginatedQuotes,
     vehicles,
@@ -286,6 +301,7 @@ export const useQuotesData = () => {
     handleRejectQuote,
     handleDeleteQuote,
     handlePrevPage,
-    handleNextPage
+    handleNextPage,
+    handleOpenCreateQuoteDialog
   };
 };

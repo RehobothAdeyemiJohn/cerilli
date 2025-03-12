@@ -7,7 +7,7 @@ import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
 import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
 import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
 
-// Import our new components
+// Import our components
 import QuotesHeader from '@/components/quotes/QuotesHeader';
 import QuotesFilters from '@/components/quotes/QuotesFilters';
 import QuotesTabs from '@/components/quotes/QuotesTabs';
@@ -50,6 +50,8 @@ const Quotes = () => {
     setDeleteDialogOpen,
     selectedQuote,
     selectedVehicle,
+    isManualQuote,
+    setIsManualQuote,
     
     // Data
     filteredQuotes,
@@ -77,7 +79,8 @@ const Quotes = () => {
     handleRejectQuote,
     handleDeleteQuote,
     handlePrevPage,
-    handleNextPage
+    handleNextPage,
+    handleOpenCreateQuoteDialog
   } = useQuotesData();
   
   // Handle navigation from other pages (e.g., vehicle inventory)
@@ -85,11 +88,10 @@ const Quotes = () => {
     if (location.state?.fromInventory) {
       const vehicleId = location.state.vehicleId;
       if (vehicleId) {
-        setSelectedVehicleId(vehicleId);
-        setCreateDialogOpen(true);
+        handleOpenCreateQuoteDialog(vehicleId);
       }
     }
-  }, [location, setSelectedVehicleId, setCreateDialogOpen]);
+  }, [location]);
   
   if (isLoading) {
     return <div className="container mx-auto py-6 px-4">Caricamento in corso...</div>;
@@ -99,9 +101,7 @@ const Quotes = () => {
     <div className="container mx-auto py-6 px-4">
       {/* Header with Create Quote button */}
       <QuotesHeader 
-        setSelectedVehicleId={setSelectedVehicleId}
-        setCreateDialogOpen={setCreateDialogOpen}
-        vehicles={vehicles}
+        handleOpenCreateQuoteDialog={handleOpenCreateQuoteDialog}
       />
       
       {/* Search and Filters */}
@@ -146,16 +146,17 @@ const Quotes = () => {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-[900px]">
           <DialogHeader>
-            <DialogTitle>Crea Nuovo Preventivo</DialogTitle>
+            <DialogTitle>
+              {isManualQuote ? 'Crea Nuovo Preventivo Manuale' : 'Crea Nuovo Preventivo'}
+            </DialogTitle>
           </DialogHeader>
           
-          {selectedVehicleId && (
-            <QuoteForm 
-              vehicle={getVehicleById(selectedVehicleId)}
-              onSubmit={handleCreateQuote}
-              onCancel={() => setCreateDialogOpen(false)}
-            />
-          )}
+          <QuoteForm 
+            vehicle={selectedVehicleId ? getVehicleById(selectedVehicleId) : undefined}
+            isManualQuote={isManualQuote}
+            onSubmit={handleCreateQuote}
+            onCancel={() => setCreateDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
       

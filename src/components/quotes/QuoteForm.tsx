@@ -4,8 +4,9 @@ import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types';
 import { useQuoteForm } from './form/useQuoteForm';
+import ManualQuoteForm from './form/ManualQuoteForm';
 
-// Import our new form section components
+// Import our form section components
 import QuoteVehicleInfo from './form/QuoteVehicleInfo';
 import QuoteCustomerInfo from './form/QuoteCustomerInfo';
 import QuoteDiscountSection from './form/QuoteDiscountSection';
@@ -16,12 +17,32 @@ import QuoteFormActions from './form/QuoteFormActions';
 
 interface QuoteFormProps {
   vehicle?: Vehicle;
+  isManualQuote?: boolean;
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
 
-const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteFormProps) => {
+const QuoteForm = ({ 
+  vehicle, 
+  isManualQuote = false, 
+  onSubmit, 
+  onCancel, 
+  isSubmitting = false 
+}: QuoteFormProps) => {
+  
+  // If it's a manual quote, use the ManualQuoteForm component
+  if (isManualQuote) {
+    return (
+      <ManualQuoteForm
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        isSubmitting={isSubmitting}
+      />
+    );
+  }
+  
+  // For vehicle-based quotes, use the existing form
   const {
     form,
     showTradeIn,
