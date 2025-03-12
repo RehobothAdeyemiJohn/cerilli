@@ -255,6 +255,7 @@ export type Database = {
       }
       settings_colors: {
         Row: {
+          compatible_models: string[] | null
           created_at: string | null
           id: string
           name: string
@@ -263,6 +264,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          compatible_models?: string[] | null
           created_at?: string | null
           id?: string
           name: string
@@ -271,6 +273,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          compatible_models?: string[] | null
           created_at?: string | null
           id?: string
           name?: string
