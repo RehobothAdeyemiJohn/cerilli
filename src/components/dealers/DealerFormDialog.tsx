@@ -121,20 +121,29 @@ const DealerFormDialog = ({
         }
       }
 
+      const dealerData = {
+        companyName: values.companyName,
+        address: values.address,
+        city: values.city,
+        province: values.province,
+        zipCode: values.zipCode,
+        isActive: values.isActive,
+        contactName: values.contactName,
+        email: values.email,
+        password: values.password,
+        logo: logoUrl,
+      };
+
       if (dealer) {
         await dealersApi.update({
           ...dealer,
-          ...values,
-          logo: logoUrl,
+          ...dealerData,
         });
         toast({
           title: "Dealer aggiornato con successo",
         });
       } else {
-        await dealersApi.create({
-          ...values,
-          logo: logoUrl,
-        });
+        await dealersApi.create(dealerData);
         toast({
           title: "Dealer creato con successo",
         });

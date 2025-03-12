@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash, Users, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Edit, Trash, Users, ToggleLeft, ToggleRight, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -124,7 +125,7 @@ const DealerList = ({ dealerId }: DealerListProps) => {
                       />
                     ) : (
                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Image className="w-6 h-6 text-gray-400" />
+                        <ImageIcon className="w-6 h-6 text-gray-400" />
                       </div>
                     )}
                   </TableCell>
