@@ -20,7 +20,7 @@ export function useVehicleDetailsDialog(
   const { user } = useAuth();
 
   // Check if the user is an admin or superadmin
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
 
   // Ottieni il primo dealer disponibile come fallback
   const { data: dealers = [] } = useQuery({
