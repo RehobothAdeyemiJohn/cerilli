@@ -5,7 +5,7 @@ import { filterVehicles } from '@/utils/vehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import InventoryHeader from '@/components/vehicles/InventoryHeader';
-import { Filter as VehicleFilter, Vehicle } from '@/types';
+import { Filter as VehicleFilter } from '@/types';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
@@ -52,7 +52,6 @@ const Inventory = () => {
   const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC');
   const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
-  const orderedVehicles = filteredVehicles.filter(v => v.status === 'ordered');
   
   // Periodicamente aggiorniamo i dati più frequentemente
   useEffect(() => {
@@ -81,7 +80,7 @@ const Inventory = () => {
   
   const toggleFilters = () => setShowFilters(!showFilters);
   
-  const handleVehicleAdd = async (newVehicle: Vehicle | null) => {
+  const handleVehicleAdd = async (newVehicle: any) => {
     if (!newVehicle) {
       setShowAddVehicleDrawer(false);
       return;
@@ -175,9 +174,6 @@ const Inventory = () => {
               <TabsTrigger value="reserved">
                 Prenotati ({reservedVehicles.length})
               </TabsTrigger>
-              <TabsTrigger value="ordered">
-                Ordini ({orderedVehicles.length})
-              </TabsTrigger>
               {!isDealer && (
                 <TabsTrigger value="all">
                   Tutti ({filteredVehicles.length})
@@ -204,14 +200,6 @@ const Inventory = () => {
             <TabsContent value="reserved">
               <VehicleList 
                 vehicles={reservedVehicles} 
-                onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDeleteWrapper}
-              />
-            </TabsContent>
-            
-            <TabsContent value="ordered">
-              <VehicleList 
-                vehicles={orderedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
               />
