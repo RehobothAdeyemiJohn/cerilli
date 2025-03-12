@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -295,6 +294,12 @@ const Orders = () => {
 
   const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
 
+  const getCreditColorClass = (creditLimit: number) => {
+    if (creditLimit >= 200000) return 'text-green-600';
+    if (creditLimit >= 100000) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   const renderOrderTable = (filteredOrders: Order[], tabName: string) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
@@ -406,7 +411,7 @@ const Orders = () => {
                         </TableCell>
                         <TableCell>
                           {order.dealer && order.dealer.credit_limit !== undefined ? (
-                            <span>
+                            <span className={getCreditColorClass(order.dealer.credit_limit)}>
                               {new Intl.NumberFormat('it-IT', {
                                 style: 'currency',
                                 currency: 'EUR',
