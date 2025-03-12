@@ -43,7 +43,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     <div 
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } h-screen bg-white border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
+      } h-screen bg-gray-100 border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
     >
       <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4 flex-shrink-0">
         {isOpen ? (
@@ -64,7 +64,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                 className={`flex items-center p-2 rounded-md transition-colors ${
                   isActive(item.path)
                     ? 'bg-[#141c2e] text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
@@ -91,7 +91,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                   className={`flex items-center p-2 rounded-md transition-colors ${
                     isActive(item.path)
                       ? 'bg-[#141c2e] text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      : 'text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />

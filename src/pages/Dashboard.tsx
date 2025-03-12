@@ -11,8 +11,11 @@ import {
 } from '@/data/mockData';
 
 const Dashboard = () => {
+  // Add a key to force re-render when component mounts
+  const renderKey = React.useId();
+  
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="container mx-auto py-6 px-4" key={renderKey}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="mt-4 md:mt-0">
