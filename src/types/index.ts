@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -71,6 +70,8 @@ export type Order = {
   status: 'processing' | 'delivered' | 'cancelled';
   orderDate: string;
   deliveryDate?: string;
+  vehicle?: Vehicle;
+  dealer?: any; // Using any temporarily as we don't have a complete Dealer type defined
 };
 
 export type Filter = {

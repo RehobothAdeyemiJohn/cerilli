@@ -21,36 +21,15 @@ const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   
-  // Fetch all orders and their associated vehicles from Supabase
+  // Fetch all orders from Supabase
   const { 
     data: ordersData = [], 
     isLoading, 
     error 
   } = useQuery({
     queryKey: ['orders'],
-    queryFn: async () => {
-      const orders = await ordersApi.getAll();
-      // For each order, fetch its associated vehicle
-      const ordersWithVehicles = await Promise.all(
-        orders.map(async (order) => {
-          try {
-            const vehicle = await vehiclesApi.getById(order.vehicleId);
-            return {
-              ...order,
-              vehicle // Store the vehicle data separately
-            };
-          } catch (error) {
-            console.error(`Error fetching vehicle for order ${order.id}:`, error);
-            return {
-              ...order,
-              vehicle: null
-            };
-          }
-        })
-      );
-      return ordersWithVehicles;
-    },
-    staleTime: 30000, // 30 seconds
+    queryFn: ordersApi.getAll,
+    staleTime: 0, // Set to 0 to always consider data stale
   });
   
   // Filter orders by status
@@ -71,7 +50,7 @@ const Orders = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       toast({
         title: "Ordine consegnato",
         description: "L'ordine è stato marcato come consegnato con successo",
@@ -99,7 +78,7 @@ const Orders = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       toast({
         title: "Ordine cancellato",
         description: "L'ordine è stato cancellato con successo",
@@ -119,7 +98,7 @@ const Orders = () => {
   const deleteOrderMutation = useMutation({
     mutationFn: (orderId: string) => ordersApi.delete(orderId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       toast({
         title: "Ordine eliminato",
         description: "L'ordine è stato eliminato definitivamente",
@@ -163,7 +142,7 @@ const Orders = () => {
     }
   };
   
-  const renderOrderTable = (filteredOrders: (Order & { vehicle: Vehicle | null })[]) => (
+  const renderOrderTable = (filteredOrders: Order[]) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
         <Table>

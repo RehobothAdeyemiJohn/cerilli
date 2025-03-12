@@ -15,7 +15,22 @@ export const ordersApi = {
       throw error;
     }
 
-    return data as Order[];
+    // Format response to match expected Order interface
+    const formattedOrders = data.map(order => ({
+      id: order.id,
+      vehicleId: order.vehicleid,
+      dealerId: order.dealerid,
+      customerName: order.customername,
+      status: order.status,
+      orderDate: order.orderdate,
+      deliveryDate: order.deliverydate,
+      // Include related data
+      vehicle: order.vehicles,
+      dealer: order.dealers
+    }));
+
+    console.log("Orders fetched successfully:", formattedOrders);
+    return formattedOrders as Order[];
   },
 
   getById: async (id: string): Promise<Order> => {
@@ -31,22 +46,41 @@ export const ordersApi = {
       throw error || new Error('Order not found');
     }
 
-    return data as Order;
+    // Format response to match expected Order interface
+    const formattedOrder = {
+      id: data.id,
+      vehicleId: data.vehicleid,
+      dealerId: data.dealerid,
+      customerName: data.customername,
+      status: data.status,
+      orderDate: data.orderdate,
+      deliveryDate: data.deliverydate,
+      // Include related data
+      vehicle: data.vehicles,
+      dealer: data.dealers
+    };
+
+    return formattedOrder as Order;
   },
 
   create: async (order: Omit<Order, 'id'>): Promise<Order> => {
-    console.log("Creating new order:", order);
+    console.log("Creating new order in Supabase:", order);
+    
+    // Map frontend field names to database column names
+    const newOrder = {
+      vehicleid: order.vehicleId,
+      dealerid: order.dealerId,
+      customername: order.customerName,
+      status: order.status,
+      orderdate: order.orderDate,
+      deliverydate: order.deliveryDate
+    };
+    
+    console.log("Formatted order for Supabase insert:", newOrder);
+    
     const { data, error } = await supabase
       .from('orders')
-      .insert({
-        vehicleid: order.vehicleId,
-        dealerid: order.dealerId,
-        customername: order.customerName,
-        status: order.status,
-        orderdate: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .insert(newOrder)
       .select('*, vehicles(*), dealers(*)')
       .maybeSingle();
 
@@ -54,22 +88,49 @@ export const ordersApi = {
       console.error('Error creating order:', error);
       throw error || new Error('Failed to create order');
     }
+    
+    console.log("Order created successfully:", data);
+    
+    // Format response to match expected Order interface
+    const formattedOrder = {
+      id: data.id,
+      vehicleId: data.vehicleid,
+      dealerId: data.dealerid,
+      customerName: data.customername,
+      status: data.status,
+      orderDate: data.orderdate,
+      deliveryDate: data.deliverydate,
+      // Include related data
+      vehicle: data.vehicles,
+      dealer: data.dealers
+    };
 
-    return data as Order;
+    return formattedOrder as Order;
   },
 
   update: async (id: string, updates: Partial<Order>): Promise<Order> => {
-    console.log("Updating order:", id, updates);
+    console.log("Updating order in Supabase:", id, updates);
+    
+    // Map frontend field names to database column names
+    const dbUpdates = {
+      vehicleid: updates.vehicleId,
+      dealerid: updates.dealerId,
+      customername: updates.customerName,
+      status: updates.status,
+      orderdate: updates.orderDate,
+      deliverydate: updates.deliveryDate
+    };
+    
+    // Remove undefined fields
+    Object.keys(dbUpdates).forEach(key => {
+      if (dbUpdates[key] === undefined) {
+        delete dbUpdates[key];
+      }
+    });
+    
     const { data, error } = await supabase
       .from('orders')
-      .update({
-        vehicleid: updates.vehicleId,
-        dealerid: updates.dealerId,
-        customername: updates.customerName,
-        status: updates.status,
-        deliverydate: updates.deliveryDate,
-        updated_at: new Date().toISOString()
-      })
+      .update(dbUpdates)
       .eq('id', id)
       .select('*, vehicles(*), dealers(*)')
       .maybeSingle();
@@ -78,12 +139,26 @@ export const ordersApi = {
       console.error('Error updating order:', error);
       throw error || new Error('Order not found');
     }
+    
+    // Format response to match expected Order interface
+    const formattedOrder = {
+      id: data.id,
+      vehicleId: data.vehicleid,
+      dealerId: data.dealerid,
+      customerName: data.customername,
+      status: data.status,
+      orderDate: data.orderdate,
+      deliveryDate: data.deliverydate,
+      // Include related data
+      vehicle: data.vehicles,
+      dealer: data.dealers
+    };
 
-    return data as Order;
+    return formattedOrder as Order;
   },
 
   delete: async (id: string): Promise<void> => {
-    console.log("Deleting order:", id);
+    console.log("Deleting order from Supabase:", id);
     const { error } = await supabase
       .from('orders')
       .delete()
@@ -93,5 +168,7 @@ export const ordersApi = {
       console.error('Error deleting order:', error);
       throw error;
     }
+    
+    console.log("Order deleted successfully");
   }
 };

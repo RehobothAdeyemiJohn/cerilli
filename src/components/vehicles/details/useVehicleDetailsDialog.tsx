@@ -205,18 +205,34 @@ export function useVehicleDetailsDialog(
           throw new Error("No dealer ID available for order creation");
         }
         
-        await ordersApi.create({
-          vehicleId: vehicle.id,
-          dealerId,
-          customerName: vehicle.reservedBy,
-          status: 'processing',
-          orderDate: new Date().toISOString()
-        });
+        try {
+          console.log("Creating order with data:", {
+            vehicleId: vehicle.id,
+            dealerId,
+            customerName: vehicle.reservedBy,
+            status: 'processing',
+            orderDate: new Date().toISOString()
+          });
+          
+          // Explicitly use the Supabase ordersApi
+          const createdOrder = await ordersApi.create({
+            vehicleId: vehicle.id,
+            dealerId,
+            customerName: vehicle.reservedBy,
+            status: 'processing',
+            orderDate: new Date().toISOString()
+          });
+          
+          console.log("Order created successfully:", createdOrder);
+        } catch (orderError) {
+          console.error("Error creating order:", orderError);
+          throw new Error(`Failed to create order: ${orderError.message}`);
+        }
       }
       
       // Update queries immediately with staleTime: 0
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+      await queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       
       toast({
         title: "Ordine Creato",
