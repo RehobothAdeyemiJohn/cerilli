@@ -49,8 +49,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         )}
       </div>
       
-      <div className="flex flex-col flex-1 py-4 overflow-hidden">
-        <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
+      <div className="flex flex-col flex-1 py-2 overflow-y-auto">
+        <nav className="flex-1 px-2 space-y-1">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -69,9 +69,9 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
           ))}
         </nav>
         
-        <div className="pt-4 mt-4 border-t border-gray-200 px-2 overflow-y-auto">
+        <div className="mt-2 border-t border-gray-200 pt-2 px-2">
           {isOpen && (
-            <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+            <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-1">
               AMMINISTRAZIONE
             </p>
           )}
