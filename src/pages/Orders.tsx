@@ -295,7 +295,7 @@ const Orders = () => {
   const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
 
   const getCreditColorClass = (creditLimit: number) => {
-    if (creditLimit >= 600000) return 'text-green-600';
+    if (creditLimit >= 60000) return 'text-green-600';
     if (creditLimit >= 40000) return 'text-yellow-600';
     if (creditLimit < 10000) return 'text-red-600';
     return 'text-red-600';
