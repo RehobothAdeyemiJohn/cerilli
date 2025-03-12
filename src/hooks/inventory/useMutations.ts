@@ -24,12 +24,9 @@ export const useInventoryMutations = () => {
       return vehiclesApi.delete(id);
     },
     onSuccess: () => {
+      console.log('Delete mutation completed successfully');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast({
-        title: "Veicolo eliminato",
-        description: "Il veicolo è stato eliminato con successo",
-      });
     },
     onError: (error) => {
       console.error('Error deleting vehicle:', error);

@@ -13,7 +13,7 @@ interface VehicleListProps {
   vehicles: Vehicle[];
   filter?: Filter;
   onVehicleUpdated?: (vehicle: Vehicle) => void;
-  onVehicleDeleted?: (vehicleId: string) => void;
+  onVehicleDeleted?: (vehicleId: string) => Promise<void>;
 }
 
 const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: VehicleListProps) => {
@@ -91,23 +91,23 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     closeEditDialog();
   };
   
-  const handleVehicleDelete = () => {
+  const handleVehicleDelete = async () => {
     if (vehicleToDelete && onVehicleDeleted) {
       console.log('Calling onVehicleDeleted with vehicle ID:', vehicleToDelete.id);
       
       try {
         // Call the delete function and pass the vehicle ID
-        onVehicleDeleted(vehicleToDelete.id);
+        await onVehicleDeleted(vehicleToDelete.id);
+        
+        // Force immediate data refresh
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
         
         // Show a toast to confirm deletion
         toast({
           title: "Veicolo Eliminato",
           description: `${vehicleToDelete.model} ${vehicleToDelete.trim || ''} è stato eliminato dall'inventario.`,
         });
-        
-        // Force immediate data refresh
-        queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-        queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       } catch (error) {
         console.error('Error deleting vehicle:', error);
         toast({
@@ -117,8 +117,6 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
         });
       }
     }
-    
-    closeDeleteDialog();
   };
   
   // Apply filters if provided

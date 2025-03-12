@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -115,6 +116,19 @@ const Inventory = () => {
     setActiveFilters(filters);
   };
   
+  const handleVehicleDeleteWrapper = async (vehicleId: string): Promise<void> => {
+    console.log('Inventory: handleVehicleDeleteWrapper called with ID:', vehicleId);
+    try {
+      await handleVehicleDelete(vehicleId);
+      console.log('Vehicle deleted successfully, refreshing data');
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+    } catch (error) {
+      console.error('Error in handleVehicleDeleteWrapper:', error);
+      throw error;
+    }
+  };
+  
   if (isLoading) {
     return <div className="container mx-auto py-6 px-4">Caricamento inventario...</div>;
   }
@@ -175,7 +189,7 @@ const Inventory = () => {
               <VehicleList 
                 vehicles={stockCMCVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDelete}
+                onVehicleDeleted={handleVehicleDeleteWrapper}
               />
             </TabsContent>
 
@@ -183,7 +197,7 @@ const Inventory = () => {
               <VehicleList 
                 vehicles={stockVirtualeVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDelete}
+                onVehicleDeleted={handleVehicleDeleteWrapper}
               />
             </TabsContent>
             
@@ -191,7 +205,7 @@ const Inventory = () => {
               <VehicleList 
                 vehicles={reservedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDelete}
+                onVehicleDeleted={handleVehicleDeleteWrapper}
               />
             </TabsContent>
             
@@ -199,7 +213,7 @@ const Inventory = () => {
               <VehicleList 
                 vehicles={orderedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDelete}
+                onVehicleDeleted={handleVehicleDeleteWrapper}
               />
             </TabsContent>
             
@@ -208,7 +222,7 @@ const Inventory = () => {
                 <VehicleList 
                   vehicles={filteredVehicles} 
                   onVehicleUpdated={handleVehicleUpdate}
-                  onVehicleDeleted={handleVehicleDelete}
+                  onVehicleDeleted={handleVehicleDeleteWrapper}
                 />
               </TabsContent>
             )}

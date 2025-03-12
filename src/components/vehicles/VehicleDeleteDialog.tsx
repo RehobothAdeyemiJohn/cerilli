@@ -16,7 +16,7 @@ interface VehicleDeleteDialogProps {
   vehicle: Vehicle | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
 }
 
 const VehicleDeleteDialog = ({ 
@@ -29,17 +29,18 @@ const VehicleDeleteDialog = ({
   
   if (!vehicle) return null;
   
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     console.log('Delete confirmation for vehicle ID:', vehicle.id);
     setIsDeleting(true);
     
-    // Call the onConfirm callback
     try {
-      onConfirm();
+      await onConfirm();
+      console.log('Delete operation completed successfully');
     } catch (error) {
       console.error('Error in delete confirmation:', error);
     } finally {
       setIsDeleting(false);
+      onOpenChange(false);
     }
   };
   

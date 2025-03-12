@@ -24,31 +24,20 @@ export const useVehicleActions = () => {
     }
   };
   
-  const handleVehicleDelete = async (vehicleId: string, inventory: Vehicle[]) => {
+  const handleVehicleDelete = async (vehicleId: string) => {
+    console.log('useVehicleActions: Deleting vehicle with ID:', vehicleId);
     setIsDeleting(true);
+    
     try {
-      console.log('useVehicleActions: Deleting vehicle with ID:', vehicleId);
-      
-      // Get the vehicle details before deletion for better user feedback
-      const vehicleToDelete = inventory.find(v => v.id === vehicleId);
-      
-      if (!vehicleToDelete) {
-        console.error('Vehicle not found in inventory:', vehicleId);
-        throw new Error('Vehicle not found in inventory');
-      }
-      
-      // Call the deleteMutation directly with the vehicleId
-      console.log('Calling deleteMutation.mutateAsync with ID:', vehicleId);
+      // Directly call the delete mutation with the vehicle ID
       await deleteMutation.mutateAsync(vehicleId);
       
       console.log('Vehicle successfully deleted:', vehicleId);
       
-      if (vehicleToDelete) {
-        toast({
-          title: "Veicolo eliminato",
-          description: `${vehicleToDelete.model} ${vehicleToDelete.trim || ''} è stato eliminato dall'inventario.`,
-        });
-      }
+      toast({
+        title: "Veicolo eliminato",
+        description: "Il veicolo è stato eliminato con successo dall'inventario.",
+      });
       
       setIsDeleting(false);
       return true;

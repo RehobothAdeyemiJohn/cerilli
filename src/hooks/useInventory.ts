@@ -20,21 +20,9 @@ export const useInventory = () => {
   
   const { 
     handleVehicleUpdate,
-    handleVehicleDelete: handleVehicleDeleteBase,
+    handleVehicleDelete,
     handleVehicleDuplicate
   } = useVehicleActions();
-
-  // Wrap the handleVehicleDelete to provide the inventory
-  const handleVehicleDelete = async (vehicleId: string) => {
-    console.log('useInventory: handleVehicleDelete called with ID:', vehicleId);
-    try {
-      // Make sure to await the promise to catch any errors
-      return await handleVehicleDeleteBase(vehicleId, inventory);
-    } catch (error) {
-      console.error('useInventory: Error in handleVehicleDelete:', error);
-      throw error;
-    }
-  };
 
   return {
     inventory,
