@@ -156,6 +156,7 @@ export function useVehicleDetailsDialog(
     if (!vehicle) return;
     
     try {
+      console.log("Starting Transform to Order process");
       setIsSubmitting(true);
       
       if (vehicle.status !== 'reserved') {
@@ -185,6 +186,7 @@ export function useVehicleDetailsDialog(
           status: 'processing',
           orderDate: new Date().toISOString()
         });
+        console.log("Order created successfully");
       }
       
       // Make sure to update the cache

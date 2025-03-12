@@ -77,16 +77,13 @@ export const vehiclesApi = {
   },
   
   duplicate: async (id: string): Promise<Vehicle> => {
-    // Get the vehicle to duplicate
     const vehicle = await vehiclesApi.getById(id);
     
-    // Create a new vehicle with the same properties but a new ID
     const { id: _, ...vehicleWithoutId } = vehicle;
     
-    // Add the duplicated vehicle
     return vehiclesApi.create({
       ...vehicleWithoutId,
-      dateAdded: new Date().toISOString().split('T')[0], // Use current date
+      dateAdded: new Date().toISOString().split('T')[0],
     });
   },
   
@@ -103,11 +100,9 @@ export const vehiclesApi = {
       reservedBy,
       reservedAccessories: reservedAccessories || [],
       reservationDestination,
-      // Set the current timestamp when reserving a vehicle
       reservationTimestamp: new Date().toISOString()
     };
     
-    // Add virtual configuration if provided
     if (virtualConfig) {
       updatedVehicle.virtualConfig = virtualConfig;
     }
@@ -115,7 +110,6 @@ export const vehiclesApi = {
     return vehiclesApi.update(id, updatedVehicle);
   },
   
-  // Transform to order method to match the Supabase API
   transformToOrder: async (id: string): Promise<Vehicle> => {
     console.log("LocalStorage API: transformToOrder - Trasforma prenotazione in ordine:", id);
     
