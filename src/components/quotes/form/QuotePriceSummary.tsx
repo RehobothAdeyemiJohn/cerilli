@@ -18,6 +18,12 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   watchReducedVAT,
   totalDiscount
 }) => {
+  // Get the form context to access more values
+  const form = useFormContext();
+  const discount = form.watch('discount') || 0;
+  const hasTradeIn = form.watch('hasTradeIn');
+  const tradeInValue = form.watch('tradeInValue') || 0;
+  
   return (
     <div className="pt-2 border-t">
       <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
@@ -33,7 +39,9 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Sconto / Permuta</p>
-          <p className="font-medium text-sm">- {formatCurrency(totalDiscount)}</p>
+          <p className="font-medium text-sm">
+            - {formatCurrency(discount)} {hasTradeIn && tradeInValue > 0 && `/ ${formatCurrency(tradeInValue)}`}
+          </p>
         </div>
         
         <div className="space-y-0.5">

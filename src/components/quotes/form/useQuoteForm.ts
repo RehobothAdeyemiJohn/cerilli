@@ -34,11 +34,12 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       price: basePrice,
       discount: 0,
       reducedVAT: false,
-      accessories: {} as Record<string, boolean>,
+      vehicleAccessories: [] as string[],
       hasTradeIn: false,
-      tradeInMake: '',
+      tradeInBrand: '',
       tradeInModel: '',
       tradeInYear: '',
+      tradeInKm: 0,
       tradeInValue: 0,
       notes: '',
       finalPrice: basePrice,
@@ -49,11 +50,12 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const watchReducedVAT = form.watch('reducedVAT');
   const watchDiscount = form.watch('discount');
   const watchTradeInValue = form.watch('tradeInValue');
-  const watchAccessories = form.watch('accessories');
-  
+  const watchVehicleAccessories = form.watch('vehicleAccessories');
+  const watchLocation = form.watch('location');
+
   // Use vehicle.accessories or an empty array if it doesn't exist
-  // Since compatibleAccessories doesn't exist on Vehicle, we'll create a workaround
   const vehicleAccessories = vehicle?.accessories || [];
+  
   // Create a compatible accessories array from the vehicle's accessories
   const compatibleAccessories: Accessory[] = vehicleAccessories.map(accessoryName => ({
     id: accessoryName, // Use the accessory name as ID
@@ -66,17 +68,15 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   }));
   
   // Calculate selected accessories total
-  const accessoryTotalPrice = Object.entries(watchAccessories || {})
-    .reduce((total, [id, isSelected]) => {
-      if (isSelected) {
-        const accessory = compatibleAccessories.find(acc => acc.id === id);
-        return total + (accessory?.priceWithVAT || 0); // Use priceWithVAT instead of price
-      }
-      return total;
-    }, 0);
+  const accessoryTotalPrice = (watchVehicleAccessories || []).reduce((total, accessoryName) => {
+    const accessory = compatibleAccessories.find(acc => acc.name === accessoryName);
+    return total + (accessory?.priceWithVAT || 0);
+  }, 0);
   
-  // Calculate final price with VAT
-  const subtotal = basePrice + accessoryTotalPrice - (watchDiscount || 0);
+  // Calculate final price with VAT and including trade-in value
+  const totalDiscount = (watchDiscount || 0) + (watchHasTradeIn ? watchTradeInValue || 0 : 0);
+  const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
+  
   const finalPrice = watchReducedVAT 
     ? subtotal + (subtotal * 0.04) // 4% reduced VAT 
     : subtotal + (subtotal * 0.22); // 22% standard VAT
@@ -92,25 +92,24 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     data.price = basePrice;
     
     // Calculate accessory selections
-    const selectedAccessories = Object.entries(data.accessories || {})
-      .filter(([_, isSelected]) => isSelected)
-      .map(([id]) => {
-        const accessory = compatibleAccessories.find(acc => acc.id === id);
-        return {
-          id,
-          name: accessory?.name || '',
-          price: accessory?.priceWithVAT || 0 // Use priceWithVAT instead of price
-        };
-      });
+    const selectedAccessories = (data.vehicleAccessories || []).map(accessoryName => {
+      const accessory = compatibleAccessories.find(acc => acc.name === accessoryName);
+      return {
+        id: accessoryName,
+        name: accessoryName,
+        price: accessory?.priceWithVAT || 0
+      };
+    });
     
     data.selectedAccessories = selectedAccessories;
     data.accessoryTotalPrice = accessoryTotalPrice;
     
     // Set trade-in info
     if (!data.hasTradeIn) {
-      data.tradeInMake = '';
+      data.tradeInBrand = '';
       data.tradeInModel = '';
       data.tradeInYear = '';
+      data.tradeInKm = 0;
       data.tradeInValue = 0;
     }
     
