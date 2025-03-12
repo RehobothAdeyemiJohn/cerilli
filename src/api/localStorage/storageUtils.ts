@@ -1,3 +1,4 @@
+
 export const initLocalStorage = () => {
   if (typeof localStorage === 'undefined') {
     return;
@@ -30,4 +31,33 @@ export const KEYS = {
   COLORS: 'colors',
   TRANSMISSIONS: 'transmissions',
   ACCESSORIES: 'accessories',
+};
+
+// Add the missing utility functions for getting and setting items in localStorage
+export const getStorageItem = <T>(key: string): T | null => {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+  
+  const item = localStorage.getItem(key);
+  if (!item) return null;
+  
+  try {
+    return JSON.parse(item) as T;
+  } catch (error) {
+    console.error(`Error parsing item from localStorage (${key}):`, error);
+    return null;
+  }
+};
+
+export const setStorageItem = <T>(key: string, data: T): void => {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Error storing item in localStorage (${key}):`, error);
+  }
 };
