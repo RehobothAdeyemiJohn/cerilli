@@ -19,6 +19,9 @@ export function useVehicleDetailsDialog(
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Check if the user is an admin or superadmin
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
   // Ottieni il primo dealer disponibile come fallback
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers-fallback'],
@@ -36,12 +39,19 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
-      // Trova un dealerId valido - prima usa quello dell'utente, poi dal form, infine prende il primo disponibile
-      let dealerId = user?.dealerId;
+      let dealerId: string | null = null;
       
-      // Se l'utente non ha un dealerId, usa quello dal form o prendi il primo dealer disponibile
-      if (!dealerId) {
-        dealerId = quoteData.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+      // Se l'utente è admin o superadmin, usa "CMC" come dealerId
+      if (isAdmin) {
+        dealerId = "CMC";
+      } else {
+        // Altrimenti usa la logica esistente
+        dealerId = user?.dealerId;
+        
+        // Se l'utente non ha un dealerId, usa quello dal form o prendi il primo dealer disponibile
+        if (!dealerId) {
+          dealerId = quoteData.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+        }
       }
       
       // Se ancora non abbiamo un dealerId, mostra un errore
