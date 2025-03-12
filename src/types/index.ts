@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -15,6 +16,7 @@ export type Vehicle = {
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];
+  reservationDestination?: string; // New field for destination
   virtualConfig?: {
     trim: string;
     fuelType: string;

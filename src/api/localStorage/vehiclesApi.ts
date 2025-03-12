@@ -91,7 +91,7 @@ export const vehiclesApi = {
     });
   },
   
-  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig']): Promise<Vehicle> => {
+  reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig'], reservationDestination?: string): Promise<Vehicle> => {
     const vehicle = await vehiclesApi.getById(id);
     
     if (vehicle.status !== 'available') {
@@ -103,6 +103,7 @@ export const vehiclesApi = {
       status: 'reserved' as const,
       reservedBy,
       reservedAccessories: reservedAccessories || [],
+      reservationDestination // Add the destination field
     };
     
     // Add virtual configuration if provided

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vehicle, Accessory } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -14,11 +15,15 @@ import { toast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useInventory } from '@/hooks/useInventory';
 import { useAuth } from '@/context/AuthContext';
+import { formatCurrency } from '@/lib/utils';
 
 // Dynamic schema based on user type (admin or dealer)
 const createReservationSchema = (isAdmin: boolean) => {
   const baseSchema = {
     accessories: z.array(z.string()).optional(),
+    destination: z.string({
+      required_error: "La destinazione è obbligatoria",
+    }),
   };
   
   // Only admins need to select the dealer
@@ -36,6 +41,7 @@ const createReservationSchema = (isAdmin: boolean) => {
 type ReservationFormValues = z.infer<ReturnType<typeof createReservationSchema>> & {
   dealerId?: string;
   accessories?: string[];
+  destination: string;
 };
 
 interface ReserveVehicleFormProps {
@@ -76,8 +82,9 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
   const reservationSchema = createReservationSchema(isAdmin);
   
   // Default form values
-  const defaultValues: any = {
+  const defaultValues: ReservationFormValues = {
     accessories: [],
+    destination: '',
   };
   
   // If dealer, no need to select a dealerId
@@ -105,7 +112,13 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
         if (modelObj && trimObj) {
           const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-          setCompatibleAccessories(compatibles);
+          
+          // Filter out accessories that are already included in the vehicle
+          const filteredAccessories = compatibles.filter(accessory => 
+            !vehicle.accessories.includes(accessory.name)
+          );
+          
+          setCompatibleAccessories(filteredAccessories);
         } else {
           setCompatibleAccessories([]);
         }
@@ -141,6 +154,7 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
         status: 'reserved',
         reservedBy: selectedDealerName,
         reservedAccessories: data.accessories || [],
+        reservationDestination: data.destination,
       };
       
       await handleVehicleUpdate(updatedVehicle);
@@ -166,16 +180,75 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <h3 className="text-lg font-medium">Prenota {vehicle.model} {vehicle.trim}</h3>
         
+        {/* Vehicle details section */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-md">
+          <h4 className="text-sm font-medium mb-2">Dettagli del veicolo e optional inclusi</h4>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <div>
+              <p className="text-xs text-gray-500">Modello</p>
+              <p className="font-medium">{vehicle.model}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Allestimento</p>
+              <p className="font-medium">{vehicle.trim}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Colore</p>
+              <p className="font-medium">{vehicle.exteriorColor}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Prezzo</p>
+              <p className="font-medium text-primary">{formatCurrency(vehicle.price)}</p>
+            </div>
+            {vehicle.transmission && (
+              <div>
+                <p className="text-xs text-gray-500">Cambio</p>
+                <p className="font-medium">{vehicle.transmission}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-gray-500">Carburante</p>
+              <p className="font-medium">{vehicle.fuelType}</p>
+            </div>
+            {vehicle.telaio && (
+              <div>
+                <p className="text-xs text-gray-500">Telaio</p>
+                <p className="font-medium">{vehicle.telaio}</p>
+              </div>
+            )}
+            {vehicle.year && (
+              <div>
+                <p className="text-xs text-gray-500">Anno</p>
+                <p className="font-medium">{vehicle.year}</p>
+              </div>
+            )}
+          </div>
+          
+          {vehicle.accessories && vehicle.accessories.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Optional Inclusi</p>
+              <div className="grid grid-cols-2 gap-1">
+                {vehicle.accessories.map((accessory, idx) => (
+                  <div key={idx} className="text-xs flex items-center">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary mr-1"></span>
+                    {accessory}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
         {isAdmin && (
           <FormField
             control={form.control}
-            name={"dealerId" as any}
+            name="dealerId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Concessionario</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  defaultValue={field.value as string}
+                  defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -194,6 +267,31 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
             )}
           />
         )}
+        
+        {/* Destination field */}
+        <FormField
+          control={form.control}
+          name="destination"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Destinazione</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona destinazione" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="contratto_abbinato">Contratto Abbinato</SelectItem>
+                  <SelectItem value="stock_dealer">Stock Dealer</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
         
         {compatibleAccessories.length > 0 && (
           <div className="space-y-2">
@@ -221,6 +319,11 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
                       </FormControl>
                       <FormLabel className="font-normal text-sm">
                         {accessory.name}
+                        {accessory.priceWithVAT > 0 && (
+                          <span className="ml-1 text-xs text-gray-500">
+                            (+{formatCurrency(accessory.priceWithVAT)})
+                          </span>
+                        )}
                       </FormLabel>
                     </FormItem>
                   )}
@@ -230,7 +333,7 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
           </div>
         )}
         
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4 border-t">
           <Button type="button" variant="outline" onClick={onCancel}>
             Annulla
           </Button>
