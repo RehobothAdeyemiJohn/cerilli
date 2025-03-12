@@ -94,11 +94,28 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   const handleVehicleDelete = () => {
     if (vehicleToDelete && onVehicleDeleted) {
       console.log('Calling onVehicleDeleted with vehicle ID:', vehicleToDelete.id);
-      onVehicleDeleted(vehicleToDelete.id);
       
-      // Force immediate data refresh
-      queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+      try {
+        // Call the delete function and pass the vehicle ID
+        onVehicleDeleted(vehicleToDelete.id);
+        
+        // Show a toast to confirm deletion
+        toast({
+          title: "Veicolo Eliminato",
+          description: `${vehicleToDelete.model} ${vehicleToDelete.trim || ''} è stato eliminato dall'inventario.`,
+        });
+        
+        // Force immediate data refresh
+        queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+        queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+      } catch (error) {
+        console.error('Error deleting vehicle:', error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante l'eliminazione del veicolo.",
+          variant: "destructive",
+        });
+      }
     }
     
     closeDeleteDialog();

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import { 
   AlertDialog,
@@ -25,15 +25,30 @@ const VehicleDeleteDialog = ({
   onOpenChange,
   onConfirm 
 }: VehicleDeleteDialogProps) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   if (!vehicle) return null;
   
   const handleConfirm = () => {
     console.log('Delete confirmation for vehicle ID:', vehicle.id);
-    onConfirm();
+    setIsDeleting(true);
+    
+    // Call the onConfirm callback
+    try {
+      onConfirm();
+    } catch (error) {
+      console.error('Error in delete confirmation:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
   
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(value) => {
+      if (!isDeleting) {
+        onOpenChange(value);
+      }
+    }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Sei sicuro di voler eliminare questo veicolo?</AlertDialogTitle>
@@ -43,8 +58,12 @@ const VehicleDeleteDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annulla</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} className="bg-red-600 hover:bg-red-700">
-            Elimina
+          <AlertDialogAction 
+            onClick={handleConfirm} 
+            className="bg-red-600 hover:bg-red-700"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Eliminazione...' : 'Elimina'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
