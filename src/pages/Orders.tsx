@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -61,7 +60,6 @@ const Orders = () => {
   const isAdmin = user?.type === 'admin';
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter state
   const [filters, setFilters] = useState({
     isLicensable: null as boolean | null,
     hasProforma: null as boolean | null,
@@ -71,16 +69,14 @@ const Orders = () => {
     dealerId: null as string | null,
     model: null as string | null,
   });
-  
-  // Fetch dealers for filter dropdown
+
   const { data: dealersData = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
     staleTime: 0,
     enabled: isAdmin,
   });
-  
-  // Fetch all orders from Supabase
+
   const { 
     data: ordersData = [], 
     isLoading, 
@@ -89,19 +85,16 @@ const Orders = () => {
   } = useQuery({
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
-    staleTime: 0, // Set to 0 to always consider data stale
+    staleTime: 0,
   });
-  
-  // Filter orders by status and apply admin filters
+
   const filterOrders = (orders: Order[], status?: string) => {
     let filtered = orders;
     
-    // Filter by status if provided
     if (status && status !== 'all') {
       filtered = filtered.filter(o => o.status === status);
     }
     
-    // Apply admin filters
     if (isAdmin) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null) {
@@ -134,26 +127,21 @@ const Orders = () => {
     
     return filtered;
   };
-  
-  // Filter orders by status
+
   const processingOrders = filterOrders(ordersData, 'processing');
   const deliveredOrders = filterOrders(ordersData, 'delivered');
   const cancelledOrders = filterOrders(ordersData, 'cancelled');
   const allOrders = filterOrders(ordersData);
-  
-  // Mutation for marking an order as delivered
+
   const markAsDeliveredMutation = useMutation({
     mutationFn: async (orderId: string) => {
       try {
-        // 1. Get current order
         const order = await ordersApi.getById(orderId);
         
-        // 2. Check if ODL has been generated
         if (!order.details?.odlGenerated) {
           throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
         }
         
-        // 3. Update vehicle status to 'delivered' and change location to 'Stock Dealer'
         if (order.vehicle && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
             status: 'delivered' as Vehicle['status'],
@@ -161,7 +149,6 @@ const Orders = () => {
           });
         }
         
-        // 4. Update order with delivered status
         return ordersApi.update(orderId, {
           ...order,
           status: 'delivered',
@@ -189,13 +176,10 @@ const Orders = () => {
       });
     }
   });
-  
-  // Mutation for cancelling an order
+
   const cancelOrderMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      // Get current order first
       const order = await ordersApi.getById(orderId);
-      // Update with cancelled status
       return ordersApi.update(orderId, {
         ...order,
         status: 'cancelled'
@@ -217,8 +201,7 @@ const Orders = () => {
       });
     }
   });
-  
-  // Mutation for deleting an order
+
   const deleteOrderMutation = useMutation({
     mutationFn: (orderId: string) => ordersApi.delete(orderId),
     onSuccess: () => {
@@ -237,33 +220,32 @@ const Orders = () => {
       });
     }
   });
-  
+
   const handleMarkAsDelivered = (orderId: string) => {
     markAsDeliveredMutation.mutate(orderId);
   };
-  
+
   const handleCancelOrder = (orderId: string) => {
     cancelOrderMutation.mutate(orderId);
   };
-  
+
   const handleDeleteOrder = () => {
     if (selectedOrderId) {
       deleteOrderMutation.mutate(selectedOrderId);
       setSelectedOrderId(null);
     }
   };
-  
+
   const handleViewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
     setOrderDetailsOpen(true);
   };
-  
+
   const handleGenerateODL = (details: OrderDetails) => {
-    // Refresh orders data
     queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
   };
-  
+
   const getStatusBadgeClass = (status: string) => {
     switch(status) {
       case 'processing':
@@ -276,13 +258,11 @@ const Orders = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
-  // Create a function to generate order numbers - simple index + 1
+
   const getOrderNumber = (index: number): string => {
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
-  
-  // Get unique models and dealers for filters
+
   const uniqueModels = React.useMemo(() => {
     const models = new Set<string>();
     ordersData.forEach(order => {
@@ -292,16 +272,14 @@ const Orders = () => {
     });
     return Array.from(models);
   }, [ordersData]);
-  
-  // Helper function for status filters
+
   const updateBooleanFilter = (key: keyof typeof filters, value: boolean | null) => {
     setFilters(prev => ({
       ...prev,
       [key]: prev[key] === value ? null : value
     }));
   };
-  
-  // Reset all filters
+
   const resetFilters = () => {
     setFilters({
       isLicensable: null,
@@ -313,10 +291,9 @@ const Orders = () => {
       model: null,
     });
   };
-  
-  // Count active filters
+
   const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
-  
+
   const renderOrderTable = (filteredOrders: Order[], tabName: string) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
@@ -361,7 +338,6 @@ const Orders = () => {
                   `${order.vehicle.model} ${order.vehicle.trim || ''}` : 
                   'Veicolo non disponibile';
                 
-                // Calculate order number based on the tab and index
                 const orderNumber = getOrderNumber(
                   tabName === 'all' ? index : 
                   tabName === 'processing' ? processingOrders.indexOf(order) :
@@ -527,7 +503,7 @@ const Orders = () => {
       </div>
     </div>
   );
-  
+
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -562,7 +538,6 @@ const Orders = () => {
         )}
       </div>
       
-      {/* Improved Filters UI */}
       {isAdmin && showFilters && (
         <Card className="mb-6">
           <CardHeader className="pb-2">
@@ -570,7 +545,6 @@ const Orders = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Status filters */}
               <div>
                 <h3 className="text-sm font-medium mb-2">Targabile</h3>
                 <div className="flex space-x-2">
@@ -671,7 +645,6 @@ const Orders = () => {
                 </div>
               </div>
               
-              {/* Model filter */}
               <div>
                 <h3 className="text-sm font-medium mb-2">Modello</h3>
                 <Select
@@ -682,7 +655,7 @@ const Orders = () => {
                     <SelectValue placeholder="Seleziona modello" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti i modelli</SelectItem>
+                    <SelectItem value="all">Tutti i modelli</SelectItem>
                     {uniqueModels.map(model => (
                       <SelectItem key={model} value={model}>{model}</SelectItem>
                     ))}
@@ -690,7 +663,6 @@ const Orders = () => {
                 </Select>
               </div>
               
-              {/* Dealer filter */}
               <div>
                 <h3 className="text-sm font-medium mb-2">Dealer</h3>
                 <Select
@@ -701,7 +673,7 @@ const Orders = () => {
                     <SelectValue placeholder="Seleziona dealer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti i dealer</SelectItem>
+                    <SelectItem value="all">Tutti i dealer</SelectItem>
                     {dealersData.map((dealer: Dealer) => (
                       <SelectItem key={dealer.id} value={dealer.id}>{dealer.companyName}</SelectItem>
                     ))}
