@@ -40,8 +40,8 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
       // Pass the vehicle ID instead of the whole vehicle object
       await handleVehicleDuplicate(vehicle.id);
       
-      // Forzare il refresh dei dati immediatamente
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      // Force immediate data refresh
+      queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
       
       toast({
         title: "Veicolo Duplicato",
@@ -59,14 +59,15 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
   
   const closeDetailsDialog = () => {
     setSelectedVehicle(null);
-    // Forzare il refresh dei dati quando si chiude il dialog
-    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    // Force immediate data refresh
+    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
   };
   
   const closeEditDialog = () => {
     setVehicleToEdit(null);
-    // Forzare il refresh dei dati quando si chiude il dialog di modifica
-    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    // Force immediate data refresh
+    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
   };
   
   const closeDeleteDialog = () => {
@@ -78,10 +79,10 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
       onVehicleUpdated(updatedVehicle);
     }
     
-    // Forzare il refresh dei dati dopo l'aggiornamento
-    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    // Force immediate data refresh
+    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
     
-    // Mostra un toast per confermare l'aggiornamento
+    // Show a toast to confirm the update
     toast({
       title: "Veicolo Aggiornato",
       description: `${updatedVehicle.model} ${updatedVehicle.trim} è stato aggiornato con successo.`,
@@ -94,10 +95,11 @@ const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: V
     if (vehicleToDelete && onVehicleDeleted) {
       onVehicleDeleted(vehicleToDelete.id);
       
-      // Forzare il refresh dei dati dopo l'eliminazione
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      // Force immediate data refresh
+      queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       
-      // Mostra un toast per confermare l'eliminazione
+      // Show a toast to confirm deletion
       toast({
         title: "Veicolo Eliminato",
         description: `${vehicleToDelete.model} ${vehicleToDelete.trim} è stato eliminato dall'inventario.`,

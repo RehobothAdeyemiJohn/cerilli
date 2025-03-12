@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,7 +60,8 @@ export const useVirtualReservation = (
     isLoading: isLoadingDealers 
   } = useQuery({
     queryKey: ['dealers'],
-    queryFn: dealersApi.getAll
+    queryFn: dealersApi.getAll,
+    staleTime: 0 // Set to 0 to always consider data stale
   });
 
   // Filter active dealers
@@ -75,7 +75,8 @@ export const useVirtualReservation = (
     isLoading: isLoadingModels 
   } = useQuery({
     queryKey: ['models'],
-    queryFn: modelsApi.getAll
+    queryFn: modelsApi.getAll,
+    staleTime: 0 // Set to 0 to always consider data stale
   });
 
   const { 

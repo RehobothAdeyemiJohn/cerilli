@@ -28,7 +28,7 @@ export function useVehicleDetailsDialog(
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
-    staleTime: 10000,
+    staleTime: 0, // Set to 0 to always consider data stale
   });
 
   const handleShowQuoteForm = () => {
@@ -214,7 +214,7 @@ export function useVehicleDetailsDialog(
         });
       }
       
-      // Update queries immediately
+      // Update queries immediately with staleTime: 0
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       

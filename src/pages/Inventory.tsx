@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -58,7 +57,7 @@ const Inventory = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 5000); // Update every 5 seconds (reduced from 15 seconds)
+    }, 2000); // Update every 2 seconds for more immediate feedback
     
     return () => clearInterval(interval);
   }, [refetch]);

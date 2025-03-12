@@ -15,8 +15,7 @@ export const useInventory = () => {
   const { data: inventory = [], isLoading, error, refetch } = useQuery({
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
-    // Ridotto significativamente il staleTime per aggiornare i dati molto più frequentemente
-    staleTime: 100, // Reduced from 500 to 100 for much more frequent updates
+    staleTime: 0, // Set to 0 to always consider data stale and refresh immediately
   });
   
   const { 
