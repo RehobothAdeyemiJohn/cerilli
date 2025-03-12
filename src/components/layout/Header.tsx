@@ -26,17 +26,17 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   };
   
   return (
-    <header className="bg-background border-b border-border h-16 flex items-center px-4">
+    <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 z-10">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-foreground hover:bg-accent focus:outline-none"
+            className="p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none mr-2"
           >
             <MenuIcon className="h-5 w-5" />
           </button>
           
-          <div className="ml-4 font-semibold text-lg md:text-xl text-foreground">
+          <div className="font-semibold text-lg md:text-xl text-gray-800">
             Cirelli Motor Company
           </div>
         </div>
@@ -44,9 +44,9 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-2 hover:bg-accent p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <UserCircle className="h-6 w-6 text-foreground" />
-                <span className="hidden md:inline text-sm text-foreground">
+              <button className="flex items-center space-x-2 hover:bg-gray-100 p-2 rounded-lg focus:outline-none">
+                <UserCircle className="h-6 w-6 text-gray-600" />
+                <span className="hidden md:inline text-sm text-gray-700">
                   {user?.firstName} {user?.lastName}
                 </span>
               </button>
