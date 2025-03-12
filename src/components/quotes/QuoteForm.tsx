@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,10 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
           <QuoteDiscountSection />
 
           {/* Optional Accessories */}
-          <QuoteAccessories compatibleAccessories={compatibleAccessories} />
+          <QuoteAccessories 
+            compatibleAccessories={compatibleAccessories} 
+            vehicle={vehicle}
+          />
 
           {/* Trade-In Section */}
           <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />

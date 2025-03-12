@@ -7,12 +7,20 @@ import { useFormContext } from 'react-hook-form';
 
 interface QuoteAccessoriesProps {
   compatibleAccessories: Accessory[];
+  vehicle: {
+    accessories: string[];
+  };
 }
 
-const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ compatibleAccessories }) => {
+const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ compatibleAccessories, vehicle }) => {
   const form = useFormContext();
 
-  if (compatibleAccessories.length === 0) {
+  // Filter out accessories that are already included in the vehicle's stock configuration
+  const availableAccessories = compatibleAccessories.filter(
+    accessory => !vehicle.accessories.includes(accessory.name)
+  );
+
+  if (availableAccessories.length === 0) {
     return null;
   }
 
@@ -20,7 +28,7 @@ const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ compatibleAccessori
     <div className="border-t pt-2">
       <h3 className="font-medium text-sm mb-2">Optional Disponibili</h3>
       <div className="grid grid-cols-2 gap-2">
-        {compatibleAccessories.map((accessory) => (
+        {availableAccessories.map((accessory) => (
           <FormField
             key={accessory.id}
             control={form.control}
