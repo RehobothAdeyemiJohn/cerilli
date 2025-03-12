@@ -22,6 +22,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     showReserveForm,
     showVirtualReserveForm,
     isSubmitting,
+    user,
     handleShowQuoteForm,
     handleCreateQuote,
     handleCancelQuote,
@@ -31,6 +32,9 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   } = useVehicleDetailsDialog(vehicle, onOpenChange);
   
   if (!vehicle) return null;
+  
+  // Verifica se l'utente può creare preventivi
+  const userCanCreateQuotes = !!user?.dealerId;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,6 +59,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
             handleCancelReservation();
             onOpenChange(false);
           }}
+          userCanCreateQuotes={userCanCreateQuotes}
         />
       </DialogContent>
     </Dialog>

@@ -10,13 +10,15 @@ interface VehicleDetailsContentProps {
   onCreateQuote: () => void;
   onReserveVehicle: () => void;
   onReserveVirtualVehicle: () => void;
+  userCanCreateQuotes: boolean;
 }
 
 const VehicleDetailsContent = ({ 
   vehicle, 
   onCreateQuote, 
   onReserveVehicle,
-  onReserveVirtualVehicle
+  onReserveVirtualVehicle,
+  userCanCreateQuotes
 }: VehicleDetailsContentProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
@@ -196,6 +198,7 @@ const VehicleDetailsContent = ({
                   variant="default" 
                   className="flex-1"
                   onClick={onCreateQuote}
+                  disabled={!userCanCreateQuotes}
                 >
                   Crea Preventivo
                 </Button>

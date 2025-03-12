@@ -19,6 +19,7 @@ interface VehicleDialogContentProps {
   onReserveVirtualVehicle: () => void;
   onReservationCancel: () => void;
   onReservationComplete: () => void;
+  userCanCreateQuotes: boolean;
 }
 
 const VehicleDialogContent = ({
@@ -33,7 +34,8 @@ const VehicleDialogContent = ({
   onReserveVehicle,
   onReserveVirtualVehicle,
   onReservationCancel,
-  onReservationComplete
+  onReservationComplete,
+  userCanCreateQuotes
 }: VehicleDialogContentProps) => {
   
   if (showQuoteForm) {
@@ -73,6 +75,7 @@ const VehicleDialogContent = ({
       onCreateQuote={onCreateQuote}
       onReserveVehicle={onReserveVehicle}
       onReserveVirtualVehicle={onReserveVirtualVehicle}
+      userCanCreateQuotes={userCanCreateQuotes}
     />
   );
 };
