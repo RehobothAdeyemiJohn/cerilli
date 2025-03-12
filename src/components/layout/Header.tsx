@@ -26,18 +26,18 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   };
   
   return (
-    <header className="fixed top-0 right-0 left-0 bg-white border-b border-gray-200 h-16 flex items-center px-4 z-30">
+    <header className="fixed top-0 right-0 left-0 bg-background border-b border-border h-16 flex items-center px-4 z-30">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="p-2 rounded-lg text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Toggle sidebar"
           >
             <MenuIcon className="h-6 w-6" />
           </button>
           
-          <div className="ml-4 font-semibold text-lg md:text-xl text-gray-800">
+          <div className="ml-4 font-semibold text-lg md:text-xl text-foreground">
             Cirelli Motor Company
           </div>
         </div>
@@ -45,9 +45,9 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-2 hover:bg-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <UserCircle className="h-6 w-6 text-gray-600" />
-                <span className="hidden md:inline text-sm text-gray-700">
+              <button className="flex items-center space-x-2 hover:bg-accent p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <UserCircle className="h-6 w-6 text-foreground" />
+                <span className="hidden md:inline text-sm text-foreground">
                   {user?.firstName} {user?.lastName}
                 </span>
               </button>

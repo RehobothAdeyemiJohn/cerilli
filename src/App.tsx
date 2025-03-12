@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/layout/Layout';
 
 // Pages
 import Index from '@/pages/Index';
@@ -48,14 +49,16 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/dealers" element={<Dealers />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/credentials" element={<Credentials />} />
-              <Route path="/migration" element={<Migration />} />
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/dealers" element={<Dealers />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/credentials" element={<Credentials />} />
+                <Route path="/migration" element={<Migration />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
