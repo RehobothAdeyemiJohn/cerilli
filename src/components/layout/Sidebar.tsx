@@ -1,17 +1,12 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  ShoppingBag, 
-  FileText, 
+  ShoppingBag,
+  Store,
   ClipboardList, 
-  Users, 
-  Settings, 
-  KeyRound,
-  Database,
   Truck,
-  Store
+  Users
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -28,10 +23,9 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
-    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true },
+    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: false, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
     { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
-    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
   ];
   
@@ -42,10 +36,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   ];
   
   const isActive = (path: string) => {
-    // For exact matches
     if (location.pathname === path) return true;
     
-    // For the inventory path with routes like /inventory/123
     if (path === '/inventory' && location.pathname.startsWith('/inventory/')) return true;
     
     return false;
