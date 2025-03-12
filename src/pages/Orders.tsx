@@ -47,10 +47,10 @@ const Orders = () => {
         // 1. Get current order
         const order = await ordersApi.getById(orderId);
         
-        // 2. Update vehicle status to 'dealer-stock'
+        // 2. Update vehicle status to 'delivered' and change location to 'Stock Dealer'
         if (order.vehicle && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
-            status: 'delivered',
+            status: 'delivered' as Vehicle['status'],
             location: 'Stock Dealer'
           });
         }

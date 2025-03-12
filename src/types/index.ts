@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -8,7 +9,7 @@ export type Vehicle = {
   price: number;
   location: string;
   imageUrl?: string;
-  status: 'available' | 'reserved' | 'sold' | 'ordered';
+  status: 'available' | 'reserved' | 'sold' | 'ordered' | 'delivered';
   dateAdded: string;
   transmission?: string;
   telaio: string;

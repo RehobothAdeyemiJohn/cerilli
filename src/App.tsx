@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -59,8 +60,8 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/credentials" element={<Credentials />} />
                 <Route path="/migration" element={<Migration />} />
-                <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
-                <Route path="/dealer-stock" element={<ProtectedRoute><DealerStock /></ProtectedRoute>} />
+                <Route path="/deliveries" element={<Deliveries />} />
+                <Route path="/dealer-stock" element={<DealerStock />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
