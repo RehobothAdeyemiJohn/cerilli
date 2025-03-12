@@ -22,6 +22,9 @@ const Dashboard = () => {
               <TabsTrigger value="month">Month</TabsTrigger>
               <TabsTrigger value="year">Year</TabsTrigger>
             </TabsList>
+            <TabsContent value="week">Week</TabsContent>
+            <TabsContent value="month">Month</TabsContent>
+            <TabsContent value="year">Year</TabsContent>
           </Tabs>
         </div>
       </div>
