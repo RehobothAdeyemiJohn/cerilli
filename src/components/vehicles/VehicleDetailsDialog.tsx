@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Vehicle } from '@/types';
 import { 
@@ -39,7 +38,6 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   if (!vehicle) return null;
   
-  // Now all users can create quotes
   const userCanCreateQuotes = true;
   
   console.log('Rendering VehicleDetailsDialog for vehicle:', vehicle.id);
@@ -48,11 +46,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   return (
     <Dialog open={open} onOpenChange={(value) => {
-      console.log('Dialog onOpenChange called with value:', value);
       if (!isTransforming) {
         onOpenChange(value);
-      } else {
-        console.log('Ignoring dialog close during transformation');
       }
     }}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
@@ -77,27 +72,19 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
           onCancelReservationCancel={handleCancelReservation}
           onReservationCancel={handleCancelReservation}
           onReservationComplete={() => {
-            console.log('Reservation complete, closing dialog');
             handleCancelReservation();
             onOpenChange(false);
           }}
-          onTransformToOrder={() => {
-            console.log('Transform to order clicked, calling handler and will close dialog');
-            // Imposta lo stato di trasformazione attivo per prevenire clic multipli
+          onTransformToOrder={async () => {
             setIsTransforming(true);
-            
-            handleTransformToOrder()
-              .then(() => {
-                console.log('Transform to order completed successfully, closing dialog');
-                onOpenChange(false);
-              })
-              .catch(error => {
-                console.error('Transform to order failed:', error);
-              })
-              .finally(() => {
-                // Rimuovi lo stato di trasformazione attiva
-                setIsTransforming(false);
-              });
+            try {
+              await handleTransformToOrder();
+              onOpenChange(false);
+            } catch (error) {
+              console.error('Transform to order failed:', error);
+            } finally {
+              setIsTransforming(false);
+            }
           }}
           userCanCreateQuotes={userCanCreateQuotes}
         />

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -27,7 +26,7 @@ export function useVehicleDetailsDialog(
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
-    staleTime: 10000, // Reduced from 60000 to 10000 for more frequent updates
+    staleTime: 10000,
   });
 
   const handleShowQuoteForm = () => {
@@ -157,7 +156,6 @@ export function useVehicleDetailsDialog(
     if (!vehicle) return Promise.reject(new Error("No vehicle provided"));
     
     try {
-      console.log("Starting Transform to Order process");
       setIsSubmitting(true);
       
       if (vehicle.status !== 'reserved') {
@@ -166,22 +164,27 @@ export function useVehicleDetailsDialog(
           description: "Solo i veicoli prenotati possono essere trasformati in ordini",
           variant: "destructive",
         });
-        setIsSubmitting(false);
         return Promise.reject(new Error("Vehicle not in reserved status"));
       }
       
       console.log("Starting transformation to order for vehicle:", vehicle.id);
       
       // Check if the vehicle is already ordered to prevent duplicate orders
-      const vehicles = await vehiclesApi.getAll();
-      const currentVehicle = vehicles.find(v => v.id === vehicle.id);
+      const { data: currentVehicle, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('id', vehicle.id)
+        .maybeSingle();
+      
+      if (error) {
+        throw new Error("Error checking vehicle status");
+      }
       
       if (!currentVehicle) {
         throw new Error("Vehicle not found in database");
       }
       
       if (currentVehicle.status === 'ordered') {
-        console.log("Vehicle is already ordered, preventing duplicate orders");
         toast({
           title: "Avviso",
           description: "Questo veicolo è già stato trasformato in ordine",
@@ -189,36 +192,27 @@ export function useVehicleDetailsDialog(
         return Promise.resolve();
       }
       
-      // Transform the vehicle to ordered status
-      const updatedVehicle = await vehiclesApi.transformToOrder(vehicle.id);
-      
-      console.log("Vehicle transformed to order:", updatedVehicle);
+      // Transform the vehicle to ordered status first
+      await vehiclesApi.transformToOrder(vehicle.id);
       
       // Create a new order record if reservedBy is available
       if (vehicle.reservedBy) {
-        console.log("Creating order record for vehicle:", vehicle.id);
         const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
         
         if (!dealerId) {
-          console.error("No dealer ID available for order creation");
-          toast({
-            title: "Avviso",
-            description: "Veicolo trasformato in ordine ma non è stato possibile creare il record dell'ordine senza un rivenditore associato",
-            variant: "destructive",
-          });
-        } else {
-          await ordersApi.create({
-            vehicleId: vehicle.id,
-            dealerId,
-            customerName: vehicle.reservedBy,
-            status: 'processing',
-            orderDate: new Date().toISOString()
-          });
-          console.log("Order created successfully");
+          throw new Error("No dealer ID available for order creation");
         }
+        
+        await ordersApi.create({
+          vehicleId: vehicle.id,
+          dealerId,
+          customerName: vehicle.reservedBy,
+          status: 'processing',
+          orderDate: new Date().toISOString()
+        });
       }
       
-      // Make sure to update the cache immediately
+      // Update queries immediately
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
@@ -226,9 +220,6 @@ export function useVehicleDetailsDialog(
         title: "Ordine Creato",
         description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
       });
-      
-      console.log("Transform to order process completed successfully");
-      setIsSubmitting(false);
       
       return Promise.resolve();
     } catch (error) {
@@ -238,8 +229,9 @@ export function useVehicleDetailsDialog(
         description: "Si è verificato un errore durante la trasformazione in ordine",
         variant: "destructive",
       });
+      throw error;
+    } finally {
       setIsSubmitting(false);
-      return Promise.reject(error);
     }
   };
 
