@@ -24,11 +24,17 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const hasTradeIn = form.watch('hasTradeIn');
   const tradeInValue = form.watch('tradeInValue') || 0;
   
+  // Calculate subtotal before VAT
+  const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
+  // Calculate VAT amount
+  const vatRate = watchReducedVAT ? 0.04 : 0.22;
+  const vatAmount = subtotal * vatRate;
+  
   return (
     <div className="pt-2 border-t">
       <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
         <div className="space-y-0.5">
-          <p className="text-xs text-gray-500">Prezzo Veicolo {watchReducedVAT ? '(IVA 4%)' : '(IVA 22%)'}</p>
+          <p className="text-xs text-gray-500">Prezzo Veicolo</p>
           <p className="font-medium text-sm">{formatCurrency(basePrice)}</p>
         </div>
         
@@ -50,7 +56,17 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         )}
         
         <div className="space-y-0.5">
-          <p className="text-xs text-gray-500 font-semibold">Prezzo Finale</p>
+          <p className="text-xs text-gray-500">Subtotale (netto)</p>
+          <p className="font-medium text-sm">{formatCurrency(subtotal)}</p>
+        </div>
+        
+        <div className="space-y-0.5">
+          <p className="text-xs text-gray-500">IVA {watchReducedVAT ? '4%' : '22%'}</p>
+          <p className="font-medium text-sm">+ {formatCurrency(vatAmount)}</p>
+        </div>
+        
+        <div className="space-y-0.5 col-span-2">
+          <p className="text-xs text-gray-500 font-semibold">Prezzo Finale (IVA inclusa)</p>
           <p className="font-bold text-sm text-primary">
             {formatCurrency(finalPrice)}
           </p>

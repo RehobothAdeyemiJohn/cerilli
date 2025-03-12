@@ -1,4 +1,3 @@
-
 import { supabase } from '@/api/supabase/client';
 import { Dealer, Vehicle, Accessory } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,7 +28,6 @@ const formSchema = z.object({
   tradeInValue: z.number().optional(),
   notes: z.string().optional(),
   finalPrice: z.number(),
-  // Add these fields to the schema to fix the TypeScript errors
   selectedAccessories: z.array(
     z.object({
       id: z.string(),
@@ -79,8 +77,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       tradeInValue: 0,
       notes: '',
       finalPrice: basePrice,
-      selectedAccessories: [], // Initialize the new field
-      accessoryTotalPrice: 0, // Initialize the new field
+      selectedAccessories: [],
+      accessoryTotalPrice: 0,
     },
   });
   
@@ -95,9 +93,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   
   // Create a compatible accessories array from the vehicle's accessories
   const compatibleAccessories: Accessory[] = vehicleAccessories.map(accessoryName => ({
-    id: accessoryName, // Use the accessory name as ID
+    id: accessoryName,
     name: accessoryName,
-    // Use priceWithVAT and priceWithoutVAT instead of price
     priceWithVAT: 0,
     priceWithoutVAT: 0,
     compatibleModels: [],
@@ -119,9 +116,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
   
   // Apply VAT rate based on selection
-  const finalPrice = watchReducedVAT 
-    ? subtotal * 1.04 // 4% reduced VAT 
-    : subtotal * 1.22; // 22% standard VAT
+  const vatRate = watchReducedVAT ? 0.04 : 0.22;
+  const finalPrice = subtotal + (subtotal * vatRate);
   
   // Update final price when component values change
   form.setValue('finalPrice', finalPrice);
