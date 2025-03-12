@@ -1,3 +1,4 @@
+
 import { supabase } from '@/api/supabase/client';
 import { Dealer, Vehicle, Accessory } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,6 +37,7 @@ const formSchema = z.object({
     })
   ).optional(),
   accessoryTotalPrice: z.number().optional(),
+  roadPreparationFee: z.number().default(400), // Add road preparation fee field
 });
 
 export type QuoteFormValues = z.infer<typeof formSchema>;
@@ -55,6 +57,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   });
   
   const basePrice = vehicle?.price || 0;
+  const roadPreparationFee = 400; // Fixed road preparation fee
   
   // Precomputed values for price calculations
   const form = useForm<QuoteFormValues>({
@@ -76,9 +79,10 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
       tradeInKm: 0,
       tradeInValue: 0,
       notes: '',
-      finalPrice: basePrice,
+      finalPrice: basePrice + roadPreparationFee,
       selectedAccessories: [],
       accessoryTotalPrice: 0,
+      roadPreparationFee: roadPreparationFee,
     },
   });
   
@@ -112,8 +116,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const tradeInValue = watchHasTradeIn ? watchTradeInValue || 0 : 0;
   const totalDiscount = discount + tradeInValue;
   
-  // Base price plus accessories minus discounts (including trade-in)
-  const finalPrice = basePrice + accessoryTotalPrice - totalDiscount;
+  // Base price plus accessories minus discounts (including trade-in) plus road preparation fee
+  const finalPrice = basePrice + accessoryTotalPrice - totalDiscount + roadPreparationFee;
   
   // Update final price when component values change
   form.setValue('finalPrice', finalPrice);
@@ -124,6 +128,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     
     // Set price info
     data.price = basePrice;
+    data.roadPreparationFee = roadPreparationFee;
     
     // Calculate accessory selections
     const selectedAccessories = (data.vehicleAccessories || []).map(accessoryName => {
@@ -181,6 +186,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     watchDiscount,
     watchTradeInValue,
     handleSubmit,
-    totalDiscount
+    totalDiscount,
+    roadPreparationFee
   };
 };

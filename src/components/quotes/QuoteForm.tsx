@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,9 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
     watchHasTradeIn,
     watchDiscount,
     watchTradeInValue,
-    handleSubmit
+    handleSubmit,
+    totalDiscount,
+    roadPreparationFee
   } = useQuoteForm(vehicle, onSubmit);
 
   // If no vehicle is provided, show a selection screen
@@ -53,8 +56,6 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
       </div>
     );
   }
-
-  const totalDiscount = (watchDiscount || 0) + (watchHasTradeIn ? watchTradeInValue || 0 : 0);
 
   return (
     <div className="w-full text-sm">
@@ -91,6 +92,7 @@ const QuoteForm = ({ vehicle, onSubmit, onCancel, isSubmitting = false }: QuoteF
             finalPrice={finalPrice}
             watchReducedVAT={form.watch('reducedVAT')}
             totalDiscount={totalDiscount}
+            roadPreparationFee={roadPreparationFee}
           />
 
           {/* Form Actions */}
