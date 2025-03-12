@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
-    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: false, showForAdmin: true },
+    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
     { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },

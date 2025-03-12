@@ -12,8 +12,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 const DealerStock = () => {
+  const { user } = useAuth();
+  
   // Fetch all vehicles from Supabase
   const { 
     data: vehicles = [], 
@@ -25,8 +28,17 @@ const DealerStock = () => {
     staleTime: 0,
   });
   
-  // Filter vehicles with location "Stock Dealer"
-  const dealerStockVehicles = vehicles.filter(v => v.location === 'Stock Dealer');
+  // Filter vehicles with location "Stock Dealer" AND (if dealer) only show those reserved by this dealer
+  const dealerStockVehicles = vehicles.filter(v => {
+    // First filter by location
+    if (v.location !== 'Stock Dealer') return false;
+    
+    // If user is admin, show all dealer stock vehicles
+    if (user?.type === 'admin') return true;
+    
+    // If user is dealer or vendor, only show vehicles reserved by this dealer
+    return v.reservedBy === user?.dealerName;
+  });
   
   return (
     <div className="container mx-auto py-6 px-4">
