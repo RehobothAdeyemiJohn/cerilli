@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { addDealer, updateDealer } from '@/data/mockData';
+import { dealersApi } from '@/api/supabase/dealersApi';
 
 const formSchema = z.object({
   companyName: z.string().min(1, 'Nome azienda richiesto'),
@@ -89,7 +88,7 @@ const DealerFormDialog = ({
     try {
       if (dealer) {
         // Update existing dealer
-        updateDealer({
+        await dealersApi.update({
           ...dealer,
           ...values,
         });
@@ -97,19 +96,8 @@ const DealerFormDialog = ({
           title: "Dealer aggiornato con successo",
         });
       } else {
-        // Create new dealer - ensure all required fields are present
-        addDealer({
-          companyName: values.companyName,
-          address: values.address,
-          city: values.city,
-          province: values.province,
-          zipCode: values.zipCode,
-          isActive: values.isActive,
-          // Include new fields
-          contactName: values.contactName,
-          email: values.email,
-          password: values.password,
-        });
+        // Create new dealer
+        await dealersApi.create(values);
         toast({
           title: "Dealer creato con successo",
         });
@@ -120,14 +108,13 @@ const DealerFormDialog = ({
       
       // Call onSuccess callback to refresh the list
       if (onSuccess) {
-        // Ensure this runs AFTER the dealer has been added to the array
-        setTimeout(() => {
-          onSuccess();
-        }, 0);
+        onSuccess();
       }
     } catch (error) {
+      console.error('Errore durante il salvataggio:', error);
       toast({
         title: "Errore durante il salvataggio",
+        description: "Controlla i dati inseriti e riprova",
         variant: "destructive",
       });
     }

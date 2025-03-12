@@ -5,15 +5,16 @@ import { Button } from '@/components/ui/button';
 import DealerList from '@/components/dealers/DealerList';
 import DealerFormDialog from '@/components/dealers/DealerFormDialog';
 import { useToast } from '@/components/ui/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Dealers = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [refresh, setRefresh] = useState(0);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleDealerCreated = () => {
-    // Force refresh of dealer list
-    setRefresh(prev => prev + 1);
+    // Invalidate the dealers query to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['dealers'] });
   };
 
   return (
@@ -26,7 +27,7 @@ const Dealers = () => {
         </Button>
       </div>
 
-      <DealerList key={refresh} />
+      <DealerList />
       
       <DealerFormDialog 
         open={isFormOpen}

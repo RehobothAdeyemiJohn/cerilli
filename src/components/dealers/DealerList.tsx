@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,29 +14,33 @@ import DealerFormDialog from './DealerFormDialog';
 import VendorsDialog from './VendorsDialog';
 import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { dealers, deleteDealer, updateDealer } from '@/data/mockData';
+import { dealersApi } from '@/api/supabase/dealersApi';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const DealerList = () => {
-  const [dealersList, setDealersList] = useState<Dealer[]>([]);
   const [selectedDealer, setSelectedDealer] = useState<Dealer | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isVendorsOpen, setIsVendorsOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load dealers when component mounts or when dealers array changes
-  useEffect(() => {
-    setDealersList([...dealers]);
-  }, []);
+  // Fetch dealers using React Query
+  const { data: dealersList = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+    staleTime: 60000, // 1 minute
+  });
 
   const handleDelete = async (id: string) => {
     try {
-      deleteDealer(id);
-      // Refresh the list after deletion
-      setDealersList([...dealers]);
+      await dealersApi.delete(id);
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['dealers'] });
       toast({
         title: "Dealer eliminato con successo",
       });
     } catch (error) {
+      console.error('Errore durante l\'eliminazione:', error);
       toast({
         title: "Errore durante l'eliminazione",
         variant: "destructive",
@@ -43,23 +48,21 @@ const DealerList = () => {
     }
   };
 
-  const toggleDealerStatus = (dealer: Dealer) => {
+  const toggleDealerStatus = async (dealer: Dealer) => {
     try {
-      const updatedDealer = {
-        ...dealer,
-        isActive: !dealer.isActive
-      };
-      updateDealer(updatedDealer);
+      const newStatus = !dealer.isActive;
+      await dealersApi.toggleStatus(dealer.id, newStatus);
       
-      // Update the dealers list
-      setDealersList([...dealers]);
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['dealers'] });
       
       toast({
-        title: updatedDealer.isActive 
+        title: newStatus 
           ? "Dealer attivato con successo" 
           : "Dealer disattivato con successo",
       });
     } catch (error) {
+      console.error('Errore durante l\'aggiornamento dello stato:', error);
       toast({
         title: "Errore durante l'aggiornamento dello stato",
         variant: "destructive",
@@ -69,8 +72,16 @@ const DealerList = () => {
 
   // Function to refresh dealers list
   const refreshDealers = () => {
-    setDealersList([...dealers]);
+    queryClient.invalidateQueries({ queryKey: ['dealers'] });
   };
+
+  if (isLoading) {
+    return <div className="py-10 text-center">Caricamento dealers...</div>;
+  }
+
+  if (isError) {
+    return <div className="py-10 text-center text-red-500">Errore nel caricamento dei dealers!</div>;
+  }
 
   return (
     <>

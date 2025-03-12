@@ -24,7 +24,7 @@ export function useVehicleDetailsDialog(
 
   // Ottieni tutti i dealer disponibili
   const { data: dealers = [] } = useQuery({
-    queryKey: ['dealers-fallback'],
+    queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
     staleTime: 60000,
   });
