@@ -24,7 +24,7 @@ const Dealers = () => {
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">
-          {isDealer ? "Gestione Venditori" : "Gestione Dealers"}
+          Gestione Dealers
         </h1>
         {!isDealer && (
           <Button onClick={() => setIsFormOpen(true)}>

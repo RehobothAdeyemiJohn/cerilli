@@ -6,11 +6,10 @@ import {
   ShoppingBag, 
   FileText, 
   ClipboardList, 
-  Truck, 
+  Users, 
   Settings, 
   KeyRound,
-  Database,
-  Users
+  Database
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -22,13 +21,14 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   const location = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.type === 'admin';
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   const menuItems = [
-    { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { title: 'Stock', icon: ShoppingBag, path: '/inventory' },
-    { title: 'Preventivi', icon: FileText, path: '/quotes' },
-    { title: 'Ordini', icon: ClipboardList, path: '/orders' },
-    { title: 'Venditori', icon: Users, path: '/dealers', showForDealer: true },
+    { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
+    { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
+    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true },
+    { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
+    { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
   ];
   
   const adminItems = [
@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       <div className="flex flex-col flex-1 py-2 overflow-y-auto">
         <nav className="flex-1 px-2 space-y-1">
           {menuItems
-            .filter(item => isAdmin || item.showForDealer)
+            .filter(item => (isAdmin || (isDealer && item.showForDealer)))
             .map((item) => (
               <Link
                 key={item.path}
