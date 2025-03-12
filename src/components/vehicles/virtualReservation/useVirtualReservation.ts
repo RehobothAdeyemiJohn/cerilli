@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,7 +9,7 @@ import {
   modelsApi, trimsApi, fuelTypesApi, colorsApi, 
   transmissionsApi, accessoriesApi, calculateVehiclePrice 
 } from '@/api/localStorage';
-import { dealers } from '@/data/mockData';
+import { dealersApi } from '@/api/supabase/dealersApi'; // Updated to use Supabase dealers API
 import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -78,10 +79,19 @@ export const useVirtualReservation = (
   
   const { handleVehicleUpdate } = useInventory();
   
+  // Fetch active dealers from Supabase instead of using local data
+  const { 
+    data: activeDealers = [], 
+    isLoading: isLoadingDealers 
+  } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll
+  });
+
   // Filter active dealers
-  const activeDealers = useMemo(() => {
-    return dealers.filter(dealer => dealer.isActive);
-  }, []);
+  const filteredDealers = useMemo(() => {
+    return activeDealers.filter(dealer => dealer.isActive);
+  }, [activeDealers]);
 
   // Queries for data fetching
   const { 
@@ -141,7 +151,7 @@ export const useVirtualReservation = (
 
   // Compute loading state
   const isLoading = isLoadingModels || isLoadingTrims || isLoadingFuelTypes || 
-                    isLoadingColors || isLoadingTransmissions || isLoadingAccessories;
+                    isLoadingColors || isLoadingTransmissions || isLoadingAccessories || isLoadingDealers;
 
   // Find model object safely with useMemo
   const modelObj = useMemo(() => {
@@ -280,7 +290,7 @@ export const useVirtualReservation = (
       if (isAdmin) {
         // For admin, use selected dealer from dropdown
         selectedDealerId = (data as any).dealerId;
-        const selectedDealer = activeDealers.find(dealer => dealer.id === selectedDealerId);
+        const selectedDealer = filteredDealers.find(dealer => dealer.id === selectedDealerId);
         selectedDealerName = selectedDealer ? selectedDealer.companyName : 'Unknown';
       } else {
         // For dealer, use authenticated user's dealer info
@@ -330,7 +340,7 @@ export const useVirtualReservation = (
     calculatedPrice,
     vehicle,
     isAdmin,
-    activeDealers,
+    activeDealers: filteredDealers, // Updated to use filtered Supabase dealers
     onCancel
   };
 };
