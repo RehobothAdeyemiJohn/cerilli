@@ -1,15 +1,131 @@
 
-import React from 'react';
-import { orders, vehicles } from '@/data/mockData';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ordersApi } from '@/api/supabase/ordersApi';
+import { Order } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/hooks/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const Orders = () => {
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  
+  // Fetch all orders from Supabase
+  const { 
+    data: orders = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => ordersApi.getAll(),
+    staleTime: 30000, // 30 seconds
+  });
+  
+  // Filter orders by status
   const processingOrders = orders.filter(o => o.status === 'processing');
   const deliveredOrders = orders.filter(o => o.status === 'delivered');
   const cancelledOrders = orders.filter(o => o.status === 'cancelled');
   
-  const getVehicleById = (id: string) => {
-    return vehicles.find(v => v.id === id);
+  // Mutation for marking an order as delivered
+  const markAsDeliveredMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      // Get current order first
+      const order = await ordersApi.getById(orderId);
+      // Update with new status and delivery date
+      return ordersApi.update(orderId, {
+        ...order,
+        status: 'delivered',
+        deliveryDate: new Date().toISOString()
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast({
+        title: "Ordine consegnato",
+        description: "L'ordine è stato marcato come consegnato con successo",
+      });
+    },
+    onError: (error) => {
+      console.error('Error marking order as delivered:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento dell'ordine",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Mutation for cancelling an order
+  const cancelOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      // Get current order first
+      const order = await ordersApi.getById(orderId);
+      // Update with cancelled status
+      return ordersApi.update(orderId, {
+        ...order,
+        status: 'cancelled'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast({
+        title: "Ordine cancellato",
+        description: "L'ordine è stato cancellato con successo",
+      });
+    },
+    onError: (error) => {
+      console.error('Error cancelling order:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la cancellazione dell'ordine",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Mutation for deleting an order
+  const deleteOrderMutation = useMutation({
+    mutationFn: (orderId: string) => ordersApi.delete(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast({
+        title: "Ordine eliminato",
+        description: "L'ordine è stato eliminato definitivamente",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting order:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione dell'ordine",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleMarkAsDelivered = (orderId: string) => {
+    markAsDeliveredMutation.mutate(orderId);
+  };
+  
+  const handleCancelOrder = (orderId: string) => {
+    cancelOrderMutation.mutate(orderId);
+  };
+  
+  const handleDeleteOrder = () => {
+    if (selectedOrderId) {
+      deleteOrderMutation.mutate(selectedOrderId);
+      setSelectedOrderId(null);
+    }
   };
   
   const getStatusBadgeClass = (status: string) => {
@@ -25,64 +141,134 @@ const Orders = () => {
     }
   };
   
-  const renderOrderTable = (filteredOrders: typeof orders) => (
+  const renderOrderTable = (filteredOrders: Order[]) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left font-medium">Customer</th>
-              <th className="p-3 text-left font-medium">Vehicle</th>
-              <th className="p-3 text-left font-medium">Status</th>
-              <th className="p-3 text-left font-medium">Order Date</th>
-              <th className="p-3 text-left font-medium">Delivery Date</th>
-              <th className="p-3 text-left font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Veicolo</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead>Data Ordine</TableHead>
+              <TableHead>Data Consegna</TableHead>
+              <TableHead>Azioni</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  Caricamento ordini...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10 text-red-500">
+                  Errore durante il caricamento degli ordini.
+                </TableCell>
+              </TableRow>
+            ) : filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
-                const vehicle = getVehicleById(order.vehicleId);
+                const vehicleInfo = order.vehicles ? 
+                  `${order.vehicles.model} ${order.vehicles.trim || ''}` : 
+                  'Veicolo non disponibile';
+                
                 return (
-                  <tr key={order.id} className="border-b">
-                    <td className="p-3">{order.customerName}</td>
-                    <td className="p-3">{vehicle ? `${vehicle.model} ${vehicle.trim}` : 'Unknown'}</td>
-                    <td className="p-3">
+                  <TableRow key={order.id}>
+                    <TableCell>{order.customerName}</TableCell>
+                    <TableCell>{vehicleInfo}</TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(order.status)}`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {order.status === 'processing' ? 'In Lavorazione' : 
+                         order.status === 'delivered' ? 'Consegnato' : 
+                         order.status === 'cancelled' ? 'Cancellato' : order.status}
                       </span>
-                    </td>
-                    <td className="p-3">{new Date(order.orderDate).toLocaleDateString()}</td>
-                    <td className="p-3">{order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}</td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
+                      {order.orderDate ? new Date(order.orderDate).toLocaleDateString() : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex gap-2">
-                        <button className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
-                          View
-                        </button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8"
+                        >
+                          Visualizza
+                        </Button>
+                        
                         {order.status === 'processing' && (
                           <>
-                            <button className="text-xs bg-green-100 hover:bg-green-200 px-2 py-1 rounded text-green-800">
-                              Mark Delivered
-                            </button>
-                            <button className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-800">
-                              Cancel
-                            </button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
+                              onClick={() => handleMarkAsDelivered(order.id)}
+                              disabled={markAsDeliveredMutation.isPending}
+                            >
+                              Consegnato
+                            </Button>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
+                              onClick={() => handleCancelOrder(order.id)}
+                              disabled={cancelOrderMutation.isPending}
+                            >
+                              Cancella
+                            </Button>
                           </>
                         )}
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-gray-100 hover:bg-gray-200"
+                              onClick={() => setSelectedOrderId(order.id)}
+                            >
+                              Elimina
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Questa azione non può essere annullata. L'ordine verrà eliminato permanentemente dal database.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleDeleteOrder}
+                                className="bg-red-500 hover:bg-red-600"
+                                disabled={deleteOrderMutation.isPending}
+                              >
+                                {deleteOrderMutation.isPending ? 'Eliminazione...' : 'Elimina'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             ) : (
-              <tr>
-                <td colSpan={6} className="p-3 text-center text-gray-500">
-                  No orders found
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10 text-gray-500">
+                  Nessun ordine trovato
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
@@ -90,20 +276,23 @@ const Orders = () => {
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <div className="mt-4 md:mt-0">
-          <button className="px-4 py-2 bg-primary text-white rounded-md">
-            Create New Order
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold">Ordini</h1>
       </div>
       
       <Tabs defaultValue="processing">
         <TabsList className="mb-6">
-          <TabsTrigger value="processing">Processing ({processingOrders.length})</TabsTrigger>
-          <TabsTrigger value="delivered">Delivered ({deliveredOrders.length})</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled ({cancelledOrders.length})</TabsTrigger>
-          <TabsTrigger value="all">All Orders ({orders.length})</TabsTrigger>
+          <TabsTrigger value="processing">
+            In Lavorazione ({processingOrders.length})
+          </TabsTrigger>
+          <TabsTrigger value="delivered">
+            Consegnati ({deliveredOrders.length})
+          </TabsTrigger>
+          <TabsTrigger value="cancelled">
+            Cancellati ({cancelledOrders.length})
+          </TabsTrigger>
+          <TabsTrigger value="all">
+            Tutti gli Ordini ({orders.length})
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="processing">
