@@ -1,148 +1,125 @@
-import { supabase } from './client';
+
+import { supabase } from '@/api/supabase/client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useAuth } from '@/context/AuthContext';
+import { dealersApi } from '@/api/supabase/dealersApi';
+import { useQuery } from '@tanstack/react-query';
+import { Vehicle } from '@/types';
 
-export const dealersApi = {
-  getAll: async (): Promise<Dealer[]> => {
-    // Use companyname, not companyName - the Supabase column name is lowercase
-    const { data, error } = await supabase
-      .from('dealers')
-      .select('*')
-      .order('companyname', { ascending: true });
-    
-    if (error) {
-      console.error('Errore nel recupero dei dealer:', error);
-      throw error;
-    }
-    
-    // Map the Supabase column names to our frontend model property names
-    return data.map(dealer => ({
-      id: dealer.id,
-      companyName: dealer.companyname, // Map from DB companyname to frontend companyName
-      address: dealer.address,
-      city: dealer.city,
-      province: dealer.province,
-      zipCode: dealer.zipcode, // Map from DB zipcode to frontend zipCode
-      email: dealer.email,
-      password: dealer.password,
-      contactName: dealer.contactname, // Map from DB contactname to frontend contactName
-      createdAt: dealer.created_at,
-      isActive: dealer.isactive
-    })) as Dealer[];
-  },
+export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any) => void) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   
-  getById: async (id: string): Promise<Dealer> => {
-    const { data, error } = await supabase
-      .from('dealers')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      console.error('Errore nel recupero del dealer:', error);
-      throw error;
-    }
-    
-    return {
-      id: data.id,
-      companyName: data.companyname,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      zipCode: data.zipcode,
-      email: data.email,
-      password: data.password,
-      contactName: data.contactname,
-      createdAt: data.created_at,
-      isActive: data.isactive
-    } as Dealer;
-  },
-
-  create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer> => {
-    // Generate a UUID for the new dealer
-    const newId = uuidv4();
-    
-    // Map from frontend model property names to DB column names
-    const { data, error } = await supabase
-      .from('dealers')
-      .insert({
-        id: newId, // Explicitly set the ID
-        companyname: dealer.companyName,
-        address: dealer.address,
-        city: dealer.city,
-        province: dealer.province,
-        zipcode: dealer.zipCode,
-        email: dealer.email,
-        password: dealer.password,
-        contactname: dealer.contactName,
-        isactive: dealer.isActive
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Errore nella creazione del dealer:', error);
-      throw error;
-    }
-    
-    return {
-      id: data.id,
-      companyName: data.companyname,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      zipCode: data.zipcode,
-      email: data.email,
-      password: data.password,
-      contactName: data.contactname,
-      createdAt: data.created_at,
-      isActive: data.isactive
-    } as Dealer;
-  },
+  const [showTradeIn, setShowTradeIn] = useState(false);
   
-  update: async (dealer: Dealer): Promise<void> => {
-    const { error } = await supabase
-      .from('dealers')
-      .update({
-        companyname: dealer.companyName,
-        address: dealer.address,
-        city: dealer.city,
-        province: dealer.province,
-        zipcode: dealer.zipCode,
-        email: dealer.email,
-        password: dealer.password,
-        contactname: dealer.contactName,
-        isactive: dealer.isActive
-      })
-      .eq('id', dealer.id);
-    
-    if (error) {
-      console.error('Errore nell\'aggiornamento del dealer:', error);
-      throw error;
-    }
-  },
+  // Get all dealers for admin users
+  const { data: dealers = [] } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+    enabled: isAdmin, // Only fetch if user is admin
+  });
   
-  delete: async (id: string): Promise<void> => {
-    const { error } = await supabase
-      .from('dealers')
-      .delete()
-      .eq('id', id);
+  const basePrice = vehicle?.price || 0;
+  
+  // Precomputed values for price calculations
+  const form = useForm({
+    defaultValues: {
+      vehicleId: vehicle?.id || '',
+      dealerId: user?.dealerId || '',
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      price: basePrice,
+      discount: 0,
+      reducedVAT: false,
+      accessories: {} as Record<string, boolean>,
+      hasTradeIn: false,
+      tradeInMake: '',
+      tradeInModel: '',
+      tradeInYear: '',
+      tradeInValue: 0,
+      notes: '',
+      finalPrice: basePrice,
+    },
+  });
+  
+  const watchHasTradeIn = form.watch('hasTradeIn');
+  const watchReducedVAT = form.watch('reducedVAT');
+  const watchDiscount = form.watch('discount');
+  const watchTradeInValue = form.watch('tradeInValue');
+  const watchAccessories = form.watch('accessories');
+  
+  // Calculate selected accessories total
+  const compatibleAccessories = vehicle?.compatibleAccessories || [];
+  const accessoryTotalPrice = Object.entries(watchAccessories || {})
+    .reduce((total, [id, isSelected]) => {
+      if (isSelected) {
+        const accessory = compatibleAccessories.find(acc => acc.id === id);
+        return total + (accessory?.price || 0);
+      }
+      return total;
+    }, 0);
+  
+  // Calculate final price with VAT
+  const subtotal = basePrice + accessoryTotalPrice - (watchDiscount || 0);
+  const finalPrice = watchReducedVAT 
+    ? subtotal + (subtotal * 0.04) // 4% reduced VAT 
+    : subtotal + (subtotal * 0.22); // 22% standard VAT
+  
+  // Update final price when component values change
+  form.setValue('finalPrice', finalPrice);
+  
+  const handleSubmit = (data: any) => {
+    // Set vehicle ID
+    data.vehicleId = vehicle?.id;
     
-    if (error) {
-      console.error('Errore nell\'eliminazione del dealer:', error);
-      throw error;
-    }
-  },
-
-  toggleStatus: async (id: string, isActive: boolean): Promise<void> => {
-    const { error } = await supabase
-      .from('dealers')
-      .update({ isactive: isActive })
-      .eq('id', id);
+    // Set price info
+    data.price = basePrice;
     
-    if (error) {
-      console.error('Errore nel cambiamento di stato del dealer:', error);
-      throw error;
+    // Calculate accessory selections
+    const selectedAccessories = Object.entries(data.accessories || {})
+      .filter(([_, isSelected]) => isSelected)
+      .map(([id]) => {
+        const accessory = compatibleAccessories.find(acc => acc.id === id);
+        return {
+          id,
+          name: accessory?.name || '',
+          price: accessory?.price || 0
+        };
+      });
+    
+    data.selectedAccessories = selectedAccessories;
+    data.accessoryTotalPrice = accessoryTotalPrice;
+    
+    // Set trade-in info
+    if (!data.hasTradeIn) {
+      data.tradeInMake = '';
+      data.tradeInModel = '';
+      data.tradeInYear = '';
+      data.tradeInValue = 0;
     }
-  }
+    
+    // Call parent onSubmit
+    onSubmit(data);
+  };
+  
+  return {
+    form,
+    showTradeIn,
+    setShowTradeIn,
+    compatibleAccessories,
+    dealers,
+    isAdmin,
+    user,
+    basePrice,
+    accessoryTotalPrice,
+    finalPrice,
+    watchHasTradeIn,
+    watchDiscount,
+    watchTradeInValue,
+    handleSubmit
+  };
 };
