@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { vehiclesApi } from '@/api/supabase';
@@ -16,7 +15,7 @@ export const useInventory = () => {
     queryKey: ['vehicles'],
     queryFn: vehiclesApi.getAll,
     // Ridotto il staleTime per aggiornare i dati più frequentemente
-    staleTime: 1000,
+    staleTime: 500, // Reduced from 1000 to 500 for more frequent updates
   });
   
   const { 

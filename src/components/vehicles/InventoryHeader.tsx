@@ -22,15 +22,25 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
       <h1 className="text-2xl font-bold">Stock Veicoli</h1>
       <div className="flex gap-4 mt-4 md:mt-0">
         {!isDealer && (
-          <Button 
-            variant="outline"
-            asChild
-          >
-            <Link to="/settings">
-              <SettingsIcon className="h-4 w-4 mr-2" />
-              Impostazioni
-            </Link>
-          </Button>
+          <>
+            <Button 
+              variant="outline"
+              asChild
+            >
+              <Link to="/settings">
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Impostazioni
+              </Link>
+            </Button>
+            
+            <button 
+              className="flex items-center px-4 py-2 bg-primary text-white rounded-md"
+              onClick={onAddVehicle}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Aggiungi Veicolo
+            </button>
+          </>
         )}
         
         <button 
@@ -40,16 +50,6 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           <Filter className="h-4 w-4 mr-2" />
           {showFilters ? 'Nascondi Filtri' : 'Mostra Filtri'}
         </button>
-        
-        {!isDealer && (
-          <button 
-            className="flex items-center px-4 py-2 bg-primary text-white rounded-md"
-            onClick={onAddVehicle}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Aggiungi Veicolo
-          </button>
-        )}
       </div>
     </div>
   );

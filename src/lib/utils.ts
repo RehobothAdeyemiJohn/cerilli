@@ -89,9 +89,10 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
     };
   }
   
-  const elapsedMs = totalDurationMs - timeRemainingMs;
-  const percentRemaining = Math.max(0, Math.min(100, 100 - (elapsedMs / totalDurationMs * 100)));
+  // Calculate percentage remaining
+  const percentRemaining = Math.max(0, Math.min(100, (timeRemainingMs / totalDurationMs) * 100));
   
+  // Calculate hours, minutes, seconds
   const hours = Math.floor(timeRemainingMs / (1000 * 60 * 60));
   const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeRemainingMs % (1000 * 60)) / 1000);

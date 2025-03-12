@@ -18,6 +18,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
   const statusColors = {
     available: 'bg-green-100 text-green-800',
     reserved: 'bg-amber-100 text-amber-800',
+    ordered: 'bg-blue-100 text-blue-800',
     sold: 'bg-gray-100 text-gray-800',
   };
 
@@ -25,6 +26,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
   const statusTranslations = {
     available: 'Disponibile',
     reserved: 'Prenotata',
+    ordered: 'Ordinata',
     sold: 'Venduta',
   };
 

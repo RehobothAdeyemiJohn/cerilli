@@ -58,7 +58,7 @@ const Inventory = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 30000); // Aggiorna ogni 30 secondi
+    }, 15000); // Update every 15 seconds (reduced from 30 seconds)
     
     return () => clearInterval(interval);
   }, [refetch]);
@@ -76,7 +76,7 @@ const Inventory = () => {
         const result = await addVehicle(newVehicle);
         console.log("Veicolo aggiunto con successo:", result);
         
-        // Forziamo l'aggiornamento dei dati dopo l'aggiunta
+        // Force data update after addition
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
         refetch();
       }
