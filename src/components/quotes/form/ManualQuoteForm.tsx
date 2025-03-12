@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { modelsApi, trimsApi, fuelTypesApi, colorsApi } from '@/api/supabase/settingsApi';
 import { useAuth } from '@/context/AuthContext';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { v4 as uuidv4 } from 'uuid';
 import QuoteCustomerInfo from './QuoteCustomerInfo';
 import QuoteDiscountSection from './QuoteDiscountSection';
 import QuoteTradeIn from './QuoteTradeIn';
@@ -196,7 +197,10 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   }, [watchModel, watchTrim, watchFuelType, watchExteriorColor, models, trims, fuelTypes, colors]);
   
   const handleFormSubmit = (data: ManualQuoteFormValues) => {
-    // Create a manually entered vehicle ID for this quote
+    // Create a proper UUID for manual quotes instead of a string
+    const vehicleId = uuidv4();
+    
+    // Create vehicle data for this quote
     const manualVehicleData = {
       model: data.model,
       trim: data.trim,
@@ -209,8 +213,8 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     // Calculate accessory total price and final price
     const submitData = {
       ...data,
-      vehicleId: `manual-${Date.now()}`, // Create a temporary ID for the vehicle
-      vehicleData: manualVehicleData, // Add the vehicle data
+      vehicleId: vehicleId, // Use proper UUID
+      vehicleData: manualVehicleData,
       finalPrice: finalPrice,
       manualEntry: true,
       price: calculatedPrice

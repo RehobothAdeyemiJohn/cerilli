@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Quote } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -116,7 +117,8 @@ export const quotesApi = {
       status: quote.status || 'pending',
       createdat: quote.createdAt || new Date().toISOString(),
       notes: quote.notes || null,
-      rejectionreason: quote.rejectionReason || null
+      rejectionreason: quote.rejectionReason || null,
+      manualentry: quote.manualEntry || false
     };
     
     console.log("Supabase API: create - Richiesta insert:", newQuote);
@@ -148,7 +150,8 @@ export const quotesApi = {
       status: data.status as Quote['status'],
       createdAt: data.createdat,
       notes: data.notes || '',
-      rejectionReason: data.rejectionreason || ''
+      rejectionReason: data.rejectionreason || '',
+      manualEntry: data.manualentry || false
     };
     
     return formattedQuote as Quote;
@@ -167,7 +170,8 @@ export const quotesApi = {
       finalprice: updates.finalPrice,
       status: updates.status,
       notes: updates.notes,
-      rejectionreason: updates.rejectionReason
+      rejectionreason: updates.rejectionReason,
+      manualentry: updates.manualEntry
     };
     
     // Remove undefined fields
@@ -207,7 +211,8 @@ export const quotesApi = {
       status: data.status as Quote['status'],
       createdAt: data.createdat,
       notes: data.notes || '',
-      rejectionReason: data.rejectionreason || ''
+      rejectionReason: data.rejectionreason || '',
+      manualEntry: data.manualentry || false
     };
     
     return formattedQuote as Quote;

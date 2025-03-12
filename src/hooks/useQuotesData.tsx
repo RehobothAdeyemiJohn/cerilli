@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -192,25 +193,62 @@ export const useQuotesData = () => {
   
   const handleCreateQuote = async (data: any) => {
     try {
+      // Make sure we have a dealer ID
       if (!data.dealerId && dealers.length > 0) {
         data.dealerId = dealers[0].id;
       }
       
       console.log("Creazione preventivo con dealerId:", data.dealerId);
       
-      data.createdAt = new Date().toISOString();
-      data.status = 'pending';
+      // Required fields for a quote in Supabase
+      const quoteData = {
+        vehicleId: data.vehicleId,
+        dealerId: data.dealerId,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail || '',
+        customerPhone: data.customerPhone || '',
+        price: data.price || 0,
+        discount: data.discount || 0,
+        finalPrice: data.finalPrice || 0,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        notes: data.notes || '',
+        manualEntry: data.manualEntry || false
+      };
       
-      await quotesApi.create(data);
-      
-      toast({
-        title: "Preventivo creato",
-        description: "Il preventivo è stato creato con successo.",
-      });
-      
-      refetchQuotes();
-      setCreateDialogOpen(false);
-      setIsManualQuote(false);
+      // For manual quotes, check if we need to create a temporary vehicle first
+      if (data.manualEntry && data.vehicleData) {
+        console.log("Creating manual quote with vehicleData:", data.vehicleData);
+        
+        try {
+          // If it's a manual quote, the vehicleId is already a UUID from ManualQuoteForm
+          await quotesApi.create(quoteData);
+          
+          toast({
+            title: "Preventivo creato",
+            description: "Il preventivo è stato creato con successo.",
+          });
+          
+          refetchQuotes();
+          setCreateDialogOpen(false);
+          setIsManualQuote(false);
+        } catch (error) {
+          console.error("Error creating manual quote:", error);
+          throw error;
+        }
+      } else {
+        // Regular quote with an existing vehicle
+        await quotesApi.create(quoteData);
+        
+        toast({
+          title: "Preventivo creato",
+          description: "Il preventivo è stato creato con successo.",
+        });
+        
+        refetchQuotes();
+        setCreateDialogOpen(false);
+        setIsManualQuote(false);
+      }
     } catch (error) {
       console.error("Error creating quote:", error);
       toast({
