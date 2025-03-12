@@ -18,7 +18,7 @@ const vehicleSchema = z.object({
   fuelType: z.string().optional(),
   exteriorColor: z.string().optional(),
   transmission: z.string().optional(),
-  status: z.enum(["available", "reserved", "sold", "ordered"]).default("available"),
+  status: z.enum(["available", "reserved", "sold", "ordered", "delivered"]).default("available"),
   telaio: z.string().optional(),
   accessories: z.array(z.string()).default([])
 });
