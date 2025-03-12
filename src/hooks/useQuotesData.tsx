@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -11,11 +10,9 @@ import { useAuth } from '@/context/AuthContext';
 export const useQuotesData = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  // Changed from user?.role === 'dealer' to use string literals
   const isDealerUser = user?.role === 'dealer';
   const dealerId = user?.dealerId;
 
-  // States for filtering and pagination
   const [activeTab, setActiveTab] = useState<string>('all');
   const [filterDealer, setFilterDealer] = useState<string>('all');
   const [filterModel, setFilterModel] = useState<string>('all');
@@ -23,7 +20,6 @@ export const useQuotesData = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   
-  // States for dialogs
   const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
   const [viewDialogOpen, setViewDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
@@ -31,36 +27,30 @@ export const useQuotesData = () => {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, filterDealer, filterModel, searchQuery, itemsPerPage]);
   
-  // Get quotes data
   const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
     queryKey: ['quotes'],
     queryFn: () => quotesApi.getAll(),
   });
   
-  // Get quotes count by status
   const { data: statusCountsData = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 }, isLoading: isLoadingCounts } = useQuery({
     queryKey: ['quotesCount'],
     queryFn: () => quotesApi.getCountByStatus(),
   });
   
-  // Get vehicles data for creating quotes
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
     queryKey: ['vehicles'],
     queryFn: () => vehiclesApi.getAll(),
   });
   
-  // Get dealers data
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
   });
 
-  // Helper functions
   const getVehicleById = (id: string) => {
     return vehicles.find(vehicle => vehicle.id === id);
   };
@@ -93,28 +83,22 @@ export const useQuotesData = () => {
     }
   };
   
-  // Generate models array from vehicles
   const models = Array.from(new Set(vehicles.map(vehicle => vehicle.model)))
     .map(model => ({ id: model, name: model }));
   
-  // Filter quotes based on active filters
   const filteredQuotes = quotes.filter(quote => {
-    // Filter by status (tab)
     if (activeTab !== 'all' && quote.status !== activeTab) {
       return false;
     }
     
-    // Filter by dealer (for admin users)
     if (filterDealer !== 'all' && quote.dealerId !== filterDealer) {
       return false;
     }
     
-    // For dealer users, only show their quotes
     if (isDealerUser && dealerId && quote.dealerId !== dealerId) {
       return false;
     }
     
-    // Filter by vehicle model
     if (filterModel !== 'all') {
       const vehicle = getVehicleById(quote.vehicleId);
       if (!vehicle || vehicle.model !== filterModel) {
@@ -122,7 +106,6 @@ export const useQuotesData = () => {
       }
     }
     
-    // Search by customer name or vehicle model
     if (searchQuery) {
       const vehicle = getVehicleById(quote.vehicleId);
       const lowerSearch = searchQuery.toLowerCase();
@@ -137,17 +120,14 @@ export const useQuotesData = () => {
     return true;
   });
   
-  // Calculate pagination
   const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / itemsPerPage));
   const paginatedQuotes = filteredQuotes.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
   
-  // Get selected vehicle details
   const selectedVehicle = selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null;
   
-  // Event handlers
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -200,14 +180,12 @@ export const useQuotesData = () => {
   
   const handleCreateQuote = async (data: any) => {
     try {
-      // Make sure we have a valid dealerId
       if (!data.dealerId && dealers.length > 0) {
         data.dealerId = dealers[0].id;
       }
       
       console.log("Creazione preventivo con dealerId:", data.dealerId);
       
-      // Imposta data di creazione e stato iniziale
       data.createdAt = new Date().toISOString();
       data.status = 'pending';
       
@@ -262,7 +240,6 @@ export const useQuotesData = () => {
   const isLoading = isLoadingQuotes || isLoadingVehicles || isLoadingDealers || isLoadingCounts;
   
   return {
-    // States
     activeTab,
     setActiveTab,
     filterDealer,
@@ -287,7 +264,6 @@ export const useQuotesData = () => {
     selectedQuote,
     selectedVehicle,
     
-    // Data
     filteredQuotes: paginatedQuotes,
     vehicles,
     dealers,
@@ -295,17 +271,14 @@ export const useQuotesData = () => {
     statusCounts: statusCountsData,
     totalPages,
     
-    // Loading states
     isLoading,
     
-    // Helpers
     getVehicleById,
     getDealerName,
     getShortId,
     formatDate,
     getStatusBadgeClass,
     
-    // Event handlers
     handleViewQuote,
     handleDeleteClick,
     handleUpdateStatus,

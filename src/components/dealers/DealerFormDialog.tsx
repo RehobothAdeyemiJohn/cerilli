@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +37,9 @@ const formSchema = z.object({
   password: z.string().min(6, 'Password deve essere di almeno 6 caratteri'),
 });
 
+// Define the form values type based on the schema
+type FormValues = z.infer<typeof formSchema>;
+
 interface DealerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,7 +54,7 @@ const DealerFormDialog = ({
   onSuccess,
 }: DealerFormDialogProps) => {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       companyName: dealer?.companyName || '',
@@ -84,7 +88,7 @@ const DealerFormDialog = ({
     }
   }, [dealer, open, form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       if (dealer) {
         // Update existing dealer
@@ -96,8 +100,18 @@ const DealerFormDialog = ({
           title: "Dealer aggiornato con successo",
         });
       } else {
-        // Create new dealer
-        await dealersApi.create(values);
+        // Create new dealer with required fields
+        await dealersApi.create({
+          companyName: values.companyName,
+          address: values.address,
+          city: values.city,
+          province: values.province,
+          zipCode: values.zipCode,
+          isActive: values.isActive,
+          contactName: values.contactName,
+          email: values.email,
+          password: values.password,
+        });
         toast({
           title: "Dealer creato con successo",
         });

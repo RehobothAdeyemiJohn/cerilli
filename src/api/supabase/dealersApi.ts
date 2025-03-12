@@ -1,6 +1,7 @@
 
 import { supabase } from './client';
 import { Dealer } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
@@ -59,10 +60,14 @@ export const dealersApi = {
   },
 
   create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer> => {
+    // Generate a UUID for the new dealer
+    const newId = uuidv4();
+    
     // Map from frontend model property names to DB column names
     const { data, error } = await supabase
       .from('dealers')
       .insert({
+        id: newId, // Explicitly set the ID
         companyname: dealer.companyName,
         address: dealer.address,
         city: dealer.city,
