@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -6,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { vehiclesApi } from '@/api/supabase';
+import { vehiclesApi, supabase } from '@/api/supabase';
 import { ordersApi } from '@/api/supabase/ordersApi';
 
 export function useVehicleDetailsDialog(
