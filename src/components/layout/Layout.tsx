@@ -1,7 +1,13 @@
 
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { 
+  SidebarProvider, 
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset
+} from '@/components/ui/sidebar';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -15,14 +21,23 @@ const Layout = () => {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-background">
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <ShadcnSidebar>
+          <SidebarHeader>
+            <div className="flex items-center justify-between p-4">
+              <h2 className="text-xl font-bold text-foreground">Cirelli Motor</h2>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+          </SidebarContent>
+        </ShadcnSidebar>
         
-        <div className="flex-1 flex flex-col">
+        <SidebarInset>
           <Header toggleSidebar={toggleSidebar} />
           <main className="flex-1 overflow-auto p-6 pt-20">
             <Outlet />
           </main>
-        </div>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );
