@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
-import { quotesApi } from '@/api/localStorage/quotesApi'; // Change to localStorage API
+import { quotesApi } from '@/api/supabase/quotesApi'; // Change back to Supabase API
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
