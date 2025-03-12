@@ -114,5 +114,22 @@ export const vehiclesApi = {
     }
     
     return vehiclesApi.update(id, updatedVehicle);
+  },
+  
+  // Add transform to order method to match the Supabase API
+  transformToOrder: async (id: string): Promise<Vehicle> => {
+    console.log("LocalStorage API: transformToOrder - Trasforma prenotazione in ordine:", id);
+    
+    const vehicle = await vehiclesApi.getById(id);
+    
+    if (vehicle.status !== 'reserved') {
+      throw new Error('Il veicolo non è prenotato e non può essere trasformato in ordine');
+    }
+    
+    const updatedVehicle: Partial<Vehicle> = {
+      status: 'ordered',
+    };
+    
+    return vehiclesApi.update(id, updatedVehicle);
   }
 };

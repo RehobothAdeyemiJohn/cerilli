@@ -21,10 +21,8 @@ export function useVehicleDetailsDialog(
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Check if the user is an admin or superadmin
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
 
-  // Get all available dealers
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
@@ -34,26 +32,23 @@ export function useVehicleDetailsDialog(
   const handleShowQuoteForm = () => {
     setShowQuoteForm(true);
   };
-  
+
   const handleCreateQuote = async (quoteData: any) => {
     if (!vehicle) return;
     
     try {
       setIsSubmitting(true);
       
-      // Make sure we have a dealerId - use the first available if none provided
       if (!quoteData.dealerId && dealers.length > 0) {
         quoteData.dealerId = dealers[0].id;
         console.log("Using first available dealer:", quoteData.dealerId);
       }
       
-      // If still no dealerId and user has a dealerId, use that
       if (!quoteData.dealerId && user?.dealerId) {
         quoteData.dealerId = user.dealerId;
         console.log("Using user's dealer ID:", quoteData.dealerId);
       }
       
-      // If we still don't have a dealerId, show error
       if (!quoteData.dealerId) {
         throw new Error("No dealer available to associate with the quote");
       }
@@ -123,7 +118,6 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
-      // Create a copy of the vehicle and restore it to available status
       const updatedVehicle: Vehicle = {
         ...vehicle,
         status: 'available',
@@ -134,7 +128,6 @@ export function useVehicleDetailsDialog(
         reservationTimestamp: undefined
       };
       
-      // Use the vehiclesApi to update the vehicle
       await vehiclesApi.update(vehicle.id, updatedVehicle);
       
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
@@ -164,7 +157,6 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
-      // Verify that the vehicle is currently reserved
       if (vehicle.status !== 'reserved') {
         toast({
           title: "Errore",
@@ -175,14 +167,17 @@ export function useVehicleDetailsDialog(
         return;
       }
       
-      // Transform the vehicle to ordered status
+      console.log("Starting transformation to order for vehicle:", vehicle.id);
+      
       const updatedVehicle = await vehiclesApi.transformToOrder(vehicle.id);
       
-      // Create a new order record
+      console.log("Vehicle transformed to order:", updatedVehicle);
+      
       if (vehicle.reservedBy) {
+        console.log("Creating order record for vehicle:", vehicle.id);
         await ordersApi.create({
           vehicleId: vehicle.id,
-          dealerId: user?.dealerId || dealers[0]?.id, // Use user's dealer if available, otherwise use first dealer
+          dealerId: user?.dealerId || dealers[0]?.id,
           customerName: vehicle.reservedBy,
           status: 'processing',
           orderDate: new Date().toISOString()
@@ -197,7 +192,7 @@ export function useVehicleDetailsDialog(
         description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
       });
       
-      // Chiudiamo il popup dopo la trasformazione in ordine
+      console.log("Closing dialog after order transformation");
       onOpenChange(false);
     } catch (error) {
       console.error('Error transforming to order:', error);

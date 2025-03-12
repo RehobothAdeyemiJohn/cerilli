@@ -2,7 +2,6 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,7 @@ const CancelReservationForm = ({
   onCancel,
   isSubmitting 
 }: CancelReservationFormProps) => {
-  // We'll use a simpler confirmation dialog approach
+  // Simple confirmation dialog approach
   return (
     <AlertDialog defaultOpen={true} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
