@@ -199,43 +199,83 @@ export const useQuotesData = () => {
       
       console.log("Creazione preventivo con dealerId:", data.dealerId);
       
-      // Required fields for a quote in Supabase
-      const quoteData: Omit<Quote, 'id'> = {
-        vehicleId: data.vehicleId,
-        dealerId: data.dealerId,
-        customerName: data.customerName,
-        customerEmail: data.customerEmail || '',
-        customerPhone: data.customerPhone || '',
-        price: data.price || 0,
-        discount: data.discount || 0,
-        finalPrice: data.finalPrice || 0,
-        createdAt: new Date().toISOString(),
-        status: 'pending' as Quote['status'],
-        notes: data.notes || '',
-        manualEntry: Boolean(data.manualEntry)
-      };
-      
       // For manual quotes, check if we need to create a temporary vehicle first
       if (data.manualEntry && data.vehicleData) {
         console.log("Creating manual quote with vehicleData:", data.vehicleData);
         
         try {
+          // First, create a temporary vehicle record
+          const vehicleData = {
+            model: data.model || data.vehicleData.model,
+            trim: data.trim || data.vehicleData.trim,
+            fuelType: data.fuelType || data.vehicleData.fuelType,
+            exteriorColor: data.exteriorColor || data.vehicleData.exteriorColor,
+            price: data.price || data.vehicleData.price,
+            location: "Preventivo Manuale", // Default location for manual quotes
+            status: "available" as const,
+            dateAdded: new Date().toISOString(),
+            telaio: "MANUALE" + Math.floor(Math.random() * 10000), // Generate a random telaio number
+            accessories: [] as string[]
+          };
+          
+          console.log("Creating temporary vehicle:", vehicleData);
+          
+          // Create the vehicle first
+          const newVehicle = await vehiclesApi.create(vehicleData);
+          console.log("Temporary vehicle created:", newVehicle);
+          
+          // Now create the quote with the new vehicle ID
+          const quoteData: Omit<Quote, 'id'> = {
+            vehicleId: newVehicle.id,
+            dealerId: data.dealerId,
+            customerName: data.customerName,
+            customerEmail: data.customerEmail || '',
+            customerPhone: data.customerPhone || '',
+            price: data.price || 0,
+            discount: data.discount || 0,
+            finalPrice: data.finalPrice || 0,
+            createdAt: new Date().toISOString(),
+            status: 'pending' as Quote['status'],
+            notes: data.notes || '',
+            manualEntry: true
+          };
+          
           await quotesApi.create(quoteData);
           
           toast({
             title: "Preventivo creato",
-            description: "Il preventivo è stato creato con successo.",
+            description: "Il preventivo manuale è stato creato con successo.",
           });
           
           refetchQuotes();
           setCreateDialogOpen(false);
           setIsManualQuote(false);
+          
         } catch (error) {
           console.error("Error creating manual quote:", error);
-          throw error;
+          toast({
+            title: "Errore",
+            description: "Si è verificato un errore durante la creazione del preventivo manuale.",
+            variant: "destructive",
+          });
         }
       } else {
         // Regular quote with an existing vehicle
+        const quoteData: Omit<Quote, 'id'> = {
+          vehicleId: data.vehicleId,
+          dealerId: data.dealerId,
+          customerName: data.customerName,
+          customerEmail: data.customerEmail || '',
+          customerPhone: data.customerPhone || '',
+          price: data.price || 0,
+          discount: data.discount || 0,
+          finalPrice: data.finalPrice || 0,
+          createdAt: new Date().toISOString(),
+          status: 'pending' as Quote['status'],
+          notes: data.notes || '',
+          manualEntry: Boolean(data.manualEntry)
+        };
+        
         await quotesApi.create(quoteData);
         
         toast({
