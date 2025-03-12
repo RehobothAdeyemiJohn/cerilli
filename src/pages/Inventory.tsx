@@ -52,7 +52,7 @@ const Inventory = () => {
   const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC');
   const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
-  const soldVehicles = filteredVehicles.filter(v => v.status === 'sold');
+  const orderedVehicles = filteredVehicles.filter(v => v.status === 'ordered');
   
   // Periodicamente aggiorniamo i dati per mantenere l'inventario fresco
   useEffect(() => {
@@ -120,6 +120,7 @@ const Inventory = () => {
         onToggleFilters={toggleFilters}
         showFilters={showFilters}
         onAddVehicle={() => setShowAddVehicleDrawer(true)}
+        isDealer={isDealer}
       />
       
       <div className="flex flex-col md:flex-row gap-6">
@@ -145,12 +146,14 @@ const Inventory = () => {
               <TabsTrigger value="reserved">
                 Prenotati ({reservedVehicles.length})
               </TabsTrigger>
-              <TabsTrigger value="sold">
-                Venduti ({soldVehicles.length})
+              <TabsTrigger value="ordered">
+                Ordini ({orderedVehicles.length})
               </TabsTrigger>
-              <TabsTrigger value="all">
-                Tutti ({filteredVehicles.length})
-              </TabsTrigger>
+              {!isDealer && (
+                <TabsTrigger value="all">
+                  Tutti ({filteredVehicles.length})
+                </TabsTrigger>
+              )}
             </TabsList>
             
             <TabsContent value="stock-cmc">
@@ -177,21 +180,23 @@ const Inventory = () => {
               />
             </TabsContent>
             
-            <TabsContent value="sold">
+            <TabsContent value="ordered">
               <VehicleList 
-                vehicles={soldVehicles} 
+                vehicles={orderedVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDelete}
               />
             </TabsContent>
             
-            <TabsContent value="all">
-              <VehicleList 
-                vehicles={filteredVehicles} 
-                onVehicleUpdated={handleVehicleUpdate}
-                onVehicleDeleted={handleVehicleDelete}
-              />
-            </TabsContent>
+            {!isDealer && (
+              <TabsContent value="all">
+                <VehicleList 
+                  vehicles={filteredVehicles} 
+                  onVehicleUpdated={handleVehicleUpdate}
+                  onVehicleDeleted={handleVehicleDelete}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>

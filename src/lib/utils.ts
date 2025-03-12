@@ -33,6 +33,9 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   timeRemaining: { hours: number; minutes: number; seconds: number } | null;
   percentRemaining: number;
 } {
+  // Set default start time (24 hours)
+  const totalDurationMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  
   // If no reservation timestamp is provided, return default values with 24 hours remaining
   if (!reservationTimestamp) {
     console.log('No reservation timestamp provided, setting default 24 hours');
@@ -69,18 +72,15 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   
   const now = new Date();
   
-  // For testing/debugging
-  console.log('Reservation date:', reservationDate);
-  console.log('Current date:', now);
-  
   // Calculate expiration date (24 hours after reservation)
   const expirationDate = new Date(reservationDate);
   expirationDate.setHours(expirationDate.getHours() + 24);
   
-  console.log('Expiration date:', expirationDate);
+  // Calculate time remaining
+  const timeRemainingMs = expirationDate.getTime() - now.getTime();
   
   // Check if reservation is expired
-  if (now >= expirationDate) {
+  if (timeRemainingMs <= 0) {
     console.log('Reservation is expired');
     return { 
       expired: true, 
@@ -89,11 +89,8 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
     };
   }
   
-  // Calculate time remaining
-  const timeRemainingMs = expirationDate.getTime() - now.getTime();
-  const totalDurationMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   const elapsedMs = totalDurationMs - timeRemainingMs;
-  const percentRemaining = 100 - (elapsedMs / totalDurationMs * 100);
+  const percentRemaining = Math.max(0, Math.min(100, 100 - (elapsedMs / totalDurationMs * 100)));
   
   const hours = Math.floor(timeRemainingMs / (1000 * 60 * 60));
   const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));

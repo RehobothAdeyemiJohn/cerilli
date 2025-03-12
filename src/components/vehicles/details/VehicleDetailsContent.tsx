@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateReservationExpiration } from '@/lib/utils';
@@ -28,23 +27,25 @@ const VehicleDetailsContent = ({
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
-  // State for countdown timer - initialize with calculation
+  // State for countdown timer
   const [expiration, setExpiration] = useState(() => 
     calculateReservationExpiration(vehicle.reservationTimestamp)
   );
   
-  // Update countdown every second
+  // Update countdown every second for reserved vehicles
   useEffect(() => {
-    // Always set up a timer for reserved vehicles, even if reservationTimestamp is undefined
     if (vehicle.status !== 'reserved') return;
     
-    console.log('Setting up countdown timer for vehicle:', vehicle.id, 'Timestamp:', vehicle.reservationTimestamp);
+    // Set initial value
+    setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
+    
+    // Update timer every second
     const timer = setInterval(() => {
       setExpiration(calculateReservationExpiration(vehicle.reservationTimestamp));
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [vehicle.reservationTimestamp, vehicle.status]);
+  }, [vehicle.status, vehicle.reservationTimestamp]);
   
   // Check if vehicle is in virtual stock
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
@@ -61,10 +62,6 @@ const VehicleDetailsContent = ({
   // Determine if vehicle is reserved and display proper information
   const isReserved = vehicle.status === 'reserved';
   const isOrdered = vehicle.status === 'ordered';
-  
-  console.log('Vehicle status:', vehicle.status, 'Reserved:', isReserved);
-  console.log('Reservation timestamp:', vehicle.reservationTimestamp);
-  console.log('Expiration:', expiration);
   
   return (
     <div className="mt-2">
@@ -149,9 +146,9 @@ const VehicleDetailsContent = ({
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-sm font-medium text-amber-800">Scadenza prenotazione</h4>
             <p className="text-sm font-bold text-amber-800">
-              {expiration.timeRemaining ? (
+              {expiration.timeRemaining && (
                 `${String(expiration.timeRemaining.hours).padStart(2, '0')}:${String(expiration.timeRemaining.minutes).padStart(2, '0')}:${String(expiration.timeRemaining.seconds).padStart(2, '0')}`
-              ) : '24:00:00'}
+              )}
             </p>
           </div>
           <Progress value={expiration.percentRemaining} className="h-2 bg-amber-200" />
@@ -313,3 +310,4 @@ const VehicleDetailsContent = ({
 };
 
 export default VehicleDetailsContent;
+

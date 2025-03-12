@@ -8,26 +8,30 @@ interface InventoryHeaderProps {
   onToggleFilters: () => void;
   showFilters: boolean;
   onAddVehicle: () => void;
+  isDealer: boolean;
 }
 
 const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onToggleFilters,
   showFilters,
   onAddVehicle,
+  isDealer
 }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
       <h1 className="text-2xl font-bold">Stock Veicoli</h1>
       <div className="flex gap-4 mt-4 md:mt-0">
-        <Button 
-          variant="outline"
-          asChild
-        >
-          <Link to="/settings">
-            <SettingsIcon className="h-4 w-4 mr-2" />
-            Impostazioni
-          </Link>
-        </Button>
+        {!isDealer && (
+          <Button 
+            variant="outline"
+            asChild
+          >
+            <Link to="/settings">
+              <SettingsIcon className="h-4 w-4 mr-2" />
+              Impostazioni
+            </Link>
+          </Button>
+        )}
         
         <button 
           onClick={onToggleFilters}
@@ -37,13 +41,15 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           {showFilters ? 'Nascondi Filtri' : 'Mostra Filtri'}
         </button>
         
-        <button 
-          className="flex items-center px-4 py-2 bg-primary text-white rounded-md"
-          onClick={onAddVehicle}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Aggiungi Veicolo
-        </button>
+        {!isDealer && (
+          <button 
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-md"
+            onClick={onAddVehicle}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Aggiungi Veicolo
+          </button>
+        )}
       </div>
     </div>
   );
