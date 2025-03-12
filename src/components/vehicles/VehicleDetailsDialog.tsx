@@ -33,8 +33,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   if (!vehicle) return null;
   
-  // Verifica se l'utente può creare preventivi
-  const userCanCreateQuotes = !!user?.dealerId;
+  // Now all users can create quotes
+  const userCanCreateQuotes = true;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -18,14 +17,6 @@ export function useVehicleDetailsDialog(
   const { user } = useAuth();
 
   const handleShowQuoteForm = () => {
-    if (!user?.dealerId) {
-      toast({
-        title: "Errore",
-        description: "Non hai accesso alla creazione di preventivi",
-        variant: "destructive",
-      });
-      return;
-    }
     setShowQuoteForm(true);
   };
   
@@ -38,7 +29,7 @@ export function useVehicleDetailsDialog(
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: user!.dealerId,
+        dealerId: user?.dealerId || null,
         vehicleId: vehicle.id
       });
       
