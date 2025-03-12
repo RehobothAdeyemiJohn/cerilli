@@ -25,7 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { title: 'Inventario', icon: ShoppingBag, path: '/inventory' },
+    { title: 'Stock', icon: ShoppingBag, path: '/inventory' },
     { title: 'Preventivi', icon: FileText, path: '/quotes' },
     { title: 'Ordini', icon: ClipboardList, path: '/orders' },
     { title: 'Dealers', icon: Truck, path: '/dealers' },
