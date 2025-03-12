@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -6,7 +7,10 @@ import {
   Store,
   ClipboardList, 
   Truck,
-  Users
+  Users,
+  KeyRound,
+  Settings,
+  Database
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
