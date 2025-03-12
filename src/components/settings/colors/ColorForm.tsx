@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ExteriorColor } from '@/types';
-import { modelsApi } from '@/api/localStorage';
+import { modelsApi } from '@/api/supabase/settingsApi';
 
 interface ColorFormProps {
   color: Partial<ExteriorColor>;

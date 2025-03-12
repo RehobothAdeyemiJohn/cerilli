@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { colorsApi } from '@/api/localStorage';
+import { colorsApi } from '@/api/supabase/settingsApi';
 import { ExteriorColor } from '@/types';
 import FormDialog from './common/FormDialog';
 import ColorForm from './colors/ColorForm';
