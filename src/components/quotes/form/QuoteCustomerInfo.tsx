@@ -71,7 +71,7 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
           name="customerName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Nome Cliente</FormLabel>
+              <FormLabel className="text-xs">Nome Cliente *</FormLabel>
               <FormControl>
                 <Input placeholder="Inserisci nome cliente" {...field} className="text-sm py-1" />
               </FormControl>
@@ -85,7 +85,7 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
           name="customerEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Email</FormLabel>
+              <FormLabel className="text-xs">Email *</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="cliente@esempio.com" {...field} className="text-sm py-1" />
               </FormControl>
@@ -99,7 +99,7 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
           name="customerPhone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Telefono</FormLabel>
+              <FormLabel className="text-xs">Telefono *</FormLabel>
               <FormControl>
                 <Input placeholder="+39 123 456 7890" {...field} className="text-sm py-1" />
               </FormControl>

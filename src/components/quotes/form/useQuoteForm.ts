@@ -7,6 +7,31 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/context/AuthContext';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { useQuery } from '@tanstack/react-query';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Define form validation schema with Zod
+const formSchema = z.object({
+  vehicleId: z.string(),
+  dealerId: z.string(),
+  customerName: z.string().min(1, { message: "Il nome del cliente è obbligatorio" }),
+  customerEmail: z.string().email({ message: "Formato email non valido" }),
+  customerPhone: z.string().min(1, { message: "Il numero di telefono è obbligatorio" }),
+  price: z.number(),
+  discount: z.number().default(0),
+  reducedVAT: z.boolean().default(false),
+  vehicleAccessories: z.array(z.string()).default([]),
+  hasTradeIn: z.boolean().default(false),
+  tradeInBrand: z.string().optional(),
+  tradeInModel: z.string().optional(),
+  tradeInYear: z.string().optional(),
+  tradeInKm: z.number().optional(),
+  tradeInValue: z.number().optional(),
+  notes: z.string().optional(),
+  finalPrice: z.number(),
+});
+
+export type QuoteFormValues = z.infer<typeof formSchema>;
 
 export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any) => void) => {
   const { user } = useAuth();
@@ -24,7 +49,8 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const basePrice = vehicle?.price || 0;
   
   // Precomputed values for price calculations
-  const form = useForm({
+  const form = useForm<QuoteFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       vehicleId: vehicle?.id || '',
       dealerId: user?.dealerId || '',
@@ -85,9 +111,9 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   // Update final price when component values change
   form.setValue('finalPrice', finalPrice);
   
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: QuoteFormValues) => {
     // Set vehicle ID
-    data.vehicleId = vehicle?.id;
+    data.vehicleId = vehicle?.id || '';
     
     // Set price info
     data.price = basePrice;
