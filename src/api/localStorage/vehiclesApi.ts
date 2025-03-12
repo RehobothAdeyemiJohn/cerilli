@@ -1,4 +1,3 @@
-
 import { Vehicle } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { KEYS, initLocalStorage } from './storageUtils';
@@ -116,7 +115,7 @@ export const vehiclesApi = {
     return vehiclesApi.update(id, updatedVehicle);
   },
   
-  // Add transform to order method to match the Supabase API
+  // Transform to order method to match the Supabase API
   transformToOrder: async (id: string): Promise<Vehicle> => {
     console.log("LocalStorage API: transformToOrder - Trasforma prenotazione in ordine:", id);
     

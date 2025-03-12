@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -169,10 +170,12 @@ export function useVehicleDetailsDialog(
       
       console.log("Starting transformation to order for vehicle:", vehicle.id);
       
+      // Transform the vehicle to ordered status
       const updatedVehicle = await vehiclesApi.transformToOrder(vehicle.id);
       
       console.log("Vehicle transformed to order:", updatedVehicle);
       
+      // Create a new order record if reservedBy is available
       if (vehicle.reservedBy) {
         console.log("Creating order record for vehicle:", vehicle.id);
         await ordersApi.create({
@@ -184,6 +187,7 @@ export function useVehicleDetailsDialog(
         });
       }
       
+      // Make sure to update the cache
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
@@ -193,6 +197,8 @@ export function useVehicleDetailsDialog(
       });
       
       console.log("Closing dialog after order transformation");
+      
+      // Ensure the dialog closes after transformation is complete
       onOpenChange(false);
     } catch (error) {
       console.error('Error transforming to order:', error);
