@@ -9,8 +9,10 @@ import {
   Truck, 
   Settings, 
   KeyRound,
-  Database
+  Database,
+  Users
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,13 +20,15 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen }: SidebarProps) => {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.type === 'admin';
   
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory' },
     { title: 'Preventivi', icon: FileText, path: '/quotes' },
     { title: 'Ordini', icon: ClipboardList, path: '/orders' },
-    { title: 'Dealers', icon: Truck, path: '/dealers' },
+    { title: 'Venditori', icon: Users, path: '/dealers', showForDealer: true },
   ];
   
   const adminItems = [
@@ -51,33 +55,9 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       
       <div className="flex flex-col flex-1 py-2 overflow-y-auto">
         <nav className="flex-1 px-2 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center p-2 rounded-md transition-colors ${
-                isActive(item.path)
-                  ? 'bg-[#141c2e] text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
-              {isOpen && (
-                <span className="ml-3">{item.title}</span>
-              )}
-            </Link>
-          ))}
-        </nav>
-        
-        <div className="pt-2 px-2">
-          {isOpen && (
-            <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-1">
-              AMMINISTRAZIONE
-            </p>
-          )}
-          
-          <nav className="space-y-1">
-            {adminItems.map((item) => (
+          {menuItems
+            .filter(item => isAdmin || item.showForDealer)
+            .map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -93,8 +73,36 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                 )}
               </Link>
             ))}
-          </nav>
-        </div>
+        </nav>
+        
+        {isAdmin && (
+          <div className="pt-2 px-2">
+            {isOpen && (
+              <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-1">
+                AMMINISTRAZIONE
+              </p>
+            )}
+            
+            <nav className="space-y-1">
+              {adminItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center p-2 rounded-md transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-[#141c2e] text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
+                  {isOpen && (
+                    <span className="ml-3">{item.title}</span>
+                  )}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
       </div>
     </div>
   );

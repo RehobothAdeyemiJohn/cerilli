@@ -16,13 +16,20 @@ import { Dealer } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 
-const DealerList = () => {
+interface DealerListProps {
+  dealerId?: string;
+}
+
+const DealerList = ({ dealerId }: DealerListProps) => {
   const [selectedDealer, setSelectedDealer] = useState<Dealer | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isVendorsOpen, setIsVendorsOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer';
 
   // Fetch dealers using React Query
   const { data: dealersList = [], isLoading, isError, refetch } = useQuery({
@@ -30,6 +37,11 @@ const DealerList = () => {
     queryFn: dealersApi.getAll,
     staleTime: 60000, // 1 minute
   });
+
+  // Filter dealers if dealerId is provided (for dealer users)
+  const filteredDealers = dealerId 
+    ? dealersList.filter(dealer => dealer.id === dealerId)
+    : dealersList;
 
   const handleDelete = async (id: string) => {
     try {
@@ -89,7 +101,7 @@ const DealerList = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Stato</TableHead>
+              {!isDealer && <TableHead>Stato</TableHead>}
               <TableHead>Azienda</TableHead>
               <TableHead>Indirizzo</TableHead>
               <TableHead>Città</TableHead>
@@ -99,30 +111,32 @@ const DealerList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dealersList.length === 0 ? (
+            {filteredDealers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-4 text-muted-foreground">
                   Nessun dealer presente
                 </TableCell>
               </TableRow>
             ) : (
-              dealersList.map((dealer) => (
+              filteredDealers.map((dealer) => (
                 <TableRow key={dealer.id}>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleDealerStatus(dealer)}
-                      className={`p-0 h-auto ${dealer.isActive ? 'text-green-500' : 'text-red-500'}`}
-                      title={dealer.isActive ? 'Attivo - Clicca per disattivare' : 'Inattivo - Clicca per attivare'}
-                    >
-                      {dealer.isActive ? (
-                        <ToggleRight className="h-6 w-6" />
-                      ) : (
-                        <ToggleLeft className="h-6 w-6" />
-                      )}
-                    </Button>
-                  </TableCell>
+                  {!isDealer && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleDealerStatus(dealer)}
+                        className={`p-0 h-auto ${dealer.isActive ? 'text-green-500' : 'text-red-500'}`}
+                        title={dealer.isActive ? 'Attivo - Clicca per disattivare' : 'Inattivo - Clicca per attivare'}
+                      >
+                        {dealer.isActive ? (
+                          <ToggleRight className="h-6 w-6" />
+                        ) : (
+                          <ToggleLeft className="h-6 w-6" />
+                        )}
+                      </Button>
+                    </TableCell>
+                  )}
                   <TableCell>{dealer.companyName}</TableCell>
                   <TableCell>{dealer.address}</TableCell>
                   <TableCell>{dealer.city}</TableCell>
@@ -140,23 +154,27 @@ const DealerList = () => {
                       >
                         <Users className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedDealer(dealer);
-                          setIsEditOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(dealer.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+                      {!isDealer && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedDealer(dealer);
+                              setIsEditOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(dealer.id)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -166,12 +184,14 @@ const DealerList = () => {
         </Table>
       </div>
 
-      <DealerFormDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        dealer={selectedDealer}
-        onSuccess={refreshDealers}
-      />
+      {!isDealer && (
+        <DealerFormDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          dealer={selectedDealer}
+          onSuccess={refreshDealers}
+        />
+      )}
 
       <VendorsDialog
         open={isVendorsOpen}
