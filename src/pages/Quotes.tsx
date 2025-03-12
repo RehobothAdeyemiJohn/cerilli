@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -83,7 +84,7 @@ const Quotes = () => {
 
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
-    queryFn: modelsApi.getAll,
+    queryFn: () => modelsApi.getAll(),
     staleTime: 60000, // 1 minute
   });
   
