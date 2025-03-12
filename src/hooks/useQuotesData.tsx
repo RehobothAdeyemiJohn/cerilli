@@ -1,260 +1,273 @@
 
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query';
-import { Quote } from '@/types';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/api/supabase/client';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { modelsApi } from '@/api/localStorage';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { Quote } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
-export function useQuotesData() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [activeTab, setActiveTab] = useState<string>('pending');
+export const useQuotesData = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const isDealerUser = user?.role === 'dealer';
+  const dealerId = user?.dealerId;
+
+  // States for filtering and pagination
+  const [activeTab, setActiveTab] = useState<string>('all');
   const [filterDealer, setFilterDealer] = useState<string>('all');
   const [filterModel, setFilterModel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  
+  // States for dialogs
+  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState<boolean>(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   
-  const queryClient = useQueryClient();
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, filterDealer, filterModel, searchQuery, itemsPerPage]);
   
-  // Query for status counts
-  const { data: statusCounts = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 } } = useQuery({
-    queryKey: ['quotes-counts'],
+  // Get quotes data
+  const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
+    queryKey: ['quotes'],
+    queryFn: () => quotesApi.getAll(),
+  });
+  
+  // Get quotes count by status
+  const { data: statusCountsData = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 }, isLoading: isLoadingCounts } = useQuery({
+    queryKey: ['quotesCount'],
     queryFn: () => quotesApi.getCountByStatus(),
-    staleTime: 30000, // 30 seconds
   });
   
-  // Query for quotes with pagination
-  const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery({
-    queryKey: ['quotes', activeTab, currentPage, itemsPerPage],
-    queryFn: () => quotesApi.getAll({ 
-      limit: itemsPerPage, 
-      page: currentPage 
-    }),
-    staleTime: 10000, // 10 seconds
-  });
-  
-  // Query for vehicles (basic information)
+  // Get vehicles data for creating quotes
   const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
-    queryKey: ['vehicles-basic'],
-    queryFn: () => vehiclesApi.getAll({
-      select: 'id,model,trim',
-    }),
-    staleTime: 60000, // 1 minute
+    queryKey: ['vehicles'],
+    queryFn: () => vehiclesApi.getAll(),
   });
-
-  // Query for dealers
+  
+  // Get dealers data
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
-    staleTime: 60000, // 1 minute
   });
 
-  // Query for models
-  const { data: models = [] } = useQuery({
-    queryKey: ['models'],
-    queryFn: () => modelsApi.getAll(),
-    staleTime: 60000, // 1 minute
-  });
+  // Generate models array from vehicles
+  const models = Array.from(new Set(vehicles.map(vehicle => vehicle.model)))
+    .map(model => ({ id: model, name: model }));
   
-  // Create quote mutation
-  const createMutation = useMutation({
-    mutationFn: (quoteData: Omit<Quote, 'id'>) => quotesApi.create(quoteData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      setCreateDialogOpen(false);
-      setActiveTab('pending');
-      toast({
-        title: 'Preventivo Creato',
-        description: 'Il preventivo è stato creato con successo',
-      });
-    },
-  });
-  
-  // Update quote mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Quote> }) => 
-      quotesApi.update(id, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      setViewDialogOpen(false);
-      setRejectDialogOpen(false);
-      toast({
-        title: 'Preventivo Aggiornato',
-        description: 'Lo stato del preventivo è stato aggiornato con successo',
-      });
-    },
-  });
-
-  // Delete quote mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => quotesApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      setDeleteDialogOpen(false);
-      toast({
-        title: 'Preventivo Eliminato',
-        description: 'Il preventivo è stato eliminato con successo',
-      });
-    },
-  });
-  
-  // Filter quotes based on active tab, dealer, model, and search query
+  // Filter quotes based on active filters
   const filteredQuotes = quotes.filter(quote => {
-    let matchesStatus = activeTab === 'all' || quote.status === activeTab;
-    let matchesDealer = filterDealer === 'all' || quote.dealerId === filterDealer;
+    // Filter by status (tab)
+    if (activeTab !== 'all' && quote.status !== activeTab) {
+      return false;
+    }
     
-    let matchesModel = true;
+    // Filter by dealer (for admin users)
+    if (filterDealer !== 'all' && quote.dealerId !== filterDealer) {
+      return false;
+    }
+    
+    // For dealer users, only show their quotes
+    if (isDealerUser && dealerId && quote.dealerId !== dealerId) {
+      return false;
+    }
+    
+    // Filter by vehicle model
     if (filterModel !== 'all') {
-      const vehicle = vehicles.find(v => v.id === quote.vehicleId);
-      matchesModel = vehicle?.model === filterModel;
+      const vehicle = getVehicleById(quote.vehicleId);
+      if (!vehicle || vehicle.model !== filterModel) {
+        return false;
+      }
     }
     
-    let matchesSearch = true;
+    // Search by customer name or vehicle model
     if (searchQuery) {
-      const vehicle = vehicles.find(v => v.id === quote.vehicleId);
+      const vehicle = getVehicleById(quote.vehicleId);
       const lowerSearch = searchQuery.toLowerCase();
-      matchesSearch = 
-        quote.customerName.toLowerCase().includes(lowerSearch) ||
-        quote.customerEmail.toLowerCase().includes(lowerSearch) ||
-        (vehicle && vehicle.model.toLowerCase().includes(lowerSearch));
+      const matchesCustomer = quote.customerName?.toLowerCase().includes(lowerSearch);
+      const matchesVehicle = vehicle?.model?.toLowerCase().includes(lowerSearch);
+      
+      if (!matchesCustomer && !matchesVehicle) {
+        return false;
+      }
     }
     
-    return matchesStatus && matchesDealer && matchesModel && matchesSearch;
+    return true;
   });
   
-  // Helper to get vehicle by ID
+  // Calculate pagination
+  const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / itemsPerPage));
+  const paginatedQuotes = filteredQuotes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  
+  // Get selected vehicle details
+  const selectedVehicle = selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null;
+  
+  // Helper functions
   const getVehicleById = (id: string) => {
-    return vehicles.find(v => v.id === id);
-  };
-
-  // Helper to get formatted dealer name
-  const getDealerName = (dealerId: string) => {
-    const dealer = dealers.find(d => d.id === dealerId);
-    return dealer ? dealer.companyName : 'N/D';
+    return vehicles.find(vehicle => vehicle.id === id);
   };
   
-  // Format an ID to be shorter for display (first 6 characters)
+  const getDealerName = (id: string) => {
+    const dealer = dealers.find(dealer => dealer.id === id);
+    return dealer ? dealer.companyName : 'N/A';
+  };
+  
   const getShortId = (id: string) => {
-    return id.substring(0, 6).toUpperCase();
+    return id.substring(0, 8);
   };
   
-  // Format date to locale format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('it-IT', {
+    return date.toLocaleDateString('it-IT', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-  
-  // Get CSS class for status badge
-  const getStatusBadgeClass = (status: string) => {
-    switch(status) {
-      case 'pending':
-        return 'bg-blue-100 text-blue-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'converted':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
-  // Handle view quote action
-  const handleViewQuote = (quote: Quote) => {
-    const vehicle = getVehicleById(quote.vehicleId);
-    if (vehicle) {
-      setSelectedQuote(quote);
-      setSelectedVehicle(vehicle);
-      setViewDialogOpen(true);
-    } else {
-      toast({
-        title: "Errore",
-        description: "Impossibile trovare il veicolo associato al preventivo",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Handle delete quote action
-  const handleDeleteClick = (quote: Quote) => {
-    setSelectedQuote(quote);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Handle quote status update
-  const handleUpdateStatus = (id: string, status: Quote['status']) => {
-    if (status === 'rejected') {
-      const quote = quotes.find(q => q.id === id);
-      if (quote) {
-        setSelectedQuote(quote);
-        setRejectDialogOpen(true);
-      }
-    } else {
-      updateMutation.mutate({ id, updates: { status } });
-    }
-  };
-  
-  // Handle quote creation
-  const handleCreateQuote = (data: any) => {
-    createMutation.mutate({
-      ...data,
-      status: 'pending' as const,
-      createdAt: new Date().toISOString(),
-      dealerId: 'current-user-dealer-id',
+      year: 'numeric'
     });
   };
   
-  // Handle quote rejection with reason
-  const handleRejectQuote = (reason: string) => {
-    if (selectedQuote) {
-      updateMutation.mutate({ 
-        id: selectedQuote.id, 
-        updates: { 
-          status: 'rejected' as Quote['status'],
-          rejectionReason: reason
-        } 
-      });
-    }
-  };
-
-  // Handle quote deletion
-  const handleDeleteQuote = () => {
-    if (selectedQuote) {
-      deleteMutation.mutate(selectedQuote.id);
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'converted': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
   
-  // Pagination helpers
-  const totalPages = Math.ceil(statusCounts[activeTab === 'all' ? 'all' : activeTab] / itemsPerPage);
-  
+  // Event handlers
   const handlePrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage(currentPage - 1);
     }
   };
   
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage(currentPage + 1);
     }
   };
+  
+  const handleViewQuote = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setViewDialogOpen(true);
+  };
+  
+  const handleDeleteClick = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleUpdateStatus = async (quoteId: string, newStatus: Quote['status'], rejectionReason?: string) => {
+    try {
+      const updates: Partial<Quote> = { status: newStatus };
+      
+      if (rejectionReason) {
+        updates.rejectionReason = rejectionReason;
+      }
+      
+      await quotesApi.update(quoteId, updates);
+      
+      toast({
+        title: "Stato aggiornato",
+        description: "Lo stato del preventivo è stato aggiornato con successo.",
+      });
+      
+      refetchQuotes();
+      setViewDialogOpen(false);
+      setRejectDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating quote status:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento dello stato.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleCreateQuote = async (data: any) => {
+    try {
+      // If the user is an admin or superadmin, set dealerId to "CMC"
+      if (user?.role === 'admin' || user?.role === 'superadmin') {
+        data.dealerId = "CMC";
+      }
+      
+      // For dealers, ensure their ID is used
+      if (user?.role === 'dealer' && user?.dealerId) {
+        data.dealerId = user.dealerId;
+      }
+      
+      // If still no dealerId, use the one from the form or the first one available
+      if (!data.dealerId && dealers.length > 0) {
+        data.dealerId = dealers[0].id;
+      }
+      
+      // Set creation date and initial status
+      data.createdAt = new Date().toISOString();
+      data.status = 'pending';
+      
+      await quotesApi.create(data);
+      
+      toast({
+        title: "Preventivo creato",
+        description: "Il preventivo è stato creato con successo.",
+      });
+      
+      refetchQuotes();
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating quote:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la creazione del preventivo.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleRejectQuote = async (reason: string) => {
+    if (!selectedQuote) return;
+    
+    await handleUpdateStatus(selectedQuote.id, 'rejected', reason);
+  };
+  
+  const handleDeleteQuote = async () => {
+    if (!selectedQuote) return;
+    
+    try {
+      await quotesApi.delete(selectedQuote.id);
+      
+      toast({
+        title: "Preventivo eliminato",
+        description: "Il preventivo è stato eliminato con successo.",
+      });
+      
+      refetchQuotes();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting quote:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del preventivo.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const isLoading = isLoadingQuotes || isLoadingVehicles || isLoadingDealers || isLoadingCounts;
   
   return {
     // States
@@ -267,7 +280,6 @@ export function useQuotesData() {
     searchQuery,
     setSearchQuery,
     currentPage,
-    setCurrentPage,
     itemsPerPage,
     setItemsPerPage,
     selectedVehicleId,
@@ -284,16 +296,15 @@ export function useQuotesData() {
     selectedVehicle,
     
     // Data
-    quotes,
-    filteredQuotes,
+    filteredQuotes: paginatedQuotes,
     vehicles,
     dealers,
     models,
-    statusCounts,
+    statusCounts: statusCountsData,
     totalPages,
     
     // Loading states
-    isLoading: isLoadingQuotes || isLoadingVehicles || isLoadingDealers,
+    isLoading,
     
     // Helpers
     getVehicleById,
@@ -312,4 +323,4 @@ export function useQuotesData() {
     handlePrevPage,
     handleNextPage
   };
-}
+};
