@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -135,6 +136,7 @@ export type Dealer = {
   password: string;
   contactName: string;
   logo?: string;
+  creditLimit?: number; // Added the creditLimit property
 };
 
 export type Vendor = {
