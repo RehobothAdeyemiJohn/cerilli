@@ -14,6 +14,15 @@ import QuotesTabs from '@/components/quotes/QuotesTabs';
 import QuotesPagination from '@/components/quotes/QuotesPagination';
 import { useQuotesData } from '@/hooks/useQuotesData';
 
+// Define the status counts type to match what getCountByStatus returns
+type StatusCounts = {
+  all: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  converted: number;
+};
+
 const Quotes = () => {
   const location = useLocation();
   const {
@@ -111,7 +120,7 @@ const Quotes = () => {
       <QuotesTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        statusCounts={statusCounts}
+        statusCounts={statusCounts as StatusCounts}
         filteredQuotes={filteredQuotes}
         getVehicleById={getVehicleById}
         getDealerName={getDealerName}

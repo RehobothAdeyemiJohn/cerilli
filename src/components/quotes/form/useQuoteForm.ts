@@ -46,7 +46,7 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
   
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
-    queryFn: dealersApi.getAll
+    queryFn: () => dealersApi.getAll()
   });
   
   // Setup form with default values
@@ -126,6 +126,12 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
   const handleSubmit = (values: QuoteFormValues) => {
     if (!vehicle) return;
     
+    // Ensure dealerId is set from the form or from the first dealer
+    let dealerId = values.dealerId;
+    if (!dealerId && dealers.length > 0) {
+      dealerId = dealers[0].id;
+    }
+    
     const quoteData = {
       ...values,
       vehicleId: vehicle.id,
@@ -133,8 +139,10 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit: (data: any) => void) =
       finalPrice: finalPrice,
       vatRate: vatRate,
       accessories: values.vehicleAccessories,
-      accessoryPrice: accessoryTotalPrice
+      accessoryPrice: accessoryTotalPrice,
+      dealerId: dealerId // Make sure dealerId is always set
     };
+    
     onSubmit(quoteData);
   };
 

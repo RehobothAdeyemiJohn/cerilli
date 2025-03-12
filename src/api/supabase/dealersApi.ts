@@ -1,21 +1,34 @@
 
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Dealer } from '@/types';
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
+    // Use companyname, not companyName - the Supabase column name is lowercase
     const { data, error } = await supabase
       .from('dealers')
       .select('*')
-      .order('companyName');
-
+      .order('companyname', { ascending: true });
+    
     if (error) {
       console.error('Errore nel recupero dei dealer:', error);
       throw error;
     }
-
-    return data as Dealer[];
+    
+    // Map the Supabase column names to our frontend model property names
+    return data.map(dealer => ({
+      id: dealer.id,
+      companyName: dealer.companyname, // Map from DB companyname to frontend companyName
+      address: dealer.address,
+      city: dealer.city,
+      province: dealer.province,
+      zipCode: dealer.zipcode, // Map from DB zipcode to frontend zipCode
+      email: dealer.email,
+      password: dealer.password,
+      contactName: dealer.contactname, // Map from DB contactname to frontend contactName
+      createdAt: dealer.created_at,
+      isActive: dealer.isactive
+    })) as Dealer[];
   },
   
   getById: async (id: string): Promise<Dealer> => {
@@ -24,68 +37,24 @@ export const dealersApi = {
       .select('*')
       .eq('id', id)
       .single();
-
+    
     if (error) {
       console.error('Errore nel recupero del dealer:', error);
       throw error;
     }
-
-    return data as Dealer;
-  },
-  
-  create: async (dealer: Omit<Dealer, 'id'>): Promise<Dealer> => {
-    const newDealer = {
-      ...dealer,
-      id: uuidv4(),
-      isActive: dealer.isActive !== undefined ? dealer.isActive : true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
     
-    const { data, error } = await supabase
-      .from('dealers')
-      .insert(newDealer)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Errore nella creazione del dealer:', error);
-      throw error;
-    }
-    
-    return data as Dealer;
-  },
-  
-  update: async (id: string, updates: Partial<Dealer>): Promise<Dealer> => {
-    const updatedData = {
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    const { data, error } = await supabase
-      .from('dealers')
-      .update(updatedData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Errore nell\'aggiornamento del dealer:', error);
-      throw error;
-    }
-    
-    return data as Dealer;
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    const { error } = await supabase
-      .from('dealers')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Errore nell\'eliminazione del dealer:', error);
-      throw error;
-    }
+    return {
+      id: data.id,
+      companyName: data.companyname,
+      address: data.address,
+      city: data.city,
+      province: data.province,
+      zipCode: data.zipcode,
+      email: data.email,
+      password: data.password,
+      contactName: data.contactname,
+      createdAt: data.created_at,
+      isActive: data.isactive
+    } as Dealer;
   }
 };

@@ -22,7 +22,7 @@ export function useVehicleDetailsDialog(
   // Check if the user is an admin or superadmin
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
 
-  // Ottieni il primo dealer disponibile come fallback
+  // Ottieni tutti i dealer disponibili
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers-fallback'],
     queryFn: () => dealersApi.getAll(),
@@ -39,34 +39,23 @@ export function useVehicleDetailsDialog(
     try {
       setIsSubmitting(true);
       
-      // Per il dealerId, usiamo un UUID valido
-      let dealerId: string | null = null;
-      
-      // Se l'utente è admin o superadmin, usa il primo dealer disponibile
-      if (isAdmin && dealers.length > 0) {
-        dealerId = dealers[0].id;
-      } else {
-        // Altrimenti usa la logica esistente
-        dealerId = user?.dealerId;
-        
-        // Se l'utente non ha un dealerId, usa quello dal form o prendi il primo dealer disponibile
-        if (!dealerId) {
-          dealerId = quoteData.dealerId || (dealers.length > 0 ? dealers[0].id : null);
-        }
+      // Verifica se abbiamo un dealerId valido
+      if (!quoteData.dealerId && dealers.length > 0) {
+        quoteData.dealerId = dealers[0].id;
+        console.log("Usando il primo dealer disponibile:", quoteData.dealerId);
       }
       
       // Se ancora non abbiamo un dealerId, mostra un errore
-      if (!dealerId) {
+      if (!quoteData.dealerId) {
         throw new Error("Nessun dealer disponibile per associare il preventivo");
       }
       
-      console.log("Creazione preventivo con dealerId:", dealerId);
+      console.log("Creazione preventivo con:", quoteData);
       
       await quotesApi.create({
         ...quoteData,
         status: 'pending' as Quote['status'],
         createdAt: new Date().toISOString(),
-        dealerId: dealerId,
         vehicleId: vehicle.id
       });
       

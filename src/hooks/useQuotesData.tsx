@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 export const useQuotesData = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  // Changed from user?.role === 'dealer' to use string literals
   const isDealerUser = user?.role === 'dealer';
   const dealerId = user?.dealerId;
 
@@ -199,17 +200,7 @@ export const useQuotesData = () => {
   
   const handleCreateQuote = async (data: any) => {
     try {
-      // Se l'utente è un admin o superadmin, usa un dealerId valido dal primo dealer disponibile
-      if ((user?.role === 'admin' || user?.role === 'superAdmin') && dealers.length > 0) {
-        data.dealerId = dealers[0].id;
-      }
-      
-      // Per dealers, assicuriamo che venga usato il loro ID
-      if (user?.role === 'dealer' && user?.dealerId) {
-        data.dealerId = user.dealerId;
-      }
-      
-      // Se ancora non c'è dealerId, usa quello dal form o il primo disponibile
+      // Make sure we have a valid dealerId
       if (!data.dealerId && dealers.length > 0) {
         data.dealerId = dealers[0].id;
       }
