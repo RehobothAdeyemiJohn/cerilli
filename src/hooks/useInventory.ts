@@ -18,6 +18,12 @@ export const useInventory = () => {
     staleTime: 0, // Set to 0 to always consider data stale and refresh immediately
   });
   
+  // Filter out vehicles that are in dealer stock or have been delivered
+  const filteredInventory = inventory.filter(vehicle => 
+    vehicle.location !== 'Stock Dealer' && 
+    vehicle.status !== 'delivered'
+  );
+  
   const { 
     handleVehicleUpdate,
     handleVehicleDelete,
@@ -25,7 +31,8 @@ export const useInventory = () => {
   } = useVehicleActions();
 
   return {
-    inventory,
+    inventory: filteredInventory,
+    allVehicles: inventory,
     isLoading,
     error,
     refetch,

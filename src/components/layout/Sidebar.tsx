@@ -9,7 +9,9 @@ import {
   Users, 
   Settings, 
   KeyRound,
-  Database
+  Database,
+  Truck,
+  Store
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -28,6 +30,8 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
     { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
+    { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
+    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
   ];
   
@@ -64,7 +68,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       <div className="flex flex-col flex-1 py-2 overflow-y-auto">
         <nav className="flex-1 px-2 space-y-1">
           {menuItems
-            .filter(item => (isAdmin || (isDealer && item.showForDealer)))
+            .filter(item => (isAdmin && (item.showForAdmin !== false)) || (isDealer && item.showForDealer))
             .map((item) => (
               <Link
                 key={item.path}

@@ -16,10 +16,13 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/context/AuthContext';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   // Fetch all orders from Supabase
   const { 
@@ -40,17 +43,32 @@ const Orders = () => {
   // Mutation for marking an order as delivered
   const markAsDeliveredMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      // Get current order first
-      const order = await ordersApi.getById(orderId);
-      // Update with new status and delivery date
-      return ordersApi.update(orderId, {
-        ...order,
-        status: 'delivered',
-        deliveryDate: new Date().toISOString()
-      });
+      try {
+        // 1. Get current order
+        const order = await ordersApi.getById(orderId);
+        
+        // 2. Update vehicle status to 'dealer-stock'
+        if (order.vehicle && order.dealerId) {
+          await vehiclesApi.update(order.vehicleId, {
+            status: 'delivered',
+            location: 'Stock Dealer'
+          });
+        }
+        
+        // 3. Update order with delivered status
+        return ordersApi.update(orderId, {
+          ...order,
+          status: 'delivered',
+          deliveryDate: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error in mark as delivered process:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       toast({
         title: "Ordine consegnato",
         description: "L'ordine è stato marcato come consegnato con successo",
@@ -142,41 +160,56 @@ const Orders = () => {
     }
   };
   
-  const renderOrderTable = (filteredOrders: Order[]) => (
+  // Create a function to generate order numbers - simple index + 1
+  const getOrderNumber = (index: number): string => {
+    return `#${(index + 1).toString().padStart(3, '0')}`;
+  };
+  
+  const renderOrderTable = (filteredOrders: Order[], tabName: string) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-24">Ordine</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Veicolo</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead>Data Ordine</TableHead>
               <TableHead>Data Consegna</TableHead>
-              <TableHead>Azioni</TableHead>
+              {!isDealer && <TableHead>Azioni</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10">
                   Caricamento ordini...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-red-500">
+                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10 text-red-500">
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
             ) : filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => {
+              filteredOrders.map((order, index) => {
                 const vehicleInfo = order.vehicle ? 
                   `${order.vehicle.model} ${order.vehicle.trim || ''}` : 
                   'Veicolo non disponibile';
                 
+                // Calculate order number based on the tab and index
+                const orderNumber = getOrderNumber(
+                  tabName === 'all' ? index : 
+                  tabName === 'processing' ? processingOrders.indexOf(order) :
+                  tabName === 'delivered' ? deliveredOrders.indexOf(order) :
+                  cancelledOrders.indexOf(order)
+                );
+                
                 return (
                   <TableRow key={order.id}>
+                    <TableCell className="font-medium">{orderNumber}</TableCell>
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell>{vehicleInfo}</TableCell>
                     <TableCell>
@@ -192,78 +225,81 @@ const Orders = () => {
                     <TableCell>
                       {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8"
-                        >
-                          Visualizza
-                        </Button>
-                        
-                        {order.status === 'processing' && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
-                              onClick={() => handleMarkAsDelivered(order.id)}
-                              disabled={markAsDeliveredMutation.isPending}
-                            >
-                              Consegnato
-                            </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
-                              onClick={() => handleCancelOrder(order.id)}
-                              disabled={cancelOrderMutation.isPending}
-                            >
-                              Cancella
-                            </Button>
-                          </>
-                        )}
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 bg-gray-100 hover:bg-gray-200"
-                              onClick={() => setSelectedOrderId(order.id)}
-                            >
-                              Elimina
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Questa azione non può essere annullata. L'ordine verrà eliminato permanentemente dal database.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annulla</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={handleDeleteOrder}
-                                className="bg-red-500 hover:bg-red-600"
-                                disabled={deleteOrderMutation.isPending}
+                    
+                    {!isDealer && (
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8"
+                          >
+                            Visualizza
+                          </Button>
+                          
+                          {order.status === 'processing' && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
+                                onClick={() => handleMarkAsDelivered(order.id)}
+                                disabled={markAsDeliveredMutation.isPending}
                               >
-                                {deleteOrderMutation.isPending ? 'Eliminazione...' : 'Elimina'}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+                                Consegnato
+                              </Button>
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
+                                onClick={() => handleCancelOrder(order.id)}
+                                disabled={cancelOrderMutation.isPending}
+                              >
+                                Cancella
+                              </Button>
+                            </>
+                          )}
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 bg-gray-100 hover:bg-gray-200"
+                                onClick={() => setSelectedOrderId(order.id)}
+                              >
+                                Elimina
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Questa azione non può essere annullata. L'ordine verrà eliminato permanentemente dal database.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={handleDeleteOrder}
+                                  className="bg-red-500 hover:bg-red-600"
+                                  disabled={deleteOrderMutation.isPending}
+                                >
+                                  {deleteOrderMutation.isPending ? 'Eliminazione...' : 'Elimina'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={isDealer ? 6 : 7} className="text-center py-10 text-gray-500">
                   Nessun ordine trovato
                 </TableCell>
               </TableRow>
@@ -297,19 +333,19 @@ const Orders = () => {
         </TabsList>
         
         <TabsContent value="processing">
-          {renderOrderTable(processingOrders)}
+          {renderOrderTable(processingOrders, 'processing')}
         </TabsContent>
         
         <TabsContent value="delivered">
-          {renderOrderTable(deliveredOrders)}
+          {renderOrderTable(deliveredOrders, 'delivered')}
         </TabsContent>
         
         <TabsContent value="cancelled">
-          {renderOrderTable(cancelledOrders)}
+          {renderOrderTable(cancelledOrders, 'cancelled')}
         </TabsContent>
         
         <TabsContent value="all">
-          {renderOrderTable(ordersData)}
+          {renderOrderTable(ordersData, 'all')}
         </TabsContent>
       </Tabs>
     </div>
