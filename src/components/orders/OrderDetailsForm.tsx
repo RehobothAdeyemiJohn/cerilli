@@ -144,6 +144,8 @@ const OrderDetailsForm = ({
         odlGenerated: hasGeneratedODL
       };
 
+      console.log('Saving order details:', formattedDetails);
+
       let result;
       if (orderDetails?.id) {
         result = await orderDetailsApi.update(orderDetails.id, formattedDetails);
@@ -170,6 +172,7 @@ const OrderDetailsForm = ({
         description: "Controlla i dati inseriti e riprova",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -186,6 +189,8 @@ const OrderDetailsForm = ({
       if (!savedDetails || !savedDetails.id) {
         throw new Error('Failed to save order details');
       }
+      
+      console.log('Generating ODL for order details ID:', savedDetails.id);
       
       // Then generate the ODL
       const updatedDetails = await orderDetailsApi.generateODL(savedDetails.id);

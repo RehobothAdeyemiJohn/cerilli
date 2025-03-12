@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { Order, Vehicle, OrderDetails } from '@/types';
+import { dealersApi } from '@/api/supabase/dealersApi';
+import { Order, Vehicle, OrderDetails, Dealer } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -22,7 +23,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Check,
   X,
-  Filter
+  Filter,
+  SlidersHorizontal,
+  RefreshCw
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,6 +35,21 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -41,6 +59,7 @@ const Orders = () => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
+  const [showFilters, setShowFilters] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -53,11 +72,20 @@ const Orders = () => {
     model: null as string | null,
   });
   
+  // Fetch dealers for filter dropdown
+  const { data: dealersData = [] } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+    staleTime: 0,
+    enabled: isAdmin,
+  });
+  
   // Fetch all orders from Supabase
   const { 
     data: ordersData = [], 
     isLoading, 
-    error 
+    error,
+    refetch: refetchOrders 
   } = useQuery({
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
@@ -265,24 +293,29 @@ const Orders = () => {
     return Array.from(models);
   }, [ordersData]);
   
-  const uniqueDealers = React.useMemo(() => {
-    const dealers = new Set<string>();
-    ordersData.forEach(order => {
-      if (order.dealer?.id) {
-        dealers.add(order.dealer.id);
-      }
-    });
-    return Array.from(dealers);
-  }, [ordersData]);
-  
-  // Helper function to render filter indicator icons
-  const renderFilterStatus = (key: keyof typeof filters) => {
-    const value = filters[key];
-    if (value === null) return null;
-    return value ? 
-      <Check className="h-4 w-4 text-green-600" /> : 
-      <X className="h-4 w-4 text-red-600" />;
+  // Helper function for status filters
+  const updateBooleanFilter = (key: keyof typeof filters, value: boolean | null) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: prev[key] === value ? null : value
+    }));
   };
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      isLicensable: null,
+      hasProforma: null,
+      isPaid: null,
+      isInvoiced: null,
+      hasConformity: null,
+      dealerId: null,
+      model: null,
+    });
+  };
+  
+  // Count active filters
+  const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
   
   const renderOrderTable = (filteredOrders: Order[], tabName: string) => (
     <div className="rounded-md border">
@@ -298,36 +331,11 @@ const Orders = () => {
               <TableHead>Data Consegna</TableHead>
               {isAdmin && (
                 <>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Targabile</span>
-                      {renderFilterStatus('isLicensable')}
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Proformata</span>
-                      {renderFilterStatus('hasProforma')}
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Saldata</span>
-                      {renderFilterStatus('isPaid')}
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Fatturata</span>
-                      {renderFilterStatus('isInvoiced')}
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Conformità</span>
-                      {renderFilterStatus('hasConformity')}
-                    </div>
-                  </TableHead>
+                  <TableHead>Targabile</TableHead>
+                  <TableHead>Proformata</TableHead>
+                  <TableHead>Saldata</TableHead>
+                  <TableHead>Fatturata</TableHead>
+                  <TableHead>Conformità</TableHead>
                   <TableHead>Plafond</TableHead>
                 </>
               )}
@@ -520,135 +528,207 @@ const Orders = () => {
     </div>
   );
   
-  // Reset all filters
-  const resetFilters = () => {
-    setFilters({
-      isLicensable: null,
-      hasProforma: null,
-      isPaid: null,
-      isInvoiced: null,
-      hasConformity: null,
-      dealerId: null,
-      model: null,
-    });
-  };
-  
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Ordini</h1>
         
         {isAdmin && (
-          <div className="flex space-x-2 mt-4 md:mt-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filtri
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Filtri Amministrativi</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuLabel className="text-xs font-medium pt-2">Targabile</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isLicensable === true}
-                  onCheckedChange={() => setFilters({...filters, isLicensable: filters.isLicensable !== true ? true : null})}
-                >
-                  Sì
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isLicensable === false}
-                  onCheckedChange={() => setFilters({...filters, isLicensable: filters.isLicensable !== false ? false : null})}
-                >
-                  No
-                </DropdownMenuCheckboxItem>
-                
-                <DropdownMenuLabel className="text-xs font-medium pt-2">Proformata</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem
-                  checked={filters.hasProforma === true}
-                  onCheckedChange={() => setFilters({...filters, hasProforma: filters.hasProforma !== true ? true : null})}
-                >
-                  Sì
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={filters.hasProforma === false}
-                  onCheckedChange={() => setFilters({...filters, hasProforma: filters.hasProforma !== false ? false : null})}
-                >
-                  No
-                </DropdownMenuCheckboxItem>
-                
-                <DropdownMenuLabel className="text-xs font-medium pt-2">Saldata</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isPaid === true}
-                  onCheckedChange={() => setFilters({...filters, isPaid: filters.isPaid !== true ? true : null})}
-                >
-                  Sì
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isPaid === false}
-                  onCheckedChange={() => setFilters({...filters, isPaid: filters.isPaid !== false ? false : null})}
-                >
-                  No
-                </DropdownMenuCheckboxItem>
-                
-                <DropdownMenuLabel className="text-xs font-medium pt-2">Fatturata</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isInvoiced === true}
-                  onCheckedChange={() => setFilters({...filters, isInvoiced: filters.isInvoiced !== true ? true : null})}
-                >
-                  Sì
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={filters.isInvoiced === false}
-                  onCheckedChange={() => setFilters({...filters, isInvoiced: filters.isInvoiced !== false ? false : null})}
-                >
-                  No
-                </DropdownMenuCheckboxItem>
-                
-                <DropdownMenuLabel className="text-xs font-medium pt-2">Conformità</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem
-                  checked={filters.hasConformity === true}
-                  onCheckedChange={() => setFilters({...filters, hasConformity: filters.hasConformity !== true ? true : null})}
-                >
-                  Sì
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={filters.hasConformity === false}
-                  onCheckedChange={() => setFilters({...filters, hasConformity: filters.hasConformity !== false ? false : null})}
-                >
-                  No
-                </DropdownMenuCheckboxItem>
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs font-medium">Modello</DropdownMenuLabel>
-                {uniqueModels.map(model => (
-                  <DropdownMenuCheckboxItem
-                    key={model}
-                    checked={filters.model === model}
-                    onCheckedChange={() => setFilters({...filters, model: filters.model !== model ? model : null})}
-                  >
-                    {model}
-                  </DropdownMenuCheckboxItem>
-                ))}
-                
-                <DropdownMenuSeparator />
-                <div className="p-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={resetFilters}
-                  >
-                    Reimposta Filtri
-                  </Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center space-x-2 mt-4 md:mt-0">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowFilters(!showFilters)}
+              className="relative"
+            >
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filtri
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchOrders()}
+              title="Ricarica ordini"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>
+      
+      {/* Improved Filters UI */}
+      {isAdmin && showFilters && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Filtri</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Status filters */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Targabile</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={filters.isLicensable === true ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isLicensable', true)}
+                  >
+                    Sì
+                  </Button>
+                  <Button 
+                    variant={filters.isLicensable === false ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isLicensable', false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Proformata</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={filters.hasProforma === true ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('hasProforma', true)}
+                  >
+                    Sì
+                  </Button>
+                  <Button 
+                    variant={filters.hasProforma === false ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('hasProforma', false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Saldata</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={filters.isPaid === true ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isPaid', true)}
+                  >
+                    Sì
+                  </Button>
+                  <Button 
+                    variant={filters.isPaid === false ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isPaid', false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Fatturata</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={filters.isInvoiced === true ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isInvoiced', true)}
+                  >
+                    Sì
+                  </Button>
+                  <Button 
+                    variant={filters.isInvoiced === false ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('isInvoiced', false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Conformità</h3>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant={filters.hasConformity === true ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('hasConformity', true)}
+                  >
+                    Sì
+                  </Button>
+                  <Button 
+                    variant={filters.hasConformity === false ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateBooleanFilter('hasConformity', false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Model filter */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Modello</h3>
+                <Select
+                  value={filters.model || ""}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, model: value || null }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleziona modello" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tutti i modelli</SelectItem>
+                    {uniqueModels.map(model => (
+                      <SelectItem key={model} value={model}>{model}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Dealer filter */}
+              <div>
+                <h3 className="text-sm font-medium mb-2">Dealer</h3>
+                <Select
+                  value={filters.dealerId || ""}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, dealerId: value || null }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleziona dealer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tutti i dealer</SelectItem>
+                    {dealersData.map((dealer: Dealer) => (
+                      <SelectItem key={dealer.id} value={dealer.id}>{dealer.companyName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t pt-4 justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetFilters}
+              className="mr-2"
+            >
+              Reimposta filtri
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowFilters(false)}
+            >
+              Applica
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
       
       <Tabs defaultValue="processing">
         <TabsList className="mb-6">

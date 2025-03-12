@@ -48,6 +48,7 @@ const OrderDetailsDialog = ({
     data: orderDetails,
     isLoading: isLoadingDetails,
     error: detailsError,
+    refetch,
   } = useQuery({
     queryKey: ['orderDetails', order.id],
     queryFn: () => orderDetailsApi.getByOrderId(order.id),
@@ -91,8 +92,10 @@ const OrderDetailsDialog = ({
     if (open && order) {
       fetchVehicleDetails();
       fetchDealerDetails();
+      // Force refetch of order details when dialog opens
+      refetch();
     }
-  }, [open, order]);
+  }, [open, order, refetch]);
 
   const getAvailableCreditColor = (availableCredit: number | null) => {
     if (availableCredit === null) return "bg-gray-100 text-gray-800";
@@ -108,6 +111,29 @@ const OrderDetailsDialog = ({
 
   const availableCredit = dealerData ? calculateAvailableCredit(dealerData, order) : null;
   const orderCost = vehicleData?.price || 0;
+
+  const handleGenerateODL = (details: OrderDetails) => {
+    if (onGenerateODL) {
+      onGenerateODL(details);
+    }
+    
+    // Update local state to reflect changes
+    refetch();
+    
+    toast({
+      title: "ODL generato con successo",
+      description: "L'Ordine Di Lavorazione è stato generato correttamente",
+    });
+  };
+
+  const handleSuccess = () => {
+    // Refresh form data
+    refetch();
+    
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,8 +192,8 @@ const OrderDetailsDialog = ({
               orderId={order.id}
               orderDetails={orderDetails}
               vehicle={vehicleData || undefined}
-              onGenerateODL={onGenerateODL}
-              onSuccess={onSuccess}
+              onGenerateODL={handleGenerateODL}
+              onSuccess={handleSuccess}
             />
           </div>
         )}
