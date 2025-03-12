@@ -110,13 +110,18 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     return total + (accessory?.priceWithVAT || 0);
   }, 0);
   
-  // Calculate final price with VAT and including trade-in value
-  const totalDiscount = (watchDiscount || 0) + (watchHasTradeIn ? watchTradeInValue || 0 : 0);
+  // Calculate final price with proper deduction of trade-in value
+  const discount = watchDiscount || 0;
+  const tradeInValue = watchHasTradeIn ? watchTradeInValue || 0 : 0;
+  const totalDiscount = discount + tradeInValue;
+  
+  // Base price plus accessories minus discounts (including trade-in)
   const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
   
+  // Apply VAT rate based on selection
   const finalPrice = watchReducedVAT 
-    ? subtotal + (subtotal * 0.04) // 4% reduced VAT 
-    : subtotal + (subtotal * 0.22); // 22% standard VAT
+    ? subtotal * 1.04 // 4% reduced VAT 
+    : subtotal * 1.22; // 22% standard VAT
   
   // Update final price when component values change
   form.setValue('finalPrice', finalPrice);
@@ -183,6 +188,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
     watchHasTradeIn,
     watchDiscount,
     watchTradeInValue,
-    handleSubmit
+    handleSubmit,
+    totalDiscount
   };
 };

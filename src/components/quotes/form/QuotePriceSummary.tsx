@@ -38,11 +38,16 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         </div>
         
         <div className="space-y-0.5">
-          <p className="text-xs text-gray-500">Sconto / Permuta</p>
-          <p className="font-medium text-sm">
-            - {formatCurrency(discount)} {hasTradeIn && tradeInValue > 0 && `/ ${formatCurrency(tradeInValue)}`}
-          </p>
+          <p className="text-xs text-gray-500">Sconto</p>
+          <p className="font-medium text-sm">- {formatCurrency(discount)}</p>
         </div>
+        
+        {hasTradeIn && tradeInValue > 0 && (
+          <div className="space-y-0.5">
+            <p className="text-xs text-gray-500">Valore Permuta</p>
+            <p className="font-medium text-sm">- {formatCurrency(tradeInValue)}</p>
+          </div>
+        )}
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500 font-semibold">Prezzo Finale</p>
