@@ -1,13 +1,12 @@
 
 import { supabase } from '@/api/supabase/client';
-import { Dealer } from '@/types';
+import { Dealer, Vehicle, Accessory } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/context/AuthContext';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { useQuery } from '@tanstack/react-query';
-import { Vehicle } from '@/types';
 
 export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any) => void) => {
   const { user } = useAuth();
@@ -52,8 +51,21 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const watchTradeInValue = form.watch('tradeInValue');
   const watchAccessories = form.watch('accessories');
   
+  // Use vehicle.accessories or an empty array if it doesn't exist
+  // Since compatibleAccessories doesn't exist on Vehicle, we'll create a workaround
+  const vehicleAccessories = vehicle?.accessories || [];
+  // Create a compatible accessories array from the vehicle's accessories
+  const compatibleAccessories: Accessory[] = vehicleAccessories.map(accessoryName => ({
+    id: accessoryName, // Use the accessory name as ID
+    name: accessoryName,
+    price: 0, // Default price, adjust if needed
+    priceWithVAT: 0,
+    priceWithoutVAT: 0,
+    compatibleModels: [],
+    compatibleTrims: []
+  }));
+  
   // Calculate selected accessories total
-  const compatibleAccessories = vehicle?.compatibleAccessories || [];
   const accessoryTotalPrice = Object.entries(watchAccessories || {})
     .reduce((total, [id, isSelected]) => {
       if (isSelected) {
