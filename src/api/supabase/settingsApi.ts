@@ -377,7 +377,8 @@ export const colorsApi = {
       .insert({
         name: color.name,
         type: color.type,
-        price_adjustment: color.priceAdjustment
+        price_adjustment: color.priceAdjustment,
+        compatible_models: color.compatibleModels || []
       })
       .select()
       .single();
@@ -402,7 +403,9 @@ export const colorsApi = {
       .update({
         name: color.name,
         type: color.type,
-        price_adjustment: color.priceAdjustment
+        price_adjustment: color.priceAdjustment,
+        compatible_models: color.compatibleModels || [],
+        updated_at: new Date()
       })
       .eq('id', id)
       .select()

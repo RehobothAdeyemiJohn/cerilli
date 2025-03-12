@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ModelsSettings from '@/components/settings/ModelsSettings';
@@ -93,7 +92,7 @@ const Settings = () => {
         });
       }
       
-      // Migrate colors - simplified to avoid compatible_models issue
+      // Migrate colors
       const colors = await localColorsApi.getAll();
       console.log('Colors to migrate:', colors);
       
@@ -102,8 +101,8 @@ const Settings = () => {
           await supabaseColorsApi.create({
             name: color.name,
             type: color.type,
-            priceAdjustment: color.priceAdjustment
-            // Skip compatibleModels for now
+            priceAdjustment: color.priceAdjustment,
+            compatibleModels: color.compatibleModels || []
           });
         } catch (error) {
           console.error(`Error migrating color ${color.name}:`, error);
