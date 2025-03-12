@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -10,7 +11,8 @@ import { useAuth } from '@/context/AuthContext';
 export const useQuotesData = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const isDealerUser = user?.role === 'dealer';
+  // Check if the user type is 'dealer' rather than checking the role
+  const isDealerUser = user?.type === 'dealer';
   const dealerId = user?.dealerId;
 
   const [activeTab, setActiveTab] = useState<string>('all');
