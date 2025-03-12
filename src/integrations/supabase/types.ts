@@ -524,6 +524,58 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_admin_user_by_email: {
+        Args: {
+          p_email: string
+        }
+        Returns: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_login: string | null
+          last_name: string
+          password: string
+          permissions: string[] | null
+          role: string
+          updated_at: string | null
+        }[]
+      }
+      get_admin_user_by_id: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_login: string | null
+          last_name: string
+          password: string
+          permissions: string[] | null
+          role: string
+          updated_at: string | null
+        }[]
+      }
+      get_all_admin_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active: boolean | null
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_login: string | null
+          last_name: string
+          password: string
+          permissions: string[] | null
+          role: string
+          updated_at: string | null
+        }[]
+      }
       insert_admin_user: {
         Args: {
           p_first_name: string

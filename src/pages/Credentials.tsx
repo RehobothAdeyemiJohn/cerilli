@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { AdminUser } from '@/types/admin';
-import { adminUsersApi } from '@/api/localStorage';
+import { adminUsersApi } from '@/api/supabase/adminUsersApi';
 import AdminUserList from '@/components/credentials/AdminUserList';
 import AdminUserFormDialog from '@/components/credentials/AdminUserFormDialog';
 

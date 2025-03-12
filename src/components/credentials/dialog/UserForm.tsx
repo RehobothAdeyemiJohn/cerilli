@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/hooks/use-toast';
 import { Form } from '@/components/ui/form';
 import { Role, Permission, AdminUser, AdminUserFormData } from '@/types/admin';
-import { adminUsersApi } from '@/api/localStorage';
+import { adminUsersApi } from '@/api/supabase/adminUsersApi';
 import { formSchema, FormValues } from '../schemas/userFormSchema';
 import UserBasicInfo from './UserBasicInfo';
 import UserRoleSection from './UserRoleSection';

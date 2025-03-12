@@ -1,29 +1,46 @@
 
 import { LoginCredentials, AuthUser } from '@/types/auth';
-import { adminUsersApi } from './localStorage';
+import { supabase } from './supabase/client';
 import { dealers, vendors } from '@/data/mockData';
 import { v4 as uuidv4 } from 'uuid';
 
-// Chiave per memorizzare il session ID nel localStorage
+// Key to store the session ID in localStorage
 const SESSION_ID_KEY = 'cmcSessionId';
 
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthUser> => {
     const { email, password } = credentials;
     
-    // Check admin users first
-    const adminUsers = await adminUsersApi.getAll();
-    const adminUser = adminUsers.find(user => 
+    // Check admin users first in Supabase
+    const { data: adminUsers, error: adminError } = await supabase
+      .rpc('get_admin_user_by_email', { p_email: email });
+    
+    if (adminError) {
+      console.error('Error fetching admin user:', adminError);
+    }
+    
+    const adminUser = adminUsers?.find(user => 
       user.email.toLowerCase() === email.toLowerCase() && 
-      user.password === password
+      user.password === password &&
+      user.active
     );
     
-    if (adminUser && adminUser.isActive) {
+    if (adminUser) {
+      // Update last login timestamp
+      try {
+        await supabase
+          .from('admin_users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', adminUser.id);
+      } catch (err) {
+        console.error('Error updating last login:', err);
+      }
+      
       return {
         id: adminUser.id,
         type: 'admin',
-        firstName: adminUser.firstName,
-        lastName: adminUser.lastName,
+        firstName: adminUser.first_name,
+        lastName: adminUser.last_name,
         email: adminUser.email,
         role: adminUser.role,
         permissions: adminUser.permissions
@@ -104,7 +121,6 @@ export const authService = {
   
   // Save the current user to localStorage
   saveUser: (user: AuthUser): void => {
-    // Generate a consistent userId + session key to ensure data is saved consistently
     localStorage.setItem('currentUser', JSON.stringify(user));
     
     // Ensure we have a session ID

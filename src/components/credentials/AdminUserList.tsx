@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { adminUsersApi } from '@/api/localStorage';
+import { adminUsersApi } from '@/api/supabase/adminUsersApi';
 import AdminUserDeleteDialog from './AdminUserDeleteDialog';
 
 interface AdminUserListProps {
