@@ -8,7 +8,7 @@ import ColorsSettings from '@/components/settings/ColorsSettings';
 import TransmissionsSettings from '@/components/settings/TransmissionsSettings';
 import AccessoriesSettings from '@/components/settings/AccessoriesSettings';
 import { Button } from '@/components/ui/button';
-import { Database, ArrowUpFromLine } from 'lucide-react';
+import { Database, ArrowUpFromLine, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/api/supabase/client';
 
@@ -41,8 +41,14 @@ const Settings = () => {
   useEffect(() => {
     const checkMigrationStatus = async () => {
       try {
-        const { data: models } = await supabase.from('settings_models').select('id').limit(1);
+        const { data: models, error } = await supabase.from('settings_models').select('id').limit(1);
+        console.log('Migration check result:', { models, error });
         setHasMigrated(models && models.length > 0);
+        
+        // If migration has happened, set localStorage to use Supabase
+        if (models && models.length > 0) {
+          localStorage.setItem('useSupabaseSettings', 'true');
+        }
       } catch (error) {
         console.error('Error checking migration status:', error);
       }
@@ -54,8 +60,12 @@ const Settings = () => {
   const migrateSettings = async () => {
     setIsMigrating(true);
     try {
+      console.log('Starting migration to Supabase...');
+      
       // Migrate models
       const models = await localModelsApi.getAll();
+      console.log('Models to migrate:', models);
+      
       for (const model of models) {
         await supabaseModelsApi.create({
           name: model.name,
@@ -116,6 +126,9 @@ const Settings = () => {
         });
       }
       
+      // Set localStorage to use Supabase
+      localStorage.setItem('useSupabaseSettings', 'true');
+      
       toast({
         title: "Migrazione completata",
         description: "Tutti i dati sono stati migrati su Supabase con successo.",
@@ -139,7 +152,7 @@ const Settings = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Impostazioni</h1>
         
-        {!hasMigrated && (
+        {!hasMigrated ? (
           <Button 
             onClick={migrateSettings} 
             disabled={isMigrating}
@@ -158,6 +171,11 @@ const Settings = () => {
               </>
             )}
           </Button>
+        ) : (
+          <div className="flex items-center text-green-600 mt-4 md:mt-0">
+            <CheckCircle className="mr-2 h-4 w-4" />
+            <span>Dati su Supabase</span>
+          </div>
         )}
       </div>
       
