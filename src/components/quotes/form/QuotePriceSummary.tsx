@@ -18,17 +18,10 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   watchReducedVAT,
   totalDiscount
 }) => {
-  // Get the form context to access more values
   const form = useFormContext();
   const discount = form.watch('discount') || 0;
   const hasTradeIn = form.watch('hasTradeIn');
   const tradeInValue = form.watch('tradeInValue') || 0;
-  
-  // Calculate subtotal before VAT
-  const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
-  // Calculate VAT amount
-  const vatRate = watchReducedVAT ? 0.04 : 0.22;
-  const vatAmount = subtotal * vatRate;
   
   return (
     <div className="pt-2 border-t">
@@ -54,16 +47,6 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
             <p className="font-medium text-sm">- {formatCurrency(tradeInValue)}</p>
           </div>
         )}
-        
-        <div className="space-y-0.5">
-          <p className="text-xs text-gray-500">Subtotale (netto)</p>
-          <p className="font-medium text-sm">{formatCurrency(subtotal)}</p>
-        </div>
-        
-        <div className="space-y-0.5">
-          <p className="text-xs text-gray-500">IVA {watchReducedVAT ? '4%' : '22%'}</p>
-          <p className="font-medium text-sm">+ {formatCurrency(vatAmount)}</p>
-        </div>
         
         <div className="space-y-0.5 col-span-2">
           <p className="text-xs text-gray-500 font-semibold">Prezzo Finale (IVA inclusa)</p>

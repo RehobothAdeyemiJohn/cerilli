@@ -113,11 +113,7 @@ export const useQuoteForm = (vehicle: Vehicle | undefined, onSubmit: (data: any)
   const totalDiscount = discount + tradeInValue;
   
   // Base price plus accessories minus discounts (including trade-in)
-  const subtotal = basePrice + accessoryTotalPrice - totalDiscount;
-  
-  // Apply VAT rate based on selection
-  const vatRate = watchReducedVAT ? 0.04 : 0.22;
-  const finalPrice = subtotal + (subtotal * vatRate);
+  const finalPrice = basePrice + accessoryTotalPrice - totalDiscount;
   
   // Update final price when component values change
   form.setValue('finalPrice', finalPrice);
