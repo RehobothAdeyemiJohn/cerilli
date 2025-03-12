@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { 
   VehicleModel, 
@@ -371,13 +370,14 @@ export const colorsApi = {
   },
   
   create: async (color: Omit<ExteriorColor, 'id'>): Promise<ExteriorColor> => {
+    console.log('Creating color in Supabase:', color);
+    
     const { data, error } = await supabase
       .from('settings_colors')
       .insert({
         name: color.name,
         type: color.type,
-        price_adjustment: color.priceAdjustment,
-        compatible_models: color.compatibleModels || []
+        price_adjustment: color.priceAdjustment
       })
       .select()
       .single();
@@ -402,9 +402,7 @@ export const colorsApi = {
       .update({
         name: color.name,
         type: color.type,
-        price_adjustment: color.priceAdjustment,
-        compatible_models: color.compatibleModels || [],
-        updated_at: new Date()
+        price_adjustment: color.priceAdjustment
       })
       .eq('id', id)
       .select()

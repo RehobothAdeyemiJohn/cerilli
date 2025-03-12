@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -22,7 +23,10 @@ const ColorsSettings = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (color: Omit<ExteriorColor, 'id'>) => colorsApi.create(color),
+    mutationFn: (color: Omit<ExteriorColor, 'id'>) => {
+      console.log('Creating color:', color);
+      return colorsApi.create(color);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colors'] });
       toast({
@@ -32,10 +36,21 @@ const ColorsSettings = () => {
       setIsAddDialogOpen(false);
       setCurrentColor({});
     },
+    onError: (error) => {
+      console.error('Error creating color:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta del colore.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, color }: { id: string; color: ExteriorColor }) => colorsApi.update(id, color),
+    mutationFn: ({ id, color }: { id: string; color: ExteriorColor }) => {
+      console.log('Updating color:', { id, color });
+      return colorsApi.update(id, color);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colors'] });
       toast({
@@ -45,6 +60,14 @@ const ColorsSettings = () => {
       setIsEditDialogOpen(false);
       setCurrentColor({});
     },
+    onError: (error) => {
+      console.error('Error updating color:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del colore.",
+        variant: "destructive",
+      });
+    }
   });
 
   const deleteMutation = useMutation({
@@ -56,6 +79,14 @@ const ColorsSettings = () => {
         description: "Il colore è stato eliminato con successo.",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting color:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del colore.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAddColor = () => {
@@ -85,19 +116,25 @@ const ColorsSettings = () => {
     if (!currentColor.name || !currentColor.type || currentColor.priceAdjustment === undefined) {
       toast({
         title: "Errore",
-        description: "Tutti i campi sono obbligatori.",
+        description: "Nome, tipo e adeguamento prezzo sono obbligatori.",
         variant: "destructive",
       });
       return;
     }
 
-    if (currentColor.id) {
+    // Ensure compatibleModels is defined (even if empty)
+    const colorToSave: Partial<ExteriorColor> = {
+      ...currentColor,
+      compatibleModels: currentColor.compatibleModels || []
+    };
+
+    if (colorToSave.id) {
       updateMutation.mutate({
-        id: currentColor.id,
-        color: currentColor as ExteriorColor,
+        id: colorToSave.id,
+        color: colorToSave as ExteriorColor,
       });
     } else {
-      createMutation.mutate(currentColor as Omit<ExteriorColor, 'id'>);
+      createMutation.mutate(colorToSave as Omit<ExteriorColor, 'id'>);
     }
   };
 

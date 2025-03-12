@@ -14,10 +14,14 @@ interface ColorFormProps {
 }
 
 const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
-  const { data: models = [] } = useQuery({
+  const { data: models = [], isLoading } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll
   });
+
+  if (isLoading) {
+    return <div>Caricamento modelli in corso...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -57,6 +61,9 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
           placeholder="es. 800"
         />
       </div>
+
+      {/* Temporarily hide the compatibility checkboxes until we fix the database schema */}
+      {/* 
       <div className="space-y-2">
         <Label>Compatibilità Modelli</Label>
         <p className="text-sm text-gray-500 mb-2">
@@ -81,6 +88,7 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
           ))}
         </div>
       </div>
+      */}
     </div>
   );
 };

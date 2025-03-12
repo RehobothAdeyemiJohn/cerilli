@@ -93,15 +93,21 @@ const Settings = () => {
         });
       }
       
-      // Migrate colors
+      // Migrate colors - simplified to avoid compatible_models issue
       const colors = await localColorsApi.getAll();
+      console.log('Colors to migrate:', colors);
+      
       for (const color of colors) {
-        await supabaseColorsApi.create({
-          name: color.name,
-          type: color.type,
-          priceAdjustment: color.priceAdjustment,
-          compatibleModels: color.compatibleModels || []
-        });
+        try {
+          await supabaseColorsApi.create({
+            name: color.name,
+            type: color.type,
+            priceAdjustment: color.priceAdjustment
+            // Skip compatibleModels for now
+          });
+        } catch (error) {
+          console.error(`Error migrating color ${color.name}:`, error);
+        }
       }
       
       // Migrate transmissions
