@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
-import { Order } from '@/types';
+import { vehiclesApi } from '@/api/supabase/vehiclesApi';
+import { Order, Vehicle } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -20,21 +20,42 @@ const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   
-  // Fetch all orders from Supabase
+  // Fetch all orders and their associated vehicles from Supabase
   const { 
-    data: orders = [], 
+    data: ordersData = [], 
     isLoading, 
     error 
   } = useQuery({
     queryKey: ['orders'],
-    queryFn: () => ordersApi.getAll(),
+    queryFn: async () => {
+      const orders = await ordersApi.getAll();
+      // For each order, fetch its associated vehicle
+      const ordersWithVehicles = await Promise.all(
+        orders.map(async (order) => {
+          try {
+            const vehicle = await vehiclesApi.getById(order.vehicleId);
+            return {
+              ...order,
+              vehicle // Store the vehicle data separately
+            };
+          } catch (error) {
+            console.error(`Error fetching vehicle for order ${order.id}:`, error);
+            return {
+              ...order,
+              vehicle: null
+            };
+          }
+        })
+      );
+      return ordersWithVehicles;
+    },
     staleTime: 30000, // 30 seconds
   });
   
   // Filter orders by status
-  const processingOrders = orders.filter(o => o.status === 'processing');
-  const deliveredOrders = orders.filter(o => o.status === 'delivered');
-  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
+  const processingOrders = ordersData.filter(o => o.status === 'processing');
+  const deliveredOrders = ordersData.filter(o => o.status === 'delivered');
+  const cancelledOrders = ordersData.filter(o => o.status === 'cancelled');
   
   // Mutation for marking an order as delivered
   const markAsDeliveredMutation = useMutation({
@@ -141,7 +162,7 @@ const Orders = () => {
     }
   };
   
-  const renderOrderTable = (filteredOrders: Order[]) => (
+  const renderOrderTable = (filteredOrders: (Order & { vehicle: Vehicle | null })[]) => (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
         <Table>
@@ -170,8 +191,8 @@ const Orders = () => {
               </TableRow>
             ) : filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
-                const vehicleInfo = order.vehicles ? 
-                  `${order.vehicles.model} ${order.vehicles.trim || ''}` : 
+                const vehicleInfo = order.vehicle ? 
+                  `${order.vehicle.model} ${order.vehicle.trim || ''}` : 
                   'Veicolo non disponibile';
                 
                 return (
@@ -291,7 +312,7 @@ const Orders = () => {
             Cancellati ({cancelledOrders.length})
           </TabsTrigger>
           <TabsTrigger value="all">
-            Tutti gli Ordini ({orders.length})
+            Tutti gli Ordini ({ordersData.length})
           </TabsTrigger>
         </TabsList>
         
@@ -308,7 +329,7 @@ const Orders = () => {
         </TabsContent>
         
         <TabsContent value="all">
-          {renderOrderTable(orders)}
+          {renderOrderTable(ordersData)}
         </TabsContent>
       </Tabs>
     </div>
