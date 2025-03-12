@@ -544,7 +544,7 @@ const Orders = () => {
             <CardTitle className="text-lg">Filtri</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
               <div>
                 <h3 className="text-sm font-medium mb-2">Targabile</h3>
                 <div className="flex space-x-2">
@@ -644,12 +644,14 @@ const Orders = () => {
                   </Button>
                 </div>
               </div>
-              
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-sm font-medium mb-2">Modello</h3>
                 <Select
-                  value={filters.model || ""}
-                  onValueChange={(value) => setFilters(prev => ({ ...prev, model: value || null }))}
+                  value={filters.model || "all"}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, model: value === "all" ? null : value }))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleziona modello" />
@@ -666,8 +668,8 @@ const Orders = () => {
               <div>
                 <h3 className="text-sm font-medium mb-2">Dealer</h3>
                 <Select
-                  value={filters.dealerId || ""}
-                  onValueChange={(value) => setFilters(prev => ({ ...prev, dealerId: value || null }))}
+                  value={filters.dealerId || "all"}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, dealerId: value === "all" ? null : value }))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleziona dealer" />
