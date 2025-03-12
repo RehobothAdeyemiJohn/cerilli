@@ -62,21 +62,19 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
               }`}
             >
               <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
-              <span className={`ml-3 transition-opacity duration-300 ${
-                isOpen ? 'opacity-100' : 'opacity-0 hidden'
-              }`}>
-                {item.title}
-              </span>
+              {isOpen && (
+                <span className="ml-3">{item.title}</span>
+              )}
             </Link>
           ))}
         </nav>
         
         <div className="pt-4 mt-4 border-t border-gray-200 px-2">
-          <p className={`px-2 text-xs font-semibold text-gray-500 uppercase mb-2 transition-opacity duration-300 ${
-            isOpen ? 'opacity-100' : 'opacity-0 hidden'
-          }`}>
-            AMMINISTRAZIONE
-          </p>
+          {isOpen && (
+            <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-2">
+              AMMINISTRAZIONE
+            </p>
+          )}
           
           <nav className="space-y-1">
             {adminItems.map((item) => (
@@ -90,11 +88,9 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                 }`}
               >
                 <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
-                <span className={`ml-3 transition-opacity duration-300 ${
-                  isOpen ? 'opacity-100' : 'opacity-0 hidden'
-                }`}>
-                  {item.title}
-                </span>
+                {isOpen && (
+                  <span className="ml-3">{item.title}</span>
+                )}
               </Link>
             ))}
           </nav>
