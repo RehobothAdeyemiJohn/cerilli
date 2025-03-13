@@ -20,6 +20,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
     reserved: 'bg-amber-100 text-amber-800',
     ordered: 'bg-blue-100 text-blue-800',
     sold: 'bg-gray-100 text-gray-800',
+    delivered: 'bg-green-100 text-green-800', // Show delivered as green (available)
   };
 
   // Traduzioni di stato
@@ -28,6 +29,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
     reserved: 'Prenotata',
     ordered: 'Ordinata',
     sold: 'Venduta',
+    delivered: 'Disponibile', // Show delivered as "Disponibile"
   };
 
   // Detect if it's a virtual stock vehicle
@@ -54,9 +56,18 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
 
   return (
     <div 
-      className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
       onClick={() => onClick(vehicle)}
     >
+      {/* Add ribbon for delivered vehicles */}
+      {vehicle.status === 'delivered' && (
+        <div className="absolute right-0 top-0">
+          <div className="bg-green-500 text-white py-1 px-3 text-xs font-bold uppercase">
+            Disponibile
+          </div>
+        </div>
+      )}
+      
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>

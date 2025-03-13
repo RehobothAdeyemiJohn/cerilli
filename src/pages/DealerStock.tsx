@@ -51,7 +51,11 @@ const DealerStock = () => {
     : dealerStockVehicles;
   
   // Split vehicles by status
-  const availableVehicles = filteredVehicles.filter(v => v.status === 'available');
+  // Delivered vehicles should be shown as available with a green ribbon
+  const availableVehicles = filteredVehicles.filter(v => 
+    v.status === 'available' || v.status === 'delivered'
+  );
+  
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   
   const handleCreateQuote = (vehicle: Vehicle) => {
@@ -76,7 +80,7 @@ const DealerStock = () => {
     setActiveFilters(filters);
   };
   
-  // Handles actions for the VehicleList component (these are placeholders as they won't be used)
+  // Handles actions for the VehicleList component
   const handleVehicleUpdated = () => refetch();
   const handleVehicleDeleted = async () => { await refetch(); return Promise.resolve(); };
   
