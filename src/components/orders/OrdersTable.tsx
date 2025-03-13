@@ -114,19 +114,22 @@ const OrdersTable = ({
                 </>
               )}
               
-              <TableHead>Azioni</TableHead>
+              {/* Only show Actions column for non-dealers */}
+              {!isDealer && (
+                <TableHead>Azioni</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 10 : 7} className="text-center py-10">
                   Caricamento ordini...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10 text-red-500">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 10 : 7} className="text-center py-10 text-red-500">
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
@@ -254,43 +257,44 @@ const OrdersTable = ({
                       </>
                     )}
                     
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8"
-                          onClick={() => onViewDetails(order)}
-                        >
-                          Visualizza
-                        </Button>
-                        
-                        {order.status === 'processing' && !isDealer && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
-                              onClick={() => onMarkAsDelivered(order.id)}
-                              disabled={markAsDeliveredPending || !canDeliverOrder}
-                              title={!canDeliverOrder ? "Genera ODL prima di consegnare" : ""}
-                            >
-                              Consegnato
-                            </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
-                              onClick={() => onCancelOrder(order.id)}
-                              disabled={cancelOrderPending}
-                            >
-                              Cancella
-                            </Button>
-                          </>
-                        )}
-                        
-                        {!isDealer && (
+                    {/* Only show Actions cell for non-dealers */}
+                    {!isDealer && (
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8"
+                            onClick={() => onViewDetails(order)}
+                          >
+                            Visualizza
+                          </Button>
+                          
+                          {order.status === 'processing' && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
+                                onClick={() => onMarkAsDelivered(order.id)}
+                                disabled={markAsDeliveredPending || !canDeliverOrder}
+                                title={!canDeliverOrder ? "Genera ODL prima di consegnare" : ""}
+                              >
+                                Consegnato
+                              </Button>
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
+                                onClick={() => onCancelOrder(order.id)}
+                                disabled={cancelOrderPending}
+                              >
+                                Cancella
+                              </Button>
+                            </>
+                          )}
+                          
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 
@@ -321,15 +325,15 @@ const OrdersTable = ({
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        )}
-                      </div>
-                    </TableCell>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 10 : 7} className="text-center py-10 text-gray-500">
                   Nessun ordine trovato
                 </TableCell>
               </TableRow>
