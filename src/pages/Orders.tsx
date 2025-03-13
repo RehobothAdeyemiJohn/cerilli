@@ -1,37 +1,34 @@
+
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersApi } from '@/api/supabase/ordersApi';
-import { vehiclesApi } from '@/api/supabase/vehiclesApi';
+import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { Order, OrderDetails, Vehicle } from '@/types';
+import { Order } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
 import OrdersTable from '@/components/orders/OrdersTable';
-import OrdersFilters from '@/components/orders/OrdersFilters';
 import { useOrdersData } from '@/hooks/useOrdersData';
-import { useQuery } from '@tanstack/react-query';
+import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
+import { useOrdersModels } from '@/hooks/orders/useOrdersModels';
+import { useOrderFilters } from '@/hooks/orders/useOrderFilters';
+import OrdersHeader from '@/components/orders/OrdersHeader';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
-  const [showFilters, setShowFilters] = useState(false);
-
-  const [filters, setFilters] = useState({
-    isLicensable: null as boolean | null,
-    hasProforma: null as boolean | null,
-    isPaid: null as boolean | null,
-    isInvoiced: null as boolean | null,
-    hasConformity: null as boolean | null,
-    dealerId: null as string | null,
-    model: null as string | null,
-  });
+  
+  const {
+    filters,
+    showFilters,
+    setShowFilters,
+    updateFilter,
+    resetFilters,
+    activeFiltersCount
+  } = useOrderFilters();
 
   const {
     processingOrders,
@@ -56,115 +53,21 @@ const Orders = () => {
     enabled: isAdmin,
   });
 
-  const markAsDeliveredMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      try {
-        const order = await ordersApi.getById(orderId);
-        
-        if (!order.details?.odlGenerated) {
-          throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
-        }
-        
-        if (order.vehicle && order.dealerId) {
-          await vehiclesApi.update(order.vehicleId, {
-            status: 'delivered' as Vehicle['status'],
-            location: 'Stock Dealer'
-          });
-        }
-        
-        return ordersApi.update(orderId, {
-          ...order,
-          status: 'delivered',
-          deliveryDate: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('Error in mark as delivered process:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      refreshAllOrderData();
-      toast({
-        title: "Ordine consegnato",
-        description: "L'ordine è stato marcato come consegnato con successo",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Error marking order as delivered:', error);
-      toast({
-        title: "Errore",
-        description: error.message || "Si è verificato un errore durante l'aggiornamento dell'ordine",
-        variant: "destructive"
-      });
-    }
-  });
+  const {
+    markAsDeliveredMutation,
+    cancelOrderMutation,
+    deleteOrderMutation,
+    handleMarkAsDelivered,
+    handleCancelOrder,
+    handleDeleteOrder,
+    handleGenerateODL
+  } = useOrdersActions(refreshAllOrderData);
 
-  const cancelOrderMutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      const order = await ordersApi.getById(orderId);
-      return ordersApi.update(orderId, {
-        ...order,
-        status: 'cancelled'
-      });
-    },
-    onSuccess: () => {
-      refreshAllOrderData();
-      toast({
-        title: "Ordine cancellato",
-        description: "L'ordine è stato cancellato con successo",
-      });
-    },
-    onError: (error) => {
-      console.error('Error cancelling order:', error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la cancellazione dell'ordine",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const deleteOrderMutation = useMutation({
-    mutationFn: (orderId: string) => ordersApi.delete(orderId),
-    onSuccess: () => {
-      refreshAllOrderData();
-      toast({
-        title: "Ordine eliminato",
-        description: "L'ordine è stato eliminato definitivamente",
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting order:', error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'eliminazione dell'ordine",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleMarkAsDelivered = (orderId: string) => {
-    markAsDeliveredMutation.mutate(orderId);
-  };
-
-  const handleCancelOrder = (orderId: string) => {
-    cancelOrderMutation.mutate(orderId);
-  };
-
-  const handleDeleteOrder = () => {
-    if (selectedOrderId) {
-      deleteOrderMutation.mutate(selectedOrderId);
-      setSelectedOrderId(null);
-    }
-  };
+  const uniqueModels = useOrdersModels(ordersData);
 
   const handleViewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
     setOrderDetailsOpen(true);
-  };
-
-  const handleGenerateODL = (details: OrderDetails) => {
-    refreshAllOrderData();
   };
 
   const handleOrderDetailsSuccess = () => {
@@ -172,55 +75,25 @@ const Orders = () => {
     refreshAllOrderData();
   };
 
-  const uniqueModels = React.useMemo(() => {
-    const models = new Set<string>();
-    ordersData.forEach(order => {
-      if (order.vehicle?.model) {
-        models.add(order.vehicle.model);
-      }
-    });
-    return Array.from(models);
-  }, [ordersData]);
-
-  const updateFilter = (key: string, value: boolean | null | string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  const handleDeleteOrderWithId = () => {
+    handleDeleteOrder(selectedOrderId);
+    setSelectedOrderId(null);
   };
-
-  const resetFilters = () => {
-    setFilters({
-      isLicensable: null,
-      hasProforma: null,
-      isPaid: null,
-      isInvoiced: null,
-      hasConformity: null,
-      dealerId: null,
-      model: null,
-    });
-  };
-
-  const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Ordini</h1>
-        
-        <OrdersFilters
-          isAdmin={isAdmin}
-          filters={filters}
-          updateFilter={updateFilter}
-          resetFilters={resetFilters}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          activeFiltersCount={activeFiltersCount}
-          dealersData={dealersData}
-          uniqueModels={uniqueModels}
-          onRefresh={refreshAllOrderData}
-        />
-      </div>
+      <OrdersHeader
+        isAdmin={isAdmin}
+        filters={filters}
+        updateFilter={updateFilter}
+        resetFilters={resetFilters}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        activeFiltersCount={activeFiltersCount}
+        dealersData={dealersData}
+        uniqueModels={uniqueModels}
+        onRefresh={refreshAllOrderData}
+      />
       
       <Tabs defaultValue="processing">
         <TabsList className="mb-6">
@@ -253,7 +126,7 @@ const Orders = () => {
             onMarkAsDelivered={handleMarkAsDelivered}
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
-            onDeleteConfirm={handleDeleteOrder}
+            onDeleteConfirm={handleDeleteOrderWithId}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -276,7 +149,7 @@ const Orders = () => {
             onMarkAsDelivered={handleMarkAsDelivered}
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
-            onDeleteConfirm={handleDeleteOrder}
+            onDeleteConfirm={handleDeleteOrderWithId}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -299,7 +172,7 @@ const Orders = () => {
             onMarkAsDelivered={handleMarkAsDelivered}
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
-            onDeleteConfirm={handleDeleteOrder}
+            onDeleteConfirm={handleDeleteOrderWithId}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -322,7 +195,7 @@ const Orders = () => {
             onMarkAsDelivered={handleMarkAsDelivered}
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
-            onDeleteConfirm={handleDeleteOrder}
+            onDeleteConfirm={handleDeleteOrderWithId}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}

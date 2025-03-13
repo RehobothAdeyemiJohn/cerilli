@@ -1,10 +1,9 @@
 
 import React from 'react';
+import { OrdersFilters } from '@/components/orders/OrdersFilters';
 import { Dealer } from '@/types';
-import FilterBar from './filters/FilterBar';
-import FilterCard from './filters/FilterCard';
 
-interface OrdersFiltersProps {
+interface OrdersHeaderProps {
   isAdmin: boolean;
   filters: {
     isLicensable: boolean | null;
@@ -25,7 +24,7 @@ interface OrdersFiltersProps {
   onRefresh: () => void;
 }
 
-const OrdersFilters = ({
+const OrdersHeader = ({
   isAdmin,
   filters,
   updateFilter,
@@ -36,31 +35,25 @@ const OrdersFilters = ({
   dealersData,
   uniqueModels,
   onRefresh
-}: OrdersFiltersProps) => {
-  if (!isAdmin) return null;
-
+}: OrdersHeaderProps) => {
   return (
-    <div>
-      <FilterBar 
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <h1 className="text-2xl font-bold">Ordini</h1>
+      
+      <OrdersFilters
+        isAdmin={isAdmin}
+        filters={filters}
+        updateFilter={updateFilter}
+        resetFilters={resetFilters}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         activeFiltersCount={activeFiltersCount}
+        dealersData={dealersData}
+        uniqueModels={uniqueModels}
         onRefresh={onRefresh}
       />
-      
-      {showFilters && (
-        <FilterCard
-          filters={filters}
-          updateFilter={updateFilter}
-          resetFilters={resetFilters}
-          setShowFilters={setShowFilters}
-          activeFiltersCount={activeFiltersCount}
-          dealersData={dealersData}
-          uniqueModels={uniqueModels}
-        />
-      )}
     </div>
   );
 };
 
-export default OrdersFilters;
+export default OrdersHeader;
