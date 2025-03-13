@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Check,
   X,
@@ -51,6 +52,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -275,10 +277,10 @@ const Orders = () => {
     return Array.from(models);
   }, [ordersData]);
 
-  const updateBooleanFilter = (key: keyof typeof filters, value: boolean | null) => {
+  const updateFilter = (key: keyof typeof filters, value: boolean | null) => {
     setFilters(prev => ({
       ...prev,
-      [key]: prev[key] === value ? null : value
+      [key]: value
     }));
   };
 
@@ -547,7 +549,7 @@ const Orders = () => {
       </div>
       
       {isAdmin && showFilters && (
-        <Card className="mb-6 border shadow-sm">
+        <Card className="mb-6 border shadow-sm bg-white">
           <CardHeader className="pb-2 border-b">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">Filtri</CardTitle>
@@ -565,41 +567,46 @@ const Orders = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <FilterToggleGroup 
-                title="Targabile" 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <FilterSwitchItem 
+                label="Targabile" 
                 value={filters.isLicensable} 
-                onChange={(value) => updateBooleanFilter('isLicensable', value)} 
+                onChange={(checked) => updateFilter('isLicensable', checked ? true : null)} 
+                description="Veicoli con possibilità di immatricolazione"
               />
               
-              <FilterToggleGroup 
-                title="Proformata" 
+              <FilterSwitchItem 
+                label="Proformata" 
                 value={filters.hasProforma} 
-                onChange={(value) => updateBooleanFilter('hasProforma', value)} 
+                onChange={(checked) => updateFilter('hasProforma', checked ? true : null)} 
+                description="Ordini con proforma emessa"
               />
               
-              <FilterToggleGroup 
-                title="Saldata" 
+              <FilterSwitchItem 
+                label="Saldata" 
                 value={filters.isPaid} 
-                onChange={(value) => updateBooleanFilter('isPaid', value)} 
+                onChange={(checked) => updateFilter('isPaid', checked ? true : null)} 
+                description="Ordini completamente pagati"
               />
               
-              <FilterToggleGroup 
-                title="Fatturata" 
+              <FilterSwitchItem 
+                label="Fatturata" 
                 value={filters.isInvoiced} 
-                onChange={(value) => updateBooleanFilter('isInvoiced', value)} 
+                onChange={(checked) => updateFilter('isInvoiced', checked ? true : null)} 
+                description="Ordini con fattura emessa"
               />
               
-              <FilterToggleGroup 
-                title="Conformità" 
+              <FilterSwitchItem 
+                label="Conformità" 
                 value={filters.hasConformity} 
-                onChange={(value) => updateBooleanFilter('hasConformity', value)} 
+                onChange={(checked) => updateFilter('hasConformity', checked ? true : null)} 
+                description="Veicoli con certificato di conformità"
               />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div>
-                <h3 className="text-sm font-medium mb-2 text-gray-700">Modello</h3>
+                <Label className="text-sm font-medium mb-2 block text-gray-700">Modello</Label>
                 <Select
                   value={filters.model || "all"}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, model: value === "all" ? null : value }))}
@@ -617,7 +624,7 @@ const Orders = () => {
               </div>
               
               <div>
-                <h3 className="text-sm font-medium mb-2 text-gray-700">Dealer</h3>
+                <Label className="text-sm font-medium mb-2 block text-gray-700">Dealer</Label>
                 <Select
                   value={filters.dealerId || "all"}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, dealerId: value === "all" ? null : value }))}
@@ -696,33 +703,28 @@ const Orders = () => {
   );
 };
 
-interface FilterToggleGroupProps {
-  title: string;
+interface FilterSwitchItemProps {
+  label: string;
   value: boolean | null;
-  onChange: (value: boolean) => void;
+  onChange: (checked: boolean) => void;
+  description?: string;
 }
 
-const FilterToggleGroup = ({ title, value, onChange }: FilterToggleGroupProps) => {
+const FilterSwitchItem = ({ label, value, onChange, description }: FilterSwitchItemProps) => {
   return (
-    <div className="flex flex-col">
-      <h3 className="text-sm font-medium mb-3 text-gray-700">{title}</h3>
-      <div className="flex items-center justify-between rounded-md bg-gray-50 p-1">
-        <Button 
-          variant={value === true ? "default" : "ghost"} 
-          size="sm"
-          onClick={() => onChange(true)}
-          className={`flex-1 h-8 rounded-sm ${value === true ? "" : "text-gray-700 hover:text-gray-900"}`}
-        >
-          Sì
-        </Button>
-        <Button 
-          variant={value === false ? "default" : "ghost"} 
-          size="sm"
-          onClick={() => onChange(false)}
-          className={`flex-1 h-8 rounded-sm ${value === false ? "" : "text-gray-700 hover:text-gray-900"}`}
-        >
-          No
-        </Button>
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-medium text-gray-700">{label}</Label>
+          {description && (
+            <p className="text-xs text-gray-500">{description}</p>
+          )}
+        </div>
+        <Switch 
+          checked={value === true}
+          onCheckedChange={onChange}
+          className="data-[state=checked]:bg-primary"
+        />
       </div>
     </div>
   );
