@@ -133,6 +133,9 @@ const OrderDetailsDialog = ({
     if (onSuccess) {
       onSuccess();
     }
+    
+    // Close the dialog when save is successful
+    onOpenChange(false);
   };
 
   return (

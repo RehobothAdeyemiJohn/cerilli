@@ -512,7 +512,7 @@ const OrderDetailsForm = ({
             type="button" 
             onClick={form.handleSubmit(onSubmit)} 
             disabled={isSubmitting}
-            className="min-w-32 bg-blue-600 hover:bg-blue-700"
+            className="min-w-32 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium"
           >
             {isSubmitting ? 'Salvataggio...' : 'Salva'}
           </Button>
@@ -522,9 +522,9 @@ const OrderDetailsForm = ({
             onClick={handleGenerateODL} 
             disabled={isSubmitting || hasGeneratedODL}
             variant={hasGeneratedODL ? "outline" : "default"}
-            className={`min-w-32 ${hasGeneratedODL 
+            className={`min-w-32 px-6 font-medium ${hasGeneratedODL 
               ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' 
-              : 'bg-green-600 hover:bg-green-700'}`}
+              : 'bg-green-600 hover:bg-green-700 text-white'}`}
           >
             {hasGeneratedODL ? (
               <span className="flex items-center">

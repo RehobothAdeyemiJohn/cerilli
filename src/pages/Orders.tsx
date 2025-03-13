@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -92,6 +93,18 @@ const Orders = () => {
     staleTime: 0,
   });
 
+  // Extract order details from the orders to make filtering easier
+  const ordersWithDetails = React.useMemo(() => {
+    return ordersData.map(order => {
+      // Find the associated orderDetails if they exist
+      const details = order.details || null;
+      return {
+        ...order,
+        details
+      };
+    });
+  }, [ordersData]);
+
   const filterOrders = (orders: Order[], status?: string) => {
     let filtered = orders;
     
@@ -132,10 +145,10 @@ const Orders = () => {
     return filtered;
   };
 
-  const processingOrders = filterOrders(ordersData, 'processing');
-  const deliveredOrders = filterOrders(ordersData, 'delivered');
-  const cancelledOrders = filterOrders(ordersData, 'cancelled');
-  const allOrders = filterOrders(ordersData);
+  const processingOrders = filterOrders(ordersWithDetails, 'processing');
+  const deliveredOrders = filterOrders(ordersWithDetails, 'delivered');
+  const cancelledOrders = filterOrders(ordersWithDetails, 'cancelled');
+  const allOrders = filterOrders(ordersWithDetails);
 
   const markAsDeliveredMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -247,6 +260,12 @@ const Orders = () => {
 
   const handleGenerateODL = (details: OrderDetails) => {
     queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
+  };
+
+  const handleOrderDetailsSuccess = () => {
+    // Force immediate data refresh
+    refetchOrders();
     queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
   };
 
@@ -693,9 +712,7 @@ const Orders = () => {
           order={selectedOrder}
           open={orderDetailsOpen}
           onOpenChange={setOrderDetailsOpen}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
-          }}
+          onSuccess={handleOrderDetailsSuccess}
           onGenerateODL={handleGenerateODL}
         />
       )}
