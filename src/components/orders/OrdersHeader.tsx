@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { OrdersFilters } from '@/components/orders/OrdersFilters';
+import OrdersFilters from '@/components/orders/OrdersFilters';
 import { Dealer } from '@/types';
 
 interface OrdersHeaderProps {
