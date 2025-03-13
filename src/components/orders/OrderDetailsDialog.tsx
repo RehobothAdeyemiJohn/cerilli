@@ -204,6 +204,54 @@ const OrderDetailsDialog = ({
                 </CardContent>
               </Card>
             )}
+
+            {/* Aggiunta della sezione Veicolo */}
+            {vehicleData && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Informazioni Veicolo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Modello</p>
+                      <p>{vehicleData.model || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Allestimento</p>
+                      <p>{vehicleData.trim || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Colore</p>
+                      <p>{vehicleData.exteriorColor || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Motore</p>
+                      <p>{vehicleData.fuelType || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Cambio</p>
+                      <p>{vehicleData.transmission || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Telaio</p>
+                      <p>{vehicleData.telaio || '-'}</p>
+                    </div>
+                  </div>
+                  
+                  {vehicleData.accessories && vehicleData.accessories.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-500 mb-2">Optional</p>
+                      <ul className="list-disc pl-5 grid grid-cols-1 md:grid-cols-2 gap-1">
+                        {vehicleData.accessories.map((accessory, index) => (
+                          <li key={index} className="text-sm">{accessory}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             
             <OrderDetailsForm
               orderId={order.id}
