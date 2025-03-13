@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
@@ -13,7 +14,7 @@ import { useOrderFilters } from '@/hooks/orders/useOrderFilters';
 import OrdersHeader from '@/components/orders/OrdersHeader';
 import OrderPrintContent from '@/components/orders/OrderPrintContent';
 import { useReactToPrint } from 'react-to-print';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -106,9 +107,10 @@ const Orders = () => {
 
   useEffect(() => {
     if (printDialogOpen && orderToPrint && printRef.current) {
+      // Increased delay to ensure content is fully rendered
       const timer = setTimeout(() => {
         handlePrint();
-      }, 300);
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [printDialogOpen, orderToPrint, handlePrint]);
@@ -252,8 +254,9 @@ const Orders = () => {
       )}
 
       <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-screen overflow-y-auto hidden">
-          <div ref={printRef}>
+        <DialogContent className="max-w-4xl max-h-screen overflow-y-auto print:block print:shadow-none print:max-w-none print:w-full">
+          <DialogTitle className="sr-only">Stampa Ordine</DialogTitle>
+          <div ref={printRef} className="w-full">
             {orderToPrint && (
               <OrderPrintContent 
                 order={orderToPrint} 
