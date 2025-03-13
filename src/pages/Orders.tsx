@@ -383,6 +383,8 @@ const Orders = () => {
                 
                 const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
                 
+                console.log('Order details for rendering:', order.details);
+                
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{orderNumber}</TableCell>

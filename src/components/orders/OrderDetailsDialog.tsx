@@ -136,8 +136,9 @@ const OrderDetailsDialog = ({
     // Refresh form data
     refetch();
     
-    // Invalidate orders query to refresh the order list with updated status
+    // Force an immediate refetch of all orders to update the UI
     queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     
     if (onSuccess) {
       onSuccess();

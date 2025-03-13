@@ -36,10 +36,12 @@ export const orderDetailsApi = {
     // Update the order object to include order details
     try {
       const order = await ordersApi.getById(details.orderId);
-      await ordersApi.update(details.orderId, { 
-        ...order,
-        details: newDetails 
-      });
+      if (order) {
+        await ordersApi.update(details.orderId, { 
+          ...order,
+          details: newDetails 
+        });
+      }
     } catch (error) {
       console.error('Error updating order with details:', error);
     }
@@ -69,10 +71,13 @@ export const orderDetailsApi = {
     try {
       if (updatedDetails.orderId) {
         const order = await ordersApi.getById(updatedDetails.orderId);
-        await ordersApi.update(updatedDetails.orderId, { 
-          ...order,
-          details: updatedDetails 
-        });
+        if (order) {
+          console.log('Updating order with details:', updatedDetails);
+          await ordersApi.update(updatedDetails.orderId, { 
+            ...order,
+            details: updatedDetails 
+          });
+        }
       }
     } catch (error) {
       console.error('Error updating order with details:', error);
@@ -103,10 +108,12 @@ export const orderDetailsApi = {
     try {
       if (updatedDetails.orderId) {
         const order = await ordersApi.getById(updatedDetails.orderId);
-        await ordersApi.update(updatedDetails.orderId, { 
-          ...order,
-          details: updatedDetails 
-        });
+        if (order) {
+          await ordersApi.update(updatedDetails.orderId, { 
+            ...order,
+            details: updatedDetails 
+          });
+        }
       }
     } catch (error) {
       console.error('Error updating order with details:', error);
