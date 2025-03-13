@@ -45,6 +45,7 @@ const OrderDetailsDialog = ({
   const [vehicleData, setVehicleData] = useState<Vehicle | null>(null);
   const [dealerData, setDealerData] = useState<Dealer | null>(null);
 
+  // Usa la nuova struttura di query key per migliore gestione della cache
   const {
     data: orderDetails,
     isLoading: isLoadingDetails,
@@ -54,7 +55,7 @@ const OrderDetailsDialog = ({
     queryKey: ['orderDetails', order.id],
     queryFn: () => orderDetailsApi.getByOrderId(order.id),
     enabled: !!order.id && open,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0, // Sempre recuperare dati freschi
   });
 
   const fetchVehicleDetails = async () => {
@@ -93,7 +94,7 @@ const OrderDetailsDialog = ({
     if (open && order) {
       fetchVehicleDetails();
       fetchDealerDetails();
-      // Force refetch of order details when dialog opens
+      // Forza il recupero dei dettagli dell'ordine quando il dialog si apre
       refetch();
     }
   }, [open, order, refetch]);
@@ -118,10 +119,10 @@ const OrderDetailsDialog = ({
       onGenerateODL(details);
     }
     
-    // Update local state to reflect changes
+    // Aggiornamento dello stato locale per riflettere i cambiamenti
     refetch();
     
-    // Invalidate all related queries to ensure UI updates correctly
+    // Invalidazione di tutte le query correlate per garantire l'aggiornamento corretto dell'UI
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
@@ -135,10 +136,10 @@ const OrderDetailsDialog = ({
   const handleSuccess = () => {
     console.log('OrderDetailsForm reported success, notifying parent component');
     
-    // Refresh form data
+    // Aggiornamento dei dati del form
     refetch();
     
-    // Force an immediate refetch of all orders to update the UI
+    // Forza un recupero immediato di tutti gli ordini per aggiornare l'UI
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
@@ -147,7 +148,7 @@ const OrderDetailsDialog = ({
       onSuccess();
     }
     
-    // Close the dialog when save is successful
+    // Chiudi il dialog quando il salvataggio ha successo
     onOpenChange(false);
   };
 
