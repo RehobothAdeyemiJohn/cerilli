@@ -33,7 +33,6 @@ const Orders = () => {
     model: null as string | null,
   });
 
-  // Usa il nuovo hook useOrdersData
   const {
     processingOrders,
     deliveredOrders,
@@ -46,7 +45,6 @@ const Orders = () => {
     ordersData,
   } = useOrdersData(filters);
 
-  // Collega lo stato del dialog con il valore nel hook
   useEffect(() => {
     setIsDetailsDialogOpen(orderDetailsOpen);
   }, [orderDetailsOpen, setIsDetailsDialogOpen]);
@@ -184,7 +182,7 @@ const Orders = () => {
     return Array.from(models);
   }, [ordersData]);
 
-  const updateFilter = (key: keyof typeof filters, value: boolean | null) => {
+  const updateFilter = (key: string, value: boolean | null | string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value

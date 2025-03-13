@@ -52,7 +52,7 @@ interface OrdersFiltersProps {
     dealerId: string | null;
     model: string | null;
   };
-  updateFilter: (key: string, value: boolean | null) => void;
+  updateFilter: (key: string, value: boolean | null | string) => void;
   resetFilters: () => void;
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
