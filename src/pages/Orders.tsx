@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
-import { Order, Vehicle, OrderDetails, Dealer } from '@/types';
+import { Order, OrderDetails, Vehicle, Dealer } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -385,6 +385,12 @@ const Orders = () => {
                 
                 console.log('Order details for rendering:', order.details);
                 
+                const isLicensable = order.details?.isLicensable === true;
+                const hasProforma = order.details?.hasProforma === true;
+                const isPaid = order.details?.isPaid === true;
+                const isInvoiced = order.details?.isInvoiced === true;
+                const hasConformity = order.details?.hasConformity === true;
+                
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{orderNumber}</TableCell>
@@ -407,35 +413,35 @@ const Orders = () => {
                     {isAdmin && (
                       <>
                         <TableCell>
-                          {order.details?.isLicensable ? (
+                          {isLicensable ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.details?.hasProforma ? (
+                          {hasProforma ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.details?.isPaid ? (
+                          {isPaid ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.details?.isInvoiced ? (
+                          {isInvoiced ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.details?.hasConformity ? (
+                          {hasConformity ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />

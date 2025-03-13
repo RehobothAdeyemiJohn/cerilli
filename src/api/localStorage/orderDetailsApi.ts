@@ -37,6 +37,8 @@ export const orderDetailsApi = {
     try {
       const order = await ordersApi.getById(details.orderId);
       if (order) {
+        // Explicitly update the order with the new details
+        console.log('Creating order details and updating order:', newDetails);
         await ordersApi.update(details.orderId, { 
           ...order,
           details: newDetails 
@@ -73,6 +75,7 @@ export const orderDetailsApi = {
         const order = await ordersApi.getById(updatedDetails.orderId);
         if (order) {
           console.log('Updating order with details:', updatedDetails);
+          // Make sure to update the order.details property properly
           await ordersApi.update(updatedDetails.orderId, { 
             ...order,
             details: updatedDetails 
@@ -109,6 +112,7 @@ export const orderDetailsApi = {
       if (updatedDetails.orderId) {
         const order = await ordersApi.getById(updatedDetails.orderId);
         if (order) {
+          console.log('Setting ODL generated flag and updating order:', updatedDetails);
           await ordersApi.update(updatedDetails.orderId, { 
             ...order,
             details: updatedDetails 
