@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -120,9 +121,10 @@ const OrderDetailsDialog = ({
     // Update local state to reflect changes
     refetch();
     
-    // Invalidate orders query to refresh the order list with updated status
-    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
+    // Invalidate all related queries to ensure UI updates correctly
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
     
     toast({
       title: "ODL generato con successo",
@@ -137,8 +139,9 @@ const OrderDetailsDialog = ({
     refetch();
     
     // Force an immediate refetch of all orders to update the UI
-    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
     
     if (onSuccess) {
       onSuccess();

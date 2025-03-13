@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { Order, OrderDetails, Vehicle, Dealer } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
@@ -92,22 +93,44 @@ const Orders = () => {
     staleTime: 0,
   });
 
-  const ordersWithDetails = React.useMemo(() => {
-    return ordersData.map(order => {
-      const details = order.details || null;
-      return {
-        ...order,
-        details
-      };
-    });
-  }, [ordersData]);
+  const fetchOrderDetails = async (orders: Order[]) => {
+    const ordersWithDetailsFull = await Promise.all(
+      orders.map(async (order) => {
+        try {
+          const details = await orderDetailsApi.getByOrderId(order.id);
+          return {
+            ...order,
+            details: details || null
+          };
+        } catch (error) {
+          console.error(`Error fetching details for order ${order.id}:`, error);
+          return {
+            ...order,
+            details: null
+          };
+        }
+      })
+    );
+    
+    return ordersWithDetailsFull;
+  };
+
+  const { data: ordersWithDetails = [], refetch: refetchOrdersWithDetails } = useQuery({
+    queryKey: ['ordersWithDetails'],
+    queryFn: () => fetchOrderDetails(ordersData),
+    enabled: ordersData.length > 0,
+    staleTime: 0,
+  });
 
   useEffect(() => {
     if (!orderDetailsOpen) {
       console.log('OrderDetailsDialog closed, refreshing orders data');
       refetchOrders();
+      if (ordersData.length > 0) {
+        refetchOrdersWithDetails();
+      }
     }
-  }, [orderDetailsOpen, refetchOrders]);
+  }, [orderDetailsOpen, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
 
   const filterOrders = (orders: Order[], status?: string) => {
     let filtered = orders;
@@ -126,7 +149,7 @@ const Orders = () => {
             case 'isInvoiced':
             case 'hasConformity':
               filtered = filtered.filter(order => 
-                order.details && order.details[key as keyof OrderDetails] === value
+                order.details && order.details[key as keyof OrderDetails] === true
               );
               break;
             case 'dealerId':
@@ -272,7 +295,11 @@ const Orders = () => {
     console.log('Order details saved successfully, refreshing data');
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
     refetchOrders();
+    if (ordersData.length > 0) {
+      refetchOrdersWithDetails();
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
