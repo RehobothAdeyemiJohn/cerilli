@@ -113,10 +113,6 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
             <p className="text-sm font-medium text-gray-500">Telaio:</p>
             <p>{order.details?.chassis || '-'}</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Targabile:</p>
-            <p>{order.details?.isLicensable ? 'Sì' : 'No'}</p>
-          </div>
         </div>
       </div>
 
