@@ -381,7 +381,7 @@ const Orders = () => {
                   cancelledOrders.indexOf(order)
                 );
                 
-                const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
+                const canDeliverOrder = order.status === 'processing' && (order.details?.odlGenerated === true);
                 
                 console.log(`Order ${order.id} details:`, {
                   isLicensable: order.details?.isLicensable === true,
