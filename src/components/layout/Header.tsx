@@ -25,6 +25,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     navigate('/');
   };
   
+  // Get dealer name for dealers or vendor users
+  const dealerName = user?.type === 'dealer' || user?.type === 'vendor' 
+    ? user.dealerName 
+    : 'Cirelli Motor Company';
+  
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 flex-shrink-0 w-full">
       <div className="flex items-center justify-between w-full">
@@ -37,7 +42,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
           </button>
           
           <div className="font-semibold text-lg md:text-xl text-gray-800">
-            Cirelli Motor Company
+            {dealerName}
           </div>
         </div>
         

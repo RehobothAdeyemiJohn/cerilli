@@ -57,9 +57,9 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     >
       <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4 flex-shrink-0">
         {isOpen ? (
-          <h2 className="text-xl font-bold text-gray-800">Cirelli Motor</h2>
+          <h2 className="text-xl font-bold text-gray-800">DMS Cirelli</h2>
         ) : (
-          <span className="text-xl font-bold text-gray-800">CM</span>
+          <span className="text-xl font-bold text-gray-800">DMS</span>
         )}
       </div>
       
