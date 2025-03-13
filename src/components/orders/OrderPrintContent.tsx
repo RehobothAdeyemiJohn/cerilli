@@ -27,14 +27,6 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
         <h2 className="text-xl font-semibold mb-3">Informazioni Dealer</h2>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-sm font-medium text-gray-500">Azienda:</p>
-            <p>{order.dealer?.companyName || '-'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Nome Contatto:</p>
-            <p>{order.dealer?.contactName || '-'}</p>
-          </div>
-          <div>
             <p className="text-sm font-medium text-gray-500">Email:</p>
             <p>{order.dealer?.email || '-'}</p>
           </div>
@@ -143,27 +135,6 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
           )}
         </div>
       </div>
-
-      {/* Costi Aggiuntivi */}
-      {(order.details?.transportCosts > 0 || order.details?.restorationCosts > 0) && (
-        <div className="mb-6 border-b pb-4">
-          <h2 className="text-xl font-semibold mb-3">Costi Aggiuntivi</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {order.details?.transportCosts > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-500">Costi di Trasporto:</p>
-                <p>{new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(order.details.transportCosts)}</p>
-              </div>
-            )}
-            {order.details?.restorationCosts > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-500">Costi di Ripristino:</p>
-                <p>{new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(order.details.restorationCosts)}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Notes - Only display if order has details with notes */}
       {order.details?.notes && (
