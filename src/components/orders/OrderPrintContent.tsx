@@ -81,16 +81,8 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
             <p>{order.vehicle?.fuelType || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Destinazione:</p>
-            <p>{order.vehicle?.location || '-'}</p>
-          </div>
-          <div>
             <p className="text-sm font-medium text-gray-500">Telaio:</p>
             <p>{order.vehicle?.telaio || order.details?.chassis || '-'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Anno:</p>
-            <p>{order.vehicle?.year || '-'}</p>
           </div>
         </div>
 
