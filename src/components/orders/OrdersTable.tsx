@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Order } from '@/types';
 import {
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Check, X } from 'lucide-react';
+import { Check, X, Printer } from 'lucide-react';
 
 interface OrdersTableProps {
   orders: Order[];
@@ -28,6 +27,7 @@ interface OrdersTableProps {
   onCancelOrder: (orderId: string) => void;
   onDeleteClick: (orderId: string) => void;
   onDeleteConfirm: () => void;
+  onPrintOrder: (order: Order) => void;
   isDealer: boolean;
   markAsDeliveredPending: boolean;
   cancelOrderPending: boolean;
@@ -49,6 +49,7 @@ const OrdersTable = ({
   onCancelOrder,
   onDeleteClick,
   onDeleteConfirm,
+  onPrintOrder,
   isDealer,
   markAsDeliveredPending,
   cancelOrderPending,
@@ -92,7 +93,6 @@ const OrdersTable = ({
               <TableHead>Data Ordine</TableHead>
               <TableHead>Data Consegna</TableHead>
               
-              {/* Admin sees all columns */}
               {showAdminColumns && isAdmin && (
                 <>
                   <TableHead>Targabile</TableHead>
@@ -104,7 +104,6 @@ const OrdersTable = ({
                 </>
               )}
               
-              {/* Dealer sees only the requested columns */}
               {isDealer && (
                 <>
                   <TableHead>Proformata</TableHead>
@@ -114,10 +113,7 @@ const OrdersTable = ({
                 </>
               )}
               
-              {/* Only show Actions column for non-dealers */}
-              {!isDealer && (
-                <TableHead>Azioni</TableHead>
-              )}
+              <TableHead>Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -167,7 +163,6 @@ const OrdersTable = ({
                       {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
                     </TableCell>
                     
-                    {/* Admin sees all columns */}
                     {showAdminColumns && isAdmin && (
                       <>
                         <TableCell>
@@ -219,7 +214,6 @@ const OrdersTable = ({
                       </>
                     )}
                     
-                    {/* Dealer sees only the requested columns */}
                     {isDealer && (
                       <>
                         <TableCell>
@@ -257,44 +251,43 @@ const OrdersTable = ({
                       </>
                     )}
                     
-                    {/* Only show Actions cell for non-dealers */}
-                    {!isDealer && (
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8"
-                            onClick={() => onViewDetails(order)}
-                          >
-                            Visualizza
-                          </Button>
-                          
-                          {order.status === 'processing' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
-                                onClick={() => onMarkAsDelivered(order.id)}
-                                disabled={markAsDeliveredPending || !canDeliverOrder}
-                                title={!canDeliverOrder ? "Genera ODL prima di consegnare" : ""}
-                              >
-                                Consegnato
-                              </Button>
-                              
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 bg-red-100 hover:bg-red-200 text-red-800 border-red-200"
-                                onClick={() => onCancelOrder(order.id)}
-                                disabled={cancelOrderPending}
-                              >
-                                Cancella
-                              </Button>
-                            </>
-                          )}
-                          
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8"
+                          onClick={() => onViewDetails(order)}
+                        >
+                          Visualizza
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-200"
+                          onClick={() => onPrintOrder(order)}
+                        >
+                          <Printer className="h-4 w-4 mr-1" />
+                          Stampa ordine
+                        </Button>
+                        
+                        {!isDealer && order.status === 'processing' && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 bg-green-100 hover:bg-green-200 text-green-800 border-green-200"
+                              onClick={() => onMarkAsDelivered(order.id)}
+                              disabled={markAsDeliveredPending || !canDeliverOrder}
+                              title={!canDeliverOrder ? "Genera ODL prima di consegnare" : ""}
+                            >
+                              Consegnato
+                            </Button>
+                          </>
+                        )}
+                        
+                        {!isDealer && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 
@@ -325,9 +318,9 @@ const OrdersTable = ({
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })

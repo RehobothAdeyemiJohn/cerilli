@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { Order } from '@/types';
@@ -12,11 +12,17 @@ import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import { useOrdersModels } from '@/hooks/orders/useOrdersModels';
 import { useOrderFilters } from '@/hooks/orders/useOrderFilters';
 import OrdersHeader from '@/components/orders/OrdersHeader';
+import OrderPrintContent from '@/components/orders/OrderPrintContent';
+import { useReactToPrint } from 'react-to-print';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const Orders = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
@@ -80,6 +86,36 @@ const Orders = () => {
     setSelectedOrderId(null);
   };
 
+  const getOrderNumber = (order: Order) => {
+    const index = ordersData.findIndex(o => o.id === order.id);
+    return `#${(index + 1).toString().padStart(3, '0')}`;
+  };
+
+  const handlePrintOrder = (order: Order) => {
+    setOrderToPrint(order);
+    setPrintDialogOpen(true);
+  };
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: `Ordine_${getOrderNumber(orderToPrint!).replace('#', '')}`,
+    onAfterPrint: () => {
+      setPrintDialogOpen(false);
+      setOrderToPrint(null);
+    }
+  });
+
+  // Executes the print when dialog opens with content ready
+  useEffect(() => {
+    if (printDialogOpen && orderToPrint && printRef.current) {
+      // Small delay to ensure content is rendered
+      const timer = setTimeout(() => {
+        handlePrint();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [printDialogOpen, orderToPrint, handlePrint]);
+
   return (
     <div className="container mx-auto py-6 px-4">
       <OrdersHeader
@@ -127,6 +163,7 @@ const Orders = () => {
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
             onDeleteConfirm={handleDeleteOrderWithId}
+            onPrintOrder={handlePrintOrder}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -150,6 +187,7 @@ const Orders = () => {
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
             onDeleteConfirm={handleDeleteOrderWithId}
+            onPrintOrder={handlePrintOrder}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -173,6 +211,7 @@ const Orders = () => {
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
             onDeleteConfirm={handleDeleteOrderWithId}
+            onPrintOrder={handlePrintOrder}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -196,6 +235,7 @@ const Orders = () => {
             onCancelOrder={handleCancelOrder}
             onDeleteClick={setSelectedOrderId}
             onDeleteConfirm={handleDeleteOrderWithId}
+            onPrintOrder={handlePrintOrder}
             isDealer={isDealer}
             markAsDeliveredPending={markAsDeliveredMutation.isPending}
             cancelOrderPending={cancelOrderMutation.isPending}
@@ -213,6 +253,20 @@ const Orders = () => {
           onGenerateODL={handleGenerateODL}
         />
       )}
+
+      {/* Hidden print dialog that opens when print is requested */}
+      <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-screen overflow-y-auto hidden">
+          <div ref={printRef}>
+            {orderToPrint && (
+              <OrderPrintContent 
+                order={orderToPrint} 
+                orderNumber={getOrderNumber(orderToPrint)} 
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
