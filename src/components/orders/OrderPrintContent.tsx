@@ -51,29 +51,29 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
           </div>
         )}
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">Modello:</p>
+            <p className="text-sm font-medium text-gray-500">Modello</p>
             <p>{order.vehicle?.model || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Allestimento:</p>
+            <p className="text-sm font-medium text-gray-500">Allestimento</p>
             <p>{order.vehicle?.trim || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Colore:</p>
+            <p className="text-sm font-medium text-gray-500">Colore</p>
             <p>{order.vehicle?.exteriorColor || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Cambio:</p>
-            <p>{order.vehicle?.transmission || '-'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Carburante:</p>
+            <p className="text-sm font-medium text-gray-500">Motore</p>
             <p>{order.vehicle?.fuelType || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Telaio:</p>
+            <p className="text-sm font-medium text-gray-500">Cambio</p>
+            <p>{order.vehicle?.transmission || '-'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Telaio</p>
             <p>{order.vehicle?.telaio || order.details?.chassis || '-'}</p>
           </div>
         </div>
