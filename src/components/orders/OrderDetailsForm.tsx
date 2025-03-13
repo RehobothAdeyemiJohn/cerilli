@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Check } from 'lucide-react';
 
 const orderDetailsSchema = z.object({
   previousChassis: z.string().optional(),
@@ -155,6 +156,7 @@ const OrderDetailsForm = ({
 
       toast({
         title: "Dettagli dell'ordine salvati con successo",
+        description: "I dati sono stati salvati nel database",
       });
 
       queryClient.invalidateQueries({ queryKey: ['orderDetails', orderId] });
@@ -198,6 +200,7 @@ const OrderDetailsForm = ({
       
       toast({
         title: "ODL generato con successo",
+        description: "L'ODL è stato generato correttamente",
       });
       
       if (onGenerateODL) {
@@ -222,26 +225,27 @@ const OrderDetailsForm = ({
   const watchIsInvoiced = form.watch('isInvoiced');
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Amministrazione</CardTitle>
-        <CardDescription>
+    <Card className="shadow-sm border bg-white">
+      <CardHeader className="bg-gray-50 border-b rounded-t-lg pb-4">
+        <CardTitle className="text-xl font-bold text-gray-800">Amministrazione</CardTitle>
+        <CardDescription className="text-gray-600">
           Dettagli amministrativi dell'ordine
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-5">
+              {/* Telaio info section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="previousChassis"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>RIF Telaio precedente</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">RIF Telaio precedente</FormLabel>
                       <FormControl>
-                        <Input {...field} readOnly={readOnly} />
+                        <Input {...field} readOnly={readOnly} className="border-gray-300" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -253,9 +257,9 @@ const OrderDetailsForm = ({
                   name="chassis"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telaio</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">Telaio</FormLabel>
                       <FormControl>
-                        <Input {...field} readOnly={readOnly} />
+                        <Input {...field} readOnly={readOnly} className="border-gray-300" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -263,92 +267,125 @@ const OrderDetailsForm = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="isLicensable"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={readOnly}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">Targabile</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="hasProforma"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={readOnly}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">Proformata</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="isPaid"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={readOnly}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">Saldata</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="isInvoiced"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={readOnly}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">Fatturata</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Status checkboxes */}
+              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Stato documentazione</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="isLicensable"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={readOnly}
+                              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">Targabile</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="hasProforma"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={readOnly}
+                              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">Proformata</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="isPaid"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={readOnly}
+                              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">Saldata</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="isInvoiced"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={readOnly}
+                              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">Fatturata</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="hasConformity"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={readOnly}
+                              className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-medium text-sm cursor-pointer">Conformità</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Conditional fields based on checkbox states */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {watchIsPaid && (
                   <FormField
                     control={form.control}
                     name="paymentDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data pagamento (GG/MM/AAAA)</FormLabel>
+                        <FormLabel className="text-gray-700 font-medium">Data pagamento</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="GG/MM/AAAA" readOnly={readOnly} />
+                          <Input {...field} placeholder="GG/MM/AAAA" readOnly={readOnly} className="border-gray-300" />
                         </FormControl>
-                        <FormDescription>
+                        <FormDescription className="text-xs text-gray-500">
                           Inserire nel formato GG/MM/AAAA
                         </FormDescription>
                         <FormMessage />
@@ -364,9 +401,9 @@ const OrderDetailsForm = ({
                       name="invoiceNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Numero fattura</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Numero fattura</FormLabel>
                           <FormControl>
-                            <Input {...field} readOnly={readOnly} />
+                            <Input {...field} readOnly={readOnly} className="border-gray-300" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -378,11 +415,11 @@ const OrderDetailsForm = ({
                       name="invoiceDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Data fattura (GG/MM/AAAA)</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Data fattura</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="GG/MM/AAAA" readOnly={readOnly} />
+                            <Input {...field} placeholder="GG/MM/AAAA" readOnly={readOnly} className="border-gray-300" />
                           </FormControl>
-                          <FormDescription>
+                          <FormDescription className="text-xs text-gray-500">
                             Inserire nel formato GG/MM/AAAA
                           </FormDescription>
                           <FormMessage />
@@ -393,71 +430,57 @@ const OrderDetailsForm = ({
                 )}
               </div>
               
-              <FormField
-                control={form.control}
-                name="hasConformity"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-2 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={readOnly}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">Conformità</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Funding type section */}
+              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                <FormField
+                  control={form.control}
+                  name="fundingType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-medium text-gray-700">Plafond</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value || undefined}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                          disabled={readOnly}
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0 border rounded-md p-3 cursor-pointer hover:bg-gray-100 transition-colors">
+                            <FormControl>
+                              <RadioGroupItem value="Factor" />
+                            </FormControl>
+                            <FormLabel className="font-medium cursor-pointer">Factor</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0 border rounded-md p-3 cursor-pointer hover:bg-gray-100 transition-colors">
+                            <FormControl>
+                              <RadioGroupItem value="Captive" />
+                            </FormControl>
+                            <FormLabel className="font-medium cursor-pointer">Captive</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0 border rounded-md p-3 cursor-pointer hover:bg-gray-100 transition-colors">
+                            <FormControl>
+                              <RadioGroupItem value="Acquisto Diretto" />
+                            </FormControl>
+                            <FormLabel className="font-medium cursor-pointer">Acquisto Diretto</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="fundingType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Plafond</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || undefined}
-                        className="flex flex-col space-y-1"
-                        disabled={readOnly}
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="Factor" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Factor</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="Captive" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Captive</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="Acquisto Diretto" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Acquisto Diretto</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Costs section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="transportCosts"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Costi di Trasporto (€)</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">Costi di Trasporto (€)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} readOnly={readOnly} />
+                        <Input type="number" {...field} readOnly={readOnly} className="border-gray-300" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -469,9 +492,9 @@ const OrderDetailsForm = ({
                   name="restorationCosts"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Costi di Ripristino (€)</FormLabel>
+                      <FormLabel className="text-gray-700 font-medium">Costi di Ripristino (€)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} readOnly={readOnly} />
+                        <Input type="number" {...field} readOnly={readOnly} className="border-gray-300" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -479,26 +502,39 @@ const OrderDetailsForm = ({
                 />
               </div>
             </div>
-            
-            {!readOnly && (
-              <div className="flex justify-end space-x-2">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Salvataggio...' : 'Salva'}
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  onClick={handleGenerateODL} 
-                  disabled={isSubmitting || hasGeneratedODL}
-                  variant={hasGeneratedODL ? "outline" : "default"}
-                >
-                  {hasGeneratedODL ? 'ODL Già Generato' : 'GENERA ODL'}
-                </Button>
-              </div>
-            )}
           </form>
         </Form>
       </CardContent>
+      
+      {!readOnly && (
+        <CardFooter className="border-t bg-gray-50 px-6 py-4 flex justify-end space-x-4">
+          <Button 
+            type="button" 
+            onClick={form.handleSubmit(onSubmit)} 
+            disabled={isSubmitting}
+            className="min-w-32 bg-blue-600 hover:bg-blue-700"
+          >
+            {isSubmitting ? 'Salvataggio...' : 'Salva'}
+          </Button>
+          
+          <Button 
+            type="button" 
+            onClick={handleGenerateODL} 
+            disabled={isSubmitting || hasGeneratedODL}
+            variant={hasGeneratedODL ? "outline" : "default"}
+            className={`min-w-32 ${hasGeneratedODL 
+              ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' 
+              : 'bg-green-600 hover:bg-green-700'}`}
+          >
+            {hasGeneratedODL ? (
+              <span className="flex items-center">
+                <Check className="mr-1 h-4 w-4" />
+                ODL Generato
+              </span>
+            ) : 'GENERA ODL'}
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };
