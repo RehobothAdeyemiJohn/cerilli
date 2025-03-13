@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -41,6 +41,7 @@ const OrderDetailsDialog = ({
   onGenerateODL,
 }: OrderDetailsDialogProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [vehicleData, setVehicleData] = useState<Vehicle | null>(null);
   const [dealerData, setDealerData] = useState<Dealer | null>(null);
 
@@ -120,6 +121,9 @@ const OrderDetailsDialog = ({
     // Update local state to reflect changes
     refetch();
     
+    // Invalidate orders query to refresh the order list with updated status
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    
     toast({
       title: "ODL generato con successo",
       description: "L'Ordine Di Lavorazione è stato generato correttamente",
@@ -131,6 +135,9 @@ const OrderDetailsDialog = ({
     
     // Refresh form data
     refetch();
+    
+    // Invalidate orders query to refresh the order list with updated status
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
     
     if (onSuccess) {
       onSuccess();
