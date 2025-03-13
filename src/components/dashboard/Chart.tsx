@@ -3,7 +3,8 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Cell } from 'recharts';
+import { useAuth } from '@/context/AuthContext';
 
 interface ChartProps {
   title?: string;
@@ -11,20 +12,28 @@ interface ChartProps {
   color?: string;
 }
 
-export const Chart = ({ title = 'Veicoli per Modello', data, color = 'currentColor' }: ChartProps) => {
+export const Chart = ({ title = 'Veicoli per Modello', data, color = '#3B82F6' }: ChartProps) => {
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer';
+  const dealerId = user?.dealerId;
+  
   // If data is provided directly, use it instead of querying
   const useProvidedData = !!data;
   
   // Query to get vehicle data (only if data is not provided)
   const { data: vehicles, isLoading } = useQuery({
-    queryKey: ['vehiclesChart'],
+    queryKey: ['vehiclesChart', dealerId],
     queryFn: async () => {
       if (useProvidedData) return null;
       
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('model, status')
-        .order('model');
+      let query = supabase.from('vehicles').select('model, status');
+      
+      // Filter by dealer if in dealer mode
+      if (isDealer && dealerId) {
+        query = query.eq('reservedby', dealerId);
+      }
+      
+      const { data, error } = await query.order('model');
       
       if (error) {
         console.error('Error fetching vehicles data:', error);
@@ -51,6 +60,9 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = 'currentCol
     }));
   }, [vehicles, data, useProvidedData]);
 
+  // Colors for bars
+  const COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#0EA5E9', '#F43F5E'];
+
   if (isLoading && !useProvidedData) {
     return (
       <Card>
@@ -63,14 +75,14 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = 'currentCol
   }
 
   return (
-    <Card className="col-span-4">
-      <CardHeader>
+    <Card className="overflow-hidden hover-scale transition-transform duration-300">
+      <CardHeader className="bg-white">
         <CardTitle>{title}</CardTitle>
         <CardDescription>
           Distribuzione dei dati
         </CardDescription>
       </CardHeader>
-      <CardContent className="pl-2">
+      <CardContent className="pl-2 pt-4">
         <div className="h-[200px] mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
@@ -88,12 +100,25 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = 'currentCol
                 axisLine={false}
                 tickFormatter={(value) => `${value}`}
               />
+              <Tooltip 
+                formatter={(value) => [value, 'Quantità']}
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.5rem'
+                }}
+              />
+              <Legend />
               <Bar
                 dataKey="total"
-                fill={color}
+                name="Quantità"
                 radius={[4, 4, 0, 0]}
-                className="fill-primary"
-              />
+                animationDuration={1500}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

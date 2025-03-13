@@ -3,16 +3,26 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabase/client';
 import StatCard from './StatCard';
+import { useAuth } from '@/context/AuthContext';
 import { Car, Users, FileText, ShoppingCart } from 'lucide-react';
 
 export const DashboardStats = () => {
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer';
+  const dealerId = user?.dealerId;
+  
   // Query per il conteggio dei veicoli
   const { data: vehiclesCount = 0, isLoading: loadingVehicles } = useQuery({
-    queryKey: ['vehiclesCount'],
+    queryKey: ['vehiclesCount', dealerId],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('vehicles')
-        .select('*', { count: 'exact', head: true });
+      let query = supabase.from('vehicles').select('*', { count: 'exact', head: true });
+      
+      // Filter by dealer if in dealer mode
+      if (isDealer && dealerId) {
+        query = query.eq('reservedby', dealerId);
+      }
+      
+      const { count, error } = await query;
       
       if (error) {
         console.error('Error fetching vehicles count:', error);
@@ -22,10 +32,12 @@ export const DashboardStats = () => {
     }
   });
 
-  // Query per il conteggio dei concessionari
+  // Query per il conteggio dei concessionari (solo per admin)
   const { data: dealersCount = 0, isLoading: loadingDealers } = useQuery({
     queryKey: ['dealersCount'],
     queryFn: async () => {
+      if (isDealer) return 1; // Se è dealer, mostra solo 1 (se stesso)
+      
       const { count, error } = await supabase
         .from('dealers')
         .select('*', { count: 'exact', head: true });
@@ -40,11 +52,16 @@ export const DashboardStats = () => {
 
   // Query per il conteggio dei preventivi
   const { data: quotesCount = 0, isLoading: loadingQuotes } = useQuery({
-    queryKey: ['quotesCount'],
+    queryKey: ['quotesCount', dealerId],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('quotes')
-        .select('*', { count: 'exact', head: true });
+      let query = supabase.from('quotes').select('*', { count: 'exact', head: true });
+      
+      // Filter by dealer if in dealer mode
+      if (isDealer && dealerId) {
+        query = query.eq('dealerid', dealerId);
+      }
+      
+      const { count, error } = await query;
       
       if (error) {
         console.error('Error fetching quotes count:', error);
@@ -56,11 +73,16 @@ export const DashboardStats = () => {
 
   // Query per il conteggio degli ordini
   const { data: ordersCount = 0, isLoading: loadingOrders } = useQuery({
-    queryKey: ['ordersCount'],
+    queryKey: ['ordersCount', dealerId],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+      let query = supabase.from('orders').select('*', { count: 'exact', head: true });
+      
+      // Filter by dealer if in dealer mode
+      if (isDealer && dealerId) {
+        query = query.eq('dealerid', dealerId);
+      }
+      
+      const { count, error } = await query;
       
       if (error) {
         console.error('Error fetching orders count:', error);
@@ -77,7 +99,7 @@ export const DashboardStats = () => {
       <StatCard
         title="Veicoli"
         value={vehiclesCount}
-        description="Totale veicoli disponibili"
+        description={isDealer ? "Veicoli riservati" : "Totale veicoli disponibili"}
         icon={Car}
         loading={loadingVehicles}
       />
@@ -90,15 +112,15 @@ export const DashboardStats = () => {
       />
       <StatCard
         title="Preventivi"
-        value={typeof quotesCount === 'object' ? 0 : quotesCount}
-        description="Preventivi totali"
+        value={quotesCount}
+        description={isDealer ? "I tuoi preventivi" : "Preventivi totali"}
         icon={FileText}
         loading={loadingQuotes}
       />
       <StatCard
         title="Ordini"
-        value={typeof ordersCount === 'object' ? 0 : ordersCount}
-        description="Ordini totali"
+        value={ordersCount}
+        description={isDealer ? "I tuoi ordini" : "Ordini totali"}
         icon={ShoppingCart}
         loading={loadingOrders}
       />
