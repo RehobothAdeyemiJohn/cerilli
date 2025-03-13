@@ -44,6 +44,8 @@ const OrderDetailsDialog = ({
   const queryClient = useQueryClient();
   const [vehicleData, setVehicleData] = useState<Vehicle | null>(null);
   const [dealerData, setDealerData] = useState<Dealer | null>(null);
+  const [isVehicleLoading, setIsVehicleLoading] = useState(false);
+  const [isDealerLoading, setIsDealerLoading] = useState(false);
 
   // Usa la nuova struttura di query key per migliore gestione della cache
   const {
@@ -61,7 +63,10 @@ const OrderDetailsDialog = ({
   const fetchVehicleDetails = async () => {
     try {
       if (order.vehicleId) {
+        setIsVehicleLoading(true);
+        console.log('Fetching vehicle details for ID:', order.vehicleId);
         const vehicle = await vehiclesApi.getById(order.vehicleId);
+        console.log('Vehicle details fetched:', vehicle);
         setVehicleData(vehicle);
       }
     } catch (error) {
@@ -71,13 +76,18 @@ const OrderDetailsDialog = ({
         description: "Impossibile recuperare i dettagli del veicolo",
         variant: "destructive",
       });
+    } finally {
+      setIsVehicleLoading(false);
     }
   };
 
   const fetchDealerDetails = async () => {
     try {
       if (order.dealerId) {
+        setIsDealerLoading(true);
+        console.log('Fetching dealer details for ID:', order.dealerId);
         const dealer = await dealersApi.getById(order.dealerId);
+        console.log('Dealer details fetched:', dealer);
         setDealerData(dealer);
       }
     } catch (error) {
@@ -87,17 +97,26 @@ const OrderDetailsDialog = ({
         description: "Impossibile recuperare i dettagli del dealer",
         variant: "destructive",
       });
+    } finally {
+      setIsDealerLoading(false);
     }
   };
 
   useEffect(() => {
     if (open && order) {
-      fetchVehicleDetails();
-      fetchDealerDetails();
       // Forza il recupero dei dettagli dell'ordine quando il dialog si apre
       refetch();
+      
+      // Fetch vehicle and dealer details
+      if (!vehicleData && order.vehicleId) {
+        fetchVehicleDetails();
+      }
+      
+      if (!dealerData && order.dealerId) {
+        fetchDealerDetails();
+      }
     }
-  }, [open, order, refetch]);
+  }, [open, order, refetch, vehicleData, dealerData]);
 
   const getAvailableCreditColor = (availableCredit: number | null) => {
     if (availableCredit === null) return "bg-gray-100 text-gray-800";
@@ -162,7 +181,7 @@ const OrderDetailsDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        {isLoadingDetails ? (
+        {isLoadingDetails || isVehicleLoading || isDealerLoading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             <span className="ml-2 text-gray-500">Caricamento dettagli...</span>
@@ -205,7 +224,6 @@ const OrderDetailsDialog = ({
               </Card>
             )}
 
-            {/* Aggiunta della sezione Veicolo */}
             {vehicleData && (
               <Card>
                 <CardHeader className="pb-2">
