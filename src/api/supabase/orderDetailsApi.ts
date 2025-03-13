@@ -22,26 +22,30 @@ export const orderDetailsApi = {
       return null;
     }
     
-    return {
+    // Ensure boolean values are properly converted
+    const orderDetails = {
       id: data.id,
       orderId: data.order_id,
       previousChassis: data.previous_chassis,
       chassis: data.chassis,
-      isLicensable: data.is_licensable,
-      hasProforma: data.has_proforma,
-      isPaid: data.is_paid,
+      isLicensable: data.is_licensable === true,
+      hasProforma: data.has_proforma === true,
+      isPaid: data.is_paid === true,
       paymentDate: data.payment_date,
-      isInvoiced: data.is_invoiced,
+      isInvoiced: data.is_invoiced === true,
       invoiceNumber: data.invoice_number,
       invoiceDate: data.invoice_date,
-      hasConformity: data.has_conformity,
+      hasConformity: data.has_conformity === true,
       fundingType: data.funding_type,
       transportCosts: data.transport_costs,
       restorationCosts: data.restoration_costs,
-      odlGenerated: data.odl_generated,
+      odlGenerated: data.odl_generated === true,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     } as OrderDetails;
+    
+    console.log("Fetched order details:", orderDetails);
+    return orderDetails;
   },
   
   create: async (details: Omit<OrderDetails, 'id' | 'createdAt' | 'updatedAt'>): Promise<OrderDetails> => {
@@ -74,26 +78,48 @@ export const orderDetailsApi = {
       throw error;
     }
     
-    return {
+    // Ensure boolean values are properly converted
+    const orderDetails = {
       id: data.id,
       orderId: data.order_id,
       previousChassis: data.previous_chassis,
       chassis: data.chassis,
-      isLicensable: data.is_licensable,
-      hasProforma: data.has_proforma,
-      isPaid: data.is_paid,
+      isLicensable: data.is_licensable === true,
+      hasProforma: data.has_proforma === true,
+      isPaid: data.is_paid === true,
       paymentDate: data.payment_date,
-      isInvoiced: data.is_invoiced,
+      isInvoiced: data.is_invoiced === true,
       invoiceNumber: data.invoice_number,
       invoiceDate: data.invoice_date,
-      hasConformity: data.has_conformity,
+      hasConformity: data.has_conformity === true,
       fundingType: data.funding_type,
       transportCosts: data.transport_costs,
       restorationCosts: data.restoration_costs,
-      odlGenerated: data.odl_generated,
+      odlGenerated: data.odl_generated === true,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     } as OrderDetails;
+    
+    // Update the order object to include order details
+    try {
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', details.orderId)
+        .single();
+      
+      if (orderData) {
+        console.log('Creating order details and updating order:', orderDetails);
+        await supabase
+          .from('orders')
+          .update({ details: orderDetails })
+          .eq('id', details.orderId);
+      }
+    } catch (error) {
+      console.error('Error updating order with details:', error);
+    }
+    
+    return orderDetails;
   },
   
   update: async (id: string, updates: Partial<OrderDetails>): Promise<OrderDetails> => {
@@ -135,26 +161,51 @@ export const orderDetailsApi = {
       throw error;
     }
     
-    return {
+    // Ensure boolean values are properly converted
+    const orderDetails = {
       id: data.id,
       orderId: data.order_id,
       previousChassis: data.previous_chassis,
       chassis: data.chassis,
-      isLicensable: data.is_licensable,
-      hasProforma: data.has_proforma,
-      isPaid: data.is_paid,
+      isLicensable: data.is_licensable === true,
+      hasProforma: data.has_proforma === true,
+      isPaid: data.is_paid === true,
       paymentDate: data.payment_date,
-      isInvoiced: data.is_invoiced,
+      isInvoiced: data.is_invoiced === true,
       invoiceNumber: data.invoice_number,
       invoiceDate: data.invoice_date,
-      hasConformity: data.has_conformity,
+      hasConformity: data.has_conformity === true,
       fundingType: data.funding_type,
       transportCosts: data.transport_costs,
       restorationCosts: data.restoration_costs,
-      odlGenerated: data.odl_generated,
+      odlGenerated: data.odl_generated === true,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     } as OrderDetails;
+    
+    // Update the order object to include updated order details
+    try {
+      if (orderDetails.orderId) {
+        console.log('Updating order with details:', orderDetails);
+        
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderDetails.orderId)
+          .single();
+          
+        if (orderData) {
+          await supabase
+            .from('orders')
+            .update({ details: orderDetails })
+            .eq('id', orderDetails.orderId);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating order with details:', error);
+    }
+    
+    return orderDetails;
   },
   
   generateODL: async (id: string): Promise<OrderDetails> => {
@@ -172,25 +223,50 @@ export const orderDetailsApi = {
       throw error;
     }
     
-    return {
+    // Ensure boolean values are properly converted
+    const orderDetails = {
       id: data.id,
       orderId: data.order_id,
       previousChassis: data.previous_chassis,
       chassis: data.chassis,
-      isLicensable: data.is_licensable,
-      hasProforma: data.has_proforma,
-      isPaid: data.is_paid,
+      isLicensable: data.is_licensable === true,
+      hasProforma: data.has_proforma === true,
+      isPaid: data.is_paid === true,
       paymentDate: data.payment_date,
-      isInvoiced: data.is_invoiced,
+      isInvoiced: data.is_invoiced === true,
       invoiceNumber: data.invoice_number,
       invoiceDate: data.invoice_date,
-      hasConformity: data.has_conformity,
+      hasConformity: data.has_conformity === true,
       fundingType: data.funding_type,
       transportCosts: data.transport_costs,
       restorationCosts: data.restoration_costs,
-      odlGenerated: data.odl_generated,
+      odlGenerated: data.odl_generated === true,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     } as OrderDetails;
+    
+    // Update the order object to include updated order details
+    try {
+      if (orderDetails.orderId) {
+        console.log('Setting ODL generated flag and updating order:', orderDetails);
+        
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderDetails.orderId)
+          .single();
+          
+        if (orderData) {
+          await supabase
+            .from('orders')
+            .update({ details: orderDetails })
+            .eq('id', orderDetails.orderId);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating order with details:', error);
+    }
+    
+    return orderDetails;
   }
 };

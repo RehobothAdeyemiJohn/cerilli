@@ -122,8 +122,8 @@ const OrderDetailsDialog = ({
     refetch();
     
     // Invalidate orders query to refresh the order list with updated status
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
     
     toast({
       title: "ODL generato con successo",

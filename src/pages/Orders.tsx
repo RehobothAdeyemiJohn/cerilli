@@ -383,13 +383,14 @@ const Orders = () => {
                 
                 const canDeliverOrder = order.status === 'processing' && order.details?.odlGenerated;
                 
-                console.log('Order details for rendering:', order.details);
-                
-                const isLicensable = order.details?.isLicensable === true;
-                const hasProforma = order.details?.hasProforma === true;
-                const isPaid = order.details?.isPaid === true;
-                const isInvoiced = order.details?.isInvoiced === true;
-                const hasConformity = order.details?.hasConformity === true;
+                console.log(`Order ${order.id} details:`, {
+                  isLicensable: order.details?.isLicensable === true,
+                  hasProforma: order.details?.hasProforma === true,
+                  isPaid: order.details?.isPaid === true,
+                  isInvoiced: order.details?.isInvoiced === true,
+                  hasConformity: order.details?.hasConformity === true,
+                  details: order.details
+                });
                 
                 return (
                   <TableRow key={order.id}>
@@ -413,35 +414,35 @@ const Orders = () => {
                     {isAdmin && (
                       <>
                         <TableCell>
-                          {isLicensable ? (
+                          {order.details?.isLicensable === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {hasProforma ? (
+                          {order.details?.hasProforma === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {isPaid ? (
+                          {order.details?.isPaid === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {isInvoiced ? (
+                          {order.details?.isInvoiced === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
                           )}
                         </TableCell>
                         <TableCell>
-                          {hasConformity ? (
+                          {order.details?.hasConformity === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
