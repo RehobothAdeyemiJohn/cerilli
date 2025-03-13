@@ -19,12 +19,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from '@/context/AuthContext';
 import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Check,
   X,
   Filter,
   SlidersHorizontal,
-  RefreshCw
+  RefreshCw,
+  XCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -545,121 +547,64 @@ const Orders = () => {
       </div>
       
       {isAdmin && showFilters && (
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Filtri</CardTitle>
+        <Card className="mb-6 border shadow-sm">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg">Filtri</CardTitle>
+              {activeFiltersCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Reimposta filtri
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-              <div>
-                <h3 className="text-sm font-medium mb-2">Targabile</h3>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={filters.isLicensable === true ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isLicensable', true)}
-                  >
-                    Sì
-                  </Button>
-                  <Button 
-                    variant={filters.isLicensable === false ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isLicensable', false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <FilterToggleGroup 
+                title="Targabile" 
+                value={filters.isLicensable} 
+                onChange={(value) => updateBooleanFilter('isLicensable', value)} 
+              />
               
-              <div>
-                <h3 className="text-sm font-medium mb-2">Proformata</h3>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={filters.hasProforma === true ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('hasProforma', true)}
-                  >
-                    Sì
-                  </Button>
-                  <Button 
-                    variant={filters.hasProforma === false ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('hasProforma', false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
+              <FilterToggleGroup 
+                title="Proformata" 
+                value={filters.hasProforma} 
+                onChange={(value) => updateBooleanFilter('hasProforma', value)} 
+              />
               
-              <div>
-                <h3 className="text-sm font-medium mb-2">Saldata</h3>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={filters.isPaid === true ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isPaid', true)}
-                  >
-                    Sì
-                  </Button>
-                  <Button 
-                    variant={filters.isPaid === false ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isPaid', false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
+              <FilterToggleGroup 
+                title="Saldata" 
+                value={filters.isPaid} 
+                onChange={(value) => updateBooleanFilter('isPaid', value)} 
+              />
               
-              <div>
-                <h3 className="text-sm font-medium mb-2">Fatturata</h3>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={filters.isInvoiced === true ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isInvoiced', true)}
-                  >
-                    Sì
-                  </Button>
-                  <Button 
-                    variant={filters.isInvoiced === false ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('isInvoiced', false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
+              <FilterToggleGroup 
+                title="Fatturata" 
+                value={filters.isInvoiced} 
+                onChange={(value) => updateBooleanFilter('isInvoiced', value)} 
+              />
               
-              <div>
-                <h3 className="text-sm font-medium mb-2">Conformità</h3>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant={filters.hasConformity === true ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('hasConformity', true)}
-                  >
-                    Sì
-                  </Button>
-                  <Button 
-                    variant={filters.hasConformity === false ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => updateBooleanFilter('hasConformity', false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              </div>
+              <FilterToggleGroup 
+                title="Conformità" 
+                value={filters.hasConformity} 
+                onChange={(value) => updateBooleanFilter('hasConformity', value)} 
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div>
-                <h3 className="text-sm font-medium mb-2">Modello</h3>
+                <h3 className="text-sm font-medium mb-2 text-gray-700">Modello</h3>
                 <Select
                   value={filters.model || "all"}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, model: value === "all" ? null : value }))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-gray-300 bg-white">
                     <SelectValue placeholder="Seleziona modello" />
                   </SelectTrigger>
                   <SelectContent>
@@ -672,12 +617,12 @@ const Orders = () => {
               </div>
               
               <div>
-                <h3 className="text-sm font-medium mb-2">Dealer</h3>
+                <h3 className="text-sm font-medium mb-2 text-gray-700">Dealer</h3>
                 <Select
                   value={filters.dealerId || "all"}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, dealerId: value === "all" ? null : value }))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-gray-300 bg-white">
                     <SelectValue placeholder="Seleziona dealer" />
                   </SelectTrigger>
                   <SelectContent>
@@ -690,19 +635,12 @@ const Orders = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="border-t pt-4 justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetFilters}
-              className="mr-2"
-            >
-              Reimposta filtri
-            </Button>
+          <CardFooter className="border-t pt-4 flex justify-end">
             <Button
               variant="default"
               size="sm"
               onClick={() => setShowFilters(false)}
+              className="bg-gray-900 hover:bg-gray-800"
             >
               Applica
             </Button>
@@ -754,6 +692,38 @@ const Orders = () => {
           onGenerateODL={handleGenerateODL}
         />
       )}
+    </div>
+  );
+};
+
+interface FilterToggleGroupProps {
+  title: string;
+  value: boolean | null;
+  onChange: (value: boolean) => void;
+}
+
+const FilterToggleGroup = ({ title, value, onChange }: FilterToggleGroupProps) => {
+  return (
+    <div className="flex flex-col">
+      <h3 className="text-sm font-medium mb-3 text-gray-700">{title}</h3>
+      <div className="flex items-center justify-between rounded-md bg-gray-50 p-1">
+        <Button 
+          variant={value === true ? "default" : "ghost"} 
+          size="sm"
+          onClick={() => onChange(true)}
+          className={`flex-1 h-8 rounded-sm ${value === true ? "" : "text-gray-700 hover:text-gray-900"}`}
+        >
+          Sì
+        </Button>
+        <Button 
+          variant={value === false ? "default" : "ghost"} 
+          size="sm"
+          onClick={() => onChange(false)}
+          className={`flex-1 h-8 rounded-sm ${value === false ? "" : "text-gray-700 hover:text-gray-900"}`}
+        >
+          No
+        </Button>
+      </div>
     </div>
   );
 };
