@@ -16,7 +16,7 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto bg-white text-black">
+    <div className="p-8 max-w-3xl mx-auto bg-white text-black print:w-full">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">Dettagli dell'ordine n° {orderNumber}</h1>
         <p className="text-sm text-gray-600">Eseguito il: {formattedDate(order.orderDate)}</p>
@@ -31,12 +31,16 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
             <p>{order.dealer?.companyName || '-'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Nome:</p>
+            <p className="text-sm font-medium text-gray-500">Nome Contatto:</p>
             <p>{order.dealer?.contactName || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Email:</p>
             <p>{order.dealer?.email || '-'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Cliente:</p>
+            <p>{order.customerName || '-'}</p>
           </div>
         </div>
       </div>
@@ -45,11 +49,11 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
       <div className="mb-6 border-b pb-4">
         <h2 className="text-xl font-semibold mb-3">Informazioni Veicolo</h2>
         
-        {order.vehicle?.imageUrl && (
+        {(order.vehicle?.imageUrl || '/placeholder.svg') && (
           <div className="mb-4 flex justify-center">
             <img 
-              src={order.vehicle.imageUrl} 
-              alt={`${order.vehicle.model} ${order.vehicle.trim || ''}`} 
+              src={order.vehicle?.imageUrl || '/placeholder.svg'} 
+              alt={`${order.vehicle?.model || 'Veicolo'} ${order.vehicle?.trim || ''}`} 
               className="max-h-48 object-contain" 
             />
           </div>
@@ -113,8 +117,53 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
             <p className="text-sm font-medium text-gray-500">Telaio:</p>
             <p>{order.details?.chassis || '-'}</p>
           </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Finanziamento:</p>
+            <p>{order.details?.fundingType || '-'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Pagato:</p>
+            <p>{order.details?.isPaid ? 'Sì' : 'No'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Fatturato:</p>
+            <p>{order.details?.isInvoiced ? 'Sì' : 'No'}</p>
+          </div>
+          {order.details?.invoiceNumber && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Numero Fattura:</p>
+              <p>{order.details.invoiceNumber}</p>
+            </div>
+          )}
+          {order.details?.invoiceDate && (
+            <div>
+              <p className="text-sm font-medium text-gray-500">Data Fattura:</p>
+              <p>{formattedDate(order.details.invoiceDate)}</p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Costi Aggiuntivi */}
+      {(order.details?.transportCosts > 0 || order.details?.restorationCosts > 0) && (
+        <div className="mb-6 border-b pb-4">
+          <h2 className="text-xl font-semibold mb-3">Costi Aggiuntivi</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {order.details?.transportCosts > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Costi di Trasporto:</p>
+                <p>{new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(order.details.transportCosts)}</p>
+              </div>
+            )}
+            {order.details?.restorationCosts > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Costi di Ripristino:</p>
+                <p>{new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(order.details.restorationCosts)}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Notes - Only display if order has details with notes */}
       {order.details?.notes && (
@@ -126,6 +175,7 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
 
       <div className="text-center text-xs text-gray-500 mt-8">
         <p>Documento generato automaticamente dal sistema DMS Cirelli</p>
+        <p className="mt-1">Data stampa: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: it })}</p>
       </div>
     </div>
   );
