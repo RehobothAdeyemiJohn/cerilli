@@ -29,12 +29,56 @@ import {
   Tooltip, 
   ResponsiveContainer,
   Legend,
-  Bar,
-  BarChart,
   PieChart,
   Pie,
   Cell
 } from 'recharts';
+
+// Define types for admin dashboard charts
+interface ModelData {
+  name: string;
+  value: number;
+}
+
+interface SalesByDealer {
+  name: string;
+  value: number;
+}
+
+interface MonthlySalesData {
+  name: string;
+  value: number;
+}
+
+// Mock data for admin dashboard
+const mockModelData: ModelData[] = [
+  { name: 'Cirelli 500', value: 15 },
+  { name: 'Cirelli SUV', value: 12 },
+  { name: 'Cirelli Berlina', value: 8 },
+  { name: 'Cirelli Spyder', value: 5 }
+];
+
+const mockSalesByDealer: SalesByDealer[] = [
+  { name: 'Auto Roma', value: 12 },
+  { name: 'Milano Motors', value: 10 },
+  { name: 'Napoli Auto', value: 8 },
+  { name: 'Torino Cars', value: 6 }
+];
+
+const mockMonthlySalesData: MonthlySalesData[] = [
+  { name: 'Gen', value: 35000 },
+  { name: 'Feb', value: 42000 },
+  { name: 'Mar', value: 38000 },
+  { name: 'Apr', value: 30000 },
+  { name: 'Mag', value: 55000 },
+  { name: 'Giu', value: 65000 },
+  { name: 'Lug', value: 45000 },
+  { name: 'Ago', value: 25000 },
+  { name: 'Set', value: 60000 },
+  { name: 'Ott', value: 70000 },
+  { name: 'Nov', value: 55000 },
+  { name: 'Dic', value: 40000 }
+];
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -460,12 +504,12 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <Chart 
               title="Inventory by Model" 
-              data={dealerData?.modelData || []} 
+              data={mockModelData} 
               color="#3B82F6"
             />
             <Chart 
               title="Sales by Dealer" 
-              data={dealerData?.salesByDealer || []} 
+              data={mockSalesByDealer} 
               color="#10B981"
             />
           </div>
@@ -473,7 +517,7 @@ const Dashboard = () => {
           <div className="mt-6">
             <Chart 
               title="Monthly Sales" 
-              data={dealerData?.monthlySalesData || []} 
+              data={mockMonthlySalesData} 
               color="#6366F1"
             />
           </div>
