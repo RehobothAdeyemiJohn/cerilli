@@ -91,7 +91,9 @@ const OrdersTable = ({
               <TableHead>Stato</TableHead>
               <TableHead>Data Ordine</TableHead>
               <TableHead>Data Consegna</TableHead>
-              {showAdminColumns && (
+              
+              {/* Admin sees all columns */}
+              {showAdminColumns && isAdmin && (
                 <>
                   <TableHead>Targabile</TableHead>
                   <TableHead>Proformata</TableHead>
@@ -101,19 +103,30 @@ const OrdersTable = ({
                   <TableHead>Plafond</TableHead>
                 </>
               )}
+              
+              {/* Dealer sees only the requested columns */}
+              {isDealer && (
+                <>
+                  <TableHead>Proformata</TableHead>
+                  <TableHead>Saldata</TableHead>
+                  <TableHead>Fatturata</TableHead>
+                  <TableHead>Plafond</TableHead>
+                </>
+              )}
+              
               <TableHead>Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={showAdminColumns ? 13 : 7} className="text-center py-10">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10">
                   Caricamento ordini...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={showAdminColumns ? 13 : 7} className="text-center py-10 text-red-500">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10 text-red-500">
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
@@ -151,7 +164,8 @@ const OrdersTable = ({
                       {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
                     </TableCell>
                     
-                    {showAdminColumns && (
+                    {/* Admin sees all columns */}
+                    {showAdminColumns && isAdmin && (
                       <>
                         <TableCell>
                           {order.details?.isLicensable === true ? (
@@ -183,6 +197,44 @@ const OrdersTable = ({
                         </TableCell>
                         <TableCell>
                           {order.details?.hasConformity === true ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.dealer && order.dealer.credit_limit !== undefined ? (
+                            <span className={getCreditColorClass(order.dealer.credit_limit)}>
+                              {new Intl.NumberFormat('it-IT', {
+                                style: 'currency',
+                                currency: 'EUR',
+                                maximumFractionDigits: 0,
+                              }).format(order.dealer.credit_limit)}
+                            </span>
+                          ) : 'N/A'}
+                        </TableCell>
+                      </>
+                    )}
+                    
+                    {/* Dealer sees only the requested columns */}
+                    {isDealer && (
+                      <>
+                        <TableCell>
+                          {order.details?.hasProforma === true ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.isPaid === true ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {order.details?.isInvoiced === true ? (
                             <Check className="h-4 w-4 text-green-600" />
                           ) : (
                             <X className="h-4 w-4 text-red-600" />
@@ -277,7 +329,7 @@ const OrdersTable = ({
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={showAdminColumns ? 13 : 7} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={showAdminColumns && isAdmin ? 13 : isDealer ? 11 : 7} className="text-center py-10 text-gray-500">
                   Nessun ordine trovato
                 </TableCell>
               </TableRow>

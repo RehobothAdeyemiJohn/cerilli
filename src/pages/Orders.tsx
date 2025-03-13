@@ -117,7 +117,7 @@ const Orders = () => {
             isLoading={isLoading}
             error={error}
             isAdmin={isAdmin}
-            showAdminColumns={isAdmin}
+            showAdminColumns={!isDealer}
             tabName="processing"
             processingOrders={processingOrders}
             deliveredOrders={deliveredOrders}
