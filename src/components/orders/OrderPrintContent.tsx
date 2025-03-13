@@ -120,11 +120,11 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
         </div>
       </div>
 
-      {/* Note */}
-      {order.notes && (
+      {/* Notes - Only display if order has details with notes */}
+      {order.details?.notes && (
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-3">Note</h2>
-          <p className="border p-3 rounded bg-gray-50">{order.notes}</p>
+          <p className="border p-3 rounded bg-gray-50">{order.details.notes}</p>
         </div>
       )}
 

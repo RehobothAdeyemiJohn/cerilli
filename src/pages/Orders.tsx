@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
@@ -87,6 +86,7 @@ const Orders = () => {
   };
 
   const getOrderNumber = (order: Order) => {
+    if (!order || !order.id) return "#000";
     const index = ordersData.findIndex(o => o.id === order.id);
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
@@ -97,18 +97,15 @@ const Orders = () => {
   };
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Ordine_${getOrderNumber(orderToPrint!).replace('#', '')}`,
+    documentTitle: orderToPrint ? `Ordine_${getOrderNumber(orderToPrint).replace('#', '')}` : 'Ordine',
     onAfterPrint: () => {
       setPrintDialogOpen(false);
       setOrderToPrint(null);
     }
   });
 
-  // Executes the print when dialog opens with content ready
   useEffect(() => {
     if (printDialogOpen && orderToPrint && printRef.current) {
-      // Small delay to ensure content is rendered
       const timer = setTimeout(() => {
         handlePrint();
       }, 300);
@@ -254,7 +251,6 @@ const Orders = () => {
         />
       )}
 
-      {/* Hidden print dialog that opens when print is requested */}
       <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
         <DialogContent className="max-w-4xl max-h-screen overflow-y-auto hidden">
           <div ref={printRef}>

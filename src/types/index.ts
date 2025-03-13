@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -98,6 +97,7 @@ export type OrderDetails = {
   odlGenerated: boolean;
   createdAt: string;
   updatedAt: string;
+  notes?: string; // Add notes field to OrderDetails
 };
 
 export type Filter = {
