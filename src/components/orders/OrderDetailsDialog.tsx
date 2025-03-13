@@ -53,7 +53,7 @@ const OrderDetailsDialog = ({
     queryKey: ['orderDetails', order.id],
     queryFn: () => orderDetailsApi.getByOrderId(order.id),
     enabled: !!order.id && open,
-    staleTime: 0,
+    staleTime: 0, // Always fetch fresh data
   });
 
   const fetchVehicleDetails = async () => {
@@ -127,6 +127,8 @@ const OrderDetailsDialog = ({
   };
 
   const handleSuccess = () => {
+    console.log('OrderDetailsForm reported success, notifying parent component');
+    
     // Refresh form data
     refetch();
     

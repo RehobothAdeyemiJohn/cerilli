@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -114,7 +113,6 @@ const OrderDetailsForm = ({
     try {
       setIsSubmitting(true);
 
-      // Format dates for the database (YYYY-MM-DD)
       const formatDate = (dateStr: string | null | undefined): string | undefined => {
         if (!dateStr) return undefined;
         
@@ -159,10 +157,13 @@ const OrderDetailsForm = ({
         description: "I dati sono stati salvati nel database",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['orderDetails', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
 
+      console.log('Order details saved, result:', result);
+
       if (onSuccess) {
+        console.log('Calling onSuccess callback');
         onSuccess();
       }
 
@@ -184,7 +185,6 @@ const OrderDetailsForm = ({
     try {
       setIsSubmitting(true);
       
-      // First save the form data
       const values = form.getValues();
       const savedDetails = await onSubmit(values);
       
@@ -194,7 +194,6 @@ const OrderDetailsForm = ({
       
       console.log('Generating ODL for order details ID:', savedDetails.id);
       
-      // Then generate the ODL
       const updatedDetails = await orderDetailsApi.generateODL(savedDetails.id);
       setHasGeneratedODL(true);
       
@@ -207,7 +206,7 @@ const OrderDetailsForm = ({
         onGenerateODL(updatedDetails);
       }
       
-      queryClient.invalidateQueries({ queryKey: ['orderDetails', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch (error) {
       console.error('Error generating ODL:', error);
@@ -236,7 +235,6 @@ const OrderDetailsForm = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-5">
-              {/* Telaio info section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
@@ -267,7 +265,6 @@ const OrderDetailsForm = ({
                 />
               </div>
 
-              {/* Status checkboxes */}
               <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
                 <h3 className="text-sm font-medium text-gray-700 mb-4">Stato documentazione</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -373,7 +370,6 @@ const OrderDetailsForm = ({
                 </div>
               </div>
               
-              {/* Conditional fields based on checkbox states */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {watchIsPaid && (
                   <FormField
@@ -430,7 +426,6 @@ const OrderDetailsForm = ({
                 )}
               </div>
               
-              {/* Funding type section */}
               <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
                 <FormField
                   control={form.control}
@@ -471,7 +466,6 @@ const OrderDetailsForm = ({
                 />
               </div>
               
-              {/* Costs section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}

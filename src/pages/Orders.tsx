@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -93,10 +92,8 @@ const Orders = () => {
     staleTime: 0,
   });
 
-  // Extract order details from the orders to make filtering easier
   const ordersWithDetails = React.useMemo(() => {
     return ordersData.map(order => {
-      // Find the associated orderDetails if they exist
       const details = order.details || null;
       return {
         ...order,
@@ -104,6 +101,13 @@ const Orders = () => {
       };
     });
   }, [ordersData]);
+
+  useEffect(() => {
+    if (!orderDetailsOpen) {
+      console.log('OrderDetailsDialog closed, refreshing orders data');
+      refetchOrders();
+    }
+  }, [orderDetailsOpen, refetchOrders]);
 
   const filterOrders = (orders: Order[], status?: string) => {
     let filtered = orders;
@@ -259,14 +263,16 @@ const Orders = () => {
   };
 
   const handleGenerateODL = (details: OrderDetails) => {
-    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    refetchOrders();
   };
 
   const handleOrderDetailsSuccess = () => {
-    // Force immediate data refresh
+    console.log('Order details saved successfully, refreshing data');
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     refetchOrders();
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'], refetchType: 'all' });
   };
 
   const getStatusBadgeClass = (status: string) => {
