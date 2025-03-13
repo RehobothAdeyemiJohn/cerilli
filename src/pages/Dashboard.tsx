@@ -9,6 +9,7 @@ import { supabase } from '@/api/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency } from '@/lib/utils';
+import { calculateDaysInStock } from '@/lib/utils';
 import { 
   Car, 
   Clock, 
@@ -100,6 +101,8 @@ const Dashboard = () => {
     queryFn: async () => {
       if (!isDealer || !dealerId) return null;
       
+      console.log('Fetching dealer dashboard data for dealerId:', dealerId);
+      
       // Get dealer info
       const { data: dealer } = await supabase
         .from('dealers')
@@ -107,11 +110,15 @@ const Dashboard = () => {
         .eq('id', dealerId)
         .single();
       
+      console.log('Dealer info:', dealer);
+      
       // Get vehicles for this dealer (reserved or ordered by this dealer)
       const { data: vehicles } = await supabase
         .from('vehicles')
         .select('*')
         .eq('reservedby', dealerId);
+      
+      console.log('Vehicles for dealer:', vehicles);
       
       // Get quotes for this dealer
       const { data: quotes } = await supabase
@@ -119,11 +126,15 @@ const Dashboard = () => {
         .select('*')
         .eq('dealerid', dealerId);
       
+      console.log('Quotes for dealer:', quotes);
+      
       // Get orders for this dealer
       const { data: orders } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, vehicles(*)')
         .eq('dealerid', dealerId);
+      
+      console.log('Orders for dealer:', orders);
       
       return {
         dealer,
@@ -142,44 +153,30 @@ const Dashboard = () => {
     const { vehicles, quotes, orders, dealer } = dealerData;
     
     // Calculate average days in stock
-    const today = new Date();
-    const daysInStock = vehicles.map(v => {
-      const dateAdded = new Date(v.dateadded);
-      return Math.floor((today.getTime() - dateAdded.getTime()) / (1000 * 3600 * 24));
-    });
-    const avgDaysInStock = daysInStock.length > 0 
-      ? Math.round(daysInStock.reduce((sum, days) => sum + days, 0) / daysInStock.length) 
+    const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
+    const avgDaysInStock = daysInStockValues.length > 0 
+      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
       : 0;
+    
+    console.log('Average days in stock calculation:', {daysInStockValues, avgDaysInStock});
     
     // Calculate conversion rate
     const conversionRate = quotes.length > 0 
       ? Math.round((orders.length / quotes.length) * 100) 
       : 0;
     
-    // Calculate monthly revenue
+    // Calculate monthly sales count (number of orders)
     const currentMonth = new Date().getMonth();
     const ordersThisMonth = orders.filter(o => {
       const orderDate = new Date(o.orderdate);
       return orderDate.getMonth() === currentMonth;
     });
     
-    // Calculate total revenue from all orders
-    const totalRevenue = orders.reduce((sum, order) => {
-      const vehicle = vehicles.find(v => v.id === order.vehicleid);
-      return sum + (vehicle?.price || 0);
-    }, 0);
+    // Monthly target is 5 vehicles
+    const monthlyTarget = 5;
+    const monthlyProgress = Math.min(100, Math.round((ordersThisMonth.length / monthlyTarget) * 100));
     
-    // Calculate monthly revenue
-    const monthlyRevenue = ordersThisMonth.reduce((sum, order) => {
-      const vehicle = vehicles.find(v => v.id === order.vehicleid);
-      return sum + (vehicle?.price || 0);
-    }, 0);
-    
-    // Set target and calculate progress
-    const monthlyTarget = 100000; // Example target: €100,000
-    const targetProgress = Math.min(100, Math.round((monthlyRevenue / monthlyTarget) * 100));
-    
-    // Generate monthly sales data for chart
+    // Generate monthly sales data for chart (count of orders per month)
     const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
     const currentYear = new Date().getFullYear();
     
@@ -189,18 +186,13 @@ const Dashboard = () => {
         return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
       });
       
-      const revenue = ordersInMonth.reduce((sum, order) => {
-        const vehicle = vehicles.find(v => v.id === order.vehicleid);
-        return sum + (vehicle?.price || 0);
-      }, 0);
-      
       return {
         name: month,
-        value: revenue
+        value: ordersInMonth.length
       };
     });
     
-    // Generate model distribution data
+    // Generate model distribution data for inventory (count of vehicles by model)
     const modelDistribution = vehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
@@ -213,6 +205,21 @@ const Dashboard = () => {
       value: count
     }));
     
+    // If no vehicles, add empty data point to avoid chart errors
+    if (modelData.length === 0) {
+      modelData.push({ name: 'Nessun veicolo', value: 0 });
+    }
+    
+    console.log('Calculated dealer stats:', {
+      vehiclesCount: vehicles.length,
+      avgDaysInStock,
+      quotesCount: quotes.length,
+      ordersCount: orders.length,
+      conversionRate,
+      monthlyProgress,
+      modelData
+    });
+    
     return {
       vehiclesCount: vehicles.length,
       quotesCount: quotes.length,
@@ -220,10 +227,8 @@ const Dashboard = () => {
       avgDaysInStock,
       conversionRate,
       creditLimit: dealer.credit_limit || 0,
-      totalRevenue,
-      monthlyRevenue,
       monthlyTarget,
-      targetProgress,
+      monthlyProgress,
       monthlySalesData,
       modelData
     };
@@ -352,7 +357,7 @@ const Dashboard = () => {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm text-gray-500">Vendite del Mese</p>
-                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(dealerStats?.monthlyRevenue || 0)}</h3>
+                  <h3 className="text-2xl font-bold mt-1">{dealerData?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-rose-100">
                   <TrendingUp className="h-5 w-5 text-rose-600" />
@@ -370,12 +375,16 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex justify-between mb-2">
-              <span className="font-medium">{formatCurrency(dealerStats?.monthlyRevenue || 0)}</span>
-              <span className="text-gray-500">{formatCurrency(dealerStats?.monthlyTarget || 0)}</span>
+              <span className="font-medium">
+                {dealerData?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0} auto vendute
+              </span>
+              <span className="text-gray-500">
+                Obiettivo: {dealerStats?.monthlyTarget || 5} auto
+              </span>
             </div>
-            <Progress value={dealerStats?.targetProgress || 0} className="h-2" />
+            <Progress value={dealerStats?.monthlyProgress || 0} className="h-2" />
             <div className="mt-2 text-right text-sm text-gray-500">
-              {dealerStats?.targetProgress || 0}% raggiunto
+              {dealerStats?.monthlyProgress || 0}% raggiunto
             </div>
           </Card>
 
@@ -397,13 +406,13 @@ const Dashboard = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `€${value / 1000}k`} />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => `${value} auto`} />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="value"
-                      name="Vendite"
+                      name="Auto Vendute"
                       stroke="#8884d8"
                       activeDot={{ r: 8 }}
                       strokeWidth={2}
@@ -454,19 +463,17 @@ const Dashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="text-left border-b border-gray-200">
-                    <th className="pb-2 font-medium">Cliente</th>
                     <th className="pb-2 font-medium">Modello</th>
                     <th className="pb-2 font-medium">Stato</th>
-                    <th className="pb-2 font-medium">Data</th>
+                    <th className="pb-2 font-medium">Data Ordine</th>
+                    <th className="pb-2 font-medium">Data Consegna</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dealerData?.orders?.slice(0, 5).map((order) => {
-                    const vehicle = dealerData.vehicles.find(v => v.id === order.vehicleid);
                     return (
                       <tr key={order.id} className="border-b border-gray-100">
-                        <td className="py-3">{order.customername || 'N/A'}</td>
-                        <td className="py-3">{vehicle?.model || 'N/A'}</td>
+                        <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
                         <td className="py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
@@ -480,6 +487,9 @@ const Dashboard = () => {
                         </td>
                         <td className="py-3">
                           {order.orderdate ? new Date(order.orderdate).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="py-3">
+                          {order.deliverydate ? new Date(order.deliverydate).toLocaleDateString() : '-'}
                         </td>
                       </tr>
                     );

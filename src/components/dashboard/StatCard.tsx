@@ -10,6 +10,10 @@ interface StatCardProps {
   icon: React.ComponentType<{ className?: string }>;
   loading?: boolean;
   color?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
 }
 
 const StatCard = ({ 
@@ -18,7 +22,8 @@ const StatCard = ({
   description, 
   icon: Icon, 
   loading = false,
-  color = 'bg-blue-100 text-blue-600'
+  color = 'bg-blue-100 text-blue-600',
+  trend
 }: StatCardProps) => {
   // Ensure value is a primitive type that can be rendered
   const displayValue = () => {
@@ -44,6 +49,14 @@ const StatCard = ({
         <p className="text-3xl font-bold mb-1 animate-fade-in">{displayValue()}</p>
       )}
       <p className="text-sm text-gray-500">{description}</p>
+      {trend && (
+        <div className={`flex items-center mt-2 text-sm ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-1">
+            {trend.isPositive ? '↑' : '↓'}
+          </span>
+          <span>{trend.value}% {trend.isPositive ? 'aumento' : 'diminuzione'}</span>
+        </div>
+      )}
     </Card>
   );
 };
