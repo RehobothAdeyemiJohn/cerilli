@@ -2,8 +2,8 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus } from 'lucide-react';
-import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
+import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock } from 'lucide-react';
+import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 
@@ -28,6 +28,7 @@ const VehicleCard = ({
 }: VehicleCardProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const isAdmin = user?.type === 'admin';
   
   // Status colors
   const statusColors = {
@@ -62,6 +63,10 @@ const VehicleCard = ({
 
   // Check if vehicle has a virtual configuration
   const hasVirtualConfig = vehicle.virtualConfig !== undefined;
+
+  // Calculate estimated arrival for reserved virtual stock
+  const showEstimatedArrival = isVirtualStock && vehicle.status === 'reserved';
+  const estimatedArrival = showEstimatedArrival ? calculateEstimatedArrival(vehicle.originalStock as any) : null;
 
   // Ferma la propagazione degli eventi per evitare che il click sui pulsanti attivi anche il click sulla card
   const handleActionClick = (e: React.MouseEvent, action: (vehicle: Vehicle) => void) => {
@@ -102,6 +107,12 @@ const VehicleCard = ({
             <span className="text-gray-500">Posizione:</span>
             <span>{vehicle.location}</span>
           </div>
+          {isVirtualStock && isAdmin && vehicle.originalStock && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Origine:</span>
+              <span>Stock {vehicle.originalStock}</span>
+            </div>
+          )}
           {!isVirtualStock && vehicle.transmission && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Cambio:</span>
@@ -112,6 +123,17 @@ const VehicleCard = ({
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Prenotato da:</span>
               <span className="font-medium">{vehicle.reservedBy}</span>
+            </div>
+          )}
+          {showEstimatedArrival && estimatedArrival && (
+            <div className="flex justify-between text-sm items-center">
+              <span className="text-gray-500 flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                Arrivo stimato:
+              </span>
+              <span className="font-medium text-primary">
+                {estimatedArrival.formattedRange}
+              </span>
             </div>
           )}
           {hasVirtualConfig && vehicle.status === 'reserved' && (

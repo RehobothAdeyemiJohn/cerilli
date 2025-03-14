@@ -1,6 +1,6 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { format, addDays } from "date-fns";
  
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -89,5 +89,36 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
     expired: false, 
     timeRemaining: { hours, minutes, seconds },
     percentRemaining
+  };
+}
+
+export function calculateEstimatedArrival(originalStock: 'Cina' | 'Germania' | undefined): { 
+  minDate: Date;
+  maxDate: Date;
+  formattedRange: string;
+} {
+  const today = new Date();
+  
+  // Default to Cina if not specified
+  const stock = originalStock || 'Cina';
+  
+  let minDays = 0;
+  let maxDays = 0;
+  
+  if (stock === 'Cina') {
+    minDays = 112;
+    maxDays = 132;
+  } else if (stock === 'Germania') {
+    minDays = 59;
+    maxDays = 75;
+  }
+  
+  const minDate = addDays(today, minDays);
+  const maxDate = addDays(today, maxDays);
+  
+  return {
+    minDate,
+    maxDate,
+    formattedRange: `${format(minDate, 'dd/MM/yyyy')} - ${format(maxDate, 'dd/MM/yyyy')}`
   };
 }

@@ -1,3 +1,4 @@
+
 import { Vehicle } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { KEYS, initLocalStorage } from './storageUtils';
@@ -35,6 +36,7 @@ export const vehiclesApi = {
       transmission: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.transmission || ''),
       telaio: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.telaio || ''),
       price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
+      originalStock: vehicle.location === 'Stock Virtuale' ? (vehicle.originalStock || 'Cina') : undefined
     };
     
     const updatedVehicles = [...vehicles, newVehicle];

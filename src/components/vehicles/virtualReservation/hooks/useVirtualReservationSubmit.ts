@@ -1,4 +1,3 @@
-
 import { Vehicle } from '@/types';
 import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
@@ -38,6 +37,7 @@ export const useVirtualReservationSubmit = (
         reservedBy: selectedDealerName,
         reservationDestination: data.reservationDestination,
         reservationTimestamp: new Date().toISOString(),
+        originalStock: vehicle.originalStock,
         virtualConfig: {
           trim: data.trim,
           fuelType: data.fuelType,
