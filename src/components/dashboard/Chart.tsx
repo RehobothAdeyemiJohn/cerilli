@@ -10,9 +10,15 @@ interface ChartProps {
   title?: string;
   data?: any[];
   color?: string;
+  darkMode?: boolean;
 }
 
-export const Chart = ({ title = 'Veicoli per Modello', data, color = '#3B82F6' }: ChartProps) => {
+export const Chart = ({ 
+  title = 'Veicoli per Modello', 
+  data, 
+  color = '#3B82F6',
+  darkMode = false
+}: ChartProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer';
   const dealerId = user?.dealerId;
@@ -61,24 +67,24 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = '#3B82F6' }
   }, [vehicles, data, useProvidedData]);
 
   // Colors for bars
-  const COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#0EA5E9', '#F43F5E'];
+  const COLORS = ['#4ADE80', '#818CF8', '#FB7185', '#FACC15', '#60A5FA', '#C084FC'];
 
   if (isLoading && !useProvidedData) {
     return (
-      <Card>
+      <Card className={`overflow-hidden ${darkMode ? 'bg-gray-900 text-white' : ''}`}>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          <CardDescription>Caricamento in corso...</CardDescription>
+          <CardDescription className={darkMode ? 'text-gray-400' : ''}>Caricamento in corso...</CardDescription>
         </CardHeader>
       </Card>
     );
   }
 
   return (
-    <Card className="overflow-hidden hover-scale transition-transform duration-300">
-      <CardHeader className="bg-white">
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
+    <Card className={`overflow-hidden transition-transform duration-300 rounded-xl ${darkMode ? 'bg-gray-900 text-white' : ''}`}>
+      <CardHeader className={darkMode ? 'bg-gray-900' : 'bg-white'}>
+        <CardTitle className={darkMode ? 'text-white' : ''}>{title}</CardTitle>
+        <CardDescription className={darkMode ? 'text-gray-400' : ''}>
           Distribuzione dei dati
         </CardDescription>
       </CardHeader>
@@ -88,13 +94,13 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = '#3B82F6' }
             <BarChart data={chartData}>
               <XAxis
                 dataKey="model" 
-                stroke="#888888"
+                stroke={darkMode ? "#888888" : "#888888"}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="#888888"
+                stroke={darkMode ? "#888888" : "#888888"}
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -103,9 +109,10 @@ export const Chart = ({ title = 'Veicoli per Modello', data, color = '#3B82F6' }
               <Tooltip 
                 formatter={(value) => [value, 'Quantità']}
                 contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '0.5rem'
+                  backgroundColor: darkMode ? '#333' : 'white', 
+                  border: darkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  color: darkMode ? '#fff' : 'inherit'
                 }}
               />
               <Legend />

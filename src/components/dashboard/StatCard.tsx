@@ -22,7 +22,7 @@ const StatCard = ({
   description, 
   icon: Icon, 
   loading = false,
-  color = 'bg-blue-100 text-blue-600',
+  color = 'bg-green-100 text-green-600',
   trend
 }: StatCardProps) => {
   // Ensure value is a primitive type that can be rendered
@@ -36,11 +36,11 @@ const StatCard = ({
   const [bgColor, textColor] = color.split(' ');
 
   return (
-    <Card className="p-6 border border-gray-100 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md">
+    <Card className="p-6 border border-gray-100 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md rounded-xl overflow-hidden">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium">{title}</h3>
-        <div className={`${bgColor || 'bg-blue-100'} p-2 rounded-full`}>
-          <Icon className={`h-5 w-5 ${textColor || 'text-blue-600'}`} />
+        <h3 className="text-lg font-medium text-gray-700">{title}</h3>
+        <div className={`${bgColor || 'bg-green-100'} p-2 rounded-full`}>
+          <Icon className={`h-5 w-5 ${textColor || 'text-green-600'}`} />
         </div>
       </div>
       {loading ? (

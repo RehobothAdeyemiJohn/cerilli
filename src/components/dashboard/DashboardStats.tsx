@@ -92,8 +92,6 @@ export const DashboardStats = () => {
     }
   });
 
-  const isLoading = loadingVehicles || loadingDealers || loadingQuotes || loadingOrders;
-
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
@@ -102,6 +100,7 @@ export const DashboardStats = () => {
         description={isDealer ? "Veicoli riservati" : "Totale veicoli disponibili"}
         icon={Car}
         loading={loadingVehicles}
+        color="bg-green-100 text-green-600"
       />
       <StatCard
         title="Concessionari"
@@ -109,6 +108,7 @@ export const DashboardStats = () => {
         description="Concessionari attivi"
         icon={Users}
         loading={loadingDealers}
+        color="bg-purple-100 text-purple-600"
       />
       <StatCard
         title="Preventivi"
@@ -116,6 +116,7 @@ export const DashboardStats = () => {
         description={isDealer ? "I tuoi preventivi" : "Preventivi totali"}
         icon={FileText}
         loading={loadingQuotes}
+        color="bg-blue-100 text-blue-600"
       />
       <StatCard
         title="Ordini"
@@ -123,6 +124,7 @@ export const DashboardStats = () => {
         description={isDealer ? "I tuoi ordini" : "Ordini totali"}
         icon={ShoppingCart}
         loading={loadingOrders}
+        color="bg-pink-100 text-pink-600"
       />
     </div>
   );

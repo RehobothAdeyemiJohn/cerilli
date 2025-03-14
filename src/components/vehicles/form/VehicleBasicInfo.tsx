@@ -81,7 +81,7 @@ const VehicleBasicInfo = ({ control, locations, isVirtualStock }: VehicleBasicIn
           render={({ field }) => (
             <FormItem>
               <FormLabel>Stock Origine</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || 'Cina'}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleziona lo stock origine" />

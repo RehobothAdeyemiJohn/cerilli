@@ -31,6 +31,21 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
         
         console.log("Uploading image to Supabase Storage:", filePath);
         
+        // Try to create the model-images folder if it doesn't exist
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const imagesBucket = buckets?.find(bucket => bucket.name === 'images');
+        
+        if (!imagesBucket) {
+          console.warn("Images bucket does not exist. Please create it manually in the Supabase dashboard.");
+          toast({
+            title: "Errore",
+            description: "Il bucket 'images' non esiste. Contattare l'amministratore.",
+            variant: "destructive",
+          });
+          setIsUploading(false);
+          return;
+        }
+        
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
           .from('images')
@@ -64,6 +79,11 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
           title: "Immagine Caricata",
           description: "L'immagine è stata caricata con successo.",
         });
+        
+        // If onImageUpload is provided, call it with the file
+        if (onImageUpload) {
+          onImageUpload(file);
+        }
       } catch (error: any) {
         console.error('Error uploading image:', error);
         toast({
@@ -131,6 +151,9 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
             />
           </div>
         )}
+        <p className="text-xs text-gray-500 mt-1">
+          Nota: Assicurati che il bucket 'images' sia stato creato nel tuo progetto Supabase con le policy di accesso appropriate.
+        </p>
       </div>
     </div>
   );

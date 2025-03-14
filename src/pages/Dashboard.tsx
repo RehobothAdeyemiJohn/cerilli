@@ -89,6 +89,7 @@ const Dashboard = () => {
   // Use state to force re-render when component mounts or route changes
   const [renderKey, setRenderKey] = useState(Date.now().toString());
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [useDarkMode, setUseDarkMode] = useState(false);
   
   // Reset the key whenever the component mounts or remounts
   useEffect(() => {
@@ -226,7 +227,7 @@ const Dashboard = () => {
       ordersCount: orders.length,
       avgDaysInStock,
       conversionRate,
-      creditLimit: dealer.credit_limit || 0,
+      creditLimit: dealer?.credit_limit || 0,
       monthlyTarget,
       monthlyProgress,
       monthlySalesData,
@@ -235,11 +236,16 @@ const Dashboard = () => {
   }, [dealerData]);
 
   // Pie chart colors
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#6E59A5'];
+  const COLORS = ['#4ADE80', '#818CF8', '#FB7185', '#FACC15', '#60A5FA', '#C084FC'];
 
   // Handle period change
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
+  };
+  
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setUseDarkMode(!useDarkMode);
   };
   
   if (isDealer && !dealerId) {
@@ -254,20 +260,26 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 animate-fade-in" key={renderKey}>
+    <div className={`container mx-auto py-6 px-4 animate-fade-in ${useDarkMode ? 'bg-gray-900 text-white' : ''}`} key={renderKey}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Dashboard {isDealer ? 'Concessionario' : 'Admin'}</h1>
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0 flex items-center gap-4">
+          <button 
+            onClick={toggleDarkMode}
+            className={`px-3 py-1 rounded-full text-sm ${useDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+          >
+            {useDarkMode ? 'Light Mode' : 'Dark Mode'}
+          </button>
           <Tabs
             defaultValue="month"
             value={selectedPeriod}
             onValueChange={handlePeriodChange}
             className="w-[250px]"
           >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="week">Settimana</TabsTrigger>
-              <TabsTrigger value="month">Mese</TabsTrigger>
-              <TabsTrigger value="year">Anno</TabsTrigger>
+            <TabsList className={`grid w-full grid-cols-3 ${useDarkMode ? 'bg-gray-800' : ''}`}>
+              <TabsTrigger value="week" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Settimana</TabsTrigger>
+              <TabsTrigger value="month" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Mese</TabsTrigger>
+              <TabsTrigger value="year" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Anno</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -278,34 +290,34 @@ const Dashboard = () => {
         <>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Auto a Stock</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto a Stock</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.vehiclesCount || 0}</h3>
                 </div>
-                <div className="p-2 rounded-full bg-blue-100">
-                  <Car className="h-5 w-5 text-blue-600" />
+                <div className="p-2 rounded-full bg-green-100">
+                  <Car className="h-5 w-5 text-green-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Giorni Medi in Giacenza</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Giorni Medi in Giacenza</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.avgDaysInStock || 0}</h3>
                 </div>
-                <div className="p-2 rounded-full bg-amber-100">
-                  <Clock className="h-5 w-5 text-amber-600" />
+                <div className="p-2 rounded-full bg-yellow-100">
+                  <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Preventivi</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Preventivi</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.quotesCount || 0}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-indigo-100">
@@ -314,14 +326,14 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Contratti</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Contratti</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.ordersCount || 0}</h3>
                 </div>
-                <div className="p-2 rounded-full bg-green-100">
-                  <ShoppingCart className="h-5 w-5 text-green-600" />
+                <div className="p-2 rounded-full bg-rose-100">
+                  <ShoppingCart className="h-5 w-5 text-rose-600" />
                 </div>
               </div>
             </Card>
@@ -329,10 +341,10 @@ const Dashboard = () => {
 
           {/* Additional KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">% di Conversione</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>% di Conversione</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.conversionRate || 0}%</h3>
                 </div>
                 <div className="p-2 rounded-full bg-purple-100">
@@ -341,10 +353,10 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Plafond Disponibile</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Plafond Disponibile</p>
                   <h3 className="text-2xl font-bold mt-1">{formatCurrency(dealerStats?.creditLimit || 0)}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-emerald-100">
@@ -353,10 +365,10 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-gray-500">Vendite del Mese</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Vendite del Mese</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerData?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-rose-100">
@@ -367,7 +379,7 @@ const Dashboard = () => {
           </div>
 
           {/* Target Progress */}
-          <Card className="p-4 mb-6 hover-scale">
+          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-medium">Obiettivo Mensile</h3>
               <div className="p-2 rounded-full bg-blue-100">
@@ -378,12 +390,12 @@ const Dashboard = () => {
               <span className="font-medium">
                 {dealerData?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0} auto vendute
               </span>
-              <span className="text-gray-500">
+              <span className={`${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Obiettivo: {dealerStats?.monthlyTarget || 5} auto
               </span>
             </div>
             <Progress value={dealerStats?.monthlyProgress || 0} className="h-2" />
-            <div className="mt-2 text-right text-sm text-gray-500">
+            <div className={`mt-2 text-right text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {dealerStats?.monthlyProgress || 0}% raggiunto
             </div>
           </Card>
@@ -391,42 +403,16 @@ const Dashboard = () => {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Monthly Sales Trend Chart */}
-            <Card className="p-4 hover-scale">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Andamento Vendite</h3>
-                <div className="p-2 rounded-full bg-indigo-100">
-                  <BarChart3 className="h-5 w-5 text-indigo-600" />
-                </div>
-              </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={dealerStats?.monthlySalesData}
-                    margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `${value} auto`} />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      name="Auto Vendute"
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                      strokeWidth={2}
-                      animationDuration={1500}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+            <Chart
+              title="Andamento Vendite"
+              data={dealerStats?.monthlySalesData}
+              darkMode={useDarkMode}
+            />
 
             {/* Vehicle Model Distribution Chart */}
-            <Card className="p-4 hover-scale">
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Distribuzione Modelli</h3>
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Distribuzione Modelli</h3>
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -447,7 +433,15 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [value, 'Quantità']} />
+                    <Tooltip 
+                      formatter={(value) => [value, 'Quantità']}
+                      contentStyle={{ 
+                        backgroundColor: useDarkMode ? '#333' : 'white', 
+                        border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                        borderRadius: '0.5rem',
+                        color: useDarkMode ? '#fff' : 'inherit'
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -455,24 +449,24 @@ const Dashboard = () => {
           </div>
 
           {/* Recent Orders */}
-          <Card className="p-4 mb-6 hover-scale">
+          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Ordini Recenti</h3>
+              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left border-b border-gray-200">
-                    <th className="pb-2 font-medium">Modello</th>
-                    <th className="pb-2 font-medium">Stato</th>
-                    <th className="pb-2 font-medium">Data Ordine</th>
-                    <th className="pb-2 font-medium">Data Consegna</th>
+                  <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Ordine</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Consegna</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dealerData?.orders?.slice(0, 5).map((order) => {
                     return (
-                      <tr key={order.id} className="border-b border-gray-100">
+                      <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                         <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
                         <td className="py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
@@ -496,7 +490,7 @@ const Dashboard = () => {
                   })}
                   {(!dealerData?.orders || dealerData.orders.length === 0) && (
                     <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                      <td colSpan={4} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         Nessun ordine recente
                       </td>
                     </tr>
@@ -515,38 +509,38 @@ const Dashboard = () => {
             <Chart 
               title="Inventory by Model" 
               data={mockModelData} 
-              color="#3B82F6"
+              darkMode={useDarkMode}
             />
             <Chart 
               title="Sales by Dealer" 
-              data={mockSalesByDealer} 
-              color="#10B981"
+              data={mockSalesByDealer}
+              darkMode={useDarkMode}
             />
           </div>
           
           <div className="mt-6">
             <Chart 
               title="Monthly Sales" 
-              data={mockMonthlySalesData} 
-              color="#6366F1"
+              data={mockMonthlySalesData}
+              darkMode={useDarkMode}
             />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-              <h3 className="text-lg font-medium mb-4">Recent Orders</h3>
+            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Recent Orders</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-left border-b border-gray-200">
-                      <th className="pb-2 font-medium">Customer</th>
-                      <th className="pb-2 font-medium">Model</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Date</th>
+                    <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Customer</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Model</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Status</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
+                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                       <td className="py-3">Giovanni Neri</td>
                       <td className="py-3">Cirelli Spyder</td>
                       <td className="py-3">
@@ -556,7 +550,7 @@ const Dashboard = () => {
                       </td>
                       <td className="py-3">Feb 10, 2024</td>
                     </tr>
-                    <tr className="border-b border-gray-100">
+                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                       <td className="py-3">Antonio Russo</td>
                       <td className="py-3">Cirelli 500</td>
                       <td className="py-3">
@@ -579,22 +573,22 @@ const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
             
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-              <h3 className="text-lg font-medium mb-4">Recent Quotes</h3>
+            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Recent Quotes</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-left border-b border-gray-200">
-                      <th className="pb-2 font-medium">Customer</th>
-                      <th className="pb-2 font-medium">Model</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Date</th>
+                    <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Customer</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Model</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Status</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
+                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                       <td className="py-3">Luca Ferrari</td>
                       <td className="py-3">Cirelli 500</td>
                       <td className="py-3">
@@ -604,7 +598,7 @@ const Dashboard = () => {
                       </td>
                       <td className="py-3">Feb 20, 2024</td>
                     </tr>
-                    <tr className="border-b border-gray-100">
+                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                       <td className="py-3">Maria Verdi</td>
                       <td className="py-3">Cirelli Berlina</td>
                       <td className="py-3">
@@ -627,7 +621,7 @@ const Dashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           </div>
         </>
       )}
