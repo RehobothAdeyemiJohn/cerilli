@@ -4,37 +4,19 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useFormContext } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 
 const QuoteDiscountSection: React.FC = () => {
   const form = useFormContext();
 
   return (
-    <div className="grid grid-cols-2 gap-3 border-t pt-2">
-      <FormField
-        control={form.control}
-        name="discount"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-xs">Sconto (€)</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                placeholder="0" 
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                className="text-sm py-1"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
+    <div className="border-t pt-2">
+      {/* VAT Switch */}
       <FormField
         control={form.control}
         name="reducedVAT"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3">
+          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
             <div className="space-y-0.5">
               <FormLabel className="text-xs">IVA agevolata</FormLabel>
               <p className="text-xs text-muted-foreground">
@@ -50,6 +32,98 @@ const QuoteDiscountSection: React.FC = () => {
           </FormItem>
         )}
       />
+      
+      {/* Pricing Fields - Single Row Layout */}
+      <div className="grid grid-cols-4 gap-3">
+        {/* Discount */}
+        <FormField
+          control={form.control}
+          name="discount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Sconto (€)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  className="text-sm py-1"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Premio Targa - New Field */}
+        <FormField
+          control={form.control}
+          name="licensePlateBonus"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Premio Targa (€)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  className="text-sm py-1 bg-blue-50"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Premio Permuta - New Field */}
+        <FormField
+          control={form.control}
+          name="tradeInBonus"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Premio Permuta (€)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  className="text-sm py-1 bg-blue-50"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Kit Sicurezza - New Field */}
+        <FormField
+          control={form.control}
+          name="safetyKit"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Kit Sicurezza (€)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0" 
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  className="text-sm py-1 bg-yellow-50"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      {/* Display the current VAT rate */}
+      <div className="mt-2 text-xs text-right text-gray-500">
+        Aliquota IVA: {form.watch('reducedVAT') ? '4%' : '22%'}
+      </div>
     </div>
   );
 };

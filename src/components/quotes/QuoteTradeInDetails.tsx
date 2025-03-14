@@ -11,7 +11,7 @@ const QuoteTradeInDetails = ({ quote }: QuoteTradeInDetailsProps) => {
   return (
     <div className="border p-2 rounded-md">
       <h3 className="font-medium mb-1 text-xs">Dettagli Permuta</h3>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-2 mb-2">
         <div>
           <p className="text-xs text-gray-500">Marca</p>
           <p className="font-medium">{quote.tradeInBrand || 'N/D'}</p>
@@ -33,6 +33,17 @@ const QuoteTradeInDetails = ({ quote }: QuoteTradeInDetailsProps) => {
           <p className="font-medium">{formatCurrency(quote.tradeInValue || 0)}</p>
         </div>
       </div>
+      
+      {quote.tradeInHandlingFee > 0 && (
+        <div className="mt-1 border-t pt-1">
+          <div className="grid grid-cols-1 gap-2">
+            <div>
+              <p className="text-xs text-gray-500">Gestione Usato</p>
+              <p className="font-medium">{formatCurrency(quote.tradeInHandlingFee)}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

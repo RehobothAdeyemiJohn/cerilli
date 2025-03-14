@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -62,6 +63,11 @@ export type Quote = {
   accessoryPrice?: number;
   notes?: string;
   manualEntry?: boolean; // Added the manualEntry property
+  licensePlateBonus?: number; // New field for Premio Targa
+  tradeInBonus?: number; // New field for Premio Permuta
+  safetyKit?: number; // New field for Kit Sicurezza
+  tradeInHandlingFee?: number; // New field for Gestione Usato
+  roadPreparationFee?: number; // Made this explicit in the type
 };
 
 export type Order = {

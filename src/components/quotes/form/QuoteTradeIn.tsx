@@ -12,115 +12,129 @@ interface QuoteTradeInProps {
 
 const QuoteTradeIn: React.FC<QuoteTradeInProps> = ({ showTradeIn, setShowTradeIn }) => {
   const form = useFormContext();
+  const hasTradeIn = form.watch('hasTradeIn');
 
   return (
     <div className="border-t pt-2">
-      <FormField
-        control={form.control}
-        name="hasTradeIn"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-2 space-y-0 mb-2">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={(checked) => {
-                  field.onChange(checked);
-                  setShowTradeIn(!!checked);
-                }}
-              />
-            </FormControl>
-            <div className="space-y-0.5 leading-none">
-              <FormLabel className="text-xs">
-                Permuta
-              </FormLabel>
-            </div>
-          </FormItem>
-        )}
-      />
+      <div className="flex items-center space-x-2 mb-3">
+        <Checkbox 
+          id="hasTradeIn" 
+          checked={hasTradeIn} 
+          onCheckedChange={(checked) => {
+            form.setValue('hasTradeIn', !!checked);
+            setShowTradeIn(!!checked);
+          }} 
+        />
+        <label
+          htmlFor="hasTradeIn"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Permuta
+        </label>
+      </div>
 
       {showTradeIn && (
-        <div className="grid grid-cols-5 gap-2 pl-5 mb-2">
-          <FormField
-            control={form.control}
-            name="tradeInBrand"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Marca</FormLabel>
-                <FormControl>
-                  <Input placeholder="Es. Fiat" {...field} className="text-sm py-1" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="tradeInModel"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Modello</FormLabel>
-                <FormControl>
-                  <Input placeholder="Es. Panda" {...field} className="text-sm py-1" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tradeInYear"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Anno</FormLabel>
-                <FormControl>
-                  <Input placeholder="Es. 2018" {...field} className="text-sm py-1" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tradeInKm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Chilometri</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="Es. 50000" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="text-sm py-1"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tradeInValue"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs">Valore permuta (€)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="text-sm py-1"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="tradeInBrand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Marca</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="text-sm py-1" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tradeInModel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Modello</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="text-sm py-1" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="tradeInYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Anno</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} className="text-sm py-1" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tradeInKm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Km</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      {...field} 
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      className="text-sm py-1" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField
+              control={form.control}
+              name="tradeInValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Valore Permuta (€)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      {...field} 
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      className="text-sm py-1" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tradeInHandlingFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Gestione Usato (€)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      {...field} 
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      className="text-sm py-1 bg-purple-50" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
       )}
     </div>
