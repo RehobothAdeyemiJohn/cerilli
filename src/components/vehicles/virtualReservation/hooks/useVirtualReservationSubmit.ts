@@ -1,5 +1,5 @@
 
-import { Vehicle, VehicleModel } from '@/types';
+import { Vehicle } from '@/types';
 import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';

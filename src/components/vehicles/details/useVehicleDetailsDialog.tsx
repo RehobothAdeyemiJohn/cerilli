@@ -179,10 +179,12 @@ export function useVehicleDetailsDialog(
         .maybeSingle();
       
       if (error) {
+        console.error("Error checking vehicle status:", error);
         throw new Error("Error checking vehicle status");
       }
       
       if (!currentVehicle) {
+        console.error("Vehicle not found in database");
         throw new Error("Vehicle not found in database");
       }
       
@@ -194,18 +196,18 @@ export function useVehicleDetailsDialog(
         return Promise.resolve();
       }
       
-      // Transform the vehicle to ordered status first
-      await vehiclesApi.transformToOrder(vehicle.id);
-      
-      // Create a new order record if reservedBy is available
-      if (vehicle.reservedBy) {
-        const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+      try {
+        // Transform the vehicle to ordered status first
+        await vehiclesApi.transformToOrder(vehicle.id);
         
-        if (!dealerId) {
-          throw new Error("No dealer ID available for order creation");
-        }
-        
-        try {
+        // Create a new order record if reservedBy is available
+        if (vehicle.reservedBy) {
+          const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+          
+          if (!dealerId) {
+            throw new Error("No dealer ID available for order creation");
+          }
+          
           console.log("Creating order with data:", {
             vehicleId: vehicle.id,
             dealerId,
@@ -224,10 +226,10 @@ export function useVehicleDetailsDialog(
           });
           
           console.log("Order created successfully:", createdOrder);
-        } catch (orderError) {
-          console.error("Error creating order:", orderError);
-          throw new Error(`Failed to create order: ${orderError.message}`);
         }
+      } catch (error) {
+        console.error("Error in transformation process:", error);
+        throw error;
       }
       
       // Update queries immediately with staleTime: 0

@@ -22,6 +22,8 @@ export const useTransformOrderConfirm = (
       onCloseDialog();
     } catch (error) {
       console.error('Transform to order failed:', error);
+      // Don't close the dialog if there's an error
+      setShowTransformConfirm(false);
     } finally {
       setIsTransforming(false);
     }
