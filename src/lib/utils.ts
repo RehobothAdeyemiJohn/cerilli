@@ -16,6 +16,10 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+export function formatDate(date: Date): string {
+  return format(date, 'dd/MM/yyyy');
+}
+
 export function calculateDaysInStock(dateAdded: string): number {
   const addedDate = new Date(dateAdded);
   const today = new Date();

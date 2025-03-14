@@ -15,7 +15,8 @@ import {
 
 interface CancelReservationFormProps {
   vehicle: Vehicle;
-  onSubmit: () => void;
+  onSubmit?: () => void;
+  onConfirm?: () => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -23,9 +24,19 @@ interface CancelReservationFormProps {
 const CancelReservationForm = ({ 
   vehicle, 
   onSubmit, 
+  onConfirm,
   onCancel,
   isSubmitting 
 }: CancelReservationFormProps) => {
+  const handleConfirm = () => {
+    // Call either onSubmit or onConfirm depending on which one was provided
+    if (onConfirm) {
+      onConfirm();
+    } else if (onSubmit) {
+      onSubmit();
+    }
+  };
+
   // Simple confirmation dialog approach
   return (
     <AlertDialog defaultOpen={true} onOpenChange={(open) => !open && onCancel()}>
@@ -43,7 +54,7 @@ const CancelReservationForm = ({
             Annulla
           </AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onSubmit}
+            onClick={handleConfirm}
             disabled={isSubmitting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
