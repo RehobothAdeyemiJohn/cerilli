@@ -11,13 +11,15 @@ interface ChartProps {
   data?: any[];
   color?: string;
   darkMode?: boolean;
+  excludeVirtualStock?: boolean;
 }
 
 export const Chart = ({ 
   title = 'Veicoli per Modello', 
   data, 
   color = '#3B82F6',
-  darkMode = false
+  darkMode = false,
+  excludeVirtualStock = false
 }: ChartProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer';
@@ -28,16 +30,21 @@ export const Chart = ({
   
   // Query to get vehicle data (only if data is not provided)
   const { data: vehicles, isLoading } = useQuery({
-    queryKey: ['vehiclesChart', dealerId],
+    queryKey: ['vehiclesChart', dealerId, excludeVirtualStock],
     queryFn: async () => {
       if (useProvidedData) return null;
       
       console.log("Fetching vehicles data for chart");
-      let query = supabase.from('vehicles').select('model, status');
+      let query = supabase.from('vehicles').select('model, status, location');
       
       // Filter by dealer if in dealer mode
       if (isDealer && dealerId) {
         query = query.eq('reservedby', dealerId);
+      }
+      
+      // Exclude virtual stock if requested
+      if (excludeVirtualStock) {
+        query = query.neq('location', 'Stock Virtuale');
       }
       
       const { data, error } = await query.order('model');

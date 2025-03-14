@@ -1,14 +1,17 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import Chart from '@/components/dashboard/Chart';
+import DateRangePicker from '@/components/dashboard/DateRangePicker';
+import HighInventoryVehicles from '@/components/dashboard/HighInventoryVehicles';
+import DealerCreditList from '@/components/dealers/DealerCreditList';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/api/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { formatCurrency } from '@/lib/utils';
-import { calculateDaysInStock } from '@/lib/utils';
+import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 import { 
   Car, 
   Clock, 
@@ -43,13 +46,17 @@ const Dashboard = () => {
   const [renderKey, setRenderKey] = useState(Date.now().toString());
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [useDarkMode, setUseDarkMode] = useState(false);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined
+  });
   
   useEffect(() => {
     setRenderKey(Date.now().toString());
   }, []);
 
   const { data: dealerData, isLoading: loadingDealerData } = useQuery({
-    queryKey: ['dealerDashboard', dealerId, selectedPeriod],
+    queryKey: ['dealerDashboard', dealerId, selectedPeriod, dateRange],
     queryFn: async () => {
       if (!isDealer || !dealerId) return null;
       
@@ -61,40 +68,48 @@ const Dashboard = () => {
         .eq('id', dealerId)
         .single();
       
-      console.log('Dealer info:', dealer);
+      let vehiclesQuery = supabase.from('vehicles').select('*').eq('reservedby', dealerId);
       
-      const { data: vehicles } = await supabase
-        .from('vehicles')
-        .select('*')
-        .eq('reservedby', dealerId);
+      let ordersQuery = supabase
+        .from('orders')
+        .select('*, vehicles(*)')
+        .eq('dealerid', dealerId)
+        .order('orderdate', { ascending: false });
       
-      console.log('Vehicles for dealer:', vehicles);
-      
-      const { data: quotes } = await supabase
+      let quotesQuery = supabase
         .from('quotes')
         .select('*, vehicles(*)')
         .eq('dealerid', dealerId)
-        .order('createdat', { ascending: false })
-        .limit(5);
+        .order('createdat', { ascending: false });
       
-      console.log('Recent quotes for dealer:', quotes);
+      // Apply date filters if specified
+      if (dateRange.from && dateRange.to) {
+        const fromDate = dateRange.from.toISOString();
+        const toDate = dateRange.to.toISOString();
+        
+        ordersQuery = ordersQuery.gte('orderdate', fromDate).lte('orderdate', toDate);
+        quotesQuery = quotesQuery.gte('createdat', fromDate).lte('createdat', toDate);
+      } else if (selectedPeriod !== 'all') {
+        let startDate = new Date();
+        
+        if (selectedPeriod === 'week') {
+          startDate.setDate(startDate.getDate() - 7);
+        } else if (selectedPeriod === 'month') {
+          startDate.setMonth(startDate.getMonth() - 1);
+        } else if (selectedPeriod === 'year') {
+          startDate.setFullYear(startDate.getFullYear() - 1);
+        }
+        
+        const startDateStr = startDate.toISOString();
+        
+        ordersQuery = ordersQuery.gte('orderdate', startDateStr);
+        quotesQuery = quotesQuery.gte('createdat', startDateStr);
+      }
       
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('*, vehicles(*)')
-        .eq('dealerid', dealerId)
-        .order('orderdate', { ascending: false })
-        .limit(5);
-      
-      console.log('Recent orders for dealer:', orders);
-
-      const currentYear = new Date().getFullYear();
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('*, vehicles(*)')
-        .eq('dealerid', dealerId);
-      
-      console.log('All orders for dealer (monthly sales data):', allOrders);
+      const { data: vehicles } = await vehiclesQuery;
+      const { data: orders } = await ordersQuery;
+      const { data: quotes } = await quotesQuery.limit(5);
+      const { data: allOrders } = await ordersQuery;
       
       return {
         dealer,
@@ -108,41 +123,57 @@ const Dashboard = () => {
   });
 
   const { data: adminData, isLoading: loadingAdminData } = useQuery({
-    queryKey: ['adminDashboard', selectedPeriod],
+    queryKey: ['adminDashboard', selectedPeriod, dateRange],
     queryFn: async () => {
       if (isDealer) return null;
       
       console.log('Fetching admin dashboard data');
       
-      const { data: vehicles } = await supabase
+      let vehiclesQuery = supabase.from('vehicles').select('*').neq('location', 'Stock Virtuale');
+      let ordersQuery = supabase.from('orders').select('*, vehicles(*), dealers(*)');
+      let quotesQuery = supabase.from('quotes').select('*, vehicles(*), dealers(*)');
+      
+      // Apply date filters if specified
+      if (dateRange.from && dateRange.to) {
+        const fromDate = dateRange.from.toISOString();
+        const toDate = dateRange.to.toISOString();
+        
+        ordersQuery = ordersQuery.gte('orderdate', fromDate).lte('orderdate', toDate);
+        quotesQuery = quotesQuery.gte('createdat', fromDate).lte('createdat', toDate);
+      } else if (selectedPeriod !== 'all') {
+        let startDate = new Date();
+        
+        if (selectedPeriod === 'week') {
+          startDate.setDate(startDate.getDate() - 7);
+        } else if (selectedPeriod === 'month') {
+          startDate.setMonth(startDate.getMonth() - 1);
+        } else if (selectedPeriod === 'year') {
+          startDate.setFullYear(startDate.getFullYear() - 1);
+        }
+        
+        const startDateStr = startDate.toISOString();
+        
+        ordersQuery = ordersQuery.gte('orderdate', startDateStr);
+        quotesQuery = quotesQuery.gte('createdat', startDateStr);
+      }
+      
+      const { data: vehicles } = await vehiclesQuery;
+      const { data: orders } = await ordersQuery;
+      const { data: quotes } = await quotesQuery;
+      const { data: dealers } = await supabase.from('dealers').select('*');
+      
+      // Fetch all vehicles for inventory analysis
+      const { data: allVehicles } = await supabase
         .from('vehicles')
-        .select('*');
-      
-      console.log('All vehicles for admin:', vehicles);
-      
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('*, vehicles(*), dealers(*)');
-      
-      console.log('All orders for admin:', orders);
-      
-      const { data: quotes } = await supabase
-        .from('quotes')
-        .select('*, vehicles(*), dealers(*)');
-      
-      console.log('All quotes for admin:', quotes);
-
-      const { data: dealers } = await supabase
-        .from('dealers')
-        .select('*');
-      
-      console.log('All dealers for admin:', dealers);
+        .select('*')
+        .neq('location', 'Stock Virtuale');
       
       return {
         vehicles: vehicles || [],
         orders: orders || [],
         quotes: quotes || [],
-        dealers: dealers || []
+        dealers: dealers || [],
+        allVehicles: allVehicles || []
       };
     },
     enabled: !isDealer,
@@ -153,12 +184,13 @@ const Dashboard = () => {
     
     const { vehicles, quotes, orders, allOrders, dealer } = dealerData;
     
-    const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
+    // Filter out virtual stock for average days calculation
+    const cmcVehicles = vehicles.filter(v => v.location !== 'Stock Virtuale');
+    
+    const daysInStockValues = cmcVehicles.map(v => calculateDaysInStock(v.dateadded));
     const avgDaysInStock = daysInStockValues.length > 0 
       ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
       : 0;
-    
-    console.log('Average days in stock calculation:', {daysInStockValues, avgDaysInStock});
     
     const conversionRate = quotes.length > 0 
       ? Math.round((orders.length / quotes.length) * 100) 
@@ -188,7 +220,14 @@ const Dashboard = () => {
       };
     });
     
-    const modelDistribution = vehicles.reduce((acc, vehicle) => {
+    // Calculate total invoiced value
+    const totalInvoiced = allOrders.reduce((sum, order) => {
+      const price = order.vehicles?.price || 0;
+      return sum + price;
+    }, 0);
+    
+    // Get model distribution for non-virtual stock
+    const modelDistribution = cmcVehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
       acc[model]++;
@@ -204,19 +243,8 @@ const Dashboard = () => {
       modelData.push({ name: 'Nessun veicolo', value: 0 });
     }
     
-    console.log('Calculated dealer stats:', {
-      vehiclesCount: vehicles.length,
-      avgDaysInStock,
-      quotesCount: quotes.length,
-      ordersCount: orders.length,
-      conversionRate,
-      monthlyProgress,
-      modelData,
-      monthlySalesData
-    });
-    
     return {
-      vehiclesCount: vehicles.length,
+      vehiclesCount: cmcVehicles.length,
       quotesCount: quotes.length,
       ordersCount: orders.length,
       avgDaysInStock,
@@ -226,15 +254,36 @@ const Dashboard = () => {
       monthlyProgress,
       monthlySalesData,
       modelData,
-      recentOrders: orders,
-      recentQuotes: quotes
+      totalInvoiced,
+      recentOrders: orders.slice(0, 5),
+      recentQuotes: quotes,
+      vehicles: cmcVehicles.map(v => ({
+        id: v.id,
+        model: v.model,
+        telaio: v.telaio,
+        dateAdded: v.dateadded,
+        price: v.price,
+        location: v.location
+      }))
     };
   }, [dealerData]);
 
   const adminStats = React.useMemo(() => {
     if (!adminData) return null;
     
-    const { vehicles, orders, quotes, dealers } = adminData;
+    const { vehicles, orders, quotes, dealers, allVehicles } = adminData;
+    
+    // Calculate average days in stock for CMC vehicles
+    const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
+    const avgDaysInStock = daysInStockValues.length > 0 
+      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
+      : 0;
+    
+    // Calculate total invoiced value
+    const totalInvoiced = orders.reduce((sum, order) => {
+      const price = order.vehicles?.price || 0;
+      return sum + price;
+    }, 0);
     
     const modelCounts = vehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
@@ -288,14 +337,6 @@ const Dashboard = () => {
       return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
     }).slice(0, 5);
     
-    console.log('Admin dashboard stats:', {
-      inventoryByModel,
-      salesByDealer,
-      monthlySalesData,
-      recentOrders,
-      recentQuotes
-    });
-    
     return {
       inventoryByModel,
       salesByDealer,
@@ -305,7 +346,17 @@ const Dashboard = () => {
       vehiclesCount: vehicles.length,
       dealersCount: dealers.length,
       quotesCount: quotes.length,
-      ordersCount: orders.length
+      ordersCount: orders.length,
+      avgDaysInStock,
+      totalInvoiced,
+      vehicles: allVehicles.map(v => ({
+        id: v.id,
+        model: v.model,
+        telaio: v.telaio,
+        dateAdded: v.dateadded,
+        price: v.price,
+        location: v.location
+      }))
     };
   }, [adminData]);
 
@@ -313,6 +364,8 @@ const Dashboard = () => {
 
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
+    // Clear date range when switching periods
+    setDateRange({ from: undefined, to: undefined });
   };
   
   const toggleDarkMode = () => {
@@ -347,7 +400,7 @@ const Dashboard = () => {
     <div className={`container mx-auto py-6 px-4 animate-fade-in ${useDarkMode ? 'bg-gray-900 text-white' : ''}`} key={renderKey}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Dashboard {isDealer ? 'Concessionario' : 'Admin'}</h1>
-        <div className="mt-4 md:mt-0 flex items-center gap-4">
+        <div className="mt-4 md:mt-0 flex items-center gap-4 flex-wrap">
           <button 
             onClick={toggleDarkMode}
             className={`px-3 py-1 rounded-full text-sm ${useDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
@@ -360,12 +413,18 @@ const Dashboard = () => {
             onValueChange={handlePeriodChange}
             className="w-[250px]"
           >
-            <TabsList className={`grid w-full grid-cols-3 ${useDarkMode ? 'bg-gray-800' : ''}`}>
+            <TabsList className={`grid w-full grid-cols-4 ${useDarkMode ? 'bg-gray-800' : ''}`}>
               <TabsTrigger value="week" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Settimana</TabsTrigger>
               <TabsTrigger value="month" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Mese</TabsTrigger>
               <TabsTrigger value="year" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Anno</TabsTrigger>
+              <TabsTrigger value="all" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Tutto</TabsTrigger>
             </TabsList>
           </Tabs>
+          <DateRangePicker 
+            dateRange={dateRange} 
+            setDateRange={setDateRange} 
+            darkMode={useDarkMode} 
+          />
         </div>
       </div>
       
@@ -375,7 +434,7 @@ const Dashboard = () => {
             <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto a Stock</p>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto a Stock CMC</p>
                   <h3 className="text-2xl font-bold mt-1">{dealerStats?.vehiclesCount || 0}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-green-100">
@@ -449,8 +508,8 @@ const Dashboard = () => {
             <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Vendite del Mese</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerData?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0}</h3>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fatturato Totale</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(dealerStats?.totalInvoiced || 0)}</h3>
                 </div>
                 <div className="p-2 rounded-full bg-rose-100">
                   <TrendingUp className="h-5 w-5 text-rose-600" />
@@ -572,7 +631,9 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+          {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
+
+          <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
             </div>
@@ -678,55 +739,58 @@ const Dashboard = () => {
         </>
       ) : (
         <>
-          <DashboardStats />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Inventario per Modello</h3>
-              </div>
-              <div className="h-[200px] mt-4">
-                {adminStats?.inventoryByModel && adminStats.inventoryByModel.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={adminStats.inventoryByModel}>
-                      <XAxis
-                        dataKey="name" 
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <Tooltip
-                        formatter={(value) => [value, 'Quantità']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
-                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                          borderRadius: '0.5rem',
-                          color: useDarkMode ? '#fff' : 'inherit'
-                        }}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="value"
-                        name="Quantità"
-                        radius={[4, 4, 0, 0]}
-                        fill="#4ADE80"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Nessun dato disponibile
-                  </div>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto a Stock CMC</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.vehiclesCount || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-green-100">
+                  <Car className="h-5 w-5 text-green-600" />
+                </div>
               </div>
             </Card>
+            
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Concessionari</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.dealersCount || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-indigo-100">
+                  <Users className="h-5 w-5 text-indigo-600" />
+                </div>
+              </div>
+            </Card>
+            
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Giorni Medi Giacenza</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.avgDaysInStock || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-yellow-100">
+                  <Clock className="h-5 w-5 text-yellow-600" />
+                </div>
+              </div>
+            </Card>
+            
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fatturato Totale</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(adminStats?.totalInvoiced || 0)}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-rose-100">
+                  <CreditCard className="h-5 w-5 text-rose-600" />
+                </div>
+              </div>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <Chart title="Inventario per Modello" excludeVirtualStock={true} darkMode={useDarkMode} />
             
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
@@ -774,9 +838,11 @@ const Dashboard = () => {
                 )}
               </div>
             </Card>
+            
+            <DealerCreditList darkMode={useDarkMode} />
           </div>
           
-          <div className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite Mensili</h3>
@@ -824,10 +890,12 @@ const Dashboard = () => {
                 )}
               </div>
             </Card>
+            
+            {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-100'}`}>
               <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -873,7 +941,7 @@ const Dashboard = () => {
               </div>
             </Card>
             
-            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+            <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-100'}`}>
               <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Preventivi Recenti</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
