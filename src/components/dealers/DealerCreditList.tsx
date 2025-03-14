@@ -39,7 +39,7 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            const creditLimit = dealer.credit_limit || 0;
+            const creditLimit = dealer.creditLimit || 0;
             // This is a placeholder - in a real app, you'd calculate used credit
             // For now, we'll use a random percentage between 30% and 90%
             const usedPercentage = Math.floor(Math.random() * 60) + 30;
@@ -48,7 +48,7 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
             return (
               <div key={dealer.id} className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">{dealer.companyname}</span>
+                  <span className="font-medium">{dealer.companyName}</span>
                   <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
                     {formatCurrency(remainingCredit)} / {formatCurrency(creditLimit)}
                   </span>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +11,7 @@ import { supabase } from '@/api/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
+import { Vehicle } from '@/types';
 import { 
   Car, 
   Clock, 
@@ -20,7 +20,8 @@ import {
   TrendingUp, 
   Target, 
   Percent, 
-  CreditCard
+  CreditCard,
+  Users
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -82,7 +83,6 @@ const Dashboard = () => {
         .eq('dealerid', dealerId)
         .order('createdat', { ascending: false });
       
-      // Apply date filters if specified
       if (dateRange.from && dateRange.to) {
         const fromDate = dateRange.from.toISOString();
         const toDate = dateRange.to.toISOString();
@@ -133,7 +133,6 @@ const Dashboard = () => {
       let ordersQuery = supabase.from('orders').select('*, vehicles(*), dealers(*)');
       let quotesQuery = supabase.from('quotes').select('*, vehicles(*), dealers(*)');
       
-      // Apply date filters if specified
       if (dateRange.from && dateRange.to) {
         const fromDate = dateRange.from.toISOString();
         const toDate = dateRange.to.toISOString();
@@ -162,7 +161,6 @@ const Dashboard = () => {
       const { data: quotes } = await quotesQuery;
       const { data: dealers } = await supabase.from('dealers').select('*');
       
-      // Fetch all vehicles for inventory analysis
       const { data: allVehicles } = await supabase
         .from('vehicles')
         .select('*')
@@ -184,7 +182,6 @@ const Dashboard = () => {
     
     const { vehicles, quotes, orders, allOrders, dealer } = dealerData;
     
-    // Filter out virtual stock for average days calculation
     const cmcVehicles = vehicles.filter(v => v.location !== 'Stock Virtuale');
     
     const daysInStockValues = cmcVehicles.map(v => calculateDaysInStock(v.dateadded));
@@ -220,13 +217,11 @@ const Dashboard = () => {
       };
     });
     
-    // Calculate total invoiced value
     const totalInvoiced = allOrders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
       return sum + price;
     }, 0);
     
-    // Get model distribution for non-virtual stock
     const modelDistribution = cmcVehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
@@ -260,11 +255,16 @@ const Dashboard = () => {
       vehicles: cmcVehicles.map(v => ({
         id: v.id,
         model: v.model,
-        telaio: v.telaio,
+        trim: v.trim || '',
+        fuelType: v.fueltype || '',
+        exteriorColor: v.exteriorcolor || '',
+        accessories: v.accessories || [],
+        price: v.price || 0,
+        location: v.location,
+        status: v.status || 'available',
         dateAdded: v.dateadded,
-        price: v.price,
-        location: v.location
-      }))
+        telaio: v.telaio || ''
+      } as Vehicle))
     };
   }, [dealerData]);
 
@@ -273,13 +273,11 @@ const Dashboard = () => {
     
     const { vehicles, orders, quotes, dealers, allVehicles } = adminData;
     
-    // Calculate average days in stock for CMC vehicles
     const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
     const avgDaysInStock = daysInStockValues.length > 0 
       ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
       : 0;
     
-    // Calculate total invoiced value
     const totalInvoiced = orders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
       return sum + price;
@@ -352,11 +350,16 @@ const Dashboard = () => {
       vehicles: allVehicles.map(v => ({
         id: v.id,
         model: v.model,
-        telaio: v.telaio,
+        trim: v.trim || '',
+        fuelType: v.fueltype || '',
+        exteriorColor: v.exteriorcolor || '',
+        accessories: v.accessories || [],
+        price: v.price || 0,
+        location: v.location,
+        status: v.status || 'available',
         dateAdded: v.dateadded,
-        price: v.price,
-        location: v.location
-      }))
+        telaio: v.telaio || ''
+      } as Vehicle))
     };
   }, [adminData]);
 
@@ -364,7 +367,6 @@ const Dashboard = () => {
 
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
-    // Clear date range when switching periods
     setDateRange({ from: undefined, to: undefined });
   };
   
