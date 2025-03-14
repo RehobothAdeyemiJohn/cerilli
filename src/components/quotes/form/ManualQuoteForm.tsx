@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -156,7 +155,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
            trim.compatibleModels.includes(models.find(m => m.name === watchModel)?.id || '');
   });
   
-  // Update compatible accessories when model or trim changes
   useEffect(() => {
     if (watchModel && watchTrim) {
       const modelObj = models.find(m => m.name === watchModel);
@@ -191,7 +189,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const tradeInValue = watchHasTradeIn ? watchTradeInValue || 0 : 0;
   const totalDiscount = discount + tradeInValue;
   
-  // Calculate price when model, trim, fuel type, color, or accessories change
   useEffect(() => {
     const calculatePrice = async () => {
       if (!watchModel || !watchTrim || !watchFuelType || !watchExteriorColor) {
@@ -219,11 +216,10 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
           const fuelTypeAdjustment = selectedFuelType.priceAdjustment;
           const colorAdjustment = selectedColor.priceAdjustment;
           
-          // Calculate accessories price
           const selectedAccessories = watchAccessories || [];
           const accessoriesPrice = selectedAccessories.reduce((total, accName) => {
             const acc = allAccessories.find(a => a.name === accName);
-            return total + (acc ? acc.price : 0);
+            return total + (acc ? acc.priceWithVAT : 0);
           }, 0);
           
           const total = baseModelPrice + trimAdjustment + fuelTypeAdjustment + colorAdjustment + accessoriesPrice;
@@ -321,9 +317,7 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column - Vehicle and Customer Information */}
             <div className="space-y-4">
-              {/* Customer Information */}
               <QuoteCustomerInfo 
                 isAdmin={isAdmin} 
                 dealers={dealers} 
@@ -331,12 +325,10 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                 dealerId={user?.dealerId}
               />
 
-              {/* Vehicle Information */}
               <div className="bg-gray-100 p-4 rounded-md">
                 <h3 className="text-md font-semibold mb-4">Informazioni Veicolo</h3>
                 
                 <div className="grid grid-cols-1 gap-4">
-                  {/* Model and Trim on the same row */}
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
                       control={form.control}
@@ -396,7 +388,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                     />
                   </div>
                   
-                  {/* Fuel Type and Color on the same row */}
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
                       control={form.control}
@@ -455,7 +446,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                     />
                   </div>
                   
-                  {/* Accessories Section */}
                   {compatibleAccessories.length > 0 && (
                     <div className="pt-2">
                       <FormField
@@ -496,7 +486,7 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                                           <FormLabel className="font-normal cursor-pointer">
                                             {accessory.name}
                                           </FormLabel>
-                                          <span className="text-sm">€{accessory.price.toLocaleString('it-IT')}</span>
+                                          <span className="text-sm">€{accessory.priceWithVAT.toLocaleString('it-IT')}</span>
                                         </div>
                                       </FormItem>
                                     )
@@ -516,18 +506,14 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
               </div>
             </div>
             
-            {/* Right Column - Price Configuration */}
             <div className="space-y-4">
               <div className="space-y-4">
                 <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
                 
-                {/* Discount Section */}
                 <QuoteDiscountSection />
                 
-                {/* Trade-In Section */}
                 {watchHasTradeIn && <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />}
                 
-                {/* Price Summary */}
                 <div className="mt-4">
                   <QuotePriceSummary 
                     basePrice={basePrice}
@@ -542,7 +528,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
             </div>
           </div>
 
-          {/* Form Actions */}
           <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />
         </form>
       </FormProvider>
