@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -118,7 +117,7 @@ const DealerStock = () => {
   
   // For admin users, add a dealer quick filter dropdown
   const DealerFilter = () => {
-    if (!user?.type === 'admin' || dealers.length === 0) return null;
+    if (!user || user.type !== 'admin' || dealers.length === 0) return null;
     
     return (
       <div className="w-64">
