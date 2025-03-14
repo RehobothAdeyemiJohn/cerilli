@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -218,7 +217,6 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
           vehicle={vehicle}
           onReservationComplete={onSubmit}
           onCancel={onCancel}
-          isSubmitting={isSubmitting}
         />
       )}
       
@@ -227,7 +225,6 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
           vehicle={vehicle}
           onReservationComplete={onSubmit}
           onCancel={onCancel}
-          isSubmitting={isSubmitting}
         />
       )}
       
