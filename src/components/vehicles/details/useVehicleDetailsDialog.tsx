@@ -233,6 +233,7 @@ export function useVehicleDetailsDialog(
           
           // Still consider this a success since the vehicle status was updated
           await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+          onOpenChange(false);
           return;
         }
         
@@ -244,7 +245,7 @@ export function useVehicleDetailsDialog(
         
         try {
           // Create the order record with properly typed status
-          const orderData = {
+          const orderData: Omit<Order, 'id'> = {
             vehicleId: vehicle.id,
             dealerId,
             customerName: vehicle.reservedBy,
