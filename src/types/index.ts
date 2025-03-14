@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -155,11 +154,12 @@ export type Vendor = {
   createdAt: string;
 };
 
-export type VehicleModel = {
+export interface VehicleModel {
   id: string;
   name: string;
   basePrice: number;
-};
+  imageUrl?: string; // Add this property
+}
 
 export type VehicleTrim = {
   id: string;

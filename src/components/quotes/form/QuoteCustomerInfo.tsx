@@ -68,41 +68,43 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
         />
       </div>
       
-      {/* Dealer Selection for Admin Users */}
+      {/* Dealer Selection moved to the bottom */}
       {isAdmin && (
-        <FormField
-          control={form.control}
-          name="dealerId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs">Dealer</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger className="text-sm py-1">
-                    <SelectValue placeholder="Seleziona Dealer" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {dealers.map((dealer) => (
-                    <SelectItem key={dealer.id} value={dealer.id}>
-                      {dealer.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="mt-4">
+          <FormField
+            control={form.control}
+            name="dealerId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">Dealer</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="text-sm py-1">
+                      <SelectValue placeholder="Seleziona Dealer" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {dealers.map((dealer) => (
+                      <SelectItem key={dealer.id} value={dealer.id}>
+                        {dealer.companyName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       )}
       
       {/* Non-admin users with a dealerId - show readonly field */}
       {!isAdmin && dealerId && dealers && (
-        <div>
+        <div className="mt-4">
           <FormLabel className="text-xs">Dealer</FormLabel>
           <div className="border rounded-md p-2 bg-gray-50 text-sm">
             {dealers.find(d => d.id === dealerId)?.companyName || 'Dealer assegnato'}

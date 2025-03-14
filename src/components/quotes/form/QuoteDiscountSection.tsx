@@ -15,16 +15,35 @@ const QuoteDiscountSection: React.FC = () => {
         <h3 className="text-md font-semibold mb-2">Configurazione Prezzo</h3>
       </div>
       
+      {/* Permuta Switch */}
+      <FormField
+        control={form.control}
+        name="hasTradeIn"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
+            <div className="space-y-0.5">
+              <FormLabel className="text-xs">Permuta</FormLabel>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+
       {/* VAT Switch */}
       <FormField
         control={form.control}
         name="reducedVAT"
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 flex-1">
               <FormLabel className="text-xs">IVA agevolata</FormLabel>
-              <p className="text-xs text-muted-foreground">
-                Applica IVA al 4% (Legge 104)
+              <p className="text-xs text-muted-foreground inline-block ml-2">
+                Applica IVA al 4% (Legge 104 art.3 com.3)
               </p>
             </div>
             <FormControl>

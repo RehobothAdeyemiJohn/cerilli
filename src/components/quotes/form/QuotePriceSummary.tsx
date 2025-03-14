@@ -33,11 +33,11 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const vatRate = watchReducedVAT ? 0.04 : 0.22;
   
   // Calculate VAT amount on applicable items (everything except trade-in value)
-  const vatAmount = ((basePrice + accessoryTotalPrice - discount + licensePlateBonus + tradeInBonus + roadPreparationFee + safetyKit + (hasTradeIn ? tradeInHandlingFee : 0)) * vatRate);
+  const vatAmount = watchReducedVAT ? ((basePrice + accessoryTotalPrice - discount + licensePlateBonus + tradeInBonus + roadPreparationFee + safetyKit + (hasTradeIn ? tradeInHandlingFee : 0)) * vatRate) : 0;
   
   return (
     <div className="pt-2 border-t">
-      <h3 className="text-md font-semibold mb-2">Prezzo Finale (Aggiornato in Tempo Reale)</h3>
+      <h3 className="text-md font-semibold mb-2">Prezzo Finale</h3>
       <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Prezzo Veicolo</p>
@@ -90,14 +90,17 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
           </>
         )}
         
-        <div className="space-y-0.5">
-          <p className="text-xs text-gray-500">IVA ({watchReducedVAT ? '4%' : '22%'})</p>
-          <p className="font-medium text-sm">+ {formatCurrency(vatAmount)}</p>
-        </div>
+        {watchReducedVAT && (
+          <div className="space-y-0.5">
+            <p className="text-xs text-gray-500">IVA (4%)</p>
+            <p className="font-medium text-sm">+ {formatCurrency(vatAmount)}</p>
+          </div>
+        )}
         
-        <div className="space-y-0.5 col-span-2">
-          <p className="text-xs text-gray-500 font-semibold">Prezzo Finale (IVA inclusa)</p>
-          <p className="font-bold text-sm text-primary">
+        {/* Final price - larger and highlighted */}
+        <div className="col-span-4 text-center mt-3">
+          <p className="text-xs text-gray-500 font-semibold">Prezzo Finale - Chiavi in mano</p>
+          <p className="font-bold text-xl text-white bg-blue-900 py-1 px-3 rounded inline-block mt-1">
             {formatCurrency(finalPrice)}
           </p>
         </div>

@@ -10,7 +10,6 @@ import ManualQuoteForm from './form/ManualQuoteForm';
 import QuoteVehicleInfo from './form/QuoteVehicleInfo';
 import QuoteCustomerInfo from './form/QuoteCustomerInfo';
 import QuoteDiscountSection from './form/QuoteDiscountSection';
-import QuoteAccessories from './form/QuoteAccessories';
 import QuoteTradeIn from './form/QuoteTradeIn';
 import QuotePriceSummary from './form/QuotePriceSummary';
 import QuoteFormActions from './form/QuoteFormActions';
@@ -95,12 +94,9 @@ const QuoteForm = ({
               />
               
               {/* Vehicle Information - Now below customer info */}
-              <QuoteVehicleInfo vehicle={vehicle} />
-              
-              {/* Optional Accessories */}
-              <QuoteAccessories 
-                compatibleAccessories={compatibleAccessories} 
-                vehicle={vehicle}
+              <QuoteVehicleInfo 
+                vehicle={vehicle} 
+                compatibleAccessories={compatibleAccessories}
               />
             </div>
             
@@ -109,8 +105,10 @@ const QuoteForm = ({
               {/* Discount and VAT Section */}
               <QuoteDiscountSection />
               
-              {/* Trade-In Section */}
-              <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
+              {/* Trade-In Section - Only if hasTradeIn is true */}
+              {watchHasTradeIn && (
+                <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
+              )}
               
               {/* Price Summary */}
               <QuotePriceSummary 
