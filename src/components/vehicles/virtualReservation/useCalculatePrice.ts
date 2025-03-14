@@ -17,12 +17,14 @@ export const useCalculatePrice = (
   accessories: Accessory[]
 ) => {
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
+  const [priceComponents, setPriceComponents] = useState<any>({});
 
   // Update price calculation
   useEffect(() => {
     const updatePrice = async () => {
       if (!modelObj || !watchTrim || !watchFuelType || !watchColor || !watchTransmission) {
         setCalculatedPrice(0);
+        setPriceComponents({});
         return;
       }
 
@@ -38,6 +40,17 @@ export const useCalculatePrice = (
 
       if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
         try {
+          // Create price components for debugging/display
+          const components = {
+            baseModelPrice: modelObj.basePrice || 0,
+            trimPrice: trimObj.basePrice || 0,
+            fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
+            colorAdjustment: colorObj.priceAdjustment || 0,
+            transmissionAdjustment: transmissionObj.priceAdjustment || 0,
+          };
+          
+          setPriceComponents(components);
+          
           const selectedAccessoryIds = watchAccessories
             .map(name => {
               const acc = accessories.find(a => a.name === name);
@@ -53,6 +66,9 @@ export const useCalculatePrice = (
             transmissionObj.id,
             selectedAccessoryIds
           );
+          
+          console.log('Price components:', components);
+          console.log('Final calculated price:', price);
           
           setCalculatedPrice(price);
         } catch (error) {
@@ -79,5 +95,5 @@ export const useCalculatePrice = (
     accessories
   ]);
 
-  return calculatedPrice;
+  return { calculatedPrice, priceComponents };
 };

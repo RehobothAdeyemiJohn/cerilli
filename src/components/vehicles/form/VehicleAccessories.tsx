@@ -19,10 +19,10 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
         name="accessories"
         render={() => (
           <FormItem>
-            <FormLabel>Accessori Disponibili</FormLabel>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormLabel className="font-semibold text-base mb-2">Accessori Disponibili</FormLabel>
+            <div className="space-y-2">
               {compatibleAccessories.map((accessory) => (
-                <div key={accessory.id} className="flex items-start space-x-3 space-y-0">
+                <div key={accessory.id} className="flex items-center space-x-3">
                   <Checkbox
                     checked={form.getValues('accessories').includes(accessory.name)}
                     onCheckedChange={(checked) => {
@@ -33,10 +33,10 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                       form.setValue('accessories', updated);
                     }}
                   />
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      {accessory.name}
-                      <span className="ml-1 text-sm text-gray-500">
+                  <div className="flex items-center">
+                    <FormLabel className="font-normal cursor-pointer">
+                      {accessory.name} 
+                      <span className="text-sm text-gray-600 ml-1">
                         (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
                       </span>
                     </FormLabel>
