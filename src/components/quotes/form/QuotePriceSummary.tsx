@@ -99,11 +99,11 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
           </div>
         )}
         
-        {/* Final price - larger and highlighted with full width */}
+        {/* Final price - with full width blue background */}
         <div className="col-span-4 mt-3">
-          <div className="bg-blue-900 py-2 px-3 rounded text-center">
-            <p className="text-xs text-white font-semibold">Prezzo Finale - Chiavi in mano</p>
-            <p className="font-bold text-xl text-white">
+          <div className="bg-blue-900 py-2 px-3 rounded">
+            <p className="text-xs text-white font-semibold text-center">Prezzo Finale - Chiavi in mano</p>
+            <p className="font-bold text-xl text-white text-center">
               {formatCurrency(finalPrice)}
             </p>
           </div>

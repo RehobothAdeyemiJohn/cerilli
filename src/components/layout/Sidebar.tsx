@@ -11,9 +11,16 @@ import {
   KeyRound,
   Settings,
   Database,
-  FileText
+  FileText,
+  Calendar,
+  BellRing,
+  BarChart4,
+  Bookmark,
+  UserCircle,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,17 +34,26 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
+    { title: 'Calendar', icon: Calendar, path: '/calendar', showForDealer: true },
+    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true, showForAdmin: true },
+    { title: 'Notifications', icon: BellRing, path: '/notifications', showForDealer: true },
+    { title: 'Analytics', icon: BarChart4, path: '/analytics', showForDealer: true },
+    { title: 'Bookmarks', icon: Bookmark, path: '/bookmarks', showForDealer: true },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
     { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
-    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
     { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
   ];
   
+  const footerItems = [
+    { title: 'Settings', icon: Settings, path: '/settings' },
+    { title: 'Profile', icon: UserCircle, path: '/profile' },
+    { title: 'Logout', icon: LogOut, path: '/logout' },
+  ];
+  
   const adminItems = [
     { title: 'Credenziali', icon: KeyRound, path: '/credentials' },
-    { title: 'Impostazioni', icon: Settings, path: '/settings' },
     { title: 'Migrazione Dati', icon: Database, path: '/migration' },
   ];
   
@@ -53,13 +69,17 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     <div 
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } h-screen bg-gray-100 border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
+      } h-screen bg-[#141c2e] text-white flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
     >
-      <div className="flex items-center justify-center h-16 border-b border-gray-200 p-4 flex-shrink-0">
+      <div className="flex items-center justify-center h-16 p-4 flex-shrink-0">
         {isOpen ? (
-          <h2 className="text-xl font-bold text-gray-800">DMS Cirelli</h2>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold">
+            CN
+          </div>
         ) : (
-          <span className="text-xl font-bold text-gray-800">DMS</span>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold">
+            CN
+          </div>
         )}
       </div>
       
@@ -71,15 +91,16 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center p-2 rounded-md transition-colors ${
+                className={cn(
+                  "flex items-center p-2 rounded-md transition-colors my-1",
                   isActive(item.path)
-                    ? 'bg-[#141c2e] text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
+                    ? "bg-white text-[#141c2e]"
+                    : "text-gray-300 hover:bg-gray-700"
+                )}
               >
-                <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
+                <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
                 {isOpen && (
-                  <span className="ml-3">{item.title}</span>
+                  <span className="ml-3 text-sm">{item.title}</span>
                 )}
               </Link>
             ))}
@@ -87,32 +108,50 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         
         {isAdmin && (
           <div className="pt-2 px-2">
-            {isOpen && (
-              <p className="px-2 text-xs font-semibold text-gray-500 uppercase mb-1">
-                AMMINISTRAZIONE
-              </p>
-            )}
-            
             <nav className="space-y-1">
               {adminItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center p-2 rounded-md transition-colors ${
+                  className={cn(
+                    "flex items-center p-2 rounded-md transition-colors my-1",
                     isActive(item.path)
-                      ? 'bg-[#141c2e] text-white'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
+                      ? "bg-white text-[#141c2e]"
+                      : "text-gray-300 hover:bg-gray-700"
+                  )}
                 >
-                  <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-white' : 'text-gray-500'}`} />
+                  <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
                   {isOpen && (
-                    <span className="ml-3">{item.title}</span>
+                    <span className="ml-3 text-sm">{item.title}</span>
                   )}
                 </Link>
               ))}
             </nav>
           </div>
         )}
+        
+        {/* Footer Navigation */}
+        <div className="mt-auto px-2 pb-4">
+          <nav className="space-y-1">
+            {footerItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center p-2 rounded-md transition-colors my-1",
+                  isActive(item.path)
+                    ? "bg-white text-[#141c2e]"
+                    : "text-gray-300 hover:bg-gray-700"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
+                {isOpen && (
+                  <span className="ml-3 text-sm">{item.title}</span>
+                )}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );

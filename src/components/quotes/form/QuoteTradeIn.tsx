@@ -27,7 +27,7 @@ const QuoteTradeIn: React.FC<QuoteTradeInProps> = ({ showTradeIn, setShowTradeIn
   }
 
   return (
-    <div className="border-t pt-2">
+    <div className="border border-blue-200 rounded-md p-3 mb-3 bg-blue-50">
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <FormField

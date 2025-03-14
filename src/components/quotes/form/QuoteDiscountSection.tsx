@@ -14,7 +14,7 @@ const QuoteDiscountSection: React.FC = () => {
         <h3 className="text-md font-semibold mb-2">Configurazione Prezzo</h3>
       </div>
       
-      {/* Permuta Switch - moved above IVA agevolata */}
+      {/* Permuta Switch - above IVA agevolata */}
       <FormField
         control={form.control}
         name="hasTradeIn"

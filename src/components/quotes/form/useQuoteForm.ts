@@ -92,9 +92,9 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit?: (data: any) => void) 
     const fetchCompatibleAccessories = async () => {
       if (vehicle && vehicle.model && vehicle.trim) {
         try {
-          // First find model and trim IDs
-          const modelId = vehicle.modelId || 'model_id';
-          const trimId = vehicle.trimId || 'trim_id';
+          // Use model and trim directly since modelId and trimId don't exist
+          const modelId = vehicle.model || 'model_id';
+          const trimId = vehicle.trim || 'trim_id';
           
           const accessories = await accessoriesApi.getCompatible(modelId, trimId);
           setCompatibleAccessories(accessories || []);
@@ -113,7 +113,7 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit?: (data: any) => void) 
     if (watchSelectedAccessories && compatibleAccessories) {
       const total = watchSelectedAccessories.reduce((sum, accessoryName) => {
         const accessory = compatibleAccessories.find(a => a.name === accessoryName);
-        return sum + (accessory?.price || 0);
+        return sum + (accessory?.priceWithVAT || 0);
       }, 0);
       setAccessoryTotalPrice(total);
     } else {
