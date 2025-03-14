@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +67,13 @@ const VehicleCard = ({
     action(vehicle);
   };
 
+  const getFormattedLocation = () => {
+    if (isDealerStock && vehicle.reservedBy && isAdmin) {
+      return `Stock ${vehicle.reservedBy}`;
+    }
+    return vehicle.location;
+  };
+
   return (
     <div 
       className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
@@ -99,7 +105,7 @@ const VehicleCard = ({
           )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Posizione:</span>
-            <span>{vehicle.location}</span>
+            <span>{getFormattedLocation()}</span>
           </div>
           {isVirtualStock && isAdmin && vehicle.originalStock && (
             <div className="flex justify-between text-sm">
@@ -124,7 +130,7 @@ const VehicleCard = ({
               <span>{vehicle.transmission}</span>
             </div>
           )}
-          {vehicle.reservedBy && vehicle.status === 'reserved' && (
+          {vehicle.reservedBy && vehicle.status === 'reserved' && !isAdmin && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Prenotato da:</span>
               <span className="font-medium">{vehicle.reservedBy}</span>

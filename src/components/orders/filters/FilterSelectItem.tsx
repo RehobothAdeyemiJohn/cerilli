@@ -9,11 +9,19 @@ interface FilterSelectItemProps {
   onChange: (value: string) => void;
   options: { id: string; name: string }[];
   placeholder: string;
+  className?: string;
 }
 
-const FilterSelectItem = ({ label, value, onChange, options, placeholder }: FilterSelectItemProps) => {
+const FilterSelectItem = ({ 
+  label, 
+  value, 
+  onChange, 
+  options, 
+  placeholder,
+  className = "" 
+}: FilterSelectItemProps) => {
   return (
-    <div>
+    <div className={className}>
       <Label className="text-sm font-medium mb-2 block text-gray-700">{label}</Label>
       <Select
         value={value || "all"}
