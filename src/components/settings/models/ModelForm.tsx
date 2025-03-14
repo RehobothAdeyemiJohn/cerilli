@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { VehicleModel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ImagePlus } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/api/supabase/client';
 
 interface ModelFormProps {
   model: Partial<VehicleModel>;
@@ -14,12 +16,51 @@ interface ModelFormProps {
 
 const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload }) => {
   const imageInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       if (onImageUpload) {
-        onImageUpload(file);
+        setIsUploading(true);
+        try {
+          // Create a unique file name
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          const filePath = `model-images/${fileName}`;
+          
+          // Upload file to Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('images')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (error) throw error;
+          
+          // Get public URL
+          const { data: publicUrlData } = supabase.storage
+            .from('images')
+            .getPublicUrl(filePath);
+          
+          // Update model with image URL
+          onChange('imageUrl', publicUrlData.publicUrl);
+          
+          toast({
+            title: "Immagine Caricata",
+            description: "L'immagine è stata caricata con successo.",
+          });
+        } catch (error: any) {
+          console.error('Error uploading image:', error);
+          toast({
+            title: "Errore",
+            description: `Errore durante il caricamento dell'immagine: ${error.message}`,
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploading(false);
+        }
       }
     }
   };
@@ -63,9 +104,10 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
             variant="outline" 
             onClick={() => imageInputRef.current?.click()}
             className="w-full flex items-center justify-center"
+            disabled={isUploading}
           >
             <ImagePlus className="h-4 w-4 mr-2" />
-            {model.imageUrl ? 'Cambia Immagine' : 'Carica Immagine'}
+            {isUploading ? 'Caricamento...' : (model.imageUrl ? 'Cambia Immagine' : 'Carica Immagine')}
           </Button>
         </div>
         {model.imageUrl && (

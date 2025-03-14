@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -208,7 +209,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       )}
       
       <div className="mt-6 flex flex-wrap gap-3 justify-end">
-        {vehicle.status === 'available' && onCreateQuote && (
+        {/* Hide Create Quote button for virtual stock */}
+        {vehicle.status === 'available' && !isVirtualStock && onCreateQuote && (
           <Button onClick={onCreateQuote} className="flex items-center gap-2">
             <InfoIcon className="h-4 w-4" />
             <span>Crea Preventivo</span>
