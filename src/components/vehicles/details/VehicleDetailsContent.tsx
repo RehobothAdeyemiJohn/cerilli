@@ -17,6 +17,8 @@ interface VehicleDetailsContentProps {
   onCancelReservation?: () => void;
   onTransformToOrder?: () => void;
   isTransforming?: boolean;
+  userCanCreateQuotes?: boolean;
+  isSubmitting?: boolean;
 }
 
 const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
