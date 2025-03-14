@@ -1,13 +1,13 @@
 
 import { Vehicle } from '@/types';
-import { useVirtualReservationForm } from './hooks/useVirtualReservationForm';
-import { useVirtualReservationData } from './hooks/useVirtualReservationData';
-import { useCompatibleItems } from './useCompatibleItems';
-import { useCalculatePrice } from './useCalculatePrice';
-import { useCompatibleAccessories } from './useCompatibleAccessories';
-import { useVirtualReservationSubmit } from './hooks/useVirtualReservationSubmit';
+import { useVirtualReservationForm } from './virtualReservation/hooks/useVirtualReservationForm';
+import { useVirtualReservationData } from './virtualReservation/hooks/useVirtualReservationData';
+import { useCompatibleItems } from './virtualReservation/useCompatibleItems';
+import { useCalculatePrice } from './virtualReservation/useCalculatePrice';
+import { useCompatibleAccessories } from './virtualReservation/useCompatibleAccessories';
+import { useVirtualReservationSubmit } from './virtualReservation/hooks/useVirtualReservationSubmit';
 
-export type { VirtualReservationFormValues } from './schema';
+export type { VirtualReservationFormValues } from './virtualReservation/schema';
 
 export const useVirtualReservation = (
   vehicle: Vehicle,

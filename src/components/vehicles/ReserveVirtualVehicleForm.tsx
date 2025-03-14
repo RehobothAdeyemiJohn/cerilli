@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Form } from '@/components/ui/form';
-import { useVirtualReservation } from './virtualReservation/useVirtualReservation';
+import { useVirtualReservation } from './useVirtualReservation';
 import VirtualReservationDealerSelect from './virtualReservation/VirtualReservationDealerSelect';
 import VirtualReservationConfigurator from './virtualReservation/VirtualReservationConfigurator';
 import VirtualReservationAccessories from './virtualReservation/VirtualReservationAccessories';
@@ -31,6 +31,7 @@ const ReserveVirtualVehicleForm = ({
     compatibleItems,
     compatibleAccessories,
     calculatedPrice,
+    priceComponents,
     isAdmin,
     activeDealers,
     onCancel: handleCancel,
@@ -74,7 +75,10 @@ const ReserveVirtualVehicleForm = ({
           compatibleAccessories={compatibleAccessories} 
         />
         
-        <VirtualReservationPrice calculatedPrice={calculatedPrice} />
+        <VirtualReservationPrice 
+          calculatedPrice={calculatedPrice} 
+          priceComponents={priceComponents}
+        />
         
         <VirtualReservationActions onCancel={handleCancel} />
       </form>
