@@ -1,29 +1,24 @@
 
 import { z } from 'zod';
 
-// Schema for virtual reservation
-export const createVirtualReservationSchema = (isAdmin: boolean) => {
-  const baseSchema = {
-    trim: z.string().min(1, { message: "È necessario selezionare un allestimento" }),
-    fuelType: z.string().min(1, { message: "È necessario selezionare un'alimentazione" }),
-    exteriorColor: z.string().min(1, { message: "È necessario selezionare un colore" }),
-    transmission: z.string().min(1, { message: "È necessario selezionare un cambio" }),
-    accessories: z.array(z.string()).default([]),
-    reservationDestination: z.string().min(1, { message: "È necessario selezionare una destinazione" }),
-  };
+export const virtualReservationSchema = z.object({
+  // Dealer selection (only for admin)
+  dealerId: z.string().optional(),
   
-  // Only admins need to select the dealer
-  if (isAdmin) {
-    return z.object({
-      ...baseSchema,
-      dealerId: z.string().min(1, { message: "È necessario selezionare un concessionario" }),
-    });
-  }
+  // Reservation destination
+  reservationDestination: z.string().min(1, "La destinazione è obbligatoria"),
   
-  return z.object(baseSchema);
-};
+  // Vehicle configuration
+  trim: z.string().min(1, "L'allestimento è obbligatorio"),
+  fuelType: z.string().min(1, "Il tipo di carburante è obbligatorio"),
+  exteriorColor: z.string().min(1, "Il colore esterno è obbligatorio"),
+  transmission: z.string().min(1, "La trasmissione è obbligatoria"),
+  
+  // Optional accessories
+  accessories: z.array(z.string()).default([]),
+  
+  // Original stock
+  originalStock: z.string().optional()
+});
 
-// This type definition explicitly allows for both base fields and optional dealerId
-export type VirtualReservationFormValues = z.infer<ReturnType<typeof createVirtualReservationSchema>> & {
-  dealerId?: string;
-};
+export type VirtualReservationFormValues = z.infer<typeof virtualReservationSchema>;

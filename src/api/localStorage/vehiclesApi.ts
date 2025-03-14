@@ -22,6 +22,20 @@ export const vehiclesApi = {
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
     const vehicles = await vehiclesApi.getAll();
     
+    // Calculate estimated arrival days for virtual stock
+    let estimatedArrivalDays = vehicle.estimatedArrivalDays;
+    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock && !estimatedArrivalDays) {
+      // Different arrival time estimates based on the original stock location
+      if (vehicle.originalStock === 'Germania') {
+        // Germany stock: 38-52 days
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else {
+        // China stock (default): 90-120 days
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+      console.log(`Giorni di arrivo stimati per stock ${vehicle.originalStock}: ${estimatedArrivalDays}`);
+    }
+    
     // Impostazione dei valori di default
     const newVehicle = {
       ...vehicle,
@@ -36,7 +50,8 @@ export const vehiclesApi = {
       transmission: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.transmission || ''),
       telaio: vehicle.location === 'Stock Virtuale' ? '' : (vehicle.telaio || ''),
       price: vehicle.location === 'Stock Virtuale' ? 0 : (vehicle.price || 0),
-      originalStock: vehicle.location === 'Stock Virtuale' ? (vehicle.originalStock || 'Cina') : undefined
+      originalStock: vehicle.location === 'Stock Virtuale' ? (vehicle.originalStock || undefined) : undefined,
+      estimatedArrivalDays: estimatedArrivalDays
     };
     
     const updatedVehicles = [...vehicles, newVehicle];
@@ -56,9 +71,21 @@ export const vehiclesApi = {
       throw new Error('Veicolo non trovato');
     }
     
+    // If updating to stock virtuale and original stock is provided, calculate estimated arrival days
+    let estimatedArrivalDays = updates.estimatedArrivalDays;
+    if (updates.location === 'Stock Virtuale' && updates.originalStock && !estimatedArrivalDays) {
+      if (updates.originalStock === 'Germania') {
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else {
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+      console.log(`Giorni di arrivo stimati per stock ${updates.originalStock}: ${estimatedArrivalDays}`);
+    }
+    
     const updatedVehicle = {
       ...vehicles[index],
       ...updates,
+      estimatedArrivalDays: estimatedArrivalDays || updates.estimatedArrivalDays || vehicles[index].estimatedArrivalDays
     };
     
     vehicles[index] = updatedVehicle;
@@ -96,13 +123,24 @@ export const vehiclesApi = {
       throw new Error('Il veicolo non è disponibile per la prenotazione');
     }
     
+    // Calculate estimated arrival days if it's a virtual vehicle and doesn't already have it set
+    let estimatedArrivalDays = vehicle.estimatedArrivalDays;
+    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock && !estimatedArrivalDays) {
+      if (vehicle.originalStock === 'Germania') {
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else {
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+    }
+    
     const updatedVehicle: Vehicle = {
       ...vehicle,
       status: 'reserved' as const,
       reservedBy,
       reservedAccessories: reservedAccessories || [],
       reservationDestination,
-      reservationTimestamp: new Date().toISOString()
+      reservationTimestamp: new Date().toISOString(),
+      estimatedArrivalDays
     };
     
     if (virtualConfig) {

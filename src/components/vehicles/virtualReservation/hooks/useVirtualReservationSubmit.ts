@@ -45,8 +45,14 @@ export const useVirtualReservationSubmit = (
         selectedDealerName = dealerName;
       }
       
+      // Use original stock from vehicle if available, otherwise from form data
+      const originalStock = vehicle.originalStock || data.originalStock;
+      
       // Calculate estimated arrival days based on original stock
-      const estimatedArrivalDays = calculateEstimatedArrivalDays(vehicle.originalStock);
+      const estimatedArrivalDays = calculateEstimatedArrivalDays(originalStock);
+      
+      console.log("Submitting virtual reservation with originalStock:", originalStock);
+      console.log("Estimated arrival days:", estimatedArrivalDays);
       
       const updatedVehicle: Vehicle = {
         ...vehicle,
@@ -54,8 +60,8 @@ export const useVirtualReservationSubmit = (
         reservedBy: selectedDealerName,
         reservationDestination: data.reservationDestination,
         reservationTimestamp: new Date().toISOString(),
-        originalStock: vehicle.originalStock,
-        estimatedArrivalDays: estimatedArrivalDays,
+        originalStock: originalStock, // Ensure this is saved
+        estimatedArrivalDays: estimatedArrivalDays, // Save the calculated days
         virtualConfig: {
           trim: data.trim,
           fuelType: data.fuelType,

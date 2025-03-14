@@ -20,7 +20,8 @@ const vehicleSchema = z.object({
   transmission: z.string().optional(),
   status: z.enum(["available", "reserved", "sold", "ordered", "delivered"]).default("available"),
   telaio: z.string().optional(),
-  accessories: z.array(z.string()).default([])
+  accessories: z.array(z.string()).default([]),
+  originalStock: z.string().optional() // Add originalStock to the schema
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -48,7 +49,8 @@ export const useEditVehicleForm = (
       transmission: vehicle.transmission || '',
       status: vehicle.status,
       telaio: vehicle.telaio || '',
-      accessories: vehicle.accessories || []
+      accessories: vehicle.accessories || [],
+      originalStock: vehicle.originalStock || '' // Initialize with existing originalStock value
     },
   });
 
@@ -89,6 +91,7 @@ export const useEditVehicleForm = (
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
   const watchLocation = form.watch('location');
+  const watchOriginalStock = form.watch('originalStock'); // Add watcher for originalStock
 
   // Update isVirtualStock when location changes
   useEffect(() => {
@@ -191,9 +194,15 @@ export const useEditVehicleForm = (
     
     // Custom validation based on location
     if (isVirtualStock) {
-      // For Stock Virtuale, only model is required
+      // For Stock Virtuale, model and originalStock are required
       if (!data.model) {
         setValidationError("Il modello è obbligatorio.");
+        return;
+      }
+      
+      // Validate originalStock only if it's virtual stock
+      if (!data.originalStock) {
+        setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
         return;
       }
     } else {
@@ -208,6 +217,19 @@ export const useEditVehicleForm = (
     // Log price components for debugging
     console.log("Price components for edited vehicle:", priceComponents);
     console.log("Calculated final price:", calculatedPrice);
+    console.log("Original stock:", data.originalStock);
+    
+    // Calculate estimated arrival days if it's Virtual Stock and has an originalStock
+    let estimatedArrivalDays = vehicle.estimatedArrivalDays;
+    if (isVirtualStock && data.originalStock) {
+      if (data.originalStock === 'Germania') {
+        // Germany stock: 38-52 days
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else if (data.originalStock === 'Cina') {
+        // China stock: 90-120 days
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+    }
     
     const updatedVehicle: Vehicle = {
       ...vehicle,
@@ -220,7 +242,9 @@ export const useEditVehicleForm = (
       status: data.status,
       telaio: isVirtualStock ? '' : data.telaio || '',
       accessories: isVirtualStock ? [] : data.accessories || [],
-      price: isVirtualStock ? 0 : calculatedPrice
+      price: isVirtualStock ? 0 : calculatedPrice,
+      originalStock: isVirtualStock ? data.originalStock : undefined, // Only set for Virtual Stock
+      estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined // Only set for Virtual Stock
     };
     
     onComplete(updatedVehicle);

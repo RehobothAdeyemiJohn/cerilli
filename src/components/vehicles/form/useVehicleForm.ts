@@ -18,9 +18,10 @@ const vehicleSchema = z.object({
   fuelType: z.string().optional(),
   exteriorColor: z.string().optional(),
   transmission: z.string().optional(),
-  status: z.enum(["available", "reserved", "sold"]).default("available"),
+  status: z.enum(["available", "reserved", "sold", "ordered", "delivered"]).default("available"),
   telaio: z.string().optional(),
-  accessories: z.array(z.string()).default([])
+  accessories: z.array(z.string()).default([]),
+  originalStock: z.string().optional() // Add originalStock to the schema
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -43,7 +44,8 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
       transmission: '',
       status: 'available',
       telaio: '',
-      accessories: []
+      accessories: [],
+      originalStock: ''
     },
   });
 
@@ -84,6 +86,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
   const watchLocation = form.watch('location');
+  const watchOriginalStock = form.watch('originalStock');
 
   // Update isVirtualStock when location changes
   useEffect(() => {
@@ -187,9 +190,14 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
       
       // Custom validation based on location
       if (isVirtualStock) {
-        // For Stock Virtuale, only model is required
+        // For Stock Virtuale, only model and originalStock are required
         if (!data.model) {
           setValidationError("Il modello è obbligatorio.");
+          return;
+        }
+        
+        if (!data.originalStock) {
+          setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
           return;
         }
       } else {
@@ -204,6 +212,20 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
       // Log price components for debugging
       console.log("Price components for new vehicle:", priceComponents);
       console.log("Calculated final price:", calculatedPrice);
+      console.log("Original stock:", data.originalStock);
+      
+      // Calculate estimated arrival days based on original stock (for virtual stock)
+      let estimatedArrivalDays: number | undefined = undefined;
+      if (isVirtualStock && data.originalStock) {
+        if (data.originalStock === 'Germania') {
+          // Germany stock: 38-52 days
+          estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+        } else if (data.originalStock === 'Cina') {
+          // China stock (default): 90-120 days
+          estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+        }
+        console.log("Estimated arrival days:", estimatedArrivalDays);
+      }
       
       const newVehicleData: Omit<Vehicle, 'id'> = {
         model: data.model,
@@ -218,6 +240,8 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         price: isVirtualStock ? 0 : calculatedPrice,
         dateAdded: new Date().toISOString().split('T')[0],
         imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+        originalStock: isVirtualStock ? data.originalStock : undefined,
+        estimatedArrivalDays: estimatedArrivalDays
       };
       
       console.log("Preparazione dati veicolo per Supabase:", newVehicleData);

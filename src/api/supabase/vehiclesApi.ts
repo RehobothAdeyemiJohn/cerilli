@@ -90,8 +90,8 @@ export const vehiclesApi = {
     console.log("Supabase API: create - Creazione veicolo:", vehicle);
     
     // Calculate estimated arrival days for virtual stock
-    let estimatedArrivalDays = null;
-    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock) {
+    let estimatedArrivalDays = vehicle.estimatedArrivalDays;
+    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock && !estimatedArrivalDays) {
       // Different arrival time estimates based on the original stock location
       if (vehicle.originalStock === 'Germania') {
         // Germany stock: 38-52 days
@@ -282,12 +282,23 @@ export const vehiclesApi = {
       throw new Error('Il veicolo non è disponibile per la prenotazione');
     }
     
+    // Calculate estimated arrival days if it's a virtual vehicle
+    let estimatedArrivalDays = vehicle.estimatedArrivalDays;
+    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock && !estimatedArrivalDays) {
+      if (vehicle.originalStock === 'Germania') {
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else {
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+    }
+    
     const updatedVehicle: Partial<Vehicle> = {
       status: 'reserved',
       reservedBy,
       reservedAccessories: reservedAccessories || [],
       reservationTimestamp: new Date().toISOString(), // Add reservation timestamp
-      reservationDestination
+      reservationDestination,
+      estimatedArrivalDays
     };
     
     // Add virtual configuration if provided
