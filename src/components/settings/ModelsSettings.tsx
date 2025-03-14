@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -8,13 +9,11 @@ import { VehicleModel } from '@/types';
 import FormDialog from './common/FormDialog';
 import ModelForm from './models/ModelForm';
 import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
-import { supabase } from '@/api/supabase/client';
 
 const ModelsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentModel, setCurrentModel] = useState<Partial<VehicleModel>>({});
-  const [isUploading, setIsUploading] = useState(false);
   
   const queryClient = useQueryClient();
   
@@ -83,65 +82,6 @@ const ModelsSettings = () => {
     });
   };
 
-  const handleImageUpload = async (file: File) => {
-    try {
-      setIsUploading(true);
-      
-      // Create a unique file name to avoid collisions
-      const fileExt = file.name.split('.').pop();
-      const fileName = `model-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      console.log("Uploading image to vehicle-images bucket:", filePath);
-      
-      // Upload file to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('vehicle-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) {
-        console.error("Upload error:", error);
-        throw error;
-      }
-      
-      console.log("Upload successful:", data);
-      
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('vehicle-images')
-        .getPublicUrl(filePath);
-      
-      if (!publicUrlData || !publicUrlData.publicUrl) {
-        throw new Error("Failed to get public URL for uploaded image");
-      }
-      
-      console.log("Public URL obtained:", publicUrlData.publicUrl);
-      
-      // Update current model with image URL
-      setCurrentModel({
-        ...currentModel,
-        imageUrl: publicUrlData.publicUrl
-      });
-      
-      toast({
-        title: "Immagine Caricata",
-        description: "L'immagine è stata caricata con successo.",
-      });
-    } catch (error: any) {
-      console.error('Error uploading image:', error.message);
-      toast({
-        title: "Errore",
-        description: `Errore durante il caricamento dell'immagine: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleSaveModel = () => {
     if (!currentModel.name || !currentModel.basePrice) {
       toast({
@@ -205,12 +145,11 @@ const ModelsSettings = () => {
         onClose={() => setIsAddDialogOpen(false)}
         title="Aggiungi Modello"
         onSubmit={handleSaveModel}
-        isSubmitting={createMutation.isPending || isUploading}
+        isSubmitting={createMutation.isPending}
       >
         <ModelForm 
           model={currentModel}
           onChange={handleModelChange}
-          onImageUpload={handleImageUpload}
         />
       </FormDialog>
 
@@ -219,12 +158,11 @@ const ModelsSettings = () => {
         onClose={() => setIsEditDialogOpen(false)}
         title="Modifica Modello"
         onSubmit={handleSaveModel}
-        isSubmitting={updateMutation.isPending || isUploading}
+        isSubmitting={updateMutation.isPending}
       >
         <ModelForm 
           model={currentModel}
           onChange={handleModelChange}
-          onImageUpload={handleImageUpload}
         />
       </FormDialog>
     </div>
