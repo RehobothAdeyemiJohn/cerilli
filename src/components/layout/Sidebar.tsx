@@ -12,12 +12,6 @@ import {
   Settings,
   Database,
   FileText,
-  Calendar,
-  BellRing,
-  BarChart4,
-  Bookmark,
-  UserCircle,
-  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -34,11 +28,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
-    { title: 'Calendar', icon: Calendar, path: '/calendar', showForDealer: true },
     { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true, showForAdmin: true },
-    { title: 'Notifications', icon: BellRing, path: '/notifications', showForDealer: true },
-    { title: 'Analytics', icon: BarChart4, path: '/analytics', showForDealer: true },
-    { title: 'Bookmarks', icon: Bookmark, path: '/bookmarks', showForDealer: true },
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
     { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
@@ -47,9 +37,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   ];
   
   const footerItems = [
-    { title: 'Settings', icon: Settings, path: '/settings' },
-    { title: 'Profile', icon: UserCircle, path: '/profile' },
-    { title: 'Logout', icon: LogOut, path: '/logout' },
+    { title: 'Impostazioni', icon: Settings, path: '/settings' },
   ];
   
   const adminItems = [
