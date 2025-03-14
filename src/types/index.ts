@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -15,7 +14,7 @@ export type Vehicle = {
   transmission?: string;
   telaio: string;
   previousChassis?: string; // New field for RIF (previous chassis) in virtual stock
-  originalStock?: 'Cina' | 'Germania'; // New field for stock origin in virtual stock
+  originalStock?: 'Cina' | 'Germania'; // Strictly define allowed values
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];

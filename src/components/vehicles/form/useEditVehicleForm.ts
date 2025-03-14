@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -205,6 +204,12 @@ export const useEditVehicleForm = (
         setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
         return;
       }
+      
+      // Validate that originalStock is either 'Cina' or 'Germania'
+      if (data.originalStock !== 'Cina' && data.originalStock !== 'Germania') {
+        setValidationError("Lo stock origine deve essere 'Cina' o 'Germania'");
+        return;
+      }
     } else {
       // For other locations, all main fields are required
       if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
@@ -222,10 +227,13 @@ export const useEditVehicleForm = (
     // Calculate estimated arrival days if it's Virtual Stock and has an originalStock
     let estimatedArrivalDays = vehicle.estimatedArrivalDays;
     if (isVirtualStock && data.originalStock) {
-      if (data.originalStock === 'Germania') {
+      // Ensure originalStock is of the correct type
+      const stockOrigin = data.originalStock as 'Cina' | 'Germania';
+      
+      if (stockOrigin === 'Germania') {
         // Germany stock: 38-52 days
         estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
-      } else if (data.originalStock === 'Cina') {
+      } else if (stockOrigin === 'Cina') {
         // China stock: 90-120 days
         estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
       }
@@ -243,8 +251,8 @@ export const useEditVehicleForm = (
       telaio: isVirtualStock ? '' : data.telaio || '',
       accessories: isVirtualStock ? [] : data.accessories || [],
       price: isVirtualStock ? 0 : calculatedPrice,
-      originalStock: isVirtualStock ? data.originalStock : undefined, // Only set for Virtual Stock
-      estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined // Only set for Virtual Stock
+      originalStock: isVirtualStock ? (data.originalStock as 'Cina' | 'Germania') : undefined,
+      estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
     };
     
     onComplete(updatedVehicle);
