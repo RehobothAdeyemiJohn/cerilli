@@ -473,6 +473,7 @@ export type Database = {
           accessories: string[] | null
           created_at: string | null
           dateadded: string
+          estimated_arrival_days: number | null
           exteriorcolor: string | null
           fueltype: string | null
           id: string
@@ -482,6 +483,7 @@ export type Database = {
           original_stock: string | null
           previous_chassis: string | null
           price: number | null
+          reservation_timestamp: string | null
           reservedaccessories: string[] | null
           reservedby: string | null
           status: string | null
@@ -495,6 +497,7 @@ export type Database = {
           accessories?: string[] | null
           created_at?: string | null
           dateadded: string
+          estimated_arrival_days?: number | null
           exteriorcolor?: string | null
           fueltype?: string | null
           id: string
@@ -504,6 +507,7 @@ export type Database = {
           original_stock?: string | null
           previous_chassis?: string | null
           price?: number | null
+          reservation_timestamp?: string | null
           reservedaccessories?: string[] | null
           reservedby?: string | null
           status?: string | null
@@ -517,6 +521,7 @@ export type Database = {
           accessories?: string[] | null
           created_at?: string | null
           dateadded?: string
+          estimated_arrival_days?: number | null
           exteriorcolor?: string | null
           fueltype?: string | null
           id?: string
@@ -526,6 +531,7 @@ export type Database = {
           original_stock?: string | null
           previous_chassis?: string | null
           price?: number | null
+          reservation_timestamp?: string | null
           reservedaccessories?: string[] | null
           reservedby?: string | null
           status?: string | null

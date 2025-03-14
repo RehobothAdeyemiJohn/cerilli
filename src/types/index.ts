@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -19,6 +20,7 @@ export type Vehicle = {
   reservedAccessories?: string[];
   reservationDestination?: string;
   reservationTimestamp?: string; // Timestamp when reservation was made
+  estimatedArrivalDays?: number; // New field for fixed estimated arrival days
   virtualConfig?: {
     trim: string;
     fuelType: string;

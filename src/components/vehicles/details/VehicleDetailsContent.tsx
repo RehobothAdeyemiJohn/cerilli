@@ -35,7 +35,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle.originalStock) : null;
+  const isDealerStock = vehicle.location === 'Stock Dealer';
+  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle) : null;
   
   const getStatusText = (status: Vehicle['status']) => {
     switch (status) {
@@ -59,22 +60,25 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     }
   };
 
-  // Placeholder for vehicle image
+  // Placeholder for vehicle image - only show for non-stock vehicles to user preference
+  const showImage = !((vehicle.location === 'Stock CMC' || vehicle.location === 'Stock Virtuale') && !isAdmin);
   const imageUrl = vehicle.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
   
   return (
     <div className="pt-6 pb-4 px-4 md:px-6">
       <div className="grid md:grid-cols-[1fr_1fr] gap-6">
-        {/* Left Column with Image */}
-        <div className="rounded overflow-hidden">
-          <div
-            className="w-full h-48 md:h-64 bg-center bg-cover rounded"
-            style={{ backgroundImage: `url(${imageUrl})` }}
-          />
-        </div>
+        {/* Left Column with Image - only show for certain locations or for admin */}
+        {showImage && (
+          <div className="rounded overflow-hidden">
+            <div
+              className="w-full h-48 md:h-64 bg-center bg-cover rounded"
+              style={{ backgroundImage: `url(${imageUrl})` }}
+            />
+          </div>
+        )}
         
-        {/* Right Column with Details */}
-        <div>
+        {/* Right Column with Details - adjust to full width if image is hidden */}
+        <div className={!showImage ? "col-span-2" : ""}>
           <div className="flex justify-between items-start">
             <div>
               <h3 className="text-xl font-semibold">{vehicle.model}</h3>

@@ -93,15 +93,25 @@ export function calculateReservationExpiration(reservationTimestamp: string | un
   };
 }
 
-export function calculateEstimatedArrival(originalStock: 'Cina' | 'Germania' | undefined): { 
+export function calculateEstimatedArrival(vehicle: { originalStock?: 'Cina' | 'Germania'; estimatedArrivalDays?: number; id: string; dateAdded: string }): { 
   minDate: Date;
   maxDate: Date;
   formattedRange: string;
 } {
   const today = new Date();
   
+  // If we already have an estimated arrival days, use it
+  if (vehicle.estimatedArrivalDays) {
+    const estimatedDate = addDays(today, vehicle.estimatedArrivalDays);
+    return {
+      minDate: estimatedDate,
+      maxDate: estimatedDate,
+      formattedRange: `${format(estimatedDate, 'dd/MM/yyyy')}`
+    };
+  }
+  
   // Default to Cina if not specified
-  const stock = originalStock || 'Cina';
+  const stock = vehicle.originalStock || 'Cina';
   
   let minDays = 0;
   let maxDays = 0;
@@ -114,18 +124,24 @@ export function calculateEstimatedArrival(originalStock: 'Cina' | 'Germania' | u
     maxDays = 75;
   }
   
-  // Calculate a fixed random number of days within the range
-  // Using the vehicle's add date and stock type as a seed
+  // Generate a deterministic random value based on vehicle id and date added
   // This ensures the same vehicle always gets the same random number
-  const randomDays = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
+  const seed = vehicle.id + vehicle.dateAdded;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
   
-  const minDate = addDays(today, minDays);
-  const maxDate = addDays(today, maxDays);
+  // Use the hash to create a random number in the range
+  const randomValue = Math.abs(hash) / 2147483647; // Normalize to 0-1
+  const randomDays = Math.floor(minDays + randomValue * (maxDays - minDays + 1));
+  
   const estimatedDate = addDays(today, randomDays);
   
   return {
-    minDate,
-    maxDate,
+    minDate: addDays(today, minDays),
+    maxDate: addDays(today, maxDays),
     formattedRange: `${format(estimatedDate, 'dd/MM/yyyy')}`
   };
 }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ const VehicleCard = ({
 
   const hasVirtualConfig = vehicle.virtualConfig !== undefined;
 
-  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle.originalStock) : null;
+  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle) : null;
 
   const handleActionClick = (e: React.MouseEvent, action: (vehicle: Vehicle) => void) => {
     e.stopPropagation();

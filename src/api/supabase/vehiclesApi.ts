@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
+import { calculateEstimatedArrival } from '@/lib/utils';
 
 export const vehiclesApi = {
   getAll: async (): Promise<Vehicle[]> => {
@@ -35,6 +36,9 @@ export const vehiclesApi = {
       reservedBy: vehicle.reservedby,
       reservedAccessories: vehicle.reservedaccessories || [],
       virtualConfig: vehicle.virtualconfig,
+      estimatedArrivalDays: vehicle.estimated_arrival_days,
+      reservationTimestamp: vehicle.reservation_timestamp,
+      reservationDestination: vehicle.reservation_destination,
     }));
 
     console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);
@@ -73,6 +77,9 @@ export const vehiclesApi = {
       reservedBy: data.reservedby,
       reservedAccessories: data.reservedaccessories || [],
       virtualConfig: data.virtualconfig,
+      estimatedArrivalDays: data.estimated_arrival_days,
+      reservationTimestamp: data.reservation_timestamp,
+      reservationDestination: data.reservation_destination,
     };
 
     console.log("Supabase API: getById - Veicolo recuperato:", formattedVehicle);
@@ -81,6 +88,24 @@ export const vehiclesApi = {
   
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
     console.log("Supabase API: create - Creazione veicolo:", vehicle);
+    
+    // Calculate estimated arrival days for virtual stock
+    let estimatedArrivalDays = null;
+    if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock) {
+      const dummyVehicle = {
+        id: uuidv4(), // Temporary ID for calculation
+        originalStock: vehicle.originalStock,
+        dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0]
+      };
+      
+      const arrivalEstimate = calculateEstimatedArrival(dummyVehicle);
+      const today = new Date();
+      const arrivalDate = new Date(arrivalEstimate.formattedRange.split('/').reverse().join('-'));
+      
+      // Calculate days difference
+      const diffTime = Math.abs(arrivalDate.getTime() - today.getTime());
+      estimatedArrivalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
     
     // Map frontend field names to database column names
     const newVehicle = {
@@ -99,6 +124,7 @@ export const vehiclesApi = {
       imageurl: vehicle.imageUrl || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
       dateadded: vehicle.dateAdded || new Date().toISOString().split('T')[0],
       status: vehicle.status || 'available',
+      estimated_arrival_days: estimatedArrivalDays,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -138,6 +164,9 @@ export const vehiclesApi = {
       reservedBy: data.reservedby,
       reservedAccessories: data.reservedaccessories || [],
       virtualConfig: data.virtualconfig,
+      estimatedArrivalDays: data.estimated_arrival_days,
+      reservationTimestamp: data.reservation_timestamp,
+      reservationDestination: data.reservation_destination,
     };
     
     return formattedVehicle as Vehicle;
@@ -163,6 +192,9 @@ export const vehiclesApi = {
       reservedby: updates.reservedBy,
       reservedaccessories: updates.reservedAccessories,
       virtualconfig: updates.virtualConfig,
+      estimated_arrival_days: updates.estimatedArrivalDays,
+      reservation_timestamp: updates.reservationTimestamp,
+      reservation_destination: updates.reservationDestination,
       updated_at: new Date().toISOString()
     };
     
@@ -209,6 +241,9 @@ export const vehiclesApi = {
       reservedBy: data.reservedby,
       reservedAccessories: data.reservedaccessories || [],
       virtualConfig: data.virtualconfig,
+      estimatedArrivalDays: data.estimated_arrival_days,
+      reservationTimestamp: data.reservation_timestamp,
+      reservationDestination: data.reservation_destination,
     };
     
     return formattedVehicle as Vehicle;
