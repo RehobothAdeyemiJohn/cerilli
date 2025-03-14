@@ -29,11 +29,13 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const tradeInValue = form.watch('tradeInValue') || 0;
   const tradeInHandlingFee = form.watch('tradeInHandlingFee') || 0;
   
-  // Calculate VAT rate
-  const vatRate = watchReducedVAT ? 0.04 : 0.22;
+  // Calculate VAT rate - only applied for reduced VAT cases
+  const vatRate = watchReducedVAT ? 0.04 : 0;
   
-  // Calculate VAT amount on applicable items (everything except trade-in value)
-  const vatAmount = watchReducedVAT ? ((basePrice + accessoryTotalPrice - discount + licensePlateBonus + tradeInBonus + roadPreparationFee + safetyKit + (hasTradeIn ? tradeInHandlingFee : 0)) * vatRate) : 0;
+  // Calculate VAT amount on applicable items (only when reduced VAT is selected)
+  // Base price already includes 22% VAT, so we don't add it again
+  const vatAmount = watchReducedVAT ? 
+    ((basePrice + accessoryTotalPrice - discount - licensePlateBonus - tradeInBonus + roadPreparationFee + safetyKit + (hasTradeIn ? tradeInHandlingFee : 0)) * vatRate) : 0;
   
   return (
     <div className="pt-2 border-t">
@@ -56,12 +58,12 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Premio Targa</p>
-          <p className="font-medium text-sm">+ {formatCurrency(licensePlateBonus)}</p>
+          <p className="font-medium text-sm">- {formatCurrency(licensePlateBonus)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Premio Permuta</p>
-          <p className="font-medium text-sm">+ {formatCurrency(tradeInBonus)}</p>
+          <p className="font-medium text-sm">- {formatCurrency(tradeInBonus)}</p>
         </div>
         
         <div className="space-y-0.5">
@@ -97,12 +99,14 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
           </div>
         )}
         
-        {/* Final price - larger and highlighted */}
-        <div className="col-span-4 text-center mt-3">
-          <p className="text-xs text-gray-500 font-semibold">Prezzo Finale - Chiavi in mano</p>
-          <p className="font-bold text-xl text-white bg-blue-900 py-1 px-3 rounded inline-block mt-1">
-            {formatCurrency(finalPrice)}
-          </p>
+        {/* Final price - larger and highlighted with full width */}
+        <div className="col-span-4 mt-3">
+          <div className="bg-blue-900 py-2 px-3 rounded text-center">
+            <p className="text-xs text-white font-semibold">Prezzo Finale - Chiavi in mano</p>
+            <p className="font-bold text-xl text-white">
+              {formatCurrency(finalPrice)}
+            </p>
+          </div>
         </div>
       </div>
     </div>

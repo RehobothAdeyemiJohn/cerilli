@@ -4,7 +4,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useFormContext } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
 
 const QuoteDiscountSection: React.FC = () => {
   const form = useFormContext();
@@ -15,7 +14,7 @@ const QuoteDiscountSection: React.FC = () => {
         <h3 className="text-md font-semibold mb-2">Configurazione Prezzo</h3>
       </div>
       
-      {/* Permuta Switch */}
+      {/* Permuta Switch - moved above IVA agevolata */}
       <FormField
         control={form.control}
         name="hasTradeIn"
@@ -41,7 +40,7 @@ const QuoteDiscountSection: React.FC = () => {
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
             <div className="space-y-0.5 flex-1">
-              <FormLabel className="text-xs">IVA agevolata</FormLabel>
+              <FormLabel className="text-xs inline-block">IVA agevolata</FormLabel>
               <p className="text-xs text-muted-foreground inline-block ml-2">
                 Applica IVA al 4% (Legge 104 art.3 com.3)
               </p>

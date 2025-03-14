@@ -5,51 +5,57 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Vehicle, Accessory } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { modelsApi, accessoriesApi } from '@/api/localStorage';
-import { useAuth } from '@/context/AuthContext';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { useAuth } from '@/context/AuthContext';
+import { accessoriesApi } from '@/api/localStorage';
 
-// Quote form schema
+// Form schema
 const quoteFormSchema = z.object({
-  customerName: z.string().min(1, { message: "Il nome del cliente è obbligatorio." }),
-  customerEmail: z.string().email({ message: "Email non valida." }).optional().or(z.literal('')),
-  customerPhone: z.string().min(1, { message: "Il numero di telefono è obbligatorio." }),
-  dealerId: z.string().min(1, { message: "Il concessionario è obbligatorio." }),
-  notes: z.string().optional().or(z.literal('')),
-  discount: z.number().default(0),
-  licensePlateBonus: z.number().default(0), // New field for Premio Targa
-  tradeInBonus: z.number().default(0), // New field for Premio Permuta
-  safetyKit: z.number().default(0), // New field for Kit Sicurezza
+  customerName: z.string().min(1, { message: "Il nome cliente è obbligatorio" }),
+  customerEmail: z.string().email({ message: "Email non valida" }),
+  customerPhone: z.string().min(1, { message: "Il telefono è obbligatorio" }),
+  dealerId: z.string().min(1, { message: "Il dealer è obbligatorio" }),
+  discount: z.coerce.number().default(0),
+  licensePlateBonus: z.coerce.number().default(0),
+  tradeInBonus: z.coerce.number().default(0),
+  safetyKit: z.coerce.number().default(0),
   reducedVAT: z.boolean().default(false),
   hasTradeIn: z.boolean().default(false),
   tradeInBrand: z.string().optional(),
   tradeInModel: z.string().optional(),
   tradeInYear: z.string().optional(),
-  tradeInKm: z.number().optional(),
-  tradeInValue: z.number().optional(),
-  tradeInHandlingFee: z.number().default(0), // New field for Gestione Usato
-  accessories: z.array(z.string()).default([])
+  tradeInKm: z.coerce.number().optional(),
+  tradeInValue: z.coerce.number().optional(),
+  tradeInHandlingFee: z.coerce.number().default(0),
+  notes: z.string().optional(),
+  selectedAccessories: z.array(z.string()).default([]),
 });
 
+export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
+
 export const useQuoteForm = (vehicle?: Vehicle, onSubmit?: (data: any) => void) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   const [showTradeIn, setShowTradeIn] = useState(false);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [accessoryTotalPrice, setAccessoryTotalPrice] = useState(0);
-  const [basePrice, setBasePrice] = useState(0);
-  const [finalPrice, setFinalPrice] = useState(0);
-  const [totalDiscount, setTotalDiscount] = useState(0);
-  const { user } = useAuth();
   const roadPreparationFee = 400; // Default road preparation fee
 
-  // Form initialization
-  const form = useForm({
+  // Get all dealers
+  const { data: dealers = [] } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+    enabled: isAdmin, // Only fetch if user is admin
+  });
+
+  const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
       customerName: '',
       customerEmail: '',
       customerPhone: '',
       dealerId: user?.dealerId || '',
-      notes: '',
       discount: 0,
       licensePlateBonus: 0,
       tradeInBonus: 0,
@@ -62,20 +68,12 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit?: (data: any) => void) 
       tradeInKm: 0,
       tradeInValue: 0,
       tradeInHandlingFee: 0,
-      accessories: []
-    }
+      notes: '',
+      selectedAccessories: [],
+    },
   });
 
-  // Get dealers for select field
-  const { data: dealers = [] } = useQuery({
-    queryKey: ['dealers'],
-    queryFn: dealersApi.getAll
-  });
-
-  // Get user role from auth context
-  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
-
-  // Watch form values for calculations
+  // Get form values for calculations
   const watchHasTradeIn = form.watch('hasTradeIn');
   const watchDiscount = form.watch('discount');
   const watchLicensePlateBonus = form.watch('licensePlateBonus');
@@ -84,124 +82,95 @@ export const useQuoteForm = (vehicle?: Vehicle, onSubmit?: (data: any) => void) 
   const watchTradeInValue = form.watch('tradeInValue');
   const watchTradeInHandlingFee = form.watch('tradeInHandlingFee');
   const watchReducedVAT = form.watch('reducedVAT');
-  const watchAccessories = form.watch('accessories');
+  const watchSelectedAccessories = form.watch('selectedAccessories');
 
-  // Set trade-in visibility when hasTradeIn changes
-  useEffect(() => {
-    setShowTradeIn(watchHasTradeIn);
-  }, [watchHasTradeIn]);
+  // Base price from vehicle
+  const basePrice = vehicle?.price || 0;
 
-  // Set base price from vehicle
+  // Get compatible accessories for this vehicle
   useEffect(() => {
-    if (vehicle) {
-      setBasePrice(vehicle.price);
-    }
-  }, [vehicle]);
-
-  // Get compatible accessories for vehicle
-  useEffect(() => {
-    if (vehicle) {
-      const fetchAccessories = async () => {
+    const fetchCompatibleAccessories = async () => {
+      if (vehicle && vehicle.model && vehicle.trim) {
         try {
-          // Find model
-          const allModels = await modelsApi.getAll();
-          const modelObj = allModels.find(m => m.name === vehicle.model);
+          // First find model and trim IDs
+          const modelId = vehicle.modelId || 'model_id';
+          const trimId = vehicle.trimId || 'trim_id';
           
-          // Find trim
-          if (modelObj && modelObj.id) {
-            const modelId = modelObj.id;
-            // Use empty string for trim as we want all compatible accessories
-            const compatibles = await accessoriesApi.getCompatible(modelId, '');
-            setCompatibleAccessories(compatibles);
-          }
+          const accessories = await accessoriesApi.getCompatible(modelId, trimId);
+          setCompatibleAccessories(accessories || []);
         } catch (error) {
-          console.error('Error loading accessories:', error);
+          console.error('Error fetching compatible accessories:', error);
+          setCompatibleAccessories([]);
         }
-      };
-      
-      fetchAccessories();
-    }
+      }
+    };
+
+    fetchCompatibleAccessories();
   }, [vehicle]);
 
-  // Calculate accessory total price
+  // Calculate accessory total price when selected accessories change
   useEffect(() => {
-    if (watchAccessories.length > 0 && compatibleAccessories.length > 0) {
-      const total = watchAccessories.reduce((sum, accessoryName) => {
+    if (watchSelectedAccessories && compatibleAccessories) {
+      const total = watchSelectedAccessories.reduce((sum, accessoryName) => {
         const accessory = compatibleAccessories.find(a => a.name === accessoryName);
-        if (accessory) {
-          // Use price with VAT for display
-          return sum + accessory.priceWithVAT;
-        }
-        return sum;
+        return sum + (accessory?.price || 0);
       }, 0);
-      
       setAccessoryTotalPrice(total);
     } else {
       setAccessoryTotalPrice(0);
     }
-  }, [watchAccessories, compatibleAccessories]);
+  }, [watchSelectedAccessories, compatibleAccessories]);
 
-  // Calculate total discount
-  useEffect(() => {
-    setTotalDiscount(watchDiscount || 0);
-  }, [watchDiscount]);
+  // Calculate total discount (direct discount + trade-in value)
+  const totalDiscount = (watchDiscount || 0) + (watchHasTradeIn ? (watchTradeInValue || 0) : 0);
 
-  // Calculate final price based on all components
-  useEffect(() => {
-    // Base calculation without VAT
-    const subTotal = basePrice + accessoryTotalPrice - (watchDiscount || 0) + 
-                    (watchLicensePlateBonus || 0) + (watchTradeInBonus || 0) + 
-                    (watchSafetyKit || 0) + roadPreparationFee;
+  // Calculate final price with all components
+  // Base price already includes 22% VAT
+  const calculateFinalPrice = () => {
+    // Start with base price and accessories
+    let price = basePrice + accessoryTotalPrice;
     
-    // Calculate VAT amount (trade-in value is exempt from VAT)
-    const vatRate = watchReducedVAT ? 0.04 : 0.22;
+    // Subtract discounts, premiums are now subtracted
+    price -= (watchDiscount || 0);
+    price -= (watchLicensePlateBonus || 0);
+    price -= (watchTradeInBonus || 0);
     
-    // Calculate final price with trade-in adjustments and VAT
-    let final = subTotal;
+    // Add fees and safety kit
+    price += (watchSafetyKit || 0);
+    price += roadPreparationFee;
     
-    // Apply VAT to all components except trade-in value
-    final += (subTotal + (watchTradeInHandlingFee || 0)) * vatRate;
-    
-    // Apply trade-in value and handling fee
+    // Handle trade-in if enabled
     if (watchHasTradeIn) {
-      final -= (watchTradeInValue || 0);
-      final += (watchTradeInHandlingFee || 0);
+      price -= (watchTradeInValue || 0);
+      price += (watchTradeInHandlingFee || 0);
     }
     
-    setFinalPrice(Math.round(final * 100) / 100);
-  }, [
-    basePrice, 
-    accessoryTotalPrice, 
-    watchDiscount, 
-    watchReducedVAT, 
-    watchHasTradeIn, 
-    watchTradeInValue,
-    watchLicensePlateBonus,
-    watchTradeInBonus,
-    watchSafetyKit,
-    watchTradeInHandlingFee,
-    roadPreparationFee
-  ]);
+    // Apply reduced VAT if selected (only 4% on the total price)
+    if (watchReducedVAT) {
+      price += price * 0.04;
+    }
+    
+    return price;
+  };
+  
+  const finalPrice = calculateFinalPrice();
 
   // Handle form submission
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: QuoteFormValues) => {
+    if (!vehicle) return;
+    
+    const formData = {
+      ...data,
+      vehicleId: vehicle.id,
+      price: basePrice,
+      accessoryTotalPrice,
+      finalPrice,
+      dealerId: data.dealerId || user?.dealerId,
+      selectedAccessories: watchSelectedAccessories
+    };
+    
     if (onSubmit) {
-      // Prepare final data with all calculated values
-      const finalData = {
-        ...data,
-        price: basePrice,
-        accessoryPrice: accessoryTotalPrice,
-        finalPrice: finalPrice,
-        vatRate: watchReducedVAT ? 4 : 22,
-        // Include new fields in submission
-        licensePlateBonus: data.licensePlateBonus || 0,
-        tradeInBonus: data.tradeInBonus || 0,
-        safetyKit: data.safetyKit || 0,
-        tradeInHandlingFee: data.tradeInHandlingFee || 0,
-        roadPreparationFee: roadPreparationFee
-      };
-      
-      onSubmit(finalData);
+      onSubmit(formData);
     }
   };
 

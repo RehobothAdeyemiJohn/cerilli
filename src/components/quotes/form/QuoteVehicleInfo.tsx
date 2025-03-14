@@ -44,7 +44,7 @@ const QuoteVehicleInfo = ({ vehicle, compatibleAccessories = [] }: QuoteVehicleI
           <p className="font-medium">{vehicle.telaio || 'N/A'}</p>
         </div>
         
-        {/* Optional Disponibili section */}
+        {/* Optional Disponibili section - Move this inside the vehicle info box */}
         {compatibleAccessories && compatibleAccessories.length > 0 && (
           <div className="mt-2">
             <QuoteAccessories 
