@@ -42,6 +42,9 @@ const manualQuoteSchema = z.object({
   
   // Optional fields
   discount: z.number().default(0),
+  licensePlateBonus: z.number().default(0), // New field for Premio Targa
+  tradeInBonus: z.number().default(0), // New field for Premio Permuta
+  safetyKit: z.number().default(0), // New field for Kit Sicurezza
   reducedVAT: z.boolean().default(false),
   hasTradeIn: z.boolean().default(false),
   tradeInBrand: z.string().optional(),
@@ -49,6 +52,7 @@ const manualQuoteSchema = z.object({
   tradeInYear: z.string().optional(),
   tradeInKm: z.number().optional(),
   tradeInValue: z.number().optional(),
+  tradeInHandlingFee: z.number().default(0), // New field for Gestione Usato
   notes: z.string().optional(),
   roadPreparationFee: z.number().default(400),
 });
@@ -112,6 +116,9 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
       customerPhone: '',
       dealerId: user?.dealerId || '',
       discount: 0,
+      licensePlateBonus: 0,
+      tradeInBonus: 0,
+      safetyKit: 0,
       reducedVAT: false,
       hasTradeIn: false,
       tradeInBrand: '',
@@ -119,6 +126,7 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
       tradeInYear: '',
       tradeInKm: 0,
       tradeInValue: 0,
+      tradeInHandlingFee: 0,
       notes: '',
       roadPreparationFee: 400,
     },
@@ -131,6 +139,11 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const watchTrim = form.watch('trim');
   const watchFuelType = form.watch('fuelType');
   const watchExteriorColor = form.watch('exteriorColor');
+  const watchLicensePlateBonus = form.watch('licensePlateBonus');
+  const watchTradeInBonus = form.watch('tradeInBonus');
+  const watchSafetyKit = form.watch('safetyKit');
+  const watchReducedVAT = form.watch('reducedVAT');
+  const watchTradeInHandlingFee = form.watch('tradeInHandlingFee');
   
   // Get model-compatible trims
   const filteredTrims = trims.filter(trim => {
@@ -146,7 +159,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const discount = watchDiscount || 0;
   const tradeInValue = watchHasTradeIn ? watchTradeInValue || 0 : 0;
   const totalDiscount = discount + tradeInValue;
-  const finalPrice = basePrice - totalDiscount + roadPreparationFee;
   
   // Calculate vehicle price based on selected options
   useEffect(() => {
@@ -195,6 +207,34 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     
     calculatePrice();
   }, [watchModel, watchTrim, watchFuelType, watchExteriorColor, models, trims, fuelTypes, colors]);
+  
+  // Calculate final price with all components
+  const finalPrice = calculateFinalPrice();
+  
+  // Function to calculate the final price with all components
+  function calculateFinalPrice() {
+    // Base calculation without VAT
+    const subTotal = basePrice - (watchDiscount || 0) + 
+                    (watchLicensePlateBonus || 0) + (watchTradeInBonus || 0) + 
+                    (watchSafetyKit || 0) + roadPreparationFee;
+    
+    // Calculate VAT amount (trade-in value is exempt from VAT)
+    const vatRate = watchReducedVAT ? 0.04 : 0.22;
+    
+    // Calculate final price with trade-in adjustments and VAT
+    let final = subTotal;
+    
+    // Apply VAT to all components except trade-in value
+    final += (subTotal + (watchTradeInHandlingFee || 0)) * vatRate;
+    
+    // Apply trade-in value and handling fee
+    if (watchHasTradeIn) {
+      final -= (watchTradeInValue || 0);
+      final += (watchTradeInHandlingFee || 0);
+    }
+    
+    return Math.round(final * 100) / 100;
+  }
   
   const handleFormSubmit = (data: ManualQuoteFormValues) => {
     // Create a proper UUID for manual quotes instead of a string
@@ -245,152 +285,160 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
       {/* Form */}
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Manual Vehicle Information */}
-          <div className="p-4 bg-gray-50 rounded-md space-y-4">
-            <h3 className="text-md font-semibold mb-2">Informazioni Veicolo</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modello</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona modello" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {models.map((model) => (
-                          <SelectItem key={model.id} value={model.name}>
-                            {model.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="trim"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Allestimento</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      disabled={!watchModel}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona allestimento" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredTrims.map((trim) => (
-                          <SelectItem key={trim.id} value={trim.name}>
-                            {trim.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="fuelType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Motore</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona motore" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {fuelTypes.map((fuelType) => (
-                          <SelectItem key={fuelType.id} value={fuelType.name}>
-                            {fuelType.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="exteriorColor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Colore</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona colore" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {colors.map((color) => (
-                          <SelectItem key={color.id} value={`${color.name} (${color.type})`}>
-                            {color.name} ({color.type})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column - Vehicle and Customer Information */}
+            <div className="space-y-4">
+              {/* Manual Vehicle Information */}
+              <div className="p-4 bg-gray-50 rounded-md space-y-4">
+                <h3 className="text-md font-semibold mb-2">Informazioni Veicolo</h3>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modello</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona modello" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {models.map((model) => (
+                              <SelectItem key={model.id} value={model.name}>
+                                {model.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="trim"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Allestimento</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={!watchModel}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona allestimento" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {filteredTrims.map((trim) => (
+                              <SelectItem key={trim.id} value={trim.name}>
+                                {trim.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="fuelType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Motore</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona motore" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {fuelTypes.map((fuelType) => (
+                              <SelectItem key={fuelType.id} value={fuelType.name}>
+                                {fuelType.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="exteriorColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Colore</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona colore" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {colors.map((color) => (
+                              <SelectItem key={color.id} value={`${color.name} (${color.type})`}>
+                                {color.name} ({color.type})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {/* Display calculated price */}
+                <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
+              </div>
+
+              {/* Customer Information */}
+              <QuoteCustomerInfo 
+                isAdmin={isAdmin} 
+                dealers={dealers} 
+                userId={user?.id}
+                dealerId={user?.dealerId}
               />
             </div>
             
-            {/* Display calculated price */}
-            <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
+            {/* Right Column - Price Configuration */}
+            <div className="space-y-4">
+              {/* Discount and VAT Section */}
+              <QuoteDiscountSection />
+
+              {/* Trade-In Section */}
+              <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
+
+              {/* Price Summary */}
+              <QuotePriceSummary 
+                basePrice={basePrice}
+                accessoryTotalPrice={0}
+                finalPrice={finalPrice}
+                watchReducedVAT={form.watch('reducedVAT')}
+                totalDiscount={totalDiscount}
+                roadPreparationFee={roadPreparationFee}
+              />
+            </div>
           </div>
-
-          {/* Customer Information */}
-          <QuoteCustomerInfo 
-            isAdmin={isAdmin} 
-            dealers={dealers} 
-            userId={user?.id}
-            dealerId={user?.dealerId}
-          />
-
-          {/* Discount and VAT Section */}
-          <QuoteDiscountSection />
-
-          {/* Trade-In Section */}
-          <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-
-          {/* Price Summary */}
-          <QuotePriceSummary 
-            basePrice={basePrice}
-            accessoryTotalPrice={0}
-            finalPrice={finalPrice}
-            watchReducedVAT={form.watch('reducedVAT')}
-            totalDiscount={totalDiscount}
-            roadPreparationFee={roadPreparationFee}
-          />
 
           {/* Form Actions */}
           <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />

@@ -80,41 +80,49 @@ const QuoteForm = ({
 
   return (
     <div className="w-full text-sm">
-      {/* Vehicle Information */}
-      <QuoteVehicleInfo vehicle={vehicle} />
-
       {/* Form */}
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-          {/* Customer Information */}
-          <QuoteCustomerInfo 
-            isAdmin={isAdmin} 
-            dealers={dealers} 
-            userId={user?.id}
-            dealerId={user?.dealerId}
-          />
-
-          {/* Discount and VAT Section */}
-          <QuoteDiscountSection />
-
-          {/* Optional Accessories */}
-          <QuoteAccessories 
-            compatibleAccessories={compatibleAccessories} 
-            vehicle={vehicle}
-          />
-
-          {/* Trade-In Section */}
-          <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-
-          {/* Price Summary */}
-          <QuotePriceSummary 
-            basePrice={basePrice}
-            accessoryTotalPrice={accessoryTotalPrice}
-            finalPrice={finalPrice}
-            watchReducedVAT={form.watch('reducedVAT')}
-            totalDiscount={totalDiscount}
-            roadPreparationFee={roadPreparationFee}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column - Vehicle and Customer Information */}
+            <div className="space-y-4">
+              {/* Vehicle Information */}
+              <QuoteVehicleInfo vehicle={vehicle} />
+              
+              {/* Customer Information */}
+              <QuoteCustomerInfo 
+                isAdmin={isAdmin} 
+                dealers={dealers} 
+                userId={user?.id}
+                dealerId={user?.dealerId}
+              />
+              
+              {/* Optional Accessories */}
+              <QuoteAccessories 
+                compatibleAccessories={compatibleAccessories} 
+                vehicle={vehicle}
+              />
+            </div>
+            
+            {/* Right Column - Price Configuration */}
+            <div className="space-y-4">
+              {/* Discount and VAT Section */}
+              <QuoteDiscountSection />
+              
+              {/* Trade-In Section */}
+              <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
+              
+              {/* Price Summary */}
+              <QuotePriceSummary 
+                basePrice={basePrice}
+                accessoryTotalPrice={accessoryTotalPrice}
+                finalPrice={finalPrice}
+                watchReducedVAT={form.watch('reducedVAT')}
+                totalDiscount={totalDiscount}
+                roadPreparationFee={roadPreparationFee}
+              />
+            </div>
+          </div>
 
           {/* Form Actions */}
           <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />

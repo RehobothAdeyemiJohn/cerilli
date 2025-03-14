@@ -37,6 +37,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   
   return (
     <div className="pt-2 border-t">
+      <h3 className="text-md font-semibold mb-2">Prezzo Finale (Aggiornato in Tempo Reale)</h3>
       <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Prezzo Veicolo</p>

@@ -11,6 +11,10 @@ const QuoteDiscountSection: React.FC = () => {
 
   return (
     <div className="border-t pt-2">
+      <div className="mb-4">
+        <h3 className="text-md font-semibold mb-2">Configurazione Prezzo</h3>
+      </div>
+      
       {/* VAT Switch */}
       <FormField
         control={form.control}
@@ -56,7 +60,7 @@ const QuoteDiscountSection: React.FC = () => {
           )}
         />
         
-        {/* Premio Targa - New Field */}
+        {/* Premio Targa */}
         <FormField
           control={form.control}
           name="licensePlateBonus"
@@ -77,7 +81,7 @@ const QuoteDiscountSection: React.FC = () => {
           )}
         />
         
-        {/* Premio Permuta - New Field */}
+        {/* Premio Permuta */}
         <FormField
           control={form.control}
           name="tradeInBonus"
@@ -98,7 +102,7 @@ const QuoteDiscountSection: React.FC = () => {
           )}
         />
         
-        {/* Kit Sicurezza - New Field */}
+        {/* Kit Sicurezza */}
         <FormField
           control={form.control}
           name="safetyKit"

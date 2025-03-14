@@ -13,7 +13,7 @@ import { dealersApi } from '@/api/supabase/dealersApi';
 const quoteFormSchema = z.object({
   customerName: z.string().min(1, { message: "Il nome del cliente è obbligatorio." }),
   customerEmail: z.string().email({ message: "Email non valida." }).optional().or(z.literal('')),
-  customerPhone: z.string().optional().or(z.literal('')),
+  customerPhone: z.string().min(1, { message: "Il numero di telefono è obbligatorio." }),
   dealerId: z.string().min(1, { message: "Il concessionario è obbligatorio." }),
   notes: z.string().optional().or(z.literal('')),
   discount: z.number().default(0),

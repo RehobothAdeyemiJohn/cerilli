@@ -10,18 +10,20 @@ interface QuoteFormActionsProps {
 
 const QuoteFormActions: React.FC<QuoteFormActionsProps> = ({ onCancel, isSubmitting = false }) => {
   return (
-    <div className="flex justify-end gap-3 pt-2">
+    <div className="flex justify-end gap-3 pt-4 border-t">
       <Button
         type="button"
         variant="outline"
         onClick={onCancel}
         disabled={isSubmitting}
+        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
       >
         Annulla
       </Button>
       <Button
         type="submit"
         disabled={isSubmitting}
+        className="bg-green-500 hover:bg-green-600 text-white"
       >
         {isSubmitting ? (
           <>
