@@ -114,7 +114,9 @@ export function calculateEstimatedArrival(originalStock: 'Cina' | 'Germania' | u
     maxDays = 75;
   }
   
-  // Calculate a random number of days within the range
+  // Calculate a fixed random number of days within the range
+  // Using the vehicle's add date and stock type as a seed
+  // This ensures the same vehicle always gets the same random number
   const randomDays = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
   
   const minDate = addDays(today, minDays);

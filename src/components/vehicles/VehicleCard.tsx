@@ -46,8 +46,11 @@ const VehicleCard = ({
   };
 
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
+  const isDealerStock = vehicle.location === 'Stock Dealer';
 
-  const daysInStock = !isVirtualStock && !isDealer ? calculateDaysInStock(vehicle.dateAdded) : null;
+  const daysInStock = (!isVirtualStock && !isDealer) || (isDealerStock && isDealer) 
+    ? calculateDaysInStock(vehicle.dateAdded) 
+    : null;
 
   const getStockDaysColor = (days: number) => {
     if (days <= 30) return 'bg-green-500';
@@ -136,7 +139,7 @@ const VehicleCard = ({
         
         <div className="mt-4 pt-2 border-t flex justify-between items-center">
           <div className="text-sm text-gray-500 flex items-center">
-            {daysInStock !== null && !isDealer ? (
+            {daysInStock !== null ? (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 <span>{daysInStock} giorni</span>
