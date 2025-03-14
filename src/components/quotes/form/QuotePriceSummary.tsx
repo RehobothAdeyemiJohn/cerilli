@@ -29,15 +29,30 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const tradeInValue = form.watch('tradeInValue') || 0;
   const tradeInHandlingFee = form.watch('tradeInHandlingFee') || 0;
   
-  // IMPORTANT: Base price already includes 22% VAT, so we need to adjust when calculating reduced VAT
-  // For reduced VAT, we need to:
-  // 1. Calculate price without VAT (divide by 1.22)
-  // 2. Apply 4% VAT to that base price (multiply by 1.04)
+  // Apply VAT adjustment to prices if reduced VAT is enabled
+  const applyVatAdjustment = (price: number): number => {
+    if (!watchReducedVAT) return price;
+    
+    // Remove 22% VAT
+    const priceWithoutVAT = price / 1.22;
+    // Add 4% VAT
+    return priceWithoutVAT * 1.04;
+  };
   
   // Calculate the applicable tax rate for display
   const vatRate = watchReducedVAT ? 0.04 : 0.22;
   
-  // Calculate VAT amount for display purposes only
+  // Adjust prices based on VAT rate - except trade-in value which stays the same
+  const adjustedBasePrice = applyVatAdjustment(basePrice);
+  const adjustedAccessoryPrice = applyVatAdjustment(accessoryTotalPrice);
+  const adjustedDiscount = applyVatAdjustment(discount);
+  const adjustedLicensePlateBonus = applyVatAdjustment(licensePlateBonus);
+  const adjustedTradeInBonus = applyVatAdjustment(tradeInBonus);
+  const adjustedSafetyKit = applyVatAdjustment(safetyKit);
+  const adjustedRoadPreparationFee = applyVatAdjustment(roadPreparationFee);
+  const adjustedTradeInHandlingFee = applyVatAdjustment(tradeInHandlingFee);
+  
+  // Calculate VAT amount for display (only when reduced VAT is selected)
   const vatAmount = watchReducedVAT ? 
     ((basePrice / 1.22) * vatRate) : 0;
   
@@ -47,37 +62,37 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
       <div className="grid grid-cols-4 gap-2 border p-2 rounded-md bg-gray-50">
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Prezzo Veicolo</p>
-          <p className="font-medium text-sm">{formatCurrency(basePrice)}</p>
+          <p className="font-medium text-sm">{formatCurrency(adjustedBasePrice)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Optional Aggiunti</p>
-          <p className="font-medium text-sm">+ {formatCurrency(accessoryTotalPrice)}</p>
+          <p className="font-medium text-sm">+ {formatCurrency(adjustedAccessoryPrice)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Sconto</p>
-          <p className="font-medium text-sm">- {formatCurrency(discount)}</p>
+          <p className="font-medium text-sm">- {formatCurrency(adjustedDiscount)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Premio Targa</p>
-          <p className="font-medium text-sm">- {formatCurrency(licensePlateBonus)}</p>
+          <p className="font-medium text-sm">- {formatCurrency(adjustedLicensePlateBonus)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Premio Permuta</p>
-          <p className="font-medium text-sm">- {formatCurrency(tradeInBonus)}</p>
+          <p className="font-medium text-sm">- {formatCurrency(adjustedTradeInBonus)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Kit Sicurezza</p>
-          <p className="font-medium text-sm">+ {formatCurrency(safetyKit)}</p>
+          <p className="font-medium text-sm">+ {formatCurrency(adjustedSafetyKit)}</p>
         </div>
         
         <div className="space-y-0.5">
           <p className="text-xs text-gray-500">Messa su strada</p>
-          <p className="font-medium text-sm">+ {formatCurrency(roadPreparationFee)}</p>
+          <p className="font-medium text-sm">+ {formatCurrency(adjustedRoadPreparationFee)}</p>
         </div>
         
         {hasTradeIn && (
@@ -90,7 +105,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
             {tradeInHandlingFee > 0 && (
               <div className="space-y-0.5">
                 <p className="text-xs text-gray-500">Gestione Usato</p>
-                <p className="font-medium text-sm">+ {formatCurrency(tradeInHandlingFee)}</p>
+                <p className="font-medium text-sm">+ {formatCurrency(adjustedTradeInHandlingFee)}</p>
               </div>
             )}
           </>
