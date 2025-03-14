@@ -395,6 +395,7 @@ export type Database = {
           base_price: number
           created_at: string | null
           id: string
+          imageurl: string | null
           name: string
           updated_at: string | null
         }
@@ -402,6 +403,7 @@ export type Database = {
           base_price: number
           created_at?: string | null
           id?: string
+          imageurl?: string | null
           name: string
           updated_at?: string | null
         }
@@ -409,6 +411,7 @@ export type Database = {
           base_price?: number
           created_at?: string | null
           id?: string
+          imageurl?: string | null
           name?: string
           updated_at?: string | null
         }

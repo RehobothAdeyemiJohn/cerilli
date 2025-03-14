@@ -24,7 +24,8 @@ export const modelsApi = {
     return data.map(model => ({
       id: model.id,
       name: model.name,
-      basePrice: model.base_price
+      basePrice: model.base_price,
+      imageUrl: model.imageurl
     }));
   },
   
@@ -46,7 +47,8 @@ export const modelsApi = {
     return {
       id: data.id,
       name: data.name,
-      basePrice: data.base_price
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
     };
   },
   
@@ -55,7 +57,8 @@ export const modelsApi = {
       .from('settings_models')
       .insert({
         name: model.name,
-        base_price: model.basePrice
+        base_price: model.basePrice,
+        imageurl: model.imageUrl
       })
       .select()
       .single();
@@ -68,7 +71,8 @@ export const modelsApi = {
     return {
       id: data.id,
       name: data.name,
-      basePrice: data.base_price
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
     };
   },
   
@@ -78,6 +82,7 @@ export const modelsApi = {
       .update({
         name: model.name,
         base_price: model.basePrice,
+        imageurl: model.imageUrl,
         updated_at: new Date()
       })
       .eq('id', id)
@@ -92,7 +97,8 @@ export const modelsApi = {
     return {
       id: data.id,
       name: data.name,
-      basePrice: data.base_price
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
     };
   },
   
