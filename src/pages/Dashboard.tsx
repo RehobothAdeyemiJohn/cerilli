@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,7 +30,9 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  BarChart,
+  Bar
 } from 'recharts';
 
 const Dashboard = () => {
@@ -39,17 +40,14 @@ const Dashboard = () => {
   const isDealer = user?.type === 'dealer';
   const dealerId = user?.dealerId;
   
-  // Use state to force re-render when component mounts or route changes
   const [renderKey, setRenderKey] = useState(Date.now().toString());
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [useDarkMode, setUseDarkMode] = useState(false);
   
-  // Reset the key whenever the component mounts or remounts
   useEffect(() => {
     setRenderKey(Date.now().toString());
   }, []);
 
-  // Query to get dealer-specific data
   const { data: dealerData, isLoading: loadingDealerData } = useQuery({
     queryKey: ['dealerDashboard', dealerId, selectedPeriod],
     queryFn: async () => {
@@ -57,7 +55,6 @@ const Dashboard = () => {
       
       console.log('Fetching dealer dashboard data for dealerId:', dealerId);
       
-      // Get dealer info
       const { data: dealer } = await supabase
         .from('dealers')
         .select('*')
@@ -66,7 +63,6 @@ const Dashboard = () => {
       
       console.log('Dealer info:', dealer);
       
-      // Get vehicles for this dealer (reserved or ordered by this dealer)
       const { data: vehicles } = await supabase
         .from('vehicles')
         .select('*')
@@ -74,7 +70,6 @@ const Dashboard = () => {
       
       console.log('Vehicles for dealer:', vehicles);
       
-      // Get quotes for this dealer
       const { data: quotes } = await supabase
         .from('quotes')
         .select('*, vehicles(*)')
@@ -84,7 +79,6 @@ const Dashboard = () => {
       
       console.log('Recent quotes for dealer:', quotes);
       
-      // Get orders for this dealer
       const { data: orders } = await supabase
         .from('orders')
         .select('*, vehicles(*)')
@@ -94,7 +88,6 @@ const Dashboard = () => {
       
       console.log('Recent orders for dealer:', orders);
 
-      // Get monthly sales data
       const currentYear = new Date().getFullYear();
       const { data: allOrders } = await supabase
         .from('orders')
@@ -114,7 +107,6 @@ const Dashboard = () => {
     enabled: isDealer && !!dealerId,
   });
 
-  // Query to get admin data (for admin dashboard)
   const { data: adminData, isLoading: loadingAdminData } = useQuery({
     queryKey: ['adminDashboard', selectedPeriod],
     queryFn: async () => {
@@ -122,28 +114,24 @@ const Dashboard = () => {
       
       console.log('Fetching admin dashboard data');
       
-      // Get all vehicles
       const { data: vehicles } = await supabase
         .from('vehicles')
         .select('*');
       
       console.log('All vehicles for admin:', vehicles);
       
-      // Get all orders
       const { data: orders } = await supabase
         .from('orders')
         .select('*, vehicles(*), dealers(*)');
       
       console.log('All orders for admin:', orders);
       
-      // Get all quotes
       const { data: quotes } = await supabase
         .from('quotes')
         .select('*, vehicles(*), dealers(*)');
       
       console.log('All quotes for admin:', quotes);
 
-      // Get all dealers
       const { data: dealers } = await supabase
         .from('dealers')
         .select('*');
@@ -160,13 +148,11 @@ const Dashboard = () => {
     enabled: !isDealer,
   });
 
-  // Calculate derived stats for dealer
   const dealerStats = React.useMemo(() => {
     if (!dealerData) return null;
     
     const { vehicles, quotes, orders, allOrders, dealer } = dealerData;
     
-    // Calculate average days in stock
     const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
     const avgDaysInStock = daysInStockValues.length > 0 
       ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
@@ -174,23 +160,19 @@ const Dashboard = () => {
     
     console.log('Average days in stock calculation:', {daysInStockValues, avgDaysInStock});
     
-    // Calculate conversion rate
     const conversionRate = quotes.length > 0 
       ? Math.round((orders.length / quotes.length) * 100) 
       : 0;
     
-    // Calculate monthly sales count (number of orders)
     const currentMonth = new Date().getMonth();
     const ordersThisMonth = allOrders.filter(o => {
       const orderDate = new Date(o.orderdate);
       return orderDate.getMonth() === currentMonth;
     });
     
-    // Monthly target is 5 vehicles
     const monthlyTarget = 5;
     const monthlyProgress = Math.min(100, Math.round((ordersThisMonth.length / monthlyTarget) * 100));
     
-    // Generate monthly sales data for chart (count of orders per month)
     const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
     const currentYear = new Date().getFullYear();
     
@@ -206,7 +188,6 @@ const Dashboard = () => {
       };
     });
     
-    // Generate model distribution data for inventory (count of vehicles by model)
     const modelDistribution = vehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
@@ -219,7 +200,6 @@ const Dashboard = () => {
       value: count
     }));
     
-    // If no vehicles, add empty data point to avoid chart errors
     if (modelData.length === 0) {
       modelData.push({ name: 'Nessun veicolo', value: 0 });
     }
@@ -251,13 +231,11 @@ const Dashboard = () => {
     };
   }, [dealerData]);
 
-  // Calculate admin dashboard stats
   const adminStats = React.useMemo(() => {
     if (!adminData) return null;
     
     const { vehicles, orders, quotes, dealers } = adminData;
     
-    // Prepare inventory by model data
     const modelCounts = vehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
@@ -270,7 +248,6 @@ const Dashboard = () => {
       value
     }));
     
-    // Prepare sales by dealer data
     const dealerSales = orders.reduce((acc, order) => {
       const dealerName = order.dealers?.companyname || 'Unknown';
       if (!acc[dealerName]) acc[dealerName] = 0;
@@ -283,7 +260,6 @@ const Dashboard = () => {
       value
     }));
     
-    // Prepare monthly sales data
     const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
     const currentYear = new Date().getFullYear();
     
@@ -293,7 +269,6 @@ const Dashboard = () => {
         return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
       });
       
-      // Calculate total value
       const totalValue = ordersInMonth.reduce((sum, order) => {
         const vehiclePrice = order.vehicles?.price || 0;
         return sum + vehiclePrice;
@@ -305,7 +280,6 @@ const Dashboard = () => {
       };
     });
     
-    // Recent orders and quotes
     const recentOrders = [...orders].sort((a, b) => {
       return new Date(b.orderdate).getTime() - new Date(a.orderdate).getTime();
     }).slice(0, 5);
@@ -335,15 +309,12 @@ const Dashboard = () => {
     };
   }, [adminData]);
 
-  // Pie chart colors
   const COLORS = ['#4ADE80', '#818CF8', '#FB7185', '#FACC15', '#60A5FA', '#C084FC'];
 
-  // Handle period change
   const handlePeriodChange = (value: string) => {
     setSelectedPeriod(value);
   };
   
-  // Toggle dark mode
   const toggleDarkMode = () => {
     setUseDarkMode(!useDarkMode);
   };
@@ -399,9 +370,7 @@ const Dashboard = () => {
       </div>
       
       {isDealer ? (
-        // DEALER DASHBOARD
         <>
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
@@ -452,7 +421,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Additional KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
@@ -491,7 +459,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Target Progress */}
           <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-medium">Obiettivo Mensile</h3>
@@ -513,9 +480,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Monthly Sales Trend Chart */}
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Andamento Vendite</h3>
@@ -563,13 +528,12 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            {/* Vehicle Model Distribution Chart */}
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Distribuzione Modelli</h3>
               </div>
               <div className="h-[200px] mt-4">
-                {dealerStats?.modelData && dealerStats.modelData.some(m => m.value > 0) ? (
+                {dealerStats?.modelData && dealerStats.modelData.some(item => Number(item.value) > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -608,7 +572,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Recent Orders */}
           <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
@@ -661,7 +624,6 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Recent Quotes */}
           <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Preventivi Recenti</h3>
@@ -715,7 +677,6 @@ const Dashboard = () => {
           </Card>
         </>
       ) : (
-        // ADMIN DASHBOARD
         <>
           <DashboardStats />
           
