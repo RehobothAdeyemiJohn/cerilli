@@ -1,69 +1,84 @@
 
 import React from 'react';
-import { formatCurrency } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface VirtualReservationPriceProps {
   calculatedPrice: number;
-  priceComponents?: {
-    baseModelPrice?: number;
+  priceComponents: {
+    basePrice?: number;
     trimPrice?: number;
     fuelTypeAdjustment?: number;
     colorAdjustment?: number;
     transmissionAdjustment?: number;
+    accessoriesPrice?: number;
   };
 }
 
-const VirtualReservationPrice = ({ calculatedPrice, priceComponents }: VirtualReservationPriceProps) => {
-  if (calculatedPrice <= 0) {
-    return null;
-  }
-  
+const VirtualReservationPrice: React.FC<VirtualReservationPriceProps> = ({ 
+  calculatedPrice,
+  priceComponents 
+}) => {
+  const formatPrice = (price: number | undefined): string => {
+    if (price === undefined) return "€0";
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
+  };
+
   return (
-    <div className="rounded-lg bg-gray-50 p-4">
-      {priceComponents && Object.keys(priceComponents).length > 0 && (
-        <div className="mb-4">
-          <h4 className="font-semibold mb-2">Componenti del prezzo:</h4>
-          <div className="space-y-1">
-            {priceComponents.baseModelPrice !== undefined && (
-              <div className="flex justify-between">
-                <span>Prezzo Base Modello:</span>
-                <span className="font-medium">{formatCurrency(priceComponents.baseModelPrice)}</span>
-              </div>
-            )}
-            {priceComponents.trimPrice !== undefined && (
-              <div className="flex justify-between">
-                <span>Prezzo Allestimento:</span>
-                <span className="font-medium">{formatCurrency(priceComponents.trimPrice)}</span>
-              </div>
-            )}
-            {priceComponents.fuelTypeAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Motore:</span>
-                <span className="font-medium">{formatCurrency(priceComponents.fuelTypeAdjustment)}</span>
-              </div>
-            )}
-            {priceComponents.colorAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Colore:</span>
-                <span className="font-medium">{formatCurrency(priceComponents.colorAdjustment)}</span>
-              </div>
-            )}
-            {priceComponents.transmissionAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Cambio:</span>
-                <span className="font-medium">{formatCurrency(priceComponents.transmissionAdjustment)}</span>
-              </div>
-            )}
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>Prezzo Configurazione</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {priceComponents.basePrice !== undefined && (
+            <div className="flex justify-between">
+              <span>Prezzo Base:</span>
+              <span className="font-medium">{formatPrice(priceComponents.basePrice)}</span>
+            </div>
+          )}
+          
+          {priceComponents.trimPrice !== undefined && (
+            <div className="flex justify-between">
+              <span>Allestimento:</span>
+              <span className="font-medium">{formatPrice(priceComponents.trimPrice)}</span>
+            </div>
+          )}
+          
+          {priceComponents.fuelTypeAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Alimentazione:</span>
+              <span className="font-medium">{formatPrice(priceComponents.fuelTypeAdjustment)}</span>
+            </div>
+          )}
+          
+          {priceComponents.colorAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Colore:</span>
+              <span className="font-medium">{formatPrice(priceComponents.colorAdjustment)}</span>
+            </div>
+          )}
+          
+          {priceComponents.transmissionAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Cambio:</span>
+              <span className="font-medium">{formatPrice(priceComponents.transmissionAdjustment)}</span>
+            </div>
+          )}
+          
+          {priceComponents.accessoriesPrice !== undefined && priceComponents.accessoriesPrice > 0 && (
+            <div className="flex justify-between">
+              <span>Accessori:</span>
+              <span className="font-medium">{formatPrice(priceComponents.accessoriesPrice)}</span>
+            </div>
+          )}
+          
+          <div className="flex justify-between border-t pt-2 mt-2">
+            <span className="font-bold">Prezzo Totale:</span>
+            <span className="font-bold">{formatPrice(calculatedPrice)}</span>
           </div>
         </div>
-      )}
-      <div className="font-semibold border-t pt-2">
-        <div className="flex justify-between items-center">
-          <span>Prezzo di Listino Calcolato:</span>
-          <span className="text-xl">{formatCurrency(calculatedPrice)}</span>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

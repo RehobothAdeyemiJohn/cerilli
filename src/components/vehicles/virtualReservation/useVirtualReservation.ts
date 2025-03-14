@@ -40,7 +40,7 @@ export const useVirtualReservation = (
   // Use custom hooks for modular functionality
   const compatibleItems = useCompatibleItems(vehicle, modelObj, trims, fuelTypes, colors, transmissions);
   
-  const calculatedPrice = useCalculatePrice(
+  const { calculatedPrice, priceComponents } = useCalculatePrice(
     modelObj,
     watchTrim,
     watchFuelType,
@@ -75,6 +75,7 @@ export const useVirtualReservation = (
     compatibleItems,
     compatibleAccessories,
     calculatedPrice,
+    priceComponents,
     vehicle,
     isAdmin,
     activeDealers: filteredDealers,

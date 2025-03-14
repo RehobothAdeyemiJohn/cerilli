@@ -4,6 +4,19 @@ import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';
 
+const calculateEstimatedArrivalDays = (stockLocation: string | undefined): number => {
+  if (!stockLocation) return 120; // Default to longest time if unknown
+  
+  // Different arrival time estimates based on the original stock location
+  if (stockLocation === 'Germania') {
+    // Germany stock: 38-52 days
+    return Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+  } else {
+    // China stock (default): 90-120 days
+    return Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+  }
+};
+
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
   isAdmin: boolean,
@@ -32,6 +45,9 @@ export const useVirtualReservationSubmit = (
         selectedDealerName = dealerName;
       }
       
+      // Calculate estimated arrival days based on original stock
+      const estimatedArrivalDays = calculateEstimatedArrivalDays(vehicle.originalStock);
+      
       const updatedVehicle: Vehicle = {
         ...vehicle,
         status: 'reserved',
@@ -39,6 +55,7 @@ export const useVirtualReservationSubmit = (
         reservationDestination: data.reservationDestination,
         reservationTimestamp: new Date().toISOString(),
         originalStock: vehicle.originalStock,
+        estimatedArrivalDays: estimatedArrivalDays,
         virtualConfig: {
           trim: data.trim,
           fuelType: data.fuelType,
