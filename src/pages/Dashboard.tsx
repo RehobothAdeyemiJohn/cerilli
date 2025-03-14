@@ -17,7 +17,6 @@ import {
   ShoppingCart, 
   TrendingUp, 
   Target, 
-  BarChart3, 
   Percent, 
   CreditCard
 } from 'lucide-react';
@@ -34,52 +33,6 @@ import {
   Pie,
   Cell
 } from 'recharts';
-
-// Define types for admin dashboard charts
-interface ModelData {
-  name: string;
-  value: number;
-}
-
-interface SalesByDealer {
-  name: string;
-  value: number;
-}
-
-interface MonthlySalesData {
-  name: string;
-  value: number;
-}
-
-// Mock data for admin dashboard
-const mockModelData: ModelData[] = [
-  { name: 'Cirelli 500', value: 15 },
-  { name: 'Cirelli SUV', value: 12 },
-  { name: 'Cirelli Berlina', value: 8 },
-  { name: 'Cirelli Spyder', value: 5 }
-];
-
-const mockSalesByDealer: SalesByDealer[] = [
-  { name: 'Auto Roma', value: 12 },
-  { name: 'Milano Motors', value: 10 },
-  { name: 'Napoli Auto', value: 8 },
-  { name: 'Torino Cars', value: 6 }
-];
-
-const mockMonthlySalesData: MonthlySalesData[] = [
-  { name: 'Gen', value: 35000 },
-  { name: 'Feb', value: 42000 },
-  { name: 'Mar', value: 38000 },
-  { name: 'Apr', value: 30000 },
-  { name: 'Mag', value: 55000 },
-  { name: 'Giu', value: 65000 },
-  { name: 'Lug', value: 45000 },
-  { name: 'Ago', value: 25000 },
-  { name: 'Set', value: 60000 },
-  { name: 'Ott', value: 70000 },
-  { name: 'Nov', value: 55000 },
-  { name: 'Dic', value: 40000 }
-];
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -124,34 +77,94 @@ const Dashboard = () => {
       // Get quotes for this dealer
       const { data: quotes } = await supabase
         .from('quotes')
-        .select('*')
-        .eq('dealerid', dealerId);
+        .select('*, vehicles(*)')
+        .eq('dealerid', dealerId)
+        .order('createdat', { ascending: false })
+        .limit(5);
       
-      console.log('Quotes for dealer:', quotes);
+      console.log('Recent quotes for dealer:', quotes);
       
       // Get orders for this dealer
       const { data: orders } = await supabase
         .from('orders')
         .select('*, vehicles(*)')
+        .eq('dealerid', dealerId)
+        .order('orderdate', { ascending: false })
+        .limit(5);
+      
+      console.log('Recent orders for dealer:', orders);
+
+      // Get monthly sales data
+      const currentYear = new Date().getFullYear();
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('*, vehicles(*)')
         .eq('dealerid', dealerId);
       
-      console.log('Orders for dealer:', orders);
+      console.log('All orders for dealer (monthly sales data):', allOrders);
       
       return {
         dealer,
         vehicles: vehicles || [],
         quotes: quotes || [],
-        orders: orders || []
+        orders: orders || [],
+        allOrders: allOrders || []
       };
     },
     enabled: isDealer && !!dealerId,
   });
 
-  // Calculate derived stats
+  // Query to get admin data (for admin dashboard)
+  const { data: adminData, isLoading: loadingAdminData } = useQuery({
+    queryKey: ['adminDashboard', selectedPeriod],
+    queryFn: async () => {
+      if (isDealer) return null;
+      
+      console.log('Fetching admin dashboard data');
+      
+      // Get all vehicles
+      const { data: vehicles } = await supabase
+        .from('vehicles')
+        .select('*');
+      
+      console.log('All vehicles for admin:', vehicles);
+      
+      // Get all orders
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('*, vehicles(*), dealers(*)');
+      
+      console.log('All orders for admin:', orders);
+      
+      // Get all quotes
+      const { data: quotes } = await supabase
+        .from('quotes')
+        .select('*, vehicles(*), dealers(*)');
+      
+      console.log('All quotes for admin:', quotes);
+
+      // Get all dealers
+      const { data: dealers } = await supabase
+        .from('dealers')
+        .select('*');
+      
+      console.log('All dealers for admin:', dealers);
+      
+      return {
+        vehicles: vehicles || [],
+        orders: orders || [],
+        quotes: quotes || [],
+        dealers: dealers || []
+      };
+    },
+    enabled: !isDealer,
+  });
+
+  // Calculate derived stats for dealer
   const dealerStats = React.useMemo(() => {
     if (!dealerData) return null;
     
-    const { vehicles, quotes, orders, dealer } = dealerData;
+    const { vehicles, quotes, orders, allOrders, dealer } = dealerData;
     
     // Calculate average days in stock
     const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
@@ -168,7 +181,7 @@ const Dashboard = () => {
     
     // Calculate monthly sales count (number of orders)
     const currentMonth = new Date().getMonth();
-    const ordersThisMonth = orders.filter(o => {
+    const ordersThisMonth = allOrders.filter(o => {
       const orderDate = new Date(o.orderdate);
       return orderDate.getMonth() === currentMonth;
     });
@@ -182,7 +195,7 @@ const Dashboard = () => {
     const currentYear = new Date().getFullYear();
     
     const monthlySalesData = monthNames.map((month, idx) => {
-      const ordersInMonth = orders.filter(o => {
+      const ordersInMonth = allOrders.filter(o => {
         const orderDate = new Date(o.orderdate);
         return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
       });
@@ -218,7 +231,8 @@ const Dashboard = () => {
       ordersCount: orders.length,
       conversionRate,
       monthlyProgress,
-      modelData
+      modelData,
+      monthlySalesData
     });
     
     return {
@@ -231,9 +245,95 @@ const Dashboard = () => {
       monthlyTarget,
       monthlyProgress,
       monthlySalesData,
-      modelData
+      modelData,
+      recentOrders: orders,
+      recentQuotes: quotes
     };
   }, [dealerData]);
+
+  // Calculate admin dashboard stats
+  const adminStats = React.useMemo(() => {
+    if (!adminData) return null;
+    
+    const { vehicles, orders, quotes, dealers } = adminData;
+    
+    // Prepare inventory by model data
+    const modelCounts = vehicles.reduce((acc, vehicle) => {
+      const model = vehicle.model;
+      if (!acc[model]) acc[model] = 0;
+      acc[model]++;
+      return acc;
+    }, {});
+    
+    const inventoryByModel = Object.entries(modelCounts).map(([name, value]) => ({
+      name,
+      value
+    }));
+    
+    // Prepare sales by dealer data
+    const dealerSales = orders.reduce((acc, order) => {
+      const dealerName = order.dealers?.companyname || 'Unknown';
+      if (!acc[dealerName]) acc[dealerName] = 0;
+      acc[dealerName]++;
+      return acc;
+    }, {});
+    
+    const salesByDealer = Object.entries(dealerSales).map(([name, value]) => ({
+      name,
+      value
+    }));
+    
+    // Prepare monthly sales data
+    const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+    const currentYear = new Date().getFullYear();
+    
+    const monthlySalesData = monthNames.map((month, idx) => {
+      const ordersInMonth = orders.filter(o => {
+        const orderDate = new Date(o.orderdate);
+        return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
+      });
+      
+      // Calculate total value
+      const totalValue = ordersInMonth.reduce((sum, order) => {
+        const vehiclePrice = order.vehicles?.price || 0;
+        return sum + vehiclePrice;
+      }, 0);
+      
+      return {
+        name: month,
+        value: totalValue
+      };
+    });
+    
+    // Recent orders and quotes
+    const recentOrders = [...orders].sort((a, b) => {
+      return new Date(b.orderdate).getTime() - new Date(a.orderdate).getTime();
+    }).slice(0, 5);
+    
+    const recentQuotes = [...quotes].sort((a, b) => {
+      return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
+    }).slice(0, 5);
+    
+    console.log('Admin dashboard stats:', {
+      inventoryByModel,
+      salesByDealer,
+      monthlySalesData,
+      recentOrders,
+      recentQuotes
+    });
+    
+    return {
+      inventoryByModel,
+      salesByDealer,
+      monthlySalesData,
+      recentOrders,
+      recentQuotes,
+      vehiclesCount: vehicles.length,
+      dealersCount: dealers.length,
+      quotesCount: quotes.length,
+      ordersCount: orders.length
+    };
+  }, [adminData]);
 
   // Pie chart colors
   const COLORS = ['#4ADE80', '#818CF8', '#FB7185', '#FACC15', '#60A5FA', '#C084FC'];
@@ -254,6 +354,19 @@ const Dashboard = () => {
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <h2 className="text-xl font-semibold">Accesso Negato</h2>
           <p className="mt-2">Non hai accesso a questa pagina come dealer.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = (isDealer && loadingDealerData) || (!isDealer && loadingAdminData);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6 px-4">
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600">Caricamento dashboard in corso...</p>
         </div>
       </div>
     );
@@ -403,47 +516,94 @@ const Dashboard = () => {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Monthly Sales Trend Chart */}
-            <Chart
-              title="Andamento Vendite"
-              data={dealerStats?.monthlySalesData}
-              darkMode={useDarkMode}
-            />
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Andamento Vendite</h3>
+              </div>
+              <div className="h-[200px] mt-4">
+                {dealerStats?.monthlySalesData && dealerStats.monthlySalesData.some(m => m.value > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dealerStats.monthlySalesData}>
+                      <XAxis 
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(value) => [value, 'Quantità']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Quantità"
+                        radius={[4, 4, 0, 0]}
+                        fill="#4ADE80"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
 
             {/* Vehicle Model Distribution Chart */}
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Distribuzione Modelli</h3>
               </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={dealerStats?.modelData || []}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                      nameKey="name"
-                      animationDuration={1500}
-                      label={(entry) => entry.name}
-                    >
-                      {dealerStats?.modelData?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => [value, 'Quantità']}
-                      contentStyle={{ 
-                        backgroundColor: useDarkMode ? '#333' : 'white', 
-                        border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                        borderRadius: '0.5rem',
-                        color: useDarkMode ? '#fff' : 'inherit'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-[200px] mt-4">
+                {dealerStats?.modelData && dealerStats.modelData.some(m => m.value > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={dealerStats.modelData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        nameKey="name"
+                        animationDuration={1500}
+                        label={(entry) => entry.name}
+                      >
+                        {dealerStats.modelData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [value, 'Quantità']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun veicolo in stock
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -458,16 +618,18 @@ const Dashboard = () => {
                 <thead>
                   <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Ordine</th>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Consegna</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dealerData?.orders?.slice(0, 5).map((order) => {
-                    return (
+                  {dealerStats?.recentOrders?.length > 0 ? (
+                    dealerStats.recentOrders.map((order) => (
                       <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                         <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
+                        <td className="py-3">{order.customername || 'N/A'}</td>
                         <td className="py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
@@ -486,12 +648,64 @@ const Dashboard = () => {
                           {order.deliverydate ? new Date(order.deliverydate).toLocaleDateString() : '-'}
                         </td>
                       </tr>
-                    );
-                  })}
-                  {(!dealerData?.orders || dealerData.orders.length === 0) && (
+                    ))
+                  ) : (
                     <tr>
-                      <td colSpan={4} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         Nessun ordine recente
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Recent Quotes */}
+          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Preventivi Recenti</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Prezzo</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dealerStats?.recentQuotes?.length > 0 ? (
+                    dealerStats.recentQuotes.map((quote) => (
+                      <tr key={quote.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                        <td className="py-3">{quote.vehicles?.model || 'N/A'}</td>
+                        <td className="py-3">{quote.customername || 'N/A'}</td>
+                        <td className="py-3">{formatCurrency(quote.finalprice || 0)}</td>
+                        <td className="py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {quote.status === 'pending' ? 'In Attesa' :
+                             quote.status === 'approved' ? 'Approvato' :
+                             quote.status === 'rejected' ? 'Rifiutato' :
+                             quote.status === 'converted' ? 'Convertito' : quote.status}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          {quote.createdat ? new Date(quote.createdat).toLocaleDateString() : '-'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Nessun preventivo recente
                       </td>
                     </tr>
                   )}
@@ -506,118 +720,241 @@ const Dashboard = () => {
           <DashboardStats />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <Chart 
-              title="Inventory by Model" 
-              data={mockModelData} 
-              darkMode={useDarkMode}
-            />
-            <Chart 
-              title="Sales by Dealer" 
-              data={mockSalesByDealer}
-              darkMode={useDarkMode}
-            />
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Inventario per Modello</h3>
+              </div>
+              <div className="h-[200px] mt-4">
+                {adminStats?.inventoryByModel && adminStats.inventoryByModel.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={adminStats.inventoryByModel}>
+                      <XAxis
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(value) => [value, 'Quantità']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Quantità"
+                        radius={[4, 4, 0, 0]}
+                        fill="#4ADE80"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
+            
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
+              </div>
+              <div className="h-[200px] mt-4">
+                {adminStats?.salesByDealer && adminStats.salesByDealer.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={adminStats.salesByDealer}>
+                      <XAxis
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(value) => [value, 'Vendite']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Vendite"
+                        radius={[4, 4, 0, 0]}
+                        fill="#818CF8"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
           
           <div className="mt-6">
-            <Chart 
-              title="Monthly Sales" 
-              data={mockMonthlySalesData}
-              darkMode={useDarkMode}
-            />
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite Mensili</h3>
+              </div>
+              <div className="h-[200px] mt-4">
+                {adminStats?.monthlySalesData && adminStats.monthlySalesData.some(m => m.value > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={adminStats.monthlySalesData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={useDarkMode ? "#333" : "#eee"} />
+                      <XAxis
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickFormatter={(value) => `€${value / 1000}k`}
+                      />
+                      <Tooltip
+                        formatter={(value) => [`€${value.toLocaleString()}`, 'Valore']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        name="Valore Vendite"
+                        stroke="#FB7185"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Recent Orders</h3>
+              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Customer</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Model</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Status</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Date</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Concessionario</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                      <td className="py-3">Giovanni Neri</td>
-                      <td className="py-3">Cirelli Spyder</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs">
-                          Delivered
-                        </span>
-                      </td>
-                      <td className="py-3">Feb 10, 2024</td>
-                    </tr>
-                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                      <td className="py-3">Antonio Russo</td>
-                      <td className="py-3">Cirelli 500</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs">
-                          Delivered
-                        </span>
-                      </td>
-                      <td className="py-3">Dec 1, 2023</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3">Elena Conti</td>
-                      <td className="py-3">Cirelli SUV</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs">
-                          Processing
-                        </span>
-                      </td>
-                      <td className="py-3">Mar 1, 2024</td>
-                    </tr>
+                    {adminStats?.recentOrders?.length > 0 ? (
+                      adminStats.recentOrders.map((order) => (
+                        <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                          <td className="py-3">{order.customername}</td>
+                          <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
+                          <td className="py-3">{order.dealers?.companyname || 'N/A'}</td>
+                          <td className="py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                              order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {order.status === 'processing' ? 'In Lavorazione' :
+                               order.status === 'delivered' ? 'Consegnato' :
+                               order.status === 'cancelled' ? 'Cancellato' : order.status}
+                            </span>
+                          </td>
+                          <td className="py-3">{new Date(order.orderdate).toLocaleDateString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Nessun ordine recente
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </Card>
             
             <Card className={`p-6 border transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
-              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Recent Quotes</h3>
+              <h3 className={`text-lg font-medium mb-4 ${useDarkMode ? 'text-white' : ''}`}>Preventivi Recenti</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Customer</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Model</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Status</th>
-                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Date</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Concessionario</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                      <td className="py-3">Luca Ferrari</td>
-                      <td className="py-3">Cirelli 500</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">
-                          Pending
-                        </span>
-                      </td>
-                      <td className="py-3">Feb 20, 2024</td>
-                    </tr>
-                    <tr className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                      <td className="py-3">Maria Verdi</td>
-                      <td className="py-3">Cirelli Berlina</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs">
-                          Approved
-                        </span>
-                      </td>
-                      <td className="py-3">Mar 5, 2024</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3">Giovanni Neri</td>
-                      <td className="py-3">Cirelli Spyder</td>
-                      <td className="py-3">
-                        <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-800 text-xs">
-                          Converted
-                        </span>
-                      </td>
-                      <td className="py-3">Jan 15, 2024</td>
-                    </tr>
+                    {adminStats?.recentQuotes?.length > 0 ? (
+                      adminStats.recentQuotes.map((quote) => (
+                        <tr key={quote.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                          <td className="py-3">{quote.customername}</td>
+                          <td className="py-3">{quote.vehicles?.model || 'N/A'}</td>
+                          <td className="py-3">{quote.dealers?.companyname || 'N/A'}</td>
+                          <td className="py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              quote.status === 'pending' ? 'bg-blue-100 text-blue-800' :
+                              quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {quote.status === 'pending' ? 'In Attesa' :
+                               quote.status === 'approved' ? 'Approvato' :
+                               quote.status === 'rejected' ? 'Rifiutato' :
+                               quote.status === 'converted' ? 'Convertito' : quote.status}
+                            </span>
+                          </td>
+                          <td className="py-3">{new Date(quote.createdat).toLocaleDateString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Nessun preventivo recente
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

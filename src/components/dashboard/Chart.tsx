@@ -32,6 +32,7 @@ export const Chart = ({
     queryFn: async () => {
       if (useProvidedData) return null;
       
+      console.log("Fetching vehicles data for chart");
       let query = supabase.from('vehicles').select('model, status');
       
       // Filter by dealer if in dealer mode
@@ -45,6 +46,7 @@ export const Chart = ({
         console.error('Error fetching vehicles data:', error);
         throw error;
       }
+      console.log("Vehicles data for chart:", data);
       return data || [];
     },
     enabled: !useProvidedData
@@ -55,15 +57,20 @@ export const Chart = ({
     if (useProvidedData) return data;
     if (!vehicles) return [];
 
+    console.log("Processing vehicle data for chart", vehicles);
     const modelCounts = vehicles.reduce((acc: { [key: string]: number }, vehicle) => {
-      acc[vehicle.model] = (acc[vehicle.model] || 0) + 1;
+      const model = vehicle.model || 'Unknown';
+      acc[model] = (acc[model] || 0) + 1;
       return acc;
     }, {});
 
-    return Object.entries(modelCounts).map(([model, total]) => ({
+    const result = Object.entries(modelCounts).map(([model, total]) => ({
       model,
       total
     }));
+    
+    console.log("Chart data processed:", result);
+    return result;
   }, [vehicles, data, useProvidedData]);
 
   // Colors for bars
@@ -90,44 +97,50 @@ export const Chart = ({
       </CardHeader>
       <CardContent className="pl-2 pt-4">
         <div className="h-[200px] mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <XAxis
-                dataKey="model" 
-                stroke={darkMode ? "#888888" : "#888888"}
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke={darkMode ? "#888888" : "#888888"}
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value}`}
-              />
-              <Tooltip 
-                formatter={(value) => [value, 'Quantità']}
-                contentStyle={{ 
-                  backgroundColor: darkMode ? '#333' : 'white', 
-                  border: darkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                  borderRadius: '0.5rem',
-                  color: darkMode ? '#fff' : 'inherit'
-                }}
-              />
-              <Legend />
-              <Bar
-                dataKey="total"
-                name="Quantità"
-                radius={[4, 4, 0, 0]}
-                animationDuration={1500}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis
+                  dataKey="model" 
+                  stroke={darkMode ? "#888888" : "#888888"}
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke={darkMode ? "#888888" : "#888888"}
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}`}
+                />
+                <Tooltip 
+                  formatter={(value) => [value, 'Quantità']}
+                  contentStyle={{ 
+                    backgroundColor: darkMode ? '#333' : 'white', 
+                    border: darkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                    borderRadius: '0.5rem',
+                    color: darkMode ? '#fff' : 'inherit'
+                  }}
+                />
+                <Legend />
+                <Bar
+                  dataKey="total"
+                  name="Quantità"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1500}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Nessun dato disponibile
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

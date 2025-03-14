@@ -27,14 +27,13 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
         // Create a unique file name
         const fileExt = file.name.split('.').pop();
         const fileName = `model-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `${fileName}`;
         
-        console.log("Uploading image to vehicle-images bucket:", filePath);
+        console.log("Uploading image to vehicle-images bucket:", fileName);
         
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
           .from('vehicle-images')
-          .upload(filePath, file, {
+          .upload(fileName, file, {
             cacheControl: '3600',
             upsert: false
           });
@@ -49,7 +48,7 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
         // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from('vehicle-images')
-          .getPublicUrl(filePath);
+          .getPublicUrl(fileName);
         
         if (!publicUrlData || !publicUrlData.publicUrl) {
           throw new Error("Failed to get public URL for uploaded image");
