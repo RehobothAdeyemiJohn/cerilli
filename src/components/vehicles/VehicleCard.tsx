@@ -2,9 +2,10 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Copy, Clock, Settings } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus } from 'lucide-react';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -12,9 +13,19 @@ interface VehicleCardProps {
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (vehicle: Vehicle) => void;
   onDuplicate: (vehicle: Vehicle) => void;
+  onCreateQuote?: (vehicle: Vehicle) => void;
+  onReserve?: (vehicle: Vehicle) => void;
 }
 
-const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: VehicleCardProps) => {
+const VehicleCard = ({ 
+  vehicle, 
+  onClick, 
+  onEdit, 
+  onDelete, 
+  onDuplicate,
+  onCreateQuote,
+  onReserve
+}: VehicleCardProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
@@ -130,6 +141,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
           )}
         </div>
         
+        {/* Admin Action Buttons */}
         {!isDealer && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
             <button 
@@ -153,6 +165,39 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
             >
               <Trash2 className="h-4 w-4" />
             </button>
+          </div>
+        )}
+        
+        {/* Dealer Action Buttons */}
+        {isDealer && vehicle.status === 'available' && (
+          <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
+            {onCreateQuote && (
+              <Button 
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateQuote(vehicle);
+                }}
+                className="flex items-center gap-1"
+              >
+                <FileCheck className="h-4 w-4" />
+                <span>Preventivo</span>
+              </Button>
+            )}
+            {onReserve && (
+              <Button 
+                size="sm"
+                variant="secondary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReserve(vehicle);
+                }}
+                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Prenota</span>
+              </Button>
+            )}
           </div>
         )}
       </div>

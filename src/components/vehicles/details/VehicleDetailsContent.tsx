@@ -169,7 +169,10 @@ const VehicleDetailsContent = ({
         
         {/* Reserve Button */}
         {vehicle.status === 'available' && vehicle.location !== 'Stock Virtuale' && (
-          <Button onClick={onReserveVehicle} className="flex items-center gap-2" variant="secondary">
+          <Button 
+            onClick={onReserveVehicle} 
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700" 
+          >
             <Plus className="h-4 w-4" />
             <span>Prenota Veicolo</span>
           </Button>
@@ -177,7 +180,10 @@ const VehicleDetailsContent = ({
         
         {/* Reserve Virtual Button */}
         {vehicle.status === 'available' && vehicle.location === 'Stock Virtuale' && (
-          <Button onClick={onReserveVirtualVehicle} className="flex items-center gap-2" variant="secondary">
+          <Button 
+            onClick={onReserveVirtualVehicle} 
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+          >
             <Plus className="h-4 w-4" />
             <span>Prenota Config. Virtuale</span>
           </Button>

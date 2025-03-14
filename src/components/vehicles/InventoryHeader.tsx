@@ -10,13 +10,17 @@ interface InventoryHeaderProps {
   showFilters: boolean;
   onAddVehicle: () => void;
   isDealer: boolean;
+  onCreateQuote?: () => void;
+  onReserveVehicle?: () => void;
 }
 
 const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onToggleFilters,
   showFilters,
   onAddVehicle,
-  isDealer
+  isDealer,
+  onCreateQuote,
+  onReserveVehicle
 }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
