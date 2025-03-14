@@ -4,13 +4,11 @@ import { Vehicle } from '@/types';
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader,
+  DialogHeader, 
 } from '@/components/ui/dialog';
 import { useVehicleDetailsDialog } from './details/useVehicleDetailsDialog';
 import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
-import TransformOrderConfirmDialog from './details/TransformOrderConfirmDialog';
-import { useTransformOrderConfirm } from './details/useTransformOrderConfirm';
 import { Toaster } from '@/components/ui/toaster';
 
 interface VehicleDetailsDialogProps {
@@ -35,16 +33,9 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
     handleCancelReservation,
     handleShowCancelReservationForm,
     handleCancelReservationSubmit,
-    handleTransformToOrder
+    handleTransformToOrder,
+    isTransforming
   } = useVehicleDetailsDialog(vehicle, onOpenChange);
-  
-  const {
-    isTransforming,
-    showTransformConfirm,
-    setShowTransformConfirm,
-    handleTransformToOrderClick,
-    handleConfirmTransform
-  } = useTransformOrderConfirm(handleTransformToOrder, () => onOpenChange(false));
   
   if (!vehicle) return null;
   
@@ -83,18 +74,11 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
               handleCancelReservation();
               onOpenChange(false);
             }}
-            onTransformToOrder={handleTransformToOrderClick}
+            onTransformToOrder={handleTransformToOrder}
             userCanCreateQuotes={true}
           />
         </DialogContent>
       </Dialog>
-      
-      <TransformOrderConfirmDialog 
-        open={showTransformConfirm}
-        onOpenChange={setShowTransformConfirm}
-        onConfirm={handleConfirmTransform}
-        isLoading={isTransforming}
-      />
       
       <Toaster />
     </>

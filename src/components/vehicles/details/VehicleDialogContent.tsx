@@ -100,6 +100,7 @@ const VehicleDialogContent = ({
       onCancelReservation={onCancelReservationShow}
       onTransformToOrder={onTransformToOrder}
       userCanCreateQuotes={userCanCreateQuotes}
+      isSubmitting={isSubmitting}
     />
   );
 };

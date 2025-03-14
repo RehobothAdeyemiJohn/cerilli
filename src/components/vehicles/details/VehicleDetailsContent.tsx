@@ -4,7 +4,7 @@ import { Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Check, Clock, Package, FileCheck, X, Truck } from 'lucide-react';
+import { Plus, Check, Clock, Package, FileCheck, X, Truck, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface VehicleDetailsContentProps {
@@ -15,6 +15,7 @@ interface VehicleDetailsContentProps {
   onCancelReservation: () => void;
   onTransformToOrder: () => void;
   userCanCreateQuotes: boolean;
+  isSubmitting?: boolean;
 }
 
 const VehicleDetailsContent = ({
@@ -24,7 +25,8 @@ const VehicleDetailsContent = ({
   onReserveVirtualVehicle,
   onCancelReservation,
   onTransformToOrder,
-  userCanCreateQuotes
+  userCanCreateQuotes,
+  isSubmitting = false
 }: VehicleDetailsContentProps) => {
   console.log("Rendering VehicleDetailsContent with status:", vehicle.status);
   console.log("Transform to order function available:", !!onTransformToOrder);
@@ -184,25 +186,33 @@ const VehicleDetailsContent = ({
         {/* Transform to Order Button */}
         {vehicle.status === 'reserved' && (
           <Button 
-            onClick={() => {
-              console.log("Transform to order button clicked");
-              if (onTransformToOrder) {
-                onTransformToOrder();
-              } else {
-                console.error("No transform to order handler provided");
-              }
-            }} 
+            onClick={onTransformToOrder} 
             className="flex items-center gap-2" 
             variant="default"
+            disabled={isSubmitting}
           >
-            <Truck className="h-4 w-4" />
-            <span>Trasforma in Ordine</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Elaborazione...</span>
+              </>
+            ) : (
+              <>
+                <Truck className="h-4 w-4" />
+                <span>Trasforma in Ordine</span>
+              </>
+            )}
           </Button>
         )}
         
         {/* Cancel Reservation Button */}
         {vehicle.status === 'reserved' && (
-          <Button onClick={onCancelReservation} className="flex items-center gap-2" variant="destructive">
+          <Button 
+            onClick={onCancelReservation} 
+            className="flex items-center gap-2" 
+            variant="destructive"
+            disabled={isSubmitting}
+          >
             <X className="h-4 w-4" />
             <span>Cancella Prenotazione</span>
           </Button>

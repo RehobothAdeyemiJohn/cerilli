@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote, Order } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -19,6 +20,7 @@ export function useVehicleDetailsDialog(
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTransforming, setIsTransforming] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -156,12 +158,18 @@ export function useVehicleDetailsDialog(
   const handleTransformToOrder = async (): Promise<void> => {
     if (!vehicle) {
       console.error("No vehicle provided for transformation");
-      return Promise.reject(new Error("No vehicle provided"));
+      return;
     }
     
-    console.log("Beginning transformation process for vehicle:", vehicle.id);
+    if (isTransforming) {
+      console.log("Already transforming, ignoring click");
+      return;
+    }
     
     try {
+      setIsTransforming(true);
+      console.log("Beginning transformation process for vehicle:", vehicle.id);
+      
       if (vehicle.status !== 'reserved') {
         console.error("Vehicle not in reserved status:", vehicle.status);
         toast({
@@ -169,7 +177,7 @@ export function useVehicleDetailsDialog(
           description: "Solo i veicoli prenotati possono essere trasformati in ordini",
           variant: "destructive",
         });
-        return Promise.reject(new Error("Vehicle not in reserved status"));
+        return;
       }
       
       console.log("Checking current vehicle status in database...");
@@ -197,7 +205,7 @@ export function useVehicleDetailsDialog(
           title: "Avviso",
           description: "Questo veicolo è già stato trasformato in ordine",
         });
-        return Promise.resolve();
+        return;
       }
       
       if (currentVehicle.status !== 'reserved') {
@@ -225,7 +233,7 @@ export function useVehicleDetailsDialog(
           
           // Still consider this a success since the vehicle status was updated
           await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-          return Promise.resolve();
+          return;
         }
         
         console.log("Creating order record with data:", {
@@ -252,10 +260,6 @@ export function useVehicleDetailsDialog(
             title: "Avviso",
             description: "Veicolo ordinato ma si è verificato un errore nella creazione del record dell'ordine",
           });
-          
-          // Still consider this a success since the vehicle status was updated
-          await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-          return Promise.resolve();
         }
       }
       
@@ -265,10 +269,23 @@ export function useVehicleDetailsDialog(
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
       console.log("Transformation process completed successfully");
-      return Promise.resolve();
+      
+      toast({
+        title: "Ordine Creato",
+        description: "Il veicolo è stato trasformato in ordine con successo.",
+      });
+      
+      onOpenChange(false);
     } catch (error) {
       console.error('Error in transform to order process:', error);
-      throw error;
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la trasformazione in ordine",
+        variant: "destructive",
+      });
+    } finally {
+      console.log("Setting isTransforming to false");
+      setIsTransforming(false);
     }
   };
 
@@ -278,6 +295,7 @@ export function useVehicleDetailsDialog(
     showVirtualReserveForm,
     showCancelReservationForm,
     isSubmitting,
+    isTransforming,
     user,
     handleShowQuoteForm,
     handleCreateQuote,
