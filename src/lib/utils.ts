@@ -120,8 +120,9 @@ export function calculateEstimatedArrival(vehicle: { originalStock?: 'Cina' | 'G
     minDays = 112;
     maxDays = 132;
   } else if (stock === 'Germania') {
-    minDays = 59;
-    maxDays = 75;
+    // Updated Germany range from 59-75 to 38-52
+    minDays = 38;
+    maxDays = 52;
   }
   
   // Generate a deterministic random value based on vehicle id and date added

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -60,14 +59,12 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     }
   };
 
-  // Placeholder for vehicle image - only show for non-stock vehicles to user preference
-  const showImage = !((vehicle.location === 'Stock CMC' || vehicle.location === 'Stock Virtuale') && !isAdmin);
+  const showImage = !(vehicle.location === 'Stock CMC' || vehicle.location === 'Stock Virtuale');
   const imageUrl = vehicle.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
   
   return (
     <div className="pt-6 pb-4 px-4 md:px-6">
       <div className="grid md:grid-cols-[1fr_1fr] gap-6">
-        {/* Left Column with Image - only show for certain locations or for admin */}
         {showImage && (
           <div className="rounded overflow-hidden">
             <div
@@ -77,7 +74,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </div>
         )}
         
-        {/* Right Column with Details - adjust to full width if image is hidden */}
         <div className={!showImage ? "col-span-2" : ""}>
           <div className="flex justify-between items-start">
             <div>
@@ -189,7 +185,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
       
-      {/* Accessories Section */}
       {((vehicle.accessories && vehicle.accessories.length > 0) || 
          (vehicle.virtualConfig?.accessories && vehicle.virtualConfig.accessories.length > 0)) && (
         <div className="mt-6">
@@ -212,9 +207,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       )}
       
-      {/* Action Buttons */}
       <div className="mt-6 flex flex-wrap gap-3 justify-end">
-        {/* Quote Button */}
         {vehicle.status === 'available' && onCreateQuote && (
           <Button onClick={onCreateQuote} className="flex items-center gap-2">
             <InfoIcon className="h-4 w-4" />
@@ -222,7 +215,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </Button>
         )}
         
-        {/* Reserve Button */}
         {vehicle.status === 'available' && vehicle.location !== 'Stock Virtuale' && (
           <Button 
             onClick={onReserveVehicle} 
@@ -233,7 +225,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </Button>
         )}
         
-        {/* Reserve Virtual Button */}
         {vehicle.status === 'available' && vehicle.location === 'Stock Virtuale' && (
           <Button 
             onClick={onReserveVirtualVehicle} 
@@ -244,14 +235,12 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </Button>
         )}
         
-        {/* Cancel Reservation Button - Only for admins */}
         {vehicle.status === 'reserved' && isAdmin && onCancelReservation && (
           <Button variant="destructive" onClick={onCancelReservation}>
             Cancella Prenotazione
           </Button>
         )}
         
-        {/* Transform to Order Button - Only for admins */}
         {vehicle.status === 'reserved' && isAdmin && onTransformToOrder && (
           <Button 
             onClick={onTransformToOrder} 
@@ -263,7 +252,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         )}
       </div>
       
-      {/* Add info note for reserved vehicle */}
       {vehicle.status === 'reserved' && (
         <div className="mt-6 pt-4 border-t text-sm text-gray-500 flex items-start">
           <InfoIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
