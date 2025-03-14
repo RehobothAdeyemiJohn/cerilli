@@ -37,6 +37,7 @@ export const useVirtualReservationSubmit = (
         status: 'reserved',
         reservedBy: selectedDealerName,
         reservationDestination: data.reservationDestination,
+        reservationTimestamp: new Date().toISOString(),
         virtualConfig: {
           trim: data.trim,
           fuelType: data.fuelType,

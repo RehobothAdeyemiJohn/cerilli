@@ -196,16 +196,27 @@ export function useVehicleDetailsDialog(
         return Promise.resolve();
       }
       
+      // First transform the vehicle to ordered status
       try {
-        // Transform the vehicle to ordered status first
+        console.log("Transforming vehicle to ordered status:", vehicle.id);
         await vehiclesApi.transformToOrder(vehicle.id);
+        console.log("Vehicle successfully transformed to ordered status");
         
-        // Create a new order record if reservedBy is available
+        // Only after successful vehicle status update, create the order
         if (vehicle.reservedBy) {
           const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
           
           if (!dealerId) {
-            throw new Error("No dealer ID available for order creation");
+            console.error("No dealer ID available for order creation");
+            toast({
+              title: "Avviso",
+              description: "Veicolo ordinato ma non è stato possibile creare il record dell'ordine: nessun concessionario disponibile",
+              variant: "destructive",
+            });
+            
+            // Still consider this a success since the vehicle status was updated
+            await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+            return Promise.resolve();
           }
           
           console.log("Creating order with data:", {
@@ -216,23 +227,36 @@ export function useVehicleDetailsDialog(
             orderDate: new Date().toISOString()
           });
           
-          // Explicitly use the Supabase ordersApi
-          const createdOrder = await ordersApi.create({
-            vehicleId: vehicle.id,
-            dealerId,
-            customerName: vehicle.reservedBy,
-            status: 'processing',
-            orderDate: new Date().toISOString()
-          });
-          
-          console.log("Order created successfully:", createdOrder);
+          try {
+            // Create the order record
+            const createdOrder = await ordersApi.create({
+              vehicleId: vehicle.id,
+              dealerId,
+              customerName: vehicle.reservedBy,
+              status: 'processing',
+              orderDate: new Date().toISOString()
+            });
+            
+            console.log("Order created successfully:", createdOrder);
+          } catch (orderError) {
+            console.error("Error creating order record:", orderError);
+            toast({
+              title: "Avviso",
+              description: "Veicolo ordinato ma si è verificato un errore nella creazione del record dell'ordine",
+              variant: "destructive",
+            });
+            
+            // Still consider this a success since the vehicle status was updated
+            await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
+            return Promise.resolve();
+          }
         }
-      } catch (error) {
-        console.error("Error in transformation process:", error);
-        throw error;
+      } catch (transformError) {
+        console.error("Error transforming vehicle status:", transformError);
+        throw transformError;
       }
       
-      // Update queries immediately with staleTime: 0
+      // Update queries with staleTime: 0 to force a refresh
       await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
       await queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
       

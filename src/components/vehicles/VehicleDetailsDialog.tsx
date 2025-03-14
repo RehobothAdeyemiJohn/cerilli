@@ -47,19 +47,16 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
   
   if (!vehicle) return null;
   
-  const userCanCreateQuotes = true;
-  
-  console.log('Rendering VehicleDetailsDialog for vehicle:', vehicle.id);
-  console.log('Vehicle status:', vehicle.status);
-  console.log('Reservation timestamp:', vehicle.reservationTimestamp);
+  // Ensure dialog can be closed unless operations are in progress
+  const handleDialogChange = (value: boolean) => {
+    if (!isTransforming && !isSubmitting) {
+      onOpenChange(value);
+    }
+  };
   
   return (
     <>
-      <Dialog open={open} onOpenChange={(value) => {
-        if (!isTransforming && !isSubmitting) {
-          onOpenChange(value);
-        }
-      }}>
+      <Dialog open={open} onOpenChange={handleDialogChange}>
         <DialogContent className="max-w-[1200px] w-[95%] max-h-[90vh] overflow-y-auto grid grid-cols-1">
           <DialogHeader className="pb-2">
             <VehicleDialogHeader vehicle={vehicle} />
@@ -86,7 +83,7 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
               onOpenChange(false);
             }}
             onTransformToOrder={handleTransformToOrderClick}
-            userCanCreateQuotes={userCanCreateQuotes}
+            userCanCreateQuotes={true}
           />
         </DialogContent>
       </Dialog>
