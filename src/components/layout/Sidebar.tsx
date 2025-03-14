@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   ];
   
   const footerItems = [
-    { title: 'Impostazioni', icon: Settings, path: '/settings' },
+    { title: 'Impostazioni', icon: Settings, path: '/settings', showForDealer: false, showForAdmin: true },
   ];
   
   const adminItems = [
@@ -121,23 +121,25 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         {/* Footer Navigation */}
         <div className="mt-auto px-2 pb-4">
           <nav className="space-y-1">
-            {footerItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center p-2 rounded-md transition-colors my-1",
-                  isActive(item.path)
-                    ? "bg-white text-[#141c2e]"
-                    : "text-gray-300 hover:bg-gray-700"
-                )}
-              >
-                <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
-                {isOpen && (
-                  <span className="ml-3 text-sm">{item.title}</span>
-                )}
-              </Link>
-            ))}
+            {footerItems
+              .filter(item => (isAdmin && (item.showForAdmin !== false)) || (isDealer && item.showForDealer))
+              .map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center p-2 rounded-md transition-colors my-1",
+                    isActive(item.path)
+                      ? "bg-white text-[#141c2e]"
+                      : "text-gray-300 hover:bg-gray-700"
+                  )}
+                >
+                  <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
+                  {isOpen && (
+                    <span className="ml-3 text-sm">{item.title}</span>
+                  )}
+                </Link>
+              ))}
           </nav>
         </div>
       </div>

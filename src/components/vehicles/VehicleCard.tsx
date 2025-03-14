@@ -4,6 +4,7 @@ import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Copy, Clock, Settings } from 'lucide-react';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -14,6 +15,9 @@ interface VehicleCardProps {
 }
 
 const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: VehicleCardProps) => {
+  const { user } = useAuth();
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  
   // Status colors
   const statusColors = {
     available: 'bg-green-100 text-green-800',
@@ -35,8 +39,8 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
   // Detect if it's a virtual stock vehicle
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
 
-  // Calculate days in stock if not in virtual stock
-  const daysInStock = !isVirtualStock ? calculateDaysInStock(vehicle.dateAdded) : null;
+  // Calculate days in stock if not in virtual stock and not a dealer
+  const daysInStock = !isVirtualStock && !isDealer ? calculateDaysInStock(vehicle.dateAdded) : null;
 
   // Get stock days color
   const getStockDaysColor = (days: number) => {
@@ -109,7 +113,7 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
         
         <div className="mt-4 pt-2 border-t flex justify-between items-center">
           <div className="text-sm text-gray-500 flex items-center">
-            {daysInStock !== null ? (
+            {daysInStock !== null && !isDealer ? (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 <span>{daysInStock} giorni</span>
@@ -126,29 +130,31 @@ const VehicleCard = ({ vehicle, onClick, onEdit, onDelete, onDuplicate }: Vehicl
           )}
         </div>
         
-        <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
-          <button 
-            onClick={(e) => handleActionClick(e, onDuplicate)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            aria-label="Duplica veicolo"
-          >
-            <Copy className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={(e) => handleActionClick(e, onEdit)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            aria-label="Modifica veicolo"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={(e) => handleActionClick(e, onDelete)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            aria-label="Elimina veicolo"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+        {!isDealer && (
+          <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
+            <button 
+              onClick={(e) => handleActionClick(e, onDuplicate)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              aria-label="Duplica veicolo"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={(e) => handleActionClick(e, onEdit)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              aria-label="Modifica veicolo"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={(e) => handleActionClick(e, onDelete)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              aria-label="Elimina veicolo"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import React from 'react';
 import { Plus, Filter, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 interface InventoryHeaderProps {
   onToggleFilters: () => void;
