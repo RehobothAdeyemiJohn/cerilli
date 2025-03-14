@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -129,7 +130,12 @@ const Dashboard = () => {
       
       console.log('Fetching admin dashboard data');
       
-      let vehiclesQuery = supabase.from('vehicles').select('*').neq('location', 'Stock Virtuale');
+      // Filter for CMC vehicles that are available or reserved only, excluding ordered ones
+      let vehiclesQuery = supabase.from('vehicles')
+        .select('*')
+        .neq('location', 'Stock Virtuale')
+        .in('status', ['available', 'reserved']);
+        
       let ordersQuery = supabase.from('orders').select('*, vehicles(*), dealers(*)');
       let quotesQuery = supabase.from('quotes').select('*, vehicles(*), dealers(*)');
       
@@ -161,10 +167,12 @@ const Dashboard = () => {
       const { data: quotes } = await quotesQuery;
       const { data: dealers } = await supabase.from('dealers').select('*');
       
+      // Get all CMC vehicles (available or reserved) for inventory stats
       const { data: allVehicles } = await supabase
         .from('vehicles')
         .select('*')
-        .neq('location', 'Stock Virtuale');
+        .neq('location', 'Stock Virtuale')
+        .in('status', ['available', 'reserved']);
       
       return {
         vehicles: vehicles || [],
@@ -278,8 +286,10 @@ const Dashboard = () => {
       ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
       : 0;
     
+    // Calculate total invoiced without trade-in values
     const totalInvoiced = orders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
+      // Don't include trade-in values
       return sum + price;
     }, 0);
     
@@ -791,59 +801,13 @@ const Dashboard = () => {
             </Card>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {/* Row 1: Inventory by Model and High Inventory Vehicles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Chart title="Inventario per Modello" excludeVirtualStock={true} darkMode={useDarkMode} />
-            
-            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
-              </div>
-              <div className="h-[200px] mt-4">
-                {adminStats?.salesByDealer && adminStats.salesByDealer.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={adminStats.salesByDealer}>
-                      <XAxis
-                        dataKey="name" 
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <Tooltip
-                        formatter={(value) => [value, 'Vendite']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
-                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                          borderRadius: '0.5rem',
-                          color: useDarkMode ? '#fff' : 'inherit'
-                        }}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="value"
-                        name="Vendite"
-                        radius={[4, 4, 0, 0]}
-                        fill="#818CF8"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Nessun dato disponibile
-                  </div>
-                )}
-              </div>
-            </Card>
-            
-            <DealerCreditList darkMode={useDarkMode} />
+            {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
           </div>
           
+          {/* Row 2: Monthly Sales and Dealer Credit Limits */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-center mb-4">
@@ -893,7 +857,57 @@ const Dashboard = () => {
               </div>
             </Card>
             
-            {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
+            <DealerCreditList darkMode={useDarkMode} />
+          </div>
+          
+          {/* Row 3: Sales by Dealer */}
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
+              </div>
+              <div className="h-[200px] mt-4">
+                {adminStats?.salesByDealer && adminStats.salesByDealer.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={adminStats.salesByDealer}>
+                      <XAxis
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(value) => [value, 'Vendite']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Vendite"
+                        radius={[4, 4, 0, 0]}
+                        fill="#818CF8"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -907,6 +921,7 @@ const Dashboard = () => {
                       <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
                       <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Concessionario</th>
                       <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                      <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>ID Ordine</th>
                       <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
                     </tr>
                   </thead>
@@ -928,12 +943,17 @@ const Dashboard = () => {
                                order.status === 'cancelled' ? 'Cancellato' : order.status}
                             </span>
                           </td>
+                          <td className="py-3">
+                            <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                              {order.id.substring(0, 8)}
+                            </span>
+                          </td>
                           <td className="py-3">{new Date(order.orderdate).toLocaleDateString()}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <td colSpan={6} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           Nessun ordine recente
                         </td>
                       </tr>
