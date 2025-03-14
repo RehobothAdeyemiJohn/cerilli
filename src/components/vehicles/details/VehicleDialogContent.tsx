@@ -216,7 +216,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       {showReserveForm && vehicle && (
         <ReserveVehicleForm 
           vehicle={vehicle}
-          onSubmit={onSubmit}
+          onReservationComplete={onSubmit}
           onCancel={onCancel}
           isSubmitting={isSubmitting}
         />
@@ -225,7 +225,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       {showVirtualReserveForm && vehicle && (
         <ReserveVirtualVehicleForm 
           vehicle={vehicle}
-          onSubmit={onSubmit}
+          onReservationComplete={onSubmit}
           onCancel={onCancel}
           isSubmitting={isSubmitting}
         />
