@@ -11,6 +11,7 @@ import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
 import TransformOrderConfirmDialog from './details/TransformOrderConfirmDialog';
 import { useTransformOrderConfirm } from './details/useTransformOrderConfirm';
+import { Toaster } from '@/components/ui/toaster';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -94,6 +95,8 @@ const VehicleDetailsDialog = ({ vehicle, open, onOpenChange }: VehicleDetailsDia
         onConfirm={handleConfirmTransform}
         isLoading={isTransforming}
       />
+      
+      <Toaster />
     </>
   );
 };

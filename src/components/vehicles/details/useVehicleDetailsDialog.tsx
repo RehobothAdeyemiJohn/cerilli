@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -155,12 +154,16 @@ export function useVehicleDetailsDialog(
   };
 
   const handleTransformToOrder = async (): Promise<void> => {
-    if (!vehicle) return Promise.reject(new Error("No vehicle provided"));
+    if (!vehicle) {
+      console.error("No vehicle provided for transformation");
+      return Promise.reject(new Error("No vehicle provided"));
+    }
+    
+    console.log("Beginning transformation process for vehicle:", vehicle.id);
     
     try {
-      setIsSubmitting(true);
-      
       if (vehicle.status !== 'reserved') {
+        console.error("Vehicle not in reserved status:", vehicle.status);
         toast({
           title: "Errore",
           description: "Solo i veicoli prenotati possono essere trasformati in ordini",
@@ -169,17 +172,17 @@ export function useVehicleDetailsDialog(
         return Promise.reject(new Error("Vehicle not in reserved status"));
       }
       
-      console.log("Starting transformation to order for vehicle:", vehicle.id);
+      console.log("Checking current vehicle status in database...");
       
-      // Check if the vehicle is already ordered to prevent duplicate orders
-      const { data: currentVehicle, error } = await supabase
+      // Double-check the vehicle status to prevent race conditions
+      const { data: currentVehicle, error: fetchError } = await supabase
         .from('vehicles')
-        .select('*')
+        .select('status')
         .eq('id', vehicle.id)
         .maybeSingle();
       
-      if (error) {
-        console.error("Error checking vehicle status:", error);
+      if (fetchError) {
+        console.error("Error checking vehicle status:", fetchError);
         throw new Error("Error checking vehicle status");
       }
       
@@ -189,6 +192,7 @@ export function useVehicleDetailsDialog(
       }
       
       if (currentVehicle.status === 'ordered') {
+        console.log("Vehicle already ordered, skipping transformation");
         toast({
           title: "Avviso",
           description: "Questo veicolo è già stato trasformato in ordine",
@@ -196,86 +200,75 @@ export function useVehicleDetailsDialog(
         return Promise.resolve();
       }
       
-      // First transform the vehicle to ordered status
-      try {
-        console.log("Transforming vehicle to ordered status:", vehicle.id);
-        await vehiclesApi.transformToOrder(vehicle.id);
-        console.log("Vehicle successfully transformed to ordered status");
+      if (currentVehicle.status !== 'reserved') {
+        console.error("Vehicle no longer in reserved status:", currentVehicle.status);
+        throw new Error(`Vehicle in invalid status: ${currentVehicle.status}`);
+      }
+      
+      console.log("Transforming vehicle to ordered status:", vehicle.id);
+      
+      // Perform the update to make the vehicle 'ordered'
+      await vehiclesApi.transformToOrder(vehicle.id);
+      
+      console.log("Vehicle status updated successfully to ordered");
+      
+      // Only after successful vehicle status update, create the order
+      if (vehicle.reservedBy) {
+        const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
         
-        // Only after successful vehicle status update, create the order
-        if (vehicle.reservedBy) {
-          const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+        if (!dealerId) {
+          console.error("No dealer ID available for order creation");
+          toast({
+            title: "Avviso",
+            description: "Veicolo ordinato ma non è stato possibile creare il record dell'ordine: nessun concessionario disponibile",
+          });
           
-          if (!dealerId) {
-            console.error("No dealer ID available for order creation");
-            toast({
-              title: "Avviso",
-              description: "Veicolo ordinato ma non è stato possibile creare il record dell'ordine: nessun concessionario disponibile",
-              variant: "destructive",
-            });
-            
-            // Still consider this a success since the vehicle status was updated
-            await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-            return Promise.resolve();
-          }
-          
-          console.log("Creating order with data:", {
+          // Still consider this a success since the vehicle status was updated
+          await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+          return Promise.resolve();
+        }
+        
+        console.log("Creating order record with data:", {
+          vehicleId: vehicle.id,
+          dealerId,
+          customerName: vehicle.reservedBy
+        });
+        
+        try {
+          // Create the order record
+          const orderData = {
             vehicleId: vehicle.id,
             dealerId,
             customerName: vehicle.reservedBy,
             status: 'processing',
             orderDate: new Date().toISOString()
+          };
+          
+          const createdOrder = await ordersApi.create(orderData);
+          console.log("Order created successfully:", createdOrder);
+        } catch (orderError) {
+          console.error("Error creating order record:", orderError);
+          toast({
+            title: "Avviso",
+            description: "Veicolo ordinato ma si è verificato un errore nella creazione del record dell'ordine",
           });
           
-          try {
-            // Create the order record
-            const createdOrder = await ordersApi.create({
-              vehicleId: vehicle.id,
-              dealerId,
-              customerName: vehicle.reservedBy,
-              status: 'processing',
-              orderDate: new Date().toISOString()
-            });
-            
-            console.log("Order created successfully:", createdOrder);
-          } catch (orderError) {
-            console.error("Error creating order record:", orderError);
-            toast({
-              title: "Avviso",
-              description: "Veicolo ordinato ma si è verificato un errore nella creazione del record dell'ordine",
-              variant: "destructive",
-            });
-            
-            // Still consider this a success since the vehicle status was updated
-            await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-            return Promise.resolve();
-          }
+          // Still consider this a success since the vehicle status was updated
+          await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+          return Promise.resolve();
         }
-      } catch (transformError) {
-        console.error("Error transforming vehicle status:", transformError);
-        throw transformError;
       }
       
       // Update queries with staleTime: 0 to force a refresh
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-      await queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
+      console.log("Refreshing data queries...");
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
-      toast({
-        title: "Ordine Creato",
-        description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine.`,
-      });
-      
+      console.log("Transformation process completed successfully");
       return Promise.resolve();
     } catch (error) {
-      console.error('Error transforming to order:', error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la trasformazione in ordine",
-        variant: "destructive",
-      });
+      console.error('Error in transform to order process:', error);
       throw error;
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

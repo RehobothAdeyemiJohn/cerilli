@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export const useTransformOrderConfirm = (
   handleTransformToOrder: () => Promise<void>,
@@ -17,12 +18,25 @@ export const useTransformOrderConfirm = (
     
     setIsTransforming(true);
     try {
+      console.log("Starting transformation process...");
       await handleTransformToOrder();
+      console.log("Transformation completed successfully");
+      
+      toast({
+        title: "Ordine Creato",
+        description: "Il veicolo è stato trasformato in ordine con successo.",
+      });
+      
       setShowTransformConfirm(false);
       onCloseDialog();
     } catch (error) {
       console.error('Transform to order failed:', error);
-      // Don't close the dialog if there's an error
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la trasformazione in ordine",
+        variant: "destructive",
+      });
+      // Don't close the main dialog if there's an error, but close the confirm dialog
       setShowTransformConfirm(false);
     } finally {
       setIsTransforming(false);

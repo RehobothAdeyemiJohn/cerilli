@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface TransformOrderConfirmDialogProps {
   open: boolean;
@@ -41,11 +42,21 @@ const TransformOrderConfirmDialog: React.FC<TransformOrderConfirmDialogProps> = 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>Annulla</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onConfirm}
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
             disabled={isLoading}
             className="bg-amber-500 hover:bg-amber-600"
           >
-            Procedi con l'ordine
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Elaborazione...
+              </>
+            ) : (
+              'Procedi con l\'ordine'
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
