@@ -16,65 +16,65 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto bg-white text-black print:w-full">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">Dettagli dell'ordine n° {orderNumber}</h1>
-        <p className="text-sm text-gray-600">Eseguito il: {formattedDate(order.orderDate)}</p>
+    <div className="p-4 md:p-8 max-w-3xl mx-auto bg-white text-black print:w-full">
+      <div className="text-center mb-6">
+        <h1 className="text-xl md:text-2xl font-bold">Dettagli dell'ordine n° {orderNumber}</h1>
+        <p className="text-xs md:text-sm text-gray-600">Eseguito il: {formattedDate(order.orderDate)}</p>
       </div>
 
       {/* Sezione Dealer */}
       <div className="mb-6 border-b pb-4">
-        <h2 className="text-xl font-semibold mb-3">Informazioni Dealer</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Email:</p>
-            <p>{order.dealer?.email || '-'}</p>
+        <h2 className="text-lg md:text-xl font-semibold mb-2">Informazioni Dealer</h2>
+        <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-500 inline mr-2">Email:</p>
+            <p className="inline">{order.dealer?.email || '-'}</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Cliente:</p>
-            <p>{order.customerName || '-'}</p>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-500 inline mr-2">Cliente:</p>
+            <p className="inline">{order.customerName || '-'}</p>
           </div>
         </div>
       </div>
 
       {/* Sezione Auto */}
       <div className="mb-6 border-b pb-4">
-        <h2 className="text-xl font-semibold mb-3">Informazioni Veicolo</h2>
+        <h2 className="text-lg md:text-xl font-semibold mb-2">Informazioni Veicolo</h2>
         
         {(order.vehicle?.imageUrl || '/placeholder.svg') && (
           <div className="mb-4 flex justify-center">
             <img 
               src={order.vehicle?.imageUrl || '/placeholder.svg'} 
               alt={`${order.vehicle?.model || 'Veicolo'} ${order.vehicle?.trim || ''}`} 
-              className="max-h-48 object-contain" 
+              className="max-h-36 md:max-h-48 object-contain" 
             />
           </div>
         )}
         
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           <div>
             <p className="text-sm font-medium text-gray-500">Modello</p>
-            <p>{order.vehicle?.model || '-'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Allestimento</p>
-            <p>{order.vehicle?.trim || '-'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Colore</p>
-            <p>{order.vehicle?.exteriorColor || '-'}</p>
+            <p className="break-words">{order.vehicle?.model || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Motore</p>
-            <p>{order.vehicle?.fuelType || '-'}</p>
+            <p className="break-words">{order.vehicle?.fuelType || '-'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Allestimento</p>
+            <p className="break-words">{order.vehicle?.trim || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Cambio</p>
-            <p>{order.vehicle?.transmission || '-'}</p>
+            <p className="break-words">{order.vehicle?.transmission || '-'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Colore</p>
+            <p className="break-words">{order.vehicle?.exteriorColor || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Telaio</p>
-            <p>{order.vehicle?.telaio || order.details?.chassis || '-'}</p>
+            <p className="break-words">{order.vehicle?.telaio || order.details?.chassis || '-'}</p>
           </div>
         </div>
 
@@ -82,9 +82,9 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
         {order.vehicle?.accessories && order.vehicle.accessories.length > 0 && (
           <div className="mt-3">
             <p className="text-sm font-medium text-gray-500">Optional:</p>
-            <ul className="list-disc pl-5">
+            <ul className="list-disc pl-5 text-sm">
               {order.vehicle.accessories.map((accessory, index) => (
-                <li key={index}>{accessory}</li>
+                <li key={index} className="break-words">{accessory}</li>
               ))}
             </ul>
           </div>
@@ -93,8 +93,8 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
 
       {/* Sezione Dettagli Amministrativi */}
       <div className="mb-6 border-b pb-4">
-        <h2 className="text-xl font-semibold mb-3">Dettagli Amministrativi</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <h2 className="text-lg md:text-xl font-semibold mb-2">Dettagli Amministrativi</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <p className="text-sm font-medium text-gray-500">Stato:</p>
             <p>{order.status === 'processing' ? 'In Lavorazione' : 
@@ -139,12 +139,12 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
       {/* Notes - Only display if order has details with notes */}
       {order.details?.notes && (
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Note</h2>
-          <p className="border p-3 rounded bg-gray-50">{order.details.notes}</p>
+          <h2 className="text-lg md:text-xl font-semibold mb-2">Note</h2>
+          <p className="border p-2 md:p-3 rounded bg-gray-50 text-sm whitespace-pre-wrap">{order.details.notes}</p>
         </div>
       )}
 
-      <div className="text-center text-xs text-gray-500 mt-8">
+      <div className="text-center text-xs text-gray-500 mt-6 md:mt-8">
         <p>Documento generato automaticamente dal sistema DMS Cirelli</p>
         <p className="mt-1">Data stampa: {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: it })}</p>
       </div>
