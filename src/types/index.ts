@@ -9,6 +9,7 @@ export type Vehicle = {
   price: number;
   location: string;
   imageUrl?: string;
+  customImageUrl?: string; // New field for custom vehicle image
   status: 'available' | 'reserved' | 'sold' | 'ordered' | 'delivered';
   dateAdded: string;
   transmission?: string;

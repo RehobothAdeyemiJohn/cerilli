@@ -13,7 +13,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle }
   const formattedDate = vehicle.dateAdded ? formatDate(new Date(vehicle.dateAdded)) : 'N/A';
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
   const isStockCMC = vehicle.location === 'Stock CMC';
-  const shouldHideImage = isVirtualStock || isStockCMC;
+  const shouldHideDefaultImage = isVirtualStock || isStockCMC;
   
   // Format reservation details
   const reservationDate = vehicle.reservationTimestamp 
@@ -22,8 +22,16 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle }
     
   return (
     <div className="space-y-4 pt-2">
-      {/* Vehicle image */}
-      {!shouldHideImage && vehicle.imageUrl && (
+      {/* Vehicle image - show custom image if available, otherwise show default */}
+      {vehicle.customImageUrl ? (
+        <div className="flex justify-center mb-4">
+          <img 
+            src={vehicle.customImageUrl} 
+            alt={`${vehicle.model} ${vehicle.trim || ''}`} 
+            className="rounded-md object-cover max-h-[250px] w-auto"
+          />
+        </div>
+      ) : (!shouldHideDefaultImage && vehicle.imageUrl && (
         <div className="flex justify-center mb-4">
           <img 
             src={vehicle.imageUrl} 
@@ -31,7 +39,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle }
             className="rounded-md object-cover max-h-[250px] w-auto"
           />
         </div>
-      )}
+      ))}
       
       {/* Virtual Configuration Card */}
       {vehicle.virtualConfig && isVirtualStock && vehicle.status === 'reserved' && (

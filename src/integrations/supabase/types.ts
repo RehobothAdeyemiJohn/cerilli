@@ -472,6 +472,7 @@ export type Database = {
         Row: {
           accessories: string[] | null
           created_at: string | null
+          custom_image_url: string | null
           dateadded: string
           estimated_arrival_days: number | null
           exteriorcolor: string | null
@@ -483,6 +484,7 @@ export type Database = {
           original_stock: string | null
           previous_chassis: string | null
           price: number | null
+          reservation_destination: string | null
           reservation_timestamp: string | null
           reservedaccessories: string[] | null
           reservedby: string | null
@@ -496,6 +498,7 @@ export type Database = {
         Insert: {
           accessories?: string[] | null
           created_at?: string | null
+          custom_image_url?: string | null
           dateadded: string
           estimated_arrival_days?: number | null
           exteriorcolor?: string | null
@@ -507,6 +510,7 @@ export type Database = {
           original_stock?: string | null
           previous_chassis?: string | null
           price?: number | null
+          reservation_destination?: string | null
           reservation_timestamp?: string | null
           reservedaccessories?: string[] | null
           reservedby?: string | null
@@ -520,6 +524,7 @@ export type Database = {
         Update: {
           accessories?: string[] | null
           created_at?: string | null
+          custom_image_url?: string | null
           dateadded?: string
           estimated_arrival_days?: number | null
           exteriorcolor?: string | null
@@ -531,6 +536,7 @@ export type Database = {
           original_stock?: string | null
           previous_chassis?: string | null
           price?: number | null
+          reservation_destination?: string | null
           reservation_timestamp?: string | null
           reservedaccessories?: string[] | null
           reservedby?: string | null
