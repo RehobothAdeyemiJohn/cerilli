@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -30,45 +29,36 @@ const VehicleCard = ({
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
   
-  // Status colors
   const statusColors = {
     available: 'bg-green-100 text-green-800',
     reserved: 'bg-amber-100 text-amber-800',
     ordered: 'bg-blue-100 text-blue-800',
     sold: 'bg-gray-100 text-gray-800',
-    delivered: 'bg-green-100 text-green-800', // Show delivered as green (available)
+    delivered: 'bg-green-100 text-green-800',
   };
 
-  // Traduzioni di stato
   const statusTranslations = {
     available: 'Disponibile',
     reserved: 'Prenotata',
     ordered: 'Ordinata',
     sold: 'Venduta',
-    delivered: 'Disponibile', // Show delivered as "Disponibile"
+    delivered: 'Disponibile',
   };
 
-  // Detect if it's a virtual stock vehicle
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
 
-  // Calculate days in stock if not in virtual stock and not a dealer
   const daysInStock = !isVirtualStock && !isDealer ? calculateDaysInStock(vehicle.dateAdded) : null;
 
-  // Get stock days color
   const getStockDaysColor = (days: number) => {
     if (days <= 30) return 'bg-green-500';
     if (days <= 60) return 'bg-amber-500';
     return 'bg-red-500';
   };
 
-  // Check if vehicle has a virtual configuration
   const hasVirtualConfig = vehicle.virtualConfig !== undefined;
 
-  // Calculate estimated arrival for reserved virtual stock
-  const showEstimatedArrival = isVirtualStock && vehicle.status === 'reserved';
-  const estimatedArrival = showEstimatedArrival ? calculateEstimatedArrival(vehicle.originalStock as any) : null;
+  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle.originalStock) : null;
 
-  // Ferma la propagazione degli eventi per evitare che il click sui pulsanti attivi anche il click sulla card
   const handleActionClick = (e: React.MouseEvent, action: (vehicle: Vehicle) => void) => {
     e.stopPropagation();
     action(vehicle);
@@ -113,6 +103,17 @@ const VehicleCard = ({
               <span>Stock {vehicle.originalStock}</span>
             </div>
           )}
+          {isVirtualStock && estimatedArrival && (
+            <div className="flex justify-between text-sm items-center">
+              <span className="text-gray-500 flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                Data Arrivo:
+              </span>
+              <span className="font-medium text-primary">
+                {estimatedArrival.formattedRange}
+              </span>
+            </div>
+          )}
           {!isVirtualStock && vehicle.transmission && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Cambio:</span>
@@ -123,17 +124,6 @@ const VehicleCard = ({
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Prenotato da:</span>
               <span className="font-medium">{vehicle.reservedBy}</span>
-            </div>
-          )}
-          {showEstimatedArrival && estimatedArrival && (
-            <div className="flex justify-between text-sm items-center">
-              <span className="text-gray-500 flex items-center gap-1">
-                <CalendarClock className="h-3 w-3" />
-                Arrivo stimato:
-              </span>
-              <span className="font-medium text-primary">
-                {estimatedArrival.formattedRange}
-              </span>
             </div>
           )}
           {hasVirtualConfig && vehicle.status === 'reserved' && (
@@ -163,7 +153,6 @@ const VehicleCard = ({
           )}
         </div>
         
-        {/* Admin Action Buttons */}
         {!isDealer && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
             <button 
@@ -190,7 +179,6 @@ const VehicleCard = ({
           </div>
         )}
         
-        {/* Dealer Action Buttons */}
         {isDealer && vehicle.status === 'available' && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
             {onCreateQuote && (

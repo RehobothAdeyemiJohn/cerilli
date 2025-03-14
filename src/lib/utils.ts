@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { format, addDays } from "date-fns";
@@ -113,12 +114,16 @@ export function calculateEstimatedArrival(originalStock: 'Cina' | 'Germania' | u
     maxDays = 75;
   }
   
+  // Calculate a random number of days within the range
+  const randomDays = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
+  
   const minDate = addDays(today, minDays);
   const maxDate = addDays(today, maxDays);
+  const estimatedDate = addDays(today, randomDays);
   
   return {
     minDate,
     maxDate,
-    formattedRange: `${format(minDate, 'dd/MM/yyyy')} - ${format(maxDate, 'dd/MM/yyyy')}`
+    formattedRange: `${format(estimatedDate, 'dd/MM/yyyy')}`
   };
 }

@@ -35,8 +35,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const showEstimatedArrival = isVirtualStock && vehicle.status === 'reserved';
-  const estimatedArrival = showEstimatedArrival ? calculateEstimatedArrival(vehicle.originalStock as any) : null;
+  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle.originalStock) : null;
   
   const getStatusText = (status: Vehicle['status']) => {
     switch (status) {
@@ -99,11 +98,11 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
               </div>
             )}
             
-            {showEstimatedArrival && estimatedArrival && (
+            {isVirtualStock && estimatedArrival && (
               <div className="grid grid-cols-2 items-center">
                 <span className="text-gray-500 flex items-center gap-1">
                   <CalendarClock className="h-4 w-4" />
-                  Arrivo stimato:
+                  Data Arrivo:
                 </span>
                 <span className="font-medium text-primary">
                   {estimatedArrival.formattedRange}
