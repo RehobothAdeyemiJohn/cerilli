@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,9 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${vehicle.id}-${Date.now()}.${fileExt}`;
-      const filePath = `vehicle-${vehicle.id}/${fileName}`;
+      const filePath = `${fileName}`;
+
+      console.log("Uploading to vehicle-images bucket:", filePath);
 
       // Upload the file to Supabase Storage
       const { data, error } = await supabase.storage
@@ -82,8 +85,11 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
         });
 
       if (error) {
+        console.error("Upload error:", error);
         throw error;
       }
+
+      console.log("Upload successful:", data);
 
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
@@ -93,6 +99,8 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       if (!publicUrlData || !publicUrlData.publicUrl) {
         throw new Error("Impossibile ottenere l'URL pubblico dell'immagine");
       }
+
+      console.log("Public URL obtained:", publicUrlData.publicUrl);
 
       // Update the vehicle with the new image URL
       await vehiclesApi.update(vehicle.id, {

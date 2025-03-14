@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { VehicleModel } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus, LoaderCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/api/supabase/client';
 
@@ -26,29 +26,14 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
       try {
         // Create a unique file name
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `model-images/${fileName}`;
+        const fileName = `model-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${fileName}`;
         
-        console.log("Uploading image to Supabase Storage:", filePath);
-        
-        // Try to create the model-images folder if it doesn't exist
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const imagesBucket = buckets?.find(bucket => bucket.name === 'images');
-        
-        if (!imagesBucket) {
-          console.warn("Images bucket does not exist. Please create it manually in the Supabase dashboard.");
-          toast({
-            title: "Errore",
-            description: "Il bucket 'images' non esiste. Contattare l'amministratore.",
-            variant: "destructive",
-          });
-          setIsUploading(false);
-          return;
-        }
+        console.log("Uploading image to vehicle-images bucket:", filePath);
         
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
-          .from('images')
+          .from('vehicle-images')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false
@@ -59,11 +44,11 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
           throw error;
         }
         
-        console.log("Upload successful, getting public URL for:", filePath);
+        console.log("Upload successful:", data);
         
         // Get public URL
         const { data: publicUrlData } = supabase.storage
-          .from('images')
+          .from('vehicle-images')
           .getPublicUrl(filePath);
         
         if (!publicUrlData || !publicUrlData.publicUrl) {
@@ -138,8 +123,17 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
             className="w-full flex items-center justify-center"
             disabled={isUploading}
           >
-            <ImagePlus className="h-4 w-4 mr-2" />
-            {isUploading ? 'Caricamento...' : (model.imageUrl ? 'Cambia Immagine' : 'Carica Immagine')}
+            {isUploading ? (
+              <>
+                <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
+                Caricamento...
+              </>
+            ) : (
+              <>
+                <ImagePlus className="h-4 w-4 mr-2" />
+                {model.imageUrl ? 'Cambia Immagine' : 'Carica Immagine'}
+              </>
+            )}
           </Button>
         </div>
         {model.imageUrl && (
@@ -151,9 +145,6 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
             />
           </div>
         )}
-        <p className="text-xs text-gray-500 mt-1">
-          Nota: Assicurati che il bucket 'images' sia stato creato nel tuo progetto Supabase con le policy di accesso appropriate.
-        </p>
       </div>
     </div>
   );
