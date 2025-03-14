@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -8,11 +9,13 @@ import { VehicleModel } from '@/types';
 import FormDialog from './common/FormDialog';
 import ModelForm from './models/ModelForm';
 import SettingsTable, { SettingsTableColumn } from './common/SettingsTable';
+import { supabase } from '@/api/supabase/client';
 
 const ModelsSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentModel, setCurrentModel] = useState<Partial<VehicleModel>>({});
+  const [isUploading, setIsUploading] = useState(false);
   
   const queryClient = useQueryClient();
   
@@ -81,6 +84,54 @@ const ModelsSettings = () => {
     });
   };
 
+  const handleImageUpload = async (file: File) => {
+    try {
+      setIsUploading(true);
+      
+      // Create a unique file name to avoid collisions
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `model-images/${fileName}`;
+      
+      // Upload file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      // Update current model with image URL
+      setCurrentModel({
+        ...currentModel,
+        imageUrl: publicUrlData.publicUrl
+      });
+      
+      toast({
+        title: "Immagine Caricata",
+        description: "L'immagine è stata caricata con successo.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading image:', error.message);
+      toast({
+        title: "Errore",
+        description: `Errore durante il caricamento dell'immagine: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSaveModel = () => {
     if (!currentModel.name || !currentModel.basePrice) {
       toast({
@@ -111,6 +162,11 @@ const ModelsSettings = () => {
       accessor: (model) => `€${model.basePrice.toLocaleString('it-IT')}`,
       className: "text-right" 
     },
+    { 
+      header: "Immagine", 
+      accessor: (model) => model.imageUrl ? "Disponibile" : "Non disponibile",
+      className: "text-center" 
+    },
   ];
 
   if (isLoading) {
@@ -139,11 +195,12 @@ const ModelsSettings = () => {
         onClose={() => setIsAddDialogOpen(false)}
         title="Aggiungi Modello"
         onSubmit={handleSaveModel}
-        isSubmitting={createMutation.isPending}
+        isSubmitting={createMutation.isPending || isUploading}
       >
         <ModelForm 
           model={currentModel}
           onChange={handleModelChange}
+          onImageUpload={handleImageUpload}
         />
       </FormDialog>
 
@@ -152,11 +209,12 @@ const ModelsSettings = () => {
         onClose={() => setIsEditDialogOpen(false)}
         title="Modifica Modello"
         onSubmit={handleSaveModel}
-        isSubmitting={updateMutation.isPending}
+        isSubmitting={updateMutation.isPending || isUploading}
       >
         <ModelForm 
           model={currentModel}
           onChange={handleModelChange}
+          onImageUpload={handleImageUpload}
         />
       </FormDialog>
     </div>

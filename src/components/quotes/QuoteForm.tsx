@@ -84,18 +84,18 @@ const QuoteForm = ({
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column - Vehicle and Customer Information */}
+            {/* Left Column - Customer and Vehicle Information */}
             <div className="space-y-4">
-              {/* Vehicle Information */}
-              <QuoteVehicleInfo vehicle={vehicle} />
-              
-              {/* Customer Information */}
+              {/* Customer Information - Now at the top */}
               <QuoteCustomerInfo 
                 isAdmin={isAdmin} 
                 dealers={dealers} 
                 userId={user?.id}
                 dealerId={user?.dealerId}
               />
+              
+              {/* Vehicle Information - Now below customer info */}
+              <QuoteVehicleInfo vehicle={vehicle} />
               
               {/* Optional Accessories */}
               <QuoteAccessories 

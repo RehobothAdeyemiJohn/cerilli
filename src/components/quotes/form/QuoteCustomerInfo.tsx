@@ -21,50 +21,9 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
   const form = useFormContext();
 
   return (
-    <>
-      {/* Dealer Selection for Admin Users */}
-      {isAdmin && (
-        <FormField
-          control={form.control}
-          name="dealerId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs">Dealer</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger className="text-sm py-1">
-                    <SelectValue placeholder="Seleziona Dealer" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {dealers.map((dealer) => (
-                    <SelectItem key={dealer.id} value={dealer.id}>
-                      {dealer.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+    <div className="space-y-4 bg-[#e1e1e2] p-4 rounded-md">
+      <h3 className="text-md font-semibold mb-2">Informazioni Cliente</h3>
       
-      {/* Non-admin users with a dealerId - show readonly field */}
-      {!isAdmin && dealerId && dealers && (
-        <div className="mb-4">
-          <FormLabel className="text-xs">Dealer</FormLabel>
-          <div className="border rounded-md p-2 bg-gray-50 text-sm">
-            {dealers.find(d => d.id === dealerId)?.companyName || 'Dealer assegnato'}
-          </div>
-          <input type="hidden" {...form.register('dealerId')} value={dealerId} />
-        </div>
-      )}
-
       <div className="grid grid-cols-3 gap-3">
         <FormField
           control={form.control}
@@ -108,7 +67,50 @@ const QuoteCustomerInfo: React.FC<QuoteCustomerInfoProps> = ({
           )}
         />
       </div>
-    </>
+      
+      {/* Dealer Selection for Admin Users */}
+      {isAdmin && (
+        <FormField
+          control={form.control}
+          name="dealerId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Dealer</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="text-sm py-1">
+                    <SelectValue placeholder="Seleziona Dealer" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {dealers.map((dealer) => (
+                    <SelectItem key={dealer.id} value={dealer.id}>
+                      {dealer.companyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+      
+      {/* Non-admin users with a dealerId - show readonly field */}
+      {!isAdmin && dealerId && dealers && (
+        <div>
+          <FormLabel className="text-xs">Dealer</FormLabel>
+          <div className="border rounded-md p-2 bg-gray-50 text-sm">
+            {dealers.find(d => d.id === dealerId)?.companyName || 'Dealer assegnato'}
+          </div>
+          <input type="hidden" {...form.register('dealerId')} value={dealerId} />
+        </div>
+      )}
+    </div>
   );
 };
 
