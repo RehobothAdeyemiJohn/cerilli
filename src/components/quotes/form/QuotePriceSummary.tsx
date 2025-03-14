@@ -27,6 +27,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const safetyKit = form.watch('safetyKit') || 0;
   const hasTradeIn = form.watch('hasTradeIn');
   const tradeInValue = form.watch('tradeInValue') || 0;
+  const accessories = form.watch('accessories') || [];
   
   return (
     <div>
@@ -39,10 +40,12 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
           <p className="font-medium">{formatCurrency(basePrice)}</p>
         </div>
         
-        <div>
-          <p className="text-sm">Optional Aggiunti</p>
-          <p className="font-medium">+ {formatCurrency(accessoryTotalPrice)}</p>
-        </div>
+        {accessoryTotalPrice > 0 || accessories.length > 0 && (
+          <div>
+            <p className="text-sm">Optional Aggiunti</p>
+            <p className="font-medium">+ {formatCurrency(accessoryTotalPrice)}</p>
+          </div>
+        )}
         
         <div>
           <p className="text-sm">Sconto</p>
@@ -83,6 +86,11 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         <p className="font-bold text-xl text-white text-center">
           {formatCurrency(finalPrice)}
         </p>
+        {watchReducedVAT && (
+          <p className="text-xs text-white text-center mt-1">
+            IVA agevolata 4% inclusa
+          </p>
+        )}
       </div>
     </div>
   );

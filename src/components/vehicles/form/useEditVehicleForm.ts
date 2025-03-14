@@ -34,6 +34,7 @@ export const useEditVehicleForm = (
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [isVirtualStock, setIsVirtualStock] = useState<boolean>(vehicle.location === 'Stock Virtuale');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [priceComponents, setPriceComponents] = useState<any>({});
 
   // Initialize form with vehicle data
   const form = useForm<VehicleFormValues>({
@@ -100,20 +101,52 @@ export const useEditVehicleForm = (
       // If we're in Stock Virtuale, the price is always 0
       if (isVirtualStock) {
         setCalculatedPrice(0);
+        setPriceComponents({});
         return;
       }
 
       if (watchModel && watchTrim && watchFuelType && watchColor && watchTransmission) {
+        console.log("Calculating price with:", {
+          model: watchModel,
+          trim: watchTrim,
+          fuelType: watchFuelType,
+          color: watchColor,
+          transmission: watchTransmission,
+          accessories: watchAccessories
+        });
+        
         const modelObj = models.find(m => m.name === watchModel);
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
+        
         const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
         const colorName = colorParts ? colorParts[1] : watchColor;
         const colorType = colorParts ? colorParts[2] : '';
         const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+        
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
+        console.log("Found objects:", {
+          modelObj,
+          trimObj,
+          fuelTypeObj,
+          colorObj,
+          transmissionObj
+        });
+
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
+          // For debugging, store and log each component's contribution to the price
+          const components = {
+            baseModelPrice: modelObj.basePrice,
+            trimPrice: trimObj.basePrice || 0,
+            fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
+            colorAdjustment: colorObj.priceAdjustment || 0,
+            transmissionAdjustment: transmissionObj.priceAdjustment || 0,
+          };
+          
+          console.log("Price components:", components);
+          setPriceComponents(components);
+          
           const selectedAccessoryIds = watchAccessories.map(name => {
             const acc = accessories.find(a => a.name === name);
             return acc ? acc.id : '';
@@ -128,6 +161,7 @@ export const useEditVehicleForm = (
             selectedAccessoryIds
           );
           
+          console.log("Final calculated price:", price);
           setCalculatedPrice(price);
         }
       }
@@ -171,6 +205,10 @@ export const useEditVehicleForm = (
       }
     }
     
+    // Log price components for debugging
+    console.log("Price components for edited vehicle:", priceComponents);
+    console.log("Calculated final price:", calculatedPrice);
+    
     const updatedVehicle: Vehicle = {
       ...vehicle,
       model: data.model,
@@ -194,6 +232,7 @@ export const useEditVehicleForm = (
     compatibleAccessories,
     isVirtualStock,
     validationError,
+    priceComponents,
     onSubmit,
     onCancel
   };

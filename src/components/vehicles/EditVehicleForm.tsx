@@ -27,6 +27,7 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
     compatibleAccessories,
     isVirtualStock,
     validationError,
+    priceComponents,
     onSubmit
   } = useEditVehicleForm(vehicle, onComplete, onCancel);
 
@@ -63,7 +64,7 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
               compatibleAccessories={compatibleAccessories}
               form={form}
             />
-            <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
+            <VehiclePriceDisplay calculatedPrice={calculatedPrice} priceComponents={priceComponents} />
           </>
         )}
         

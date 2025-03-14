@@ -25,6 +25,7 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
     compatibleAccessories,
     isVirtualStock,
     validationError,
+    priceComponents,
     onSubmit
   } = useVehicleForm(onComplete);
 
@@ -61,7 +62,7 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
               compatibleAccessories={compatibleAccessories}
               form={form}
             />
-            <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
+            <VehiclePriceDisplay calculatedPrice={calculatedPrice} priceComponents={priceComponents} />
           </>
         )}
         
