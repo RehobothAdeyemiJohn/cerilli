@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -271,10 +272,20 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     <div className="w-full text-sm">
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left Column - Vehicle and Customer Information */}
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-md space-y-4">
-                <h3 className="text-md font-semibold mb-2">Informazioni Veicolo</h3>
+              {/* Customer Information */}
+              <QuoteCustomerInfo 
+                isAdmin={isAdmin} 
+                dealers={dealers} 
+                userId={user?.id}
+                dealerId={user?.dealerId}
+              />
+
+              {/* Vehicle Information */}
+              <div className="bg-gray-100 p-4 rounded-md">
+                <h3 className="text-md font-semibold mb-4">Informazioni Veicolo</h3>
                 
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
@@ -393,29 +404,35 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                 
                 <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
               </div>
-
-              <QuoteCustomerInfo 
-                isAdmin={isAdmin} 
-                dealers={dealers} 
-                userId={user?.id}
-                dealerId={user?.dealerId}
-              />
             </div>
             
+            {/* Right Column - Price Configuration */}
             <div className="space-y-4">
-              <QuoteDiscountSection />
-              <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-              <QuotePriceSummary 
-                basePrice={basePrice}
-                accessoryTotalPrice={0}
-                finalPrice={finalPrice}
-                watchReducedVAT={form.watch('reducedVAT')}
-                totalDiscount={totalDiscount}
-                roadPreparationFee={roadPreparationFee}
-              />
+              <div className="space-y-4">
+                <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
+                
+                {/* Discount Section */}
+                <QuoteDiscountSection />
+                
+                {/* Trade-In Section */}
+                {watchHasTradeIn && <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />}
+                
+                {/* Price Summary */}
+                <div className="mt-4">
+                  <QuotePriceSummary 
+                    basePrice={basePrice}
+                    accessoryTotalPrice={0}
+                    finalPrice={finalPrice}
+                    watchReducedVAT={form.watch('reducedVAT')}
+                    totalDiscount={totalDiscount}
+                    roadPreparationFee={roadPreparationFee}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Form Actions */}
           <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />
         </form>
       </FormProvider>

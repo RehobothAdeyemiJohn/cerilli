@@ -23,7 +23,7 @@ const QuoteFormActions: React.FC<QuoteFormActionsProps> = ({ onCancel, isSubmitt
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="bg-green-500 hover:bg-green-600 text-white"
+        className="bg-green-600 hover:bg-green-700 text-white"
       >
         {isSubmitting ? (
           <>

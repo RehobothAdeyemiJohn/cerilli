@@ -81,11 +81,11 @@ const QuoteForm = ({
     <div className="w-full text-sm">
       {/* Form */}
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left Column - Customer and Vehicle Information */}
             <div className="space-y-4">
-              {/* Customer Information - Now at the top */}
+              {/* Customer Information - Gray background */}
               <QuoteCustomerInfo 
                 isAdmin={isAdmin} 
                 dealers={dealers} 
@@ -93,7 +93,7 @@ const QuoteForm = ({
                 dealerId={user?.dealerId}
               />
               
-              {/* Vehicle Information - Now below customer info */}
+              {/* Vehicle Information - Gray background */}
               <QuoteVehicleInfo 
                 vehicle={vehicle} 
                 compatibleAccessories={compatibleAccessories}
@@ -102,23 +102,30 @@ const QuoteForm = ({
             
             {/* Right Column - Price Configuration */}
             <div className="space-y-4">
-              {/* Discount and VAT Section */}
-              <QuoteDiscountSection />
-              
-              {/* Trade-In Section - Only if hasTradeIn is true */}
-              {watchHasTradeIn && (
-                <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-              )}
-              
-              {/* Price Summary */}
-              <QuotePriceSummary 
-                basePrice={basePrice}
-                accessoryTotalPrice={accessoryTotalPrice}
-                finalPrice={finalPrice}
-                watchReducedVAT={form.watch('reducedVAT')}
-                totalDiscount={totalDiscount}
-                roadPreparationFee={roadPreparationFee}
-              />
+              {/* Price Configuration Section */}
+              <div className="space-y-4">
+                <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
+                
+                {/* Discount and VAT Section */}
+                <QuoteDiscountSection />
+                
+                {/* Trade-In Section - Only if hasTradeIn is true */}
+                {watchHasTradeIn && (
+                  <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
+                )}
+                
+                {/* Price Summary */}
+                <div className="mt-4">
+                  <QuotePriceSummary 
+                    basePrice={basePrice}
+                    accessoryTotalPrice={accessoryTotalPrice}
+                    finalPrice={finalPrice}
+                    watchReducedVAT={form.watch('reducedVAT')}
+                    totalDiscount={totalDiscount}
+                    roadPreparationFee={roadPreparationFee}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -9,19 +9,15 @@ const QuoteDiscountSection: React.FC = () => {
   const form = useFormContext();
 
   return (
-    <div className="border-t pt-2">
-      <div className="mb-4">
-        <h3 className="text-md font-semibold mb-2">Configurazione Prezzo</h3>
-      </div>
-      
-      {/* Permuta Switch - above IVA agevolata */}
+    <div>
+      {/* Permuta Switch - top of the form */}
       <FormField
         control={form.control}
         name="hasTradeIn"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
+          <FormItem className="flex flex-row items-center justify-between rounded-md mb-4 border p-3">
             <div className="space-y-0.5">
-              <FormLabel className="text-xs">Permuta</FormLabel>
+              <FormLabel>Permuta</FormLabel>
             </div>
             <FormControl>
               <Switch
@@ -33,15 +29,15 @@ const QuoteDiscountSection: React.FC = () => {
         )}
       />
 
-      {/* VAT Switch */}
+      {/* IVA agevolata Switch */}
       <FormField
         control={form.control}
         name="reducedVAT"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-3">
+          <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 mb-4">
             <div className="space-y-0.5 flex-1">
-              <FormLabel className="text-xs inline-block">IVA agevolata</FormLabel>
-              <p className="text-xs text-muted-foreground inline-block ml-2">
+              <FormLabel className="inline-block">IVA agevolata</FormLabel>
+              <p className="text-xs text-green-700 inline-block ml-2">
                 Applica IVA al 4% (Legge 104 art.3 com.3)
               </p>
             </div>
@@ -63,14 +59,13 @@ const QuoteDiscountSection: React.FC = () => {
           name="discount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Sconto (€)</FormLabel>
+              <FormLabel>Sconto (€)</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   placeholder="0" 
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="text-sm py-1"
                 />
               </FormControl>
               <FormMessage />
@@ -84,14 +79,14 @@ const QuoteDiscountSection: React.FC = () => {
           name="licensePlateBonus"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Premio Targa (€)</FormLabel>
+              <FormLabel>Premio Targa (€)</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   placeholder="0" 
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="text-sm py-1 bg-blue-50"
+                  className="bg-blue-50"
                 />
               </FormControl>
               <FormMessage />
@@ -105,14 +100,14 @@ const QuoteDiscountSection: React.FC = () => {
           name="tradeInBonus"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Premio Permuta (€)</FormLabel>
+              <FormLabel>Premio Permuta (€)</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   placeholder="0" 
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="text-sm py-1 bg-blue-50"
+                  className="bg-blue-50"
                 />
               </FormControl>
               <FormMessage />
@@ -126,14 +121,14 @@ const QuoteDiscountSection: React.FC = () => {
           name="safetyKit"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Kit Sicurezza (€)</FormLabel>
+              <FormLabel>Kit Sicurezza (€)</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   placeholder="0" 
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="text-sm py-1 bg-yellow-50"
+                  className="bg-yellow-50"
                 />
               </FormControl>
               <FormMessage />

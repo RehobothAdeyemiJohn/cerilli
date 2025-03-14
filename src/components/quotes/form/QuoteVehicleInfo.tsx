@@ -1,96 +1,104 @@
 
 import React from 'react';
 import { Vehicle } from '@/types';
-import { Accessory } from '@/types';
-import { FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFormContext } from 'react-hook-form';
+import { formatCurrency } from '@/lib/utils';
 
 interface QuoteVehicleInfoProps {
   vehicle: Vehicle;
-  compatibleAccessories?: Accessory[];
+  compatibleAccessories?: any[];
 }
 
-const QuoteVehicleInfo = ({ vehicle, compatibleAccessories = [] }: QuoteVehicleInfoProps) => {
+const QuoteVehicleInfo: React.FC<QuoteVehicleInfoProps> = ({ 
+  vehicle, 
+  compatibleAccessories = []
+}) => {
   const form = useFormContext();
-
-  // Filter accessories that are already included in the vehicle
-  const availableAccessories = compatibleAccessories.filter(
-    accessory => !vehicle.accessories?.includes(accessory.name)
-  );
+  const selectedAccessories = form.watch('selectedAccessories') || [];
 
   return (
-    <div className="bg-[#e1e1e2] p-4 rounded-md">
-      <h3 className="text-md font-semibold mb-2">Informazioni Veicolo</h3>
-      <div className="grid grid-cols-1 gap-3">
-        {/* Model and Trim in the same row */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="text-xs text-gray-500">Modello</p>
-            <p className="font-medium">{vehicle.model}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Allestimento</p>
-            <p className="font-medium">{vehicle.trim}</p>
-          </div>
-        </div>
-        
-        {/* Engine and Color in the same row */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="text-xs text-gray-500">Motore</p>
-            <p className="font-medium">{vehicle.fuelType}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Colore</p>
-            <p className="font-medium">{vehicle.exteriorColor}</p>
-          </div>
-        </div>
-        
-        {/* Telaio */}
+    <div className="bg-gray-100 p-4 rounded-md">
+      <h3 className="text-md font-semibold mb-4">Informazioni Veicolo</h3>
+      
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <p className="text-xs text-gray-500">Telaio</p>
-          <p className="font-medium">{vehicle.telaio || 'N/A'}</p>
+          <div className="text-sm text-gray-500">Modello</div>
+          <div className="font-medium">{vehicle.model}</div>
         </div>
         
-        {/* Optional Disponibili section */}
-        {availableAccessories.length > 0 && (
-          <div className="border-t pt-2 mt-2">
-            <h3 className="font-medium text-sm mb-2">Optional Disponibili</h3>
-            <div className="grid grid-cols-1 gap-2">
-              {availableAccessories.map((accessory) => (
-                <FormField
-                  key={accessory.id}
-                  control={form.control}
-                  name="selectedAccessories"
-                  render={({ field }) => (
-                    <FormItem className="flex items-start space-x-2 space-y-0">
-                      <Checkbox
-                        checked={field.value?.includes(accessory.name)}
-                        onCheckedChange={(checked) => {
-                          const current = field.value || [];
-                          const updated = checked
-                            ? [...current, accessory.name]
-                            : current.filter((name) => name !== accessory.name);
-                          field.onChange(updated);
-                        }}
-                      />
-                      <div className="space-y-0.5 leading-none">
-                        <FormLabel className="text-xs">
-                          {accessory.name}
-                          <span className="ml-1 text-xs text-gray-500">
-                            (+€{accessory.priceWithVAT?.toLocaleString('it-IT')})
-                          </span>
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
+        <div>
+          <div className="text-sm text-gray-500">Allestimento</div>
+          <div className="font-medium">{vehicle.trim}</div>
+        </div>
+        
+        <div>
+          <div className="text-sm text-gray-500">Motore</div>
+          <div className="font-medium">{vehicle.fuelType}</div>
+        </div>
+        
+        <div>
+          <div className="text-sm text-gray-500">Colore</div>
+          <div className="font-medium">{vehicle.exteriorColor}</div>
+        </div>
+        
+        {vehicle.telaio && (
+          <div>
+            <div className="text-sm text-gray-500">Telaio</div>
+            <div className="font-medium">{vehicle.telaio}</div>
           </div>
         )}
       </div>
+      
+      {/* Optional Accessories */}
+      {compatibleAccessories && compatibleAccessories.length > 0 && (
+        <div>
+          <h4 className="text-sm font-medium mb-2">Optional Disponibili</h4>
+          <div className="space-y-2">
+            {compatibleAccessories.map((accessory) => (
+              <FormField
+                key={accessory.id}
+                control={form.control}
+                name="selectedAccessories"
+                render={({ field }) => {
+                  return (
+                    <FormItem
+                      key={accessory.id}
+                      className="flex flex-row items-center space-x-2 space-y-0"
+                    >
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value?.includes(accessory.id)}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? field.onChange([...field.value, accessory.id])
+                              : field.onChange(
+                                  field.value?.filter(
+                                    (value: string) => value !== accessory.id
+                                  )
+                                );
+                          }}
+                        />
+                      </FormControl>
+                      <div className="flex-1 flex justify-between items-center">
+                        <FormLabel className="text-sm cursor-pointer">
+                          {accessory.name}
+                        </FormLabel>
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(accessory.price)}
+                        </span>
+                      </div>
+                    </FormItem>
+                  );
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
