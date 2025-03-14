@@ -29,13 +29,17 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const tradeInValue = form.watch('tradeInValue') || 0;
   const tradeInHandlingFee = form.watch('tradeInHandlingFee') || 0;
   
-  // Calculate VAT rate - only applied for reduced VAT cases
-  const vatRate = watchReducedVAT ? 0.04 : 0;
+  // IMPORTANT: Base price already includes 22% VAT, so we need to adjust when calculating reduced VAT
+  // For reduced VAT, we need to:
+  // 1. Calculate price without VAT (divide by 1.22)
+  // 2. Apply 4% VAT to that base price (multiply by 1.04)
   
-  // Calculate VAT amount on applicable items (only when reduced VAT is selected)
-  // Base price already includes 22% VAT, so we don't add it again
+  // Calculate the applicable tax rate for display
+  const vatRate = watchReducedVAT ? 0.04 : 0.22;
+  
+  // Calculate VAT amount for display purposes only
   const vatAmount = watchReducedVAT ? 
-    ((basePrice + accessoryTotalPrice - discount - licensePlateBonus - tradeInBonus + roadPreparationFee + safetyKit + (hasTradeIn ? tradeInHandlingFee : 0)) * vatRate) : 0;
+    ((basePrice / 1.22) * vatRate) : 0;
   
   return (
     <div className="pt-2 border-t">
@@ -101,7 +105,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         
         {/* Final price - with full width blue background */}
         <div className="col-span-4 mt-3">
-          <div className="bg-blue-900 py-2 px-3 rounded">
+          <div className="bg-blue-900 py-2 px-3 rounded w-full">
             <p className="text-xs text-white font-semibold text-center">Prezzo Finale - Chiavi in mano</p>
             <p className="font-bold text-xl text-white text-center">
               {formatCurrency(finalPrice)}

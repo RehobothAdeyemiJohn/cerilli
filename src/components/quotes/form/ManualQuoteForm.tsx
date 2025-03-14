@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -27,24 +26,21 @@ import QuotePriceSummary from './QuotePriceSummary';
 import QuoteFormActions from './QuoteFormActions';
 import VehiclePriceDisplay from '@/components/vehicles/form/VehiclePriceDisplay';
 
-// Form schema for manual quote creation
 const manualQuoteSchema = z.object({
   model: z.string().min(1, { message: "Il modello è obbligatorio" }),
   trim: z.string().min(1, { message: "L'allestimento è obbligatorio" }),
   fuelType: z.string().min(1, { message: "Il tipo di carburante è obbligatorio" }),
   exteriorColor: z.string().min(1, { message: "Il colore è obbligatorio" }),
   
-  // Customer fields
   customerName: z.string().min(1, { message: "Il nome del cliente è obbligatorio" }),
   customerEmail: z.string().email({ message: "Formato email non valido" }),
   customerPhone: z.string().min(1, { message: "Il numero di telefono è obbligatorio" }),
   dealerId: z.string().min(1, { message: "Il concessionario è obbligatorio" }),
   
-  // Optional fields
   discount: z.number().default(0),
-  licensePlateBonus: z.number().default(0), // New field for Premio Targa
-  tradeInBonus: z.number().default(0), // New field for Premio Permuta
-  safetyKit: z.number().default(0), // New field for Kit Sicurezza
+  licensePlateBonus: z.number().default(0),
+  tradeInBonus: z.number().default(0),
+  safetyKit: z.number().default(0),
   reducedVAT: z.boolean().default(false),
   hasTradeIn: z.boolean().default(false),
   tradeInBrand: z.string().optional(),
@@ -52,7 +48,7 @@ const manualQuoteSchema = z.object({
   tradeInYear: z.string().optional(),
   tradeInKm: z.number().optional(),
   tradeInValue: z.number().optional(),
-  tradeInHandlingFee: z.number().default(0), // New field for Gestione Usato
+  tradeInHandlingFee: z.number().default(0),
   notes: z.string().optional(),
   roadPreparationFee: z.number().default(400),
 });
@@ -71,7 +67,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const [showTradeIn, setShowTradeIn] = useState(false);
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   
-  // Fetch all required data
   const { data: models = [], isLoading: isLoadingModels } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll,
@@ -92,11 +87,10 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     queryFn: colorsApi.getAll,
   });
   
-  // Get all dealers for admin users
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
-    enabled: isAdmin, // Only fetch if user is admin
+    enabled: isAdmin,
   });
 
   console.log('Loaded models:', models);
@@ -145,7 +139,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
   const watchReducedVAT = form.watch('reducedVAT');
   const watchTradeInHandlingFee = form.watch('tradeInHandlingFee');
   
-  // Get model-compatible trims
   const filteredTrims = trims.filter(trim => {
     if (!watchModel) return true;
     return trim.compatibleModels.length === 0 || 
@@ -153,14 +146,12 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
            trim.compatibleModels.includes(models.find(m => m.name === watchModel)?.id || '');
   });
   
-  // Calculate final price
   const roadPreparationFee = 400;
   const basePrice = calculatedPrice;
   const discount = watchDiscount || 0;
   const tradeInValue = watchHasTradeIn ? watchTradeInValue || 0 : 0;
   const totalDiscount = discount + tradeInValue;
   
-  // Calculate vehicle price based on selected options
   useEffect(() => {
     const calculatePrice = async () => {
       if (!watchModel || !watchTrim || !watchFuelType || !watchExteriorColor) {
@@ -173,7 +164,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
         const selectedTrim = trims.find(t => t.name === watchTrim);
         const selectedFuelType = fuelTypes.find(f => f.name === watchFuelType);
         
-        // Parse color to extract name and type from format "Name (type)"
         const colorRegex = /(.+) \((.+)\)$/;
         const colorMatch = watchExteriorColor.match(colorRegex);
         const colorName = colorMatch ? colorMatch[1] : watchExteriorColor;
@@ -184,7 +174,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
         );
         
         if (selectedModel && selectedTrim && selectedFuelType && selectedColor) {
-          // Calculate price based on base model price + adjustments
           const baseModelPrice = selectedModel.basePrice;
           const trimAdjustment = selectedTrim.basePrice;
           const fuelTypeAdjustment = selectedFuelType.priceAdjustment;
@@ -208,59 +197,59 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     calculatePrice();
   }, [watchModel, watchTrim, watchFuelType, watchExteriorColor, models, trims, fuelTypes, colors]);
   
-  // Calculate final price with all components
   const finalPrice = calculateFinalPrice();
   
-  // Function to calculate the final price with all components
   function calculateFinalPrice() {
-    // Base calculation without VAT
-    const subTotal = basePrice - (watchDiscount || 0) + 
-                    (watchLicensePlateBonus || 0) + (watchTradeInBonus || 0) + 
-                    (watchSafetyKit || 0) + roadPreparationFee;
-    
-    // Calculate VAT amount (trade-in value is exempt from VAT)
-    const vatRate = watchReducedVAT ? 0.04 : 0.22;
-    
-    // Calculate final price with trade-in adjustments and VAT
-    let final = subTotal;
-    
-    // Apply VAT to all components except trade-in value
-    final += (subTotal + (watchTradeInHandlingFee || 0)) * vatRate;
-    
-    // Apply trade-in value and handling fee
-    if (watchHasTradeIn) {
-      final -= (watchTradeInValue || 0);
-      final += (watchTradeInHandlingFee || 0);
+    const discount = watchDiscount || 0;
+    const licensePlateBonus = watchLicensePlateBonus || 0;
+    const tradeInBonus = watchTradeInBonus || 0;
+    const safetyKit = watchSafetyKit || 0;
+    const tradeInValue = watchHasTradeIn ? (watchTradeInValue || 0) : 0;
+    const tradeInHandlingFee = watchHasTradeIn ? (watchTradeInHandlingFee || 0) : 0;
+    const reducedVAT = watchReducedVAT || false;
+
+    let priceWithCorrectVAT = calculatedPrice;
+    if (reducedVAT) {
+      const priceWithoutVAT = calculatedPrice / 1.22;
+      priceWithCorrectVAT = priceWithoutVAT * 1.04;
     }
+
+    let calculatedFinalPrice = priceWithCorrectVAT;
     
-    return Math.round(final * 100) / 100;
+    calculatedFinalPrice -= discount;
+    calculatedFinalPrice -= licensePlateBonus;
+    calculatedFinalPrice -= tradeInBonus;
+    
+    calculatedFinalPrice += safetyKit;
+    calculatedFinalPrice += roadPreparationFee;
+    calculatedFinalPrice += tradeInHandlingFee;
+    
+    calculatedFinalPrice -= tradeInValue;
+
+    return Math.round(calculatedFinalPrice * 100) / 100;
   }
   
   const handleFormSubmit = (data: ManualQuoteFormValues) => {
-    // Create a proper UUID for manual quotes instead of a string
     const vehicleId = uuidv4();
     
-    // Create vehicle data for this quote
     const manualVehicleData = {
       model: data.model,
       trim: data.trim,
       fuelType: data.fuelType,
       exteriorColor: data.exteriorColor,
-      manualEntry: true, // Flag to identify manual vehicle entries
+      manualEntry: true,
       price: calculatedPrice
     };
     
-    // Calculate accessory total price and final price
     const submitData = {
       ...data,
-      vehicleId: vehicleId, // Use proper UUID
+      vehicleId: vehicleId,
       vehicleData: manualVehicleData,
       finalPrice: finalPrice,
       manualEntry: true,
       price: calculatedPrice
     };
     
-    // Set trade-in info
     if (!submitData.hasTradeIn) {
       submitData.tradeInBrand = '';
       submitData.tradeInModel = '';
@@ -271,24 +260,19 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
     
     console.log("Form submission data:", submitData);
     
-    // Call parent onSubmit
     onSubmit(submitData);
   };
 
-  // Loading state
   if (isLoadingModels || isLoadingTrims || isLoadingFuelTypes || isLoadingColors) {
     return <div className="text-center p-4">Caricamento configurazioni...</div>;
   }
   
   return (
     <div className="w-full text-sm">
-      {/* Form */}
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column - Vehicle and Customer Information */}
             <div className="space-y-4">
-              {/* Manual Vehicle Information */}
               <div className="p-4 bg-gray-50 rounded-md space-y-4">
                 <h3 className="text-md font-semibold mb-2">Informazioni Veicolo</h3>
                 
@@ -407,11 +391,9 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
                   />
                 </div>
                 
-                {/* Display calculated price */}
                 <VehiclePriceDisplay calculatedPrice={calculatedPrice} />
               </div>
 
-              {/* Customer Information */}
               <QuoteCustomerInfo 
                 isAdmin={isAdmin} 
                 dealers={dealers} 
@@ -420,15 +402,9 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
               />
             </div>
             
-            {/* Right Column - Price Configuration */}
             <div className="space-y-4">
-              {/* Discount and VAT Section */}
               <QuoteDiscountSection />
-
-              {/* Trade-In Section */}
               <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-
-              {/* Price Summary */}
               <QuotePriceSummary 
                 basePrice={basePrice}
                 accessoryTotalPrice={0}
@@ -440,7 +416,6 @@ const ManualQuoteForm = ({ onSubmit, onCancel, isSubmitting = false }: ManualQuo
             </div>
           </div>
 
-          {/* Form Actions */}
           <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />
         </form>
       </FormProvider>
