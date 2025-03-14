@@ -14,9 +14,14 @@ export const useTransformOrderConfirm = (
   };
   
   const handleConfirmTransform = async () => {
-    if (isTransforming) return; // Prevent multiple clicks
+    if (isTransforming) {
+      console.log("Already processing, ignoring click");
+      return; // Prevent multiple clicks
+    }
     
     setIsTransforming(true);
+    console.log("Setting isTransforming to true");
+    
     try {
       console.log("Starting transformation process...");
       await handleTransformToOrder();
@@ -39,6 +44,7 @@ export const useTransformOrderConfirm = (
       // Don't close the main dialog if there's an error, but close the confirm dialog
       setShowTransformConfirm(false);
     } finally {
+      console.log("Setting isTransforming to false");
       setIsTransforming(false);
     }
   };

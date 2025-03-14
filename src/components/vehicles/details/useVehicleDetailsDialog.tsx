@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Vehicle, Quote } from '@/types';
+import { Vehicle, Quote, Order } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -235,12 +235,12 @@ export function useVehicleDetailsDialog(
         });
         
         try {
-          // Create the order record
+          // Create the order record with properly typed status
           const orderData = {
             vehicleId: vehicle.id,
             dealerId,
             customerName: vehicle.reservedBy,
-            status: 'processing',
+            status: 'processing' as Order['status'],
             orderDate: new Date().toISOString()
           };
           
