@@ -74,7 +74,7 @@ const VehicleBasicInfo = ({ control, locations, isVirtualStock }: VehicleBasicIn
         )}
       />
 
-      {isVirtualStock && isAdmin && (
+      {isVirtualStock && (
         <FormField
           control={control}
           name="originalStock"

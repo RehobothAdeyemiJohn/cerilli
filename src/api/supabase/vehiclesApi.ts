@@ -92,19 +92,15 @@ export const vehiclesApi = {
     // Calculate estimated arrival days for virtual stock
     let estimatedArrivalDays = null;
     if (vehicle.location === 'Stock Virtuale' && vehicle.originalStock) {
-      const dummyVehicle = {
-        id: uuidv4(), // Temporary ID for calculation
-        originalStock: vehicle.originalStock,
-        dateAdded: vehicle.dateAdded || new Date().toISOString().split('T')[0]
-      };
-      
-      const arrivalEstimate = calculateEstimatedArrival(dummyVehicle);
-      const today = new Date();
-      const arrivalDate = new Date(arrivalEstimate.formattedRange.split('/').reverse().join('-'));
-      
-      // Calculate days difference
-      const diffTime = Math.abs(arrivalDate.getTime() - today.getTime());
-      estimatedArrivalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      // Different arrival time estimates based on the original stock location
+      if (vehicle.originalStock === 'Germania') {
+        // Germany stock: 38-52 days
+        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+      } else {
+        // China stock (default): 90-120 days
+        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      }
+      console.log(`Giorni di arrivo stimati per stock ${vehicle.originalStock}: ${estimatedArrivalDays}`);
     }
     
     // Map frontend field names to database column names

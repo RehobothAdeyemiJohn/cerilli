@@ -21,46 +21,58 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange, onImageUpload })
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      if (onImageUpload) {
-        setIsUploading(true);
-        try {
-          // Create a unique file name
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-          const filePath = `model-images/${fileName}`;
-          
-          // Upload file to Supabase Storage
-          const { data, error } = await supabase.storage
-            .from('images')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-          
-          if (error) throw error;
-          
-          // Get public URL
-          const { data: publicUrlData } = supabase.storage
-            .from('images')
-            .getPublicUrl(filePath);
-          
-          // Update model with image URL
-          onChange('imageUrl', publicUrlData.publicUrl);
-          
-          toast({
-            title: "Immagine Caricata",
-            description: "L'immagine è stata caricata con successo.",
+      
+      setIsUploading(true);
+      try {
+        // Create a unique file name
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `model-images/${fileName}`;
+        
+        console.log("Uploading image to Supabase Storage:", filePath);
+        
+        // Upload file to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('images')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
           });
-        } catch (error: any) {
-          console.error('Error uploading image:', error);
-          toast({
-            title: "Errore",
-            description: `Errore durante il caricamento dell'immagine: ${error.message}`,
-            variant: "destructive",
-          });
-        } finally {
-          setIsUploading(false);
+        
+        if (error) {
+          console.error("Upload error:", error);
+          throw error;
         }
+        
+        console.log("Upload successful, getting public URL for:", filePath);
+        
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('images')
+          .getPublicUrl(filePath);
+        
+        if (!publicUrlData || !publicUrlData.publicUrl) {
+          throw new Error("Failed to get public URL for uploaded image");
+        }
+        
+        console.log("Public URL obtained:", publicUrlData.publicUrl);
+        
+        // Update model with image URL
+        onChange('imageUrl', publicUrlData.publicUrl);
+        
+        toast({
+          title: "Immagine Caricata",
+          description: "L'immagine è stata caricata con successo.",
+        });
+      } catch (error: any) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "Errore",
+          description: `Errore durante il caricamento dell'immagine: ${error.message}`,
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploading(false);
       }
     }
   };

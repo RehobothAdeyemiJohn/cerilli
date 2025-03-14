@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle, Quote, Order } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -25,6 +24,7 @@ export function useVehicleDetailsDialog(
   const { user } = useAuth();
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
+  const isVirtualStock = vehicle?.location === 'Stock Virtuale';
 
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
@@ -298,14 +298,183 @@ export function useVehicleDetailsDialog(
     isSubmitting,
     isTransforming,
     user,
+    isVirtualStock,
     handleShowQuoteForm,
     handleCreateQuote,
-    handleCancelQuote,
-    handleReserveVehicle,
-    handleReserveVirtualVehicle,
-    handleCancelReservation,
-    handleShowCancelReservationForm,
-    handleCancelReservationSubmit,
-    handleTransformToOrder
+    handleCancelQuote: () => setShowQuoteForm(false),
+    handleReserveVehicle: () => setShowReserveForm(true),
+    handleReserveVirtualVehicle: () => setShowVirtualReserveForm(true),
+    handleCancelReservation: () => {
+      setShowReserveForm(false);
+      setShowVirtualReserveForm(false);
+      setShowCancelReservationForm(false);
+    },
+    handleShowCancelReservationForm: () => setShowCancelReservationForm(true),
+    handleCancelReservationSubmit: async () => {
+      if (!vehicle) return;
+      
+      try {
+        setIsSubmitting(true);
+        
+        const updatedVehicle: Vehicle = {
+          ...vehicle,
+          status: 'available',
+          reservedBy: undefined,
+          reservedAccessories: [],
+          virtualConfig: vehicle.location === 'Stock Virtuale' ? undefined : vehicle.virtualConfig,
+          reservationDestination: undefined,
+          reservationTimestamp: undefined
+        };
+        
+        await vehiclesApi.update(vehicle.id, updatedVehicle);
+        
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        
+        toast({
+          title: "Prenotazione Cancellata",
+          description: `La prenotazione per ${vehicle.model} ${vehicle.trim || ''} è stata cancellata.`,
+        });
+        
+        setShowCancelReservationForm(false);
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Error canceling reservation:', error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la cancellazione della prenotazione",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    handleTransformToOrder: async () => {
+      if (!vehicle) return;
+      
+      if (isTransforming) return;
+      
+      try {
+        setIsTransforming(true);
+        console.log("Beginning transformation process for vehicle:", vehicle.id);
+        
+        if (vehicle.status !== 'reserved') {
+          console.error("Vehicle not in reserved status:", vehicle.status);
+          toast({
+            title: "Errore",
+            description: "Solo i veicoli prenotati possono essere trasformati in ordini",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        console.log("Checking current vehicle status in database...");
+        
+        // Double-check the vehicle status to prevent race conditions
+        const { data: currentVehicle, error: fetchError } = await supabase
+          .from('vehicles')
+          .select('status')
+          .eq('id', vehicle.id)
+          .maybeSingle();
+        
+        if (fetchError) {
+          console.error("Error checking vehicle status:", fetchError);
+          throw new Error("Error checking vehicle status");
+        }
+        
+        if (!currentVehicle) {
+          console.error("Vehicle not found in database");
+          throw new Error("Vehicle not found in database");
+        }
+        
+        if (currentVehicle.status === 'ordered') {
+          console.log("Vehicle already ordered, skipping transformation");
+          toast({
+            title: "Avviso",
+            description: "Questo veicolo è già stato trasformato in ordine",
+          });
+          return;
+        }
+        
+        if (currentVehicle.status !== 'reserved') {
+          console.error("Vehicle no longer in reserved status:", currentVehicle.status);
+          throw new Error(`Vehicle in invalid status: ${currentVehicle.status}`);
+        }
+        
+        console.log("Transforming vehicle to ordered status:", vehicle.id);
+        
+        // Perform the update to make the vehicle 'ordered'
+        await vehiclesApi.transformToOrder(vehicle.id);
+        
+        console.log("Vehicle status updated successfully to ordered");
+        
+        // Only after successful vehicle status update, create the order
+        if (vehicle.reservedBy) {
+          const dealerId = user?.dealerId || (dealers.length > 0 ? dealers[0].id : null);
+          
+          if (!dealerId) {
+            console.error("No dealer ID available for order creation");
+            toast({
+              title: "Avviso",
+              description: "Veicolo ordinato ma non è stato possibile creare il record dell'ordine: nessun concessionario disponibile",
+            });
+            
+            // Still consider this a success since the vehicle status was updated
+            await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+            onOpenChange(false);
+            return;
+          }
+          
+          console.log("Creating order record with data:", {
+            vehicleId: vehicle.id,
+            dealerId,
+            customerName: vehicle.reservedBy
+          });
+          
+          try {
+            // Create the order record with properly typed status
+            const orderData: Omit<Order, 'id'> = {
+              vehicleId: vehicle.id,
+              dealerId,
+              customerName: vehicle.reservedBy,
+              status: 'processing' as Order['status'],
+              orderDate: new Date().toISOString()
+            };
+            
+            const createdOrder = await ordersApi.create(orderData);
+            console.log("Order created successfully:", createdOrder);
+          } catch (orderError) {
+            console.error("Error creating order record:", orderError);
+            toast({
+              title: "Avviso",
+              description: "Veicolo ordinato ma si è verificato un errore nella creazione del record dell'ordine",
+            });
+          }
+        }
+        
+        // Update queries with staleTime: 0 to force a refresh
+        console.log("Refreshing data queries...");
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        await queryClient.invalidateQueries({ queryKey: ['orders'] });
+        
+        console.log("Transformation process completed successfully");
+        
+        toast({
+          title: "Ordine Creato",
+          description: "Il veicolo è stato trasformato in ordine con successo.",
+        });
+        
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Error in transform to order process:', error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la trasformazione in ordine",
+          variant: "destructive",
+        });
+      } finally {
+        console.log("Setting isTransforming to false");
+        setIsTransforming(false);
+      }
+    }
   };
 }

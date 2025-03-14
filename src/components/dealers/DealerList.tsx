@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Trash2, Users } from 'lucide-react';
@@ -27,7 +28,6 @@ const DealerList: React.FC<DealerListProps> = ({ dealerId }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isVendorsOpen, setIsVendorsOpen] = useState(false);
   const [selectedDealer, setSelectedDealer] = useState<Dealer | null>(null);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = user?.type === 'admin';
@@ -198,7 +198,7 @@ const DealerList: React.FC<DealerListProps> = ({ dealerId }) => {
         <VendorsDialog
           open={isVendorsOpen}
           onOpenChange={() => setIsVendorsOpen(false)}
-          dealerId={selectedDealer.id}
+          dealer={selectedDealer}
         />
       )}
     </>

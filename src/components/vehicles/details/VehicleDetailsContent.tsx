@@ -1,266 +1,172 @@
 
 import React from 'react';
 import { Vehicle } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { CalendarClock, InfoIcon, Package, Settings } from 'lucide-react';
-import { formatCurrency, calculateEstimatedArrival } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/AuthContext';
-import { Plus } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
-  onCreateQuote?: () => void;
-  onReserveVehicle?: () => void;
-  onReserveVirtualVehicle?: () => void;
-  onCancelReservation?: () => void;
-  onTransformToOrder?: () => void;
-  isTransforming?: boolean;
-  userCanCreateQuotes?: boolean;
-  isSubmitting?: boolean;
 }
 
-const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
-  vehicle,
-  onCreateQuote,
-  onReserveVehicle,
-  onReserveVirtualVehicle,
-  onCancelReservation,
-  onTransformToOrder,
-  isTransforming
-}) => {
-  const { user } = useAuth();
-  const isAdmin = user?.type === 'admin';
-  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
-  
+const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle }) => {
+  const formattedDate = vehicle.dateAdded ? formatDate(new Date(vehicle.dateAdded)) : 'N/A';
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const isDealerStock = vehicle.location === 'Stock Dealer';
-  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle) : null;
+  const isStockCMC = vehicle.location === 'Stock CMC';
+  const shouldHideImage = isVirtualStock || isStockCMC;
   
-  const getStatusText = (status: Vehicle['status']) => {
-    switch (status) {
-      case 'available': return 'Disponibile';
-      case 'reserved': return 'Prenotato';
-      case 'sold': return 'Venduto';
-      case 'ordered': return 'Ordinato';
-      case 'delivered': return 'Consegnato';
-      default: return status;
-    }
-  };
-  
-  const getStatusBadgeClass = (status: Vehicle['status']) => {
-    switch (status) {
-      case 'available': return 'bg-green-100 text-green-800';
-      case 'reserved': return 'bg-amber-100 text-amber-800';
-      case 'sold': return 'bg-gray-100 text-gray-800';
-      case 'ordered': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const showImage = !(vehicle.location === 'Stock CMC' || vehicle.location === 'Stock Virtuale');
-  const imageUrl = vehicle.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
-  
+  // Format reservation details
+  const reservationDate = vehicle.reservationTimestamp 
+    ? formatDate(new Date(vehicle.reservationTimestamp)) 
+    : null;
+    
   return (
-    <div className="pt-6 pb-4 px-4 md:px-6">
-      <div className="grid md:grid-cols-[1fr_1fr] gap-6">
-        {showImage && (
-          <div className="rounded overflow-hidden">
-            <div
-              className="w-full h-48 md:h-64 bg-center bg-cover rounded"
-              style={{ backgroundImage: `url(${imageUrl})` }}
-            />
-          </div>
-        )}
-        
-        <div className={!showImage ? "col-span-2" : ""}>
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-semibold">{vehicle.model}</h3>
-              {!isVirtualStock && <p className="text-gray-500">{vehicle.trim}</p>}
-            </div>
-            <Badge className={getStatusBadgeClass(vehicle.status)}>
-              {getStatusText(vehicle.status)}
-            </Badge>
-          </div>
-          
-          <div className="grid gap-3 mt-4">
-            <div className="grid grid-cols-2">
-              <span className="text-gray-500">Posizione:</span>
-              <span>{vehicle.location}</span>
-            </div>
-            
-            {isVirtualStock && isAdmin && vehicle.originalStock && (
-              <div className="grid grid-cols-2">
-                <span className="text-gray-500">Origine:</span>
-                <span>Stock {vehicle.originalStock}</span>
-              </div>
-            )}
-            
-            {isVirtualStock && estimatedArrival && (
-              <div className="grid grid-cols-2 items-center">
-                <span className="text-gray-500 flex items-center gap-1">
-                  <CalendarClock className="h-4 w-4" />
-                  Data Arrivo:
-                </span>
-                <span className="font-medium text-primary">
-                  {estimatedArrival.formattedRange}
-                </span>
-              </div>
-            )}
-            
-            {!isVirtualStock && (
-              <>
-                <div className="grid grid-cols-2">
-                  <span className="text-gray-500">Alimentazione:</span>
-                  <span>{vehicle.fuelType}</span>
-                </div>
-                
-                <div className="grid grid-cols-2">
-                  <span className="text-gray-500">Colore:</span>
-                  <span>{vehicle.exteriorColor}</span>
-                </div>
-                
-                <div className="grid grid-cols-2">
-                  <span className="text-gray-500">Cambio:</span>
-                  <span>{vehicle.transmission}</span>
-                </div>
-                
-                <div className="grid grid-cols-2">
-                  <span className="text-gray-500">Telaio:</span>
-                  <span>{vehicle.telaio || 'N/A'}</span>
-                </div>
-                
-                <div className="grid grid-cols-2">
-                  <span className="text-gray-500">Prezzo:</span>
-                  <span className="font-bold text-primary">{formatCurrency(vehicle.price)}</span>
-                </div>
-              </>
-            )}
-            
-            {vehicle.reservedBy && (
-              <div className="grid grid-cols-2">
-                <span className="text-gray-500">Prenotato da:</span>
-                <span className="font-semibold">{vehicle.reservedBy}</span>
-              </div>
-            )}
-            
-            {vehicle.virtualConfig && (
-              <div className="mt-2">
-                <div className="flex items-center text-primary mb-2">
-                  <Settings className="h-4 w-4 mr-1.5" />
-                  <span className="font-medium">Configurazione Veicolo</span>
-                </div>
-                
-                <div className="bg-gray-50 p-3 rounded space-y-2">
-                  <div className="grid grid-cols-2">
-                    <span className="text-gray-500">Allestimento:</span>
-                    <span>{vehicle.virtualConfig.trim}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2">
-                    <span className="text-gray-500">Alimentazione:</span>
-                    <span>{vehicle.virtualConfig.fuelType}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2">
-                    <span className="text-gray-500">Colore:</span>
-                    <span>{vehicle.virtualConfig.exteriorColor}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2">
-                    <span className="text-gray-500">Cambio:</span>
-                    <span>{vehicle.virtualConfig.transmission}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2">
-                    <span className="text-gray-500">Prezzo:</span>
-                    <span className="font-bold text-primary">{formatCurrency(vehicle.virtualConfig.price)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {((vehicle.accessories && vehicle.accessories.length > 0) || 
-         (vehicle.virtualConfig?.accessories && vehicle.virtualConfig.accessories.length > 0)) && (
-        <div className="mt-6">
-          <h4 className="font-medium flex items-center mb-2">
-            <Package className="h-4 w-4 mr-1.5" />
-            Accessori
-          </h4>
-          
-          <div className="bg-gray-50 p-3 rounded">
-            <ul className="list-disc list-inside space-y-1">
-              {!isVirtualStock && vehicle.accessories && vehicle.accessories.map((acc, idx) => (
-                <li key={idx} className="text-sm">{acc}</li>
-              ))}
-              
-              {vehicle.virtualConfig?.accessories && vehicle.virtualConfig.accessories.map((acc, idx) => (
-                <li key={idx} className="text-sm">{acc}</li>
-              ))}
-            </ul>
-          </div>
+    <div className="space-y-4 pt-2">
+      {/* Vehicle image */}
+      {!shouldHideImage && vehicle.imageUrl && (
+        <div className="flex justify-center mb-4">
+          <img 
+            src={vehicle.imageUrl} 
+            alt={`${vehicle.model} ${vehicle.trim || ''}`} 
+            className="rounded-md object-cover max-h-[250px] w-auto"
+          />
         </div>
       )}
       
-      <div className="mt-6 flex flex-wrap gap-3 justify-end">
-        {/* Hide Create Quote button for virtual stock */}
-        {vehicle.status === 'available' && !isVirtualStock && onCreateQuote && (
-          <Button onClick={onCreateQuote} className="flex items-center gap-2">
-            <InfoIcon className="h-4 w-4" />
-            <span>Crea Preventivo</span>
-          </Button>
-        )}
-        
-        {vehicle.status === 'available' && vehicle.location !== 'Stock Virtuale' && (
-          <Button 
-            onClick={onReserveVehicle} 
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700" 
-          >
-            <Plus className="h-4 w-4" />
-            <span>Prenota Veicolo</span>
-          </Button>
-        )}
-        
-        {vehicle.status === 'available' && vehicle.location === 'Stock Virtuale' && (
-          <Button 
-            onClick={onReserveVirtualVehicle} 
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Prenota Config. Virtuale</span>
-          </Button>
-        )}
-        
-        {vehicle.status === 'reserved' && isAdmin && onCancelReservation && (
-          <Button variant="destructive" onClick={onCancelReservation}>
-            Cancella Prenotazione
-          </Button>
-        )}
-        
-        {vehicle.status === 'reserved' && isAdmin && onTransformToOrder && (
-          <Button 
-            onClick={onTransformToOrder} 
-            disabled={isTransforming}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isTransforming ? "Trasformazione..." : "Trasforma in Ordine"}
-          </Button>
-        )}
+      {/* Virtual Configuration Card */}
+      {vehicle.virtualConfig && isVirtualStock && vehicle.status === 'reserved' && (
+        <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-4">
+            <h3 className="font-semibold text-lg mb-2">Configurazione Virtuale</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-sm">
+                <span className="font-medium">Allestimento:</span> {vehicle.virtualConfig.trim}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Alimentazione:</span> {vehicle.virtualConfig.fuelType}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Colore:</span> {vehicle.virtualConfig.exteriorColor}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Trasmissione:</span> {vehicle.virtualConfig.transmission}
+              </div>
+              <div className="text-sm col-span-2">
+                <span className="font-medium">Prezzo:</span> €{vehicle.virtualConfig.price?.toLocaleString('it-IT')}
+              </div>
+              {vehicle.virtualConfig.accessories && vehicle.virtualConfig.accessories.length > 0 && (
+                <div className="text-sm col-span-2">
+                  <span className="font-medium">Accessori:</span> {vehicle.virtualConfig.accessories.join(', ')}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Basic Details */}
+      <div>
+        <h3 className="font-semibold mb-2">Dettagli Base</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="text-sm">
+            <span className="font-medium">Modello:</span> {vehicle.model}
+          </div>
+          {!isVirtualStock && (
+            <>
+              <div className="text-sm">
+                <span className="font-medium">Allestimento:</span> {vehicle.trim || 'N/A'}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Alimentazione:</span> {vehicle.fuelType || 'N/A'}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Colore:</span> {vehicle.exteriorColor || 'N/A'}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Trasmissione:</span> {vehicle.transmission || 'N/A'}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Telaio:</span> {vehicle.telaio || 'N/A'}
+              </div>
+            </>
+          )}
+          <div className="text-sm">
+            <span className="font-medium">Data Aggiunta:</span> {formattedDate}
+          </div>
+          <div className="text-sm">
+            <span className="font-medium">Posizione:</span> {vehicle.location}
+          </div>
+          {isVirtualStock && vehicle.originalStock && (
+            <div className="text-sm">
+              <span className="font-medium">Stock Origine:</span> {vehicle.originalStock}
+            </div>
+          )}
+          {isVirtualStock && vehicle.estimatedArrivalDays && (
+            <div className="text-sm">
+              <span className="font-medium">Arrivo Stimato:</span> {vehicle.estimatedArrivalDays} giorni
+            </div>
+          )}
+          {!isVirtualStock && (
+            <div className="text-sm">
+              <span className="font-medium">Prezzo:</span> {vehicle.price ? `€${vehicle.price.toLocaleString('it-IT')}` : 'N/A'}
+            </div>
+          )}
+          <div className="text-sm">
+            <span className="font-medium">Stato:</span> {vehicle.status}
+          </div>
+        </div>
       </div>
       
-      {vehicle.status === 'reserved' && (
-        <div className="mt-6 pt-4 border-t text-sm text-gray-500 flex items-start">
-          <InfoIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-          <p>
-            La prenotazione è valida per 24 ore, dopodiché il veicolo tornerà disponibile nello stock.
-          </p>
-        </div>
+      {/* Accessories Section */}
+      {!isVirtualStock && vehicle.accessories && vehicle.accessories.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h3 className="font-semibold mb-2">Accessori</h3>
+            <ul className="text-sm list-disc pl-5">
+              {vehicle.accessories.map((accessory, index) => (
+                <li key={index}>{accessory}</li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+      
+      {/* Reservation Details Section */}
+      {vehicle.status === 'reserved' && vehicle.reservedBy && (
+        <>
+          <Separator />
+          <div>
+            <h3 className="font-semibold mb-2">Dettagli Prenotazione</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-sm">
+                <span className="font-medium">Prenotato Da:</span> {vehicle.reservedBy}
+              </div>
+              {reservationDate && (
+                <div className="text-sm">
+                  <span className="font-medium">Data Prenotazione:</span> {reservationDate}
+                </div>
+              )}
+              {vehicle.reservationDestination && (
+                <div className="text-sm">
+                  <span className="font-medium">Destinazione:</span> {vehicle.reservationDestination}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Reserved Accessories */}
+          {vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Accessori Prenotati</h3>
+              <ul className="text-sm list-disc pl-5">
+                {vehicle.reservedAccessories.map((accessory, index) => (
+                  <li key={index}>{accessory}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
