@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -28,6 +29,9 @@ const Defects = () => {
     dealerId?: string;
     search?: string;
   }>({});
+
+  console.log("Current user context:", user);
+  console.log("Is dealer:", isDealer, "Dealer ID:", dealerId);
 
   const {
     data: defectReports = [],
@@ -105,7 +109,7 @@ const Defects = () => {
           });
         }
         
-        return [];
+        throw err;
       }
     },
     refetchOnWindowFocus: false

@@ -841,6 +841,10 @@ export type Database = {
         }
         Returns: string
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       list_tables: {
         Args: Record<PropertyKey, never>
         Returns: {

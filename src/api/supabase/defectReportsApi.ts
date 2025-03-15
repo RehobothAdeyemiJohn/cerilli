@@ -2,22 +2,9 @@
 import { supabase } from './client';
 import { DefectReport, DefectReportStats } from '@/types';
 
-// Helper function to check authentication and get session
-const getAuthenticatedSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  
-  if (error || !data.session) {
-    console.error('Authentication error:', error?.message || 'No active session found');
-    throw new Error('Authentication error: ' + (error?.message || 'Sessione non valida. Effettua il login.'));
-  }
-  
-  return data.session;
-};
-
 export const defectReportsApi = {
   async getAll() {
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
+    console.log('Fetching all defect reports');
     
     const { data, error } = await supabase
       .from('defect_reports')
@@ -33,8 +20,7 @@ export const defectReportsApi = {
   },
 
   async getById(id: string) {
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
+    console.log('Fetching defect report with id:', id);
     
     const { data, error } = await supabase
       .from('defect_reports')
@@ -51,8 +37,7 @@ export const defectReportsApi = {
   },
 
   async getByDealerId(dealerId: string) {
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
+    console.log('Fetching defect reports for dealer:', dealerId);
     
     const { data, error } = await supabase
       .from('defect_reports')
@@ -70,9 +55,6 @@ export const defectReportsApi = {
 
   async create(report: Omit<DefectReport, 'id' | 'caseNumber' | 'createdAt' | 'updatedAt'>) {
     console.log("Creating defect report with data:", report);
-    
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
     
     // Make sure we have all required fields and they are in the correct format
     const payload = {
@@ -119,9 +101,6 @@ export const defectReportsApi = {
   async update(id: string, report: Partial<DefectReport>) {
     console.log("Updating defect report with id:", id, "and data:", report);
     
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
-    
     // Format all fields correctly for the database
     const payload: Record<string, any> = {};
     
@@ -167,8 +146,7 @@ export const defectReportsApi = {
   },
 
   async delete(id: string) {
-    // Ensure user is authenticated before proceeding
-    await getAuthenticatedSession();
+    console.log("Deleting defect report with id:", id);
     
     const { error } = await supabase
       .from('defect_reports')
@@ -184,10 +162,9 @@ export const defectReportsApi = {
   },
 
   async getStats(): Promise<DefectReportStats> {
-    // Ensure user is authenticated before proceeding
+    console.log("Fetching defect report stats");
+    
     try {
-      await getAuthenticatedSession();
-      
       // For open reports count
       const { count: openCount, error: openError } = await supabase
         .from('defect_reports')
