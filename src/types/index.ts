@@ -132,21 +132,22 @@ export type ChartData = {
   value: number;
 }[];
 
-export type Dealer = {
+export interface Dealer {
   id: string;
   companyName: string;
   address: string;
   city: string;
   province: string;
   zipCode: string;
-  createdAt: string;
-  isActive?: boolean;
   email: string;
   password: string;
   contactName: string;
+  createdAt?: string;
+  isActive: boolean;
   logo?: string;
   creditLimit?: number;
-};
+  orders?: Order[];
+}
 
 export type Vendor = {
   id: string;

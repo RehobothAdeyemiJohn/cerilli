@@ -2,7 +2,7 @@
 import { Dealer, Order } from '@/types';
 
 /**
- * Calculates the available credit for a dealer based on their credit limit and the order amount
+ * Calculates the available credit for a dealer based on their credit limit and the existing orders
  * @param dealer The dealer to calculate available credit for
  * @param currentOrder The current order (to exclude from calculations if updating)
  * @returns The available credit amount or null if credit limit is not defined
@@ -12,11 +12,28 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
     return null;
   }
   
-  // For now, we're just returning the credit limit
-  // In a full implementation, this would subtract all existing orders for this dealer
-  // and potentially exclude the current order if it's being updated
+  // If we're looking at the individual order details, we don't subtract this order's value
+  const orderAmountToExclude = currentOrder?.vehicle?.price || 0;
   
-  return dealer.creditLimit;
+  // Start with the credit limit
+  let availableCredit = dealer.creditLimit;
+  
+  // If the dealer has orders, we should subtract them from the credit
+  if (dealer.orders && Array.isArray(dealer.orders)) {
+    // Only consider delivered orders for credit limit calculation
+    const deliveredOrders = dealer.orders.filter(order => 
+      order.status === 'delivered' && order.id !== currentOrder?.id
+    );
+    
+    // Subtract the price of each delivered vehicle from the credit limit
+    deliveredOrders.forEach(order => {
+      if (order.vehicle && order.vehicle.price) {
+        availableCredit -= order.vehicle.price;
+      }
+    });
+  }
+  
+  return availableCredit;
 };
 
 /**

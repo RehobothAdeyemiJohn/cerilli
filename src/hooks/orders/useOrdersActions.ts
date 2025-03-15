@@ -37,6 +37,11 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       }
     },
     onSuccess: () => {
+      // Invalidate all related queries to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['dealers'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      
       refreshAllOrderData();
       toast({
         title: "Ordine consegnato",
@@ -62,6 +67,8 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['dealers'] });
       refreshAllOrderData();
       toast({
         title: "Ordine cancellato",
@@ -81,6 +88,8 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
   const deleteOrderMutation = useMutation({
     mutationFn: (orderId: string) => ordersApi.delete(orderId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['dealers'] });
       refreshAllOrderData();
       toast({
         title: "Ordine eliminato",
@@ -98,6 +107,8 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
   });
 
   const handleGenerateODL = (details: OrderDetails) => {
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     refreshAllOrderData();
   };
 

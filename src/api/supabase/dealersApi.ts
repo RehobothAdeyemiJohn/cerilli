@@ -1,10 +1,11 @@
-
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
+    console.log("Fetching all dealers from Supabase");
+    
     const { data, error } = await supabase
       .from('dealers')
       .select('*')
@@ -15,7 +16,7 @@ export const dealersApi = {
       throw error;
     }
     
-    return data.map(dealer => ({
+    const formattedDealers = data.map(dealer => ({
       id: dealer.id,
       companyName: dealer.companyname,
       address: dealer.address,
@@ -30,6 +31,32 @@ export const dealersApi = {
       logo: dealer.logo,
       creditLimit: dealer.credit_limit
     })) as Dealer[];
+    
+    for (const dealer of formattedDealers) {
+      try {
+        const { data: ordersData, error: ordersError } = await supabase
+          .from('orders')
+          .select('*, vehicles(*)')
+          .eq('dealerid', dealer.id);
+          
+        if (!ordersError && ordersData) {
+          dealer.orders = ordersData.map(order => ({
+            id: order.id,
+            vehicleId: order.vehicleid,
+            dealerId: order.dealerid,
+            customerName: order.customername,
+            status: order.status,
+            orderDate: order.orderdate,
+            deliveryDate: order.deliverydate,
+            vehicle: order.vehicles
+          }));
+        }
+      } catch (err) {
+        console.error(`Error fetching orders for dealer ${dealer.id}:`, err);
+      }
+    }
+    
+    return formattedDealers;
   },
   
   getById: async (id: string): Promise<Dealer> => {
@@ -44,7 +71,7 @@ export const dealersApi = {
       throw error;
     }
     
-    return {
+    const formattedDealer = {
       id: data.id,
       companyName: data.companyname,
       address: data.address,
@@ -59,6 +86,30 @@ export const dealersApi = {
       logo: data.logo,
       creditLimit: data.credit_limit
     } as Dealer;
+    
+    try {
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*, vehicles(*)')
+        .eq('dealerid', id);
+        
+      if (!ordersError && ordersData) {
+        formattedDealer.orders = ordersData.map(order => ({
+          id: order.id,
+          vehicleId: order.vehicleid,
+          dealerId: order.dealerid,
+          customerName: order.customername,
+          status: order.status,
+          orderDate: order.orderdate,
+          deliveryDate: order.deliverydate,
+          vehicle: order.vehicles
+        }));
+      }
+    } catch (err) {
+      console.error(`Error fetching orders for dealer ${id}:`, err);
+    }
+    
+    return formattedDealer;
   },
 
   uploadLogo: async (file: File, dealerId: string): Promise<string> => {
@@ -121,7 +172,7 @@ export const dealersApi = {
       throw error;
     }
     
-    return {
+    const formattedDealer = {
       id: data.id,
       companyName: data.companyname,
       address: data.address,
@@ -134,8 +185,11 @@ export const dealersApi = {
       createdAt: data.created_at,
       isActive: data.isactive,
       logo: data.logo,
-      creditLimit: data.credit_limit
+      creditLimit: data.credit_limit,
+      orders: []
     } as Dealer;
+    
+    return formattedDealer;
   },
   
   update: async (dealer: Dealer): Promise<void> => {
