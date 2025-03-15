@@ -1,4 +1,3 @@
-
 export type Vehicle = {
   id: string;
   model: string;
@@ -252,4 +251,22 @@ export type DefectReportStats = {
   closedReports: number;
   approvedReports: number;
   totalPaid: number;
+}
+
+export interface OrderFilters {
+  searchText?: string;
+  dateRange?: {
+    from: Date | undefined;
+    to: Date | undefined;
+  };
+  models?: string[];
+  dealers?: string[];
+  status?: string[];
+  isLicensable: boolean | null;
+  hasProforma: boolean | null;
+  isPaid: boolean | null;
+  isInvoiced: boolean | null;
+  hasConformity: boolean | null;
+  dealerId: string | null;
+  model: string | null;
 }
