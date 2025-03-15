@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,6 +74,9 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
+  
+  // Add a logging state to track upload progress
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   const { data: dealers = [], isLoading: loadingDealers } = useQuery({
     queryKey: ['dealers'],
@@ -156,6 +160,8 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       
       const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+      
+      console.log('Added new photos:', newFiles.length, 'Total photos:', photos.length + newFiles.length);
     }
   };
 
@@ -166,29 +172,84 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
     setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Function to check and create buckets
+  const ensureBucketsExist = async () => {
+    try {
+      setUploadStatus('Checking storage buckets...');
+      console.log('Checking if required storage buckets exist...');
+      
+      const { data: bucketList, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error('Error listing buckets:', listError);
+        return false;
+      }
+      
+      const bucketNames = bucketList?.map(b => b.name) || [];
+      console.log('Existing buckets:', bucketNames);
+      
+      const requiredBuckets = ['defect-documents', 'defect-quotes', 'defect-photos'];
+      const missingBuckets = requiredBuckets.filter(name => !bucketNames.includes(name));
+      
+      if (missingBuckets.length > 0) {
+        console.log('Creating missing buckets:', missingBuckets);
+        setUploadStatus('Creating missing storage buckets...');
+        
+        for (const bucketName of missingBuckets) {
+          const { error } = await supabase.storage.createBucket(bucketName, {
+            public: true
+          });
+          
+          if (error) {
+            console.error(`Error creating bucket ${bucketName}:`, error);
+            toast({
+              title: 'Errore',
+              description: `Impossibile creare il bucket di storage "${bucketName}": ${error.message}`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking/creating buckets:', error);
+      setUploadStatus('Errore nella verifica/creazione dei bucket');
+      return false;
+    }
+  };
+
   const uploadTransportDoc = async () => {
     if (!transportDoc) return '';
     setUploadingTransportDoc(true);
+    setUploadStatus('Caricamento documento di trasporto...');
     
     try {
       const fileName = `${Date.now()}-${transportDoc.name}`;
+      console.log('Uploading transport document:', fileName);
+      
       const { data, error } = await supabase.storage
         .from('defect-documents')
         .upload(fileName, transportDoc);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error uploading transport document:', error);
+        throw error;
+      }
       
       const { data: urlData } = supabase.storage
         .from('defect-documents')
         .getPublicUrl(fileName);
       
+      console.log('Transport document uploaded successfully, URL:', urlData.publicUrl);
       setTransportDocUrl(urlData.publicUrl);
       return urlData.publicUrl;
     } catch (error) {
       console.error('Error uploading transport document:', error);
       toast({
         title: "Errore",
-        description: "Impossibile caricare il documento di trasporto",
+        description: "Impossibile caricare il documento di trasporto: " + (error as Error).message,
         variant: "destructive",
       });
       return '';
@@ -200,26 +261,33 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const uploadRepairQuote = async () => {
     if (!repairQuote) return '';
     setUploadingRepairQuote(true);
+    setUploadStatus('Caricamento preventivo...');
     
     try {
       const fileName = `${Date.now()}-${repairQuote.name}`;
+      console.log('Uploading repair quote:', fileName);
+      
       const { data, error } = await supabase.storage
         .from('defect-quotes')
         .upload(fileName, repairQuote);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error uploading repair quote:', error);
+        throw error;
+      }
       
       const { data: urlData } = supabase.storage
         .from('defect-quotes')
         .getPublicUrl(fileName);
       
+      console.log('Repair quote uploaded successfully, URL:', urlData.publicUrl);
       setRepairQuoteUrl(urlData.publicUrl);
       return urlData.publicUrl;
     } catch (error) {
       console.error('Error uploading repair quote:', error);
       toast({
         title: "Errore",
-        description: "Impossibile caricare il preventivo",
+        description: "Impossibile caricare il preventivo: " + (error as Error).message,
         variant: "destructive",
       });
       return '';
@@ -231,46 +299,52 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const uploadPhotos = async () => {
     if (photos.length === 0) return photoUrls;
     setUploadingPhotos(true);
+    setUploadStatus(`Caricamento foto (0/${photos.length})...`);
     
     try {
-      const { data: bucketList } = await supabase.storage.listBuckets();
-      const defectPhotoBucket = bucketList?.find(b => b.name === 'defect-photos');
+      console.log(`Starting upload of ${photos.length} photos...`);
       
-      if (!defectPhotoBucket) {
-        const { error: bucketError } = await supabase.storage.createBucket('defect-photos', {
-          public: true
-        });
-        if (bucketError) {
-          console.error('Error creating bucket:', bucketError);
-        }
-      }
+      const newPhotoUrls: string[] = [];
       
-      const uploadPromises = photos.map(async (photo) => {
+      // Upload photos one by one to better track progress
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
         const fileName = `${Date.now()}-${photo.name}`;
+        
+        setUploadStatus(`Caricamento foto (${i+1}/${photos.length})...`);
+        console.log(`Uploading photo ${i+1}/${photos.length}: ${fileName}`);
+        
         const { data, error } = await supabase.storage
           .from('defect-photos')
           .upload(fileName, photo);
         
         if (error) {
-          console.error('Error uploading photo:', error);
-          throw error;
+          console.error(`Error uploading photo ${i+1}:`, error);
+          toast({
+            title: "Avviso",
+            description: `Errore durante il caricamento della foto ${i+1}: ${error.message}`,
+            variant: "destructive",
+          });
+          continue; // Try to upload the rest
         }
         
         const { data: urlData } = supabase.storage
           .from('defect-photos')
           .getPublicUrl(fileName);
         
-        return urlData.publicUrl;
-      });
+        console.log(`Photo ${i+1} uploaded successfully, URL:`, urlData.publicUrl);
+        newPhotoUrls.push(urlData.publicUrl);
+      }
       
-      const newPhotoUrls = await Promise.all(uploadPromises);
       const allPhotoUrls = [...photoUrls, ...newPhotoUrls];
       setPhotoUrls(allPhotoUrls);
       
+      // Clean up preview URLs
       photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
       setPhotoPreviewUrls([]);
       setPhotos([]);
       
+      console.log(`Successfully uploaded ${newPhotoUrls.length} photos out of ${photos.length}`);
       return allPhotoUrls;
     } catch (error) {
       console.error('Error uploading photos:', error);
@@ -300,47 +374,34 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         return;
       }
       
+      // Check if we have photos - either already uploaded or new ones
+      if (!photoUrls.length && !photos.length && !defectId) {
+        toast({
+          title: "Attenzione",
+          description: "È obbligatorio allegare almeno una fotografia",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       let newTransportDocUrl = transportDocUrl;
       let newRepairQuoteUrl = repairQuoteUrl;
       let newPhotoUrls = photoUrls;
       
       try {
-        const { data: session, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session.session) {
+        const bucketsExist = await ensureBucketsExist();
+        if (!bucketsExist) {
           toast({
-            title: "Errore di autenticazione",
-            description: "Effettua il login per continuare",
+            title: "Errore",
+            description: "Impossibile inizializzare lo storage per i file. Contatta l'amministratore.",
             variant: "destructive",
           });
           setIsSubmitting(false);
           return;
         }
         
-        const { data: bucketList } = await supabase.storage.listBuckets();
-        const bucketNames = bucketList?.map(b => b.name) || [];
-        
-        if (transportDoc && !bucketNames.includes('defect-documents')) {
-          const { error } = await supabase.storage.createBucket('defect-documents', {
-            public: true
-          });
-          if (error) console.error('Error creating documents bucket:', error);
-        }
-        
-        if (repairQuote && !bucketNames.includes('defect-quotes')) {
-          const { error } = await supabase.storage.createBucket('defect-quotes', {
-            public: true
-          });
-          if (error) console.error('Error creating quotes bucket:', error);
-        }
-        
-        if (photos.length > 0 && !bucketNames.includes('defect-photos')) {
-          const { error } = await supabase.storage.createBucket('defect-photos', {
-            public: true
-          });
-          if (error) console.error('Error creating photos bucket:', error);
-        }
-        
+        // Upload files
         if (transportDoc) {
           newTransportDocUrl = await uploadTransportDoc();
         }
@@ -363,15 +424,18 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         return;
       }
       
+      // Additional check after uploads
       if (!newPhotoUrls.length && !defectId) {
         toast({
           title: "Attenzione",
-          description: "È obbligatorio allegare almeno una fotografia",
+          description: "È obbligatorio allegare almeno una fotografia. Caricamento non riuscito.",
           variant: "destructive",
         });
         setIsSubmitting(false);
         return;
       }
+      
+      setUploadStatus('Salvataggio della segnalazione...');
       
       const submissionData = {
         dealerId: values.dealerId,
@@ -418,9 +482,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         
         let errorMessage = "Si è verificato un errore durante il salvataggio";
         
-        if (error.message && error.message.includes("Authentication error")) {
-          errorMessage = "Errore di autenticazione. Effettua il login per continuare.";
-        } else if (error.message) {
+        if (error.message) {
           errorMessage += ": " + error.message;
         }
         
@@ -439,6 +501,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       });
     } finally {
       setIsSubmitting(false);
+      setUploadStatus('');
     }
   };
 
@@ -621,33 +684,48 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                       {uploadingPhotos && <Loader2 className="h-4 w-4 animate-spin" />}
                     </div>
                     
-                    {(photoPreviewUrls.length > 0 || photoUrls.length > 0) && (
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        {photoUrls.map((url, index) => (
-                          <div key={`existing-${index}`} className="relative rounded overflow-hidden h-20">
-                            <img 
-                              src={url} 
-                              alt={`Photo ${index}`} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                        ))}
-                        {photoPreviewUrls.map((url, index) => (
-                          <div key={`new-${index}`} className="relative rounded overflow-hidden h-20">
-                            <img 
-                              src={url} 
-                              alt={`New photo ${index}`} 
-                              className="w-full h-full object-cover" 
-                            />
-                            <button
-                              type="button"
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                              onClick={() => removePhoto(index)}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
+                    {photoUrls.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-2">
+                          {photoUrls.length} foto già caricate
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {photoUrls.map((url, index) => (
+                            <div key={`existing-${index}`} className="relative rounded overflow-hidden h-20">
+                              <img 
+                                src={url} 
+                                alt={`Photo ${index}`} 
+                                className="w-full h-full object-cover" 
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {photoPreviewUrls.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-2">
+                          {photoPreviewUrls.length} nuove foto da caricare
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {photoPreviewUrls.map((url, index) => (
+                            <div key={`new-${index}`} className="relative rounded overflow-hidden h-20">
+                              <img 
+                                src={url} 
+                                alt={`New photo ${index}`} 
+                                className="w-full h-full object-cover" 
+                              />
+                              <button
+                                type="button"
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                                onClick={() => removePhoto(index)}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -738,6 +816,13 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                   )}
                 </div>
               </div>
+              
+              {uploadStatus && (
+                <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                  <p className="text-blue-700 text-sm">{uploadStatus}</p>
+                </div>
+              )}
               
               <DialogFooter>
                 <Button 
