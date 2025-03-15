@@ -93,7 +93,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
         vehicle={selectedVehicle}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onComplete={vehicle => onVehicleUpdated()}
+        onComplete={() => onVehicleUpdated()}
         onCancel={() => setShowEditDialog(false)}
       />
       

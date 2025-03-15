@@ -128,6 +128,11 @@ const Inventory = () => {
     }
   };
 
+  // Wrapper functions with correct signatures for VehicleList component
+  const handleVehicleUpdateWrapper = () => {
+    handleVehicleUpdate();
+  };
+  
   const handleCreateQuote = (vehicle: Vehicle) => {
     // Implementation for creating a quote
     console.log("Creating quote for vehicle:", vehicle.id);
@@ -194,7 +199,7 @@ const Inventory = () => {
             <TabsContent value="stock-cmc">
               <VehicleList 
                 vehicles={stockCMCVehicles} 
-                onVehicleUpdated={handleVehicleUpdate}
+                onVehicleUpdated={handleVehicleUpdateWrapper}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
                 onCreateQuote={handleCreateQuote}
                 onReserve={handleReserve}
@@ -204,7 +209,7 @@ const Inventory = () => {
             <TabsContent value="stock-virtuale">
               <VehicleList 
                 vehicles={stockVirtualeVehicles} 
-                onVehicleUpdated={handleVehicleUpdate}
+                onVehicleUpdated={handleVehicleUpdateWrapper}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
                 onCreateQuote={handleCreateQuote}
                 onReserve={handleReserve}
@@ -214,7 +219,7 @@ const Inventory = () => {
             <TabsContent value="reserved">
               <VehicleList 
                 vehicles={reservedVehicles} 
-                onVehicleUpdated={handleVehicleUpdate}
+                onVehicleUpdated={handleVehicleUpdateWrapper}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
               />
             </TabsContent>
@@ -223,7 +228,7 @@ const Inventory = () => {
               <TabsContent value="all">
                 <VehicleList 
                   vehicles={filteredVehicles} 
-                  onVehicleUpdated={handleVehicleUpdate}
+                  onVehicleUpdated={handleVehicleUpdateWrapper}
                   onVehicleDeleted={handleVehicleDeleteWrapper}
                   onCreateQuote={handleCreateQuote}
                   onReserve={handleReserve}
