@@ -21,6 +21,7 @@ interface VehicleDialogContentProps {
   onConfirm?: () => Promise<void>;
   userCanReserveVehicles?: boolean;
   userCanCreateQuotes?: boolean;
+  hideImage?: boolean;
 }
 
 const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({ 
@@ -36,7 +37,8 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
   onSubmit,
   onConfirm,
   userCanReserveVehicles,
-  userCanCreateQuotes
+  userCanCreateQuotes,
+  hideImage
 }) => {
   if (!vehicle) {
     return null;
@@ -44,7 +46,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
 
   return (
     <>
-      <VehicleDetailsContent vehicle={vehicle} />
+      <VehicleDetailsContent vehicle={vehicle} hideImage={hideImage} />
       
       {showQuoteForm && vehicle && (
         <QuoteForm 

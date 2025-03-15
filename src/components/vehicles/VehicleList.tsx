@@ -1,176 +1,125 @@
-
 import React, { useState } from 'react';
+import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
-import { Vehicle, Filter } from '@/types';
-import { toast } from '@/hooks/use-toast';
 import VehicleDetailsDialog from './VehicleDetailsDialog';
 import VehicleEditDialog from './VehicleEditDialog';
 import VehicleDeleteDialog from './VehicleDeleteDialog';
-import { useInventory } from '@/hooks/useInventory';
-import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { AlertCircle } from 'lucide-react';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
-  filter?: Filter;
-  onVehicleUpdated?: (vehicle: Vehicle) => void;
-  onVehicleDeleted?: (vehicleId: string) => Promise<void>;
+  onVehicleUpdated: () => void;
+  onVehicleDeleted: (id: string) => Promise<void>;
+  onCreateQuote?: (vehicle: Vehicle) => void;
+  onReserve?: (vehicle: Vehicle) => void;
+  isDealerStock?: boolean;
 }
 
-const VehicleList = ({ vehicles, filter, onVehicleUpdated, onVehicleDeleted }: VehicleListProps) => {
+const VehicleList: React.FC<VehicleListProps> = ({ 
+  vehicles, 
+  onVehicleUpdated, 
+  onVehicleDeleted,
+  onCreateQuote,
+  onReserve,
+  isDealerStock = false
+}) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null);
-  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
-  const { handleVehicleDuplicate } = useInventory();
-  const queryClient = useQueryClient();
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const { toast } = useToast();
   
-  const handleVehicleClick = (vehicle: Vehicle) => {
+  const handleCardClick = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowDetailsDialog(true);
+  };
+  
+  const handleEdit = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
   };
   
-  const handleEditClick = (vehicle: Vehicle) => {
-    setVehicleToEdit(vehicle);
+  const handleDelete = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
   };
   
-  const handleDeleteClick = (vehicle: Vehicle) => {
-    setVehicleToDelete(vehicle);
+  const handleDuplicate = (vehicle: Vehicle) => {
+    // This will be handled by the VehicleDetailsDialog
+    setSelectedVehicle(vehicle);
+    setShowDetailsDialog(true);
   };
   
-  const handleDuplicateClick = async (vehicle: Vehicle) => {
-    try {
-      // Pass the vehicle ID instead of the whole vehicle object
-      await handleVehicleDuplicate(vehicle.id);
-      
-      // Force immediate data refresh
-      queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-      
-      toast({
-        title: "Veicolo Duplicato",
-        description: `${vehicle.model} ${vehicle.trim} è stato duplicato con successo.`,
-      });
-    } catch (error) {
-      console.error("Error duplicating vehicle:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la duplicazione del veicolo.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const closeDetailsDialog = () => {
-    setSelectedVehicle(null);
-    // Force immediate data refresh
-    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
-  };
-  
-  const closeEditDialog = () => {
-    setVehicleToEdit(null);
-    // Force immediate data refresh
-    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-  };
-  
-  const closeDeleteDialog = () => {
-    setVehicleToDelete(null);
-  };
-  
-  const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
-    if (onVehicleUpdated) {
-      onVehicleUpdated(updatedVehicle);
-    }
-    
-    // Force immediate data refresh
-    queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-    
-    // Show a toast to confirm the update
-    toast({
-      title: "Veicolo Aggiornato",
-      description: `${updatedVehicle.model} ${updatedVehicle.trim} è stato aggiornato con successo.`,
-    });
-    
-    closeEditDialog();
-  };
-  
-  const handleVehicleDelete = async () => {
-    if (vehicleToDelete && onVehicleDeleted) {
-      console.log('Calling onVehicleDeleted with vehicle ID:', vehicleToDelete.id);
-      
-      try {
-        // Call the delete function and pass the vehicle ID
-        await onVehicleDeleted(vehicleToDelete.id);
-        
-        // Force immediate data refresh
-        await queryClient.invalidateQueries({ queryKey: ['vehicles'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['orders'], refetchType: 'all' });
-        
-        // Show a toast to confirm deletion
-        toast({
-          title: "Veicolo Eliminato",
-          description: `${vehicleToDelete.model} ${vehicleToDelete.trim || ''} è stato eliminato dall'inventario.`,
-        });
-      } catch (error) {
-        console.error('Error deleting vehicle:', error);
-        toast({
-          title: "Errore",
-          description: "Si è verificato un errore durante l'eliminazione del veicolo.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-  
-  // Apply filters if provided
-  const filteredVehicles = vehicles;
+  if (vehicles.length === 0) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        <AlertCircle className="mx-auto h-12 w-12 mb-4 text-gray-400" />
+        <p>Nessun veicolo trovato con i filtri selezionati.</p>
+      </div>
+    );
+  }
   
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVehicles.map((vehicle) => (
-          <VehicleCard 
-            key={vehicle.id} 
-            vehicle={vehicle} 
-            onClick={handleVehicleClick}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onDuplicate={handleDuplicateClick}
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {vehicles.map(vehicle => (
+          <VehicleCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            onClick={handleCardClick}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
+            onCreateQuote={onCreateQuote}
+            onReserve={onReserve}
           />
         ))}
       </div>
       
-      {filteredVehicles.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Nessun veicolo trovato in base ai criteri di ricerca</p>
-        </div>
-      )}
+      <VehicleDetailsDialog
+        vehicle={selectedVehicle}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        onVehicleUpdated={onVehicleUpdated}
+        onVehicleDeleted={id => onVehicleDeleted(id)}
+        onCreateQuote={onCreateQuote}
+        onReserve={onReserve}
+        isDealerStock={isDealerStock}
+      />
       
-      {/* Dialogs for vehicle operations */}
-      <VehicleDetailsDialog 
+      <VehicleEditDialog
         vehicle={selectedVehicle}
         open={!!selectedVehicle}
         onOpenChange={open => {
-          if (!open) {
-            closeDetailsDialog();
-            // Forzare il refresh dei dati quando si chiude il dialog
-            queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+          if (!open) setSelectedVehicle(null);
+        }}
+        onVehicleUpdated={onVehicleUpdated}
+      />
+      
+      <VehicleDeleteDialog
+        vehicle={selectedVehicle}
+        open={!!selectedVehicle}
+        onOpenChange={open => {
+          if (!open) setSelectedVehicle(null);
+        }}
+        onVehicleDeleted={async () => {
+          if (selectedVehicle) {
+            try {
+              await onVehicleDeleted(selectedVehicle.id);
+              toast({
+                title: "Veicolo eliminato",
+                description: "Il veicolo è stato eliminato con successo dall'inventario.",
+              });
+            } catch (error) {
+              toast({
+                title: "Errore",
+                description: "Si è verificato un errore durante l'eliminazione del veicolo.",
+                variant: "destructive",
+              });
+            } finally {
+              setSelectedVehicle(null);
+            }
           }
         }}
       />
-      
-      <VehicleEditDialog 
-        vehicle={vehicleToEdit}
-        open={!!vehicleToEdit}
-        onOpenChange={open => !open && closeEditDialog()}
-        onComplete={handleVehicleUpdate}
-        onCancel={closeEditDialog}
-      />
-      
-      <VehicleDeleteDialog 
-        vehicle={vehicleToDelete}
-        open={!!vehicleToDelete}
-        onOpenChange={open => !open && closeDeleteDialog()}
-        onConfirm={handleVehicleDelete}
-      />
-    </>
+    </div>
   );
 };
 

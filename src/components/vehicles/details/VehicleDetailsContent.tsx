@@ -1,180 +1,143 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
+import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { formatDate } from '@/lib/utils';
+import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide-react';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
+  hideImage?: boolean;
 }
 
-const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle }) => {
-  const formattedDate = vehicle.dateAdded ? formatDate(new Date(vehicle.dateAdded)) : 'N/A';
-  const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const isStockCMC = vehicle.location === 'Stock CMC';
-  const shouldHideDefaultImage = isVirtualStock || isStockCMC;
-  
-  // Format reservation details
-  const reservationDate = vehicle.reservationTimestamp 
-    ? formatDate(new Date(vehicle.reservationTimestamp)) 
-    : null;
-    
-  return (
-    <div className="space-y-4 pt-2">
-      {/* Vehicle image - show custom image if available, otherwise show default */}
-      {vehicle.customImageUrl ? (
-        <div className="flex justify-center mb-4">
-          <img 
-            src={vehicle.customImageUrl} 
-            alt={`${vehicle.model} ${vehicle.trim || ''}`} 
-            className="rounded-md object-cover max-h-[250px] w-auto"
-          />
-        </div>
-      ) : (!shouldHideDefaultImage && vehicle.imageUrl && (
-        <div className="flex justify-center mb-4">
-          <img 
-            src={vehicle.imageUrl} 
-            alt={`${vehicle.model} ${vehicle.trim || ''}`} 
-            className="rounded-md object-cover max-h-[250px] w-auto"
-          />
-        </div>
-      ))}
-      
-      {/* Virtual Configuration Card */}
-      {vehicle.virtualConfig && isVirtualStock && vehicle.status === 'reserved' && (
-        <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-          <CardContent className="pt-4">
-            <h3 className="font-semibold text-lg mb-2">Configurazione Virtuale</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="text-sm">
-                <span className="font-medium">Allestimento:</span> {vehicle.virtualConfig.trim}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Alimentazione:</span> {vehicle.virtualConfig.fuelType}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Colore:</span> {vehicle.virtualConfig.exteriorColor}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Trasmissione:</span> {vehicle.virtualConfig.transmission}
-              </div>
-              <div className="text-sm col-span-2">
-                <span className="font-medium">Prezzo:</span> €{vehicle.virtualConfig.price?.toLocaleString('it-IT')}
-              </div>
-              {vehicle.virtualConfig.accessories && vehicle.virtualConfig.accessories.length > 0 && (
-                <div className="text-sm col-span-2">
-                  <span className="font-medium">Accessori:</span> {vehicle.virtualConfig.accessories.join(', ')}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, hideImage }) => {
+  const statusColors = {
+    available: 'bg-green-100 text-green-800',
+    reserved: 'bg-amber-100 text-amber-800',
+    ordered: 'bg-blue-100 text-blue-800',
+    sold: 'bg-gray-100 text-gray-800',
+    delivered: 'bg-purple-100 text-purple-800',
+  };
 
-      {/* Basic Details */}
-      <div>
-        <h3 className="font-semibold mb-2">Dettagli Base</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="text-sm">
-            <span className="font-medium">Modello:</span> {vehicle.model}
+  const statusTranslations = {
+    available: 'Disponibile',
+    reserved: 'Prenotata',
+    ordered: 'Ordinata',
+    sold: 'Venduta',
+    delivered: 'Consegnata',
+  };
+
+  const isVirtualStock = vehicle.location === 'Stock Virtuale';
+  const daysInStock = !isVirtualStock ? calculateDaysInStock(vehicle.dateAdded) : null;
+  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle) : null;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        {!hideImage && (
+          <div className="md:w-1/2">
+            <img
+              src={vehicle.imageUrl || "/placeholder.svg"}
+              alt={`${vehicle.model} ${vehicle.trim}`}
+              className="w-full h-auto rounded-lg object-cover aspect-video"
+            />
           </div>
-          {!isVirtualStock && (
-            <>
-              <div className="text-sm">
-                <span className="font-medium">Allestimento:</span> {vehicle.trim || 'N/A'}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Alimentazione:</span> {vehicle.fuelType || 'N/A'}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Colore:</span> {vehicle.exteriorColor || 'N/A'}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Trasmissione:</span> {vehicle.transmission || 'N/A'}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Telaio:</span> {vehicle.telaio || 'N/A'}
-              </div>
-            </>
-          )}
-          <div className="text-sm">
-            <span className="font-medium">Data Aggiunta:</span> {formattedDate}
+        )}
+        
+        <div className={hideImage ? "w-full" : "md:w-1/2"}>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">{vehicle.model}</h2>
+              {!isVirtualStock && <p className="text-lg text-gray-600">{vehicle.trim}</p>}
+            </div>
+            <Badge className={statusColors[vehicle.status]}>
+              {statusTranslations[vehicle.status]}
+            </Badge>
           </div>
-          <div className="text-sm">
-            <span className="font-medium">Posizione:</span> {vehicle.location}
-          </div>
-          {isVirtualStock && vehicle.originalStock && (
-            <div className="text-sm">
-              <span className="font-medium">Stock Origine:</span> {vehicle.originalStock}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {!isVirtualStock && (
+              <>
+                {vehicle.fuelType && (
+                  <div className="flex items-center gap-2">
+                    <Fuel className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{vehicle.fuelType}</span>
+                  </div>
+                )}
+                
+                {vehicle.exteriorColor && (
+                  <div className="flex items-center gap-2">
+                    <PaintBucket className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{vehicle.exteriorColor}</span>
+                  </div>
+                )}
+                
+                {vehicle.transmission && (
+                  <div className="flex items-center gap-2">
+                    <Car className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{vehicle.transmission}</span>
+                  </div>
+                )}
+              </>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-gray-500" />
+              <span className="text-gray-700">
+                {isVirtualStock ? 'Prezzo da configurare' : formatCurrency(vehicle.price)}
+              </span>
             </div>
-          )}
-          {isVirtualStock && vehicle.estimatedArrivalDays && (
-            <div className="text-sm">
-              <span className="font-medium">Arrivo Stimato:</span> {vehicle.estimatedArrivalDays} giorni
-            </div>
-          )}
-          {!isVirtualStock && (
-            <div className="text-sm">
-              <span className="font-medium">Prezzo:</span> {vehicle.price ? `€${vehicle.price.toLocaleString('it-IT')}` : 'N/A'}
-            </div>
-          )}
-          <div className="text-sm">
-            <span className="font-medium">Stato:</span> {vehicle.status}
+            
+            {daysInStock !== null && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">{daysInStock} giorni in stock</span>
+              </div>
+            )}
+            
+            {isVirtualStock && estimatedArrival && (
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">
+                  Arrivo: {estimatedArrival.formattedRange}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
       
-      {/* Accessories Section */}
-      {!isVirtualStock && vehicle.accessories && vehicle.accessories.length > 0 && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="font-semibold mb-2">Accessori</h3>
-            <ul className="text-sm list-disc pl-5">
+      <Card>
+        <CardContent className="space-y-2">
+          <h3 className="text-lg font-semibold">Accessori</h3>
+          {vehicle.accessories && vehicle.accessories.length > 0 ? (
+            <ul className="list-disc pl-5">
               {vehicle.accessories.map((accessory, index) => (
-                <li key={index}>{accessory}</li>
+                <li key={index} className="text-gray-700">{accessory}</li>
               ))}
             </ul>
-          </div>
-        </>
+          ) : (
+            <p className="text-gray-500">Nessun accessorio disponibile.</p>
+          )}
+        </CardContent>
+      </Card>
+      
+      {vehicle.previousChassis && (
+        <Card>
+          <CardContent className="space-y-2">
+            <h3 className="text-lg font-semibold">Telaio Precedente</h3>
+            <p className="text-gray-700">{vehicle.previousChassis}</p>
+          </CardContent>
+        </Card>
       )}
       
-      {/* Reservation Details Section */}
-      {vehicle.status === 'reserved' && vehicle.reservedBy && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="font-semibold mb-2">Dettagli Prenotazione</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="text-sm">
-                <span className="font-medium">Prenotato Da:</span> {vehicle.reservedBy}
-              </div>
-              {reservationDate && (
-                <div className="text-sm">
-                  <span className="font-medium">Data Prenotazione:</span> {reservationDate}
-                </div>
-              )}
-              {vehicle.reservationDestination && (
-                <div className="text-sm">
-                  <span className="font-medium">Destinazione:</span> {vehicle.reservationDestination}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Reserved Accessories */}
-          {vehicle.reservedAccessories && vehicle.reservedAccessories.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Accessori Prenotati</h3>
-              <ul className="text-sm list-disc pl-5">
-                {vehicle.reservedAccessories.map((accessory, index) => (
-                  <li key={index}>{accessory}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
+      {vehicle.telaio && (
+        <Card>
+          <CardContent className="space-y-2">
+            <h3 className="text-lg font-semibold">Telaio</h3>
+            <p className="text-gray-700">{vehicle.telaio}</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

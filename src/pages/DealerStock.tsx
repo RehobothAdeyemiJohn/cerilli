@@ -96,7 +96,7 @@ const DealerStock = () => {
             onFiltersChange={handleFiltersChange}
             dealers={dealers}
             showDealerFilter={user?.type === 'admin'}
-            isDealerStock={true} // Added this prop to identify it's the Stock Dealer page
+            isDealerStock={true}
           />
         </div>
         
@@ -126,6 +126,12 @@ const DealerStock = () => {
                   vehicles={availableVehicles}
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
+                  onCreateQuote={handleCreateQuote}
+                  onReserve={(vehicle) => {
+                    // Navigate to inventory with this vehicle ID for reservation
+                    navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
+                  }}
+                  isDealerStock={true}
                 />
               )}
             </TabsContent>
@@ -142,6 +148,7 @@ const DealerStock = () => {
                   vehicles={reservedVehicles}
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
+                  isDealerStock={true}
                 />
               )}
             </TabsContent>
@@ -158,6 +165,8 @@ const DealerStock = () => {
                   vehicles={filteredVehicles}
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
+                  onCreateQuote={user?.type !== 'admin' ? handleCreateQuote : undefined}
+                  isDealerStock={true}
                 />
               )}
             </TabsContent>
