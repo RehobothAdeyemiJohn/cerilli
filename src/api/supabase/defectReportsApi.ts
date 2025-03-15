@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
@@ -229,71 +230,75 @@ export const defectReportsApi = {
     console.log("Fetching defect report stats with date filters:", dateFrom, dateTo);
     
     try {
-      let query = supabase.from('defect_reports');
-      
-      // Apply date filters if provided
-      if (dateFrom || dateTo) {
-        if (dateFrom) {
-          query = query.gte('created_at', dateFrom.toISOString());
-        }
-        
-        if (dateTo) {
-          // Set the time to end of day to include all records for that day
-          const endDate = new Date(dateTo);
-          endDate.setHours(23, 59, 59, 999);
-          query = query.lte('created_at', endDate.toISOString());
-        }
-      }
-      
       // For open reports count
-      const { count: openCount, error: openError } = await query
+      let openCountQuery = supabase.from('defect_reports')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Aperta');
-
-      // For closed reports count (reset the query to apply date filters again)
-      let closedQuery = supabase.from('defect_reports');
+      
+      // Apply date filters if provided
       if (dateFrom) {
-        closedQuery = closedQuery.gte('created_at', dateFrom.toISOString());
-      }
-      if (dateTo) {
-        const endDate = new Date(dateTo);
-        endDate.setHours(23, 59, 59, 999);
-        closedQuery = closedQuery.lte('created_at', endDate.toISOString());
+        openCountQuery = openCountQuery.filter('created_at', 'gte', dateFrom.toISOString());
       }
       
-      const { count: closedCount, error: closedError } = await closedQuery
+      if (dateTo) {
+        // Set the time to end of day to include all records for that day
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        openCountQuery = openCountQuery.filter('created_at', 'lte', endDate.toISOString());
+      }
+      
+      const { count: openCount, error: openError } = await openCountQuery;
+
+      // For closed reports count
+      let closedCountQuery = supabase.from('defect_reports')
         .select('*', { count: 'exact', head: true })
         .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
+      
+      if (dateFrom) {
+        closedCountQuery = closedCountQuery.filter('created_at', 'gte', dateFrom.toISOString());
+      }
+      
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        closedCountQuery = closedCountQuery.filter('created_at', 'lte', endDate.toISOString());
+      }
+      
+      const { count: closedCount, error: closedError } = await closedCountQuery;
 
       // For approved reports count
-      let approvedQuery = supabase.from('defect_reports');
-      if (dateFrom) {
-        approvedQuery = approvedQuery.gte('created_at', dateFrom.toISOString());
-      }
-      if (dateTo) {
-        const endDate = new Date(dateTo);
-        endDate.setHours(23, 59, 59, 999);
-        approvedQuery = approvedQuery.lte('created_at', endDate.toISOString());
-      }
-      
-      const { count: approvedCount, error: approvedError } = await approvedQuery
+      let approvedCountQuery = supabase.from('defect_reports')
         .select('*', { count: 'exact', head: true })
         .in('status', ['Approvata', 'Approvata Parzialmente']);
-
-      // For total approved repair value
-      let valuesQuery = supabase.from('defect_reports');
+      
       if (dateFrom) {
-        valuesQuery = valuesQuery.gte('created_at', dateFrom.toISOString());
+        approvedCountQuery = approvedCountQuery.filter('created_at', 'gte', dateFrom.toISOString());
       }
+      
       if (dateTo) {
         const endDate = new Date(dateTo);
         endDate.setHours(23, 59, 59, 999);
-        valuesQuery = valuesQuery.lte('created_at', endDate.toISOString());
+        approvedCountQuery = approvedCountQuery.filter('created_at', 'lte', endDate.toISOString());
       }
       
-      const { data: approvedReports, error: approvedValuesError } = await valuesQuery
+      const { count: approvedCount, error: approvedError } = await approvedCountQuery;
+
+      // For total approved repair value
+      let approvedValuesQuery = supabase.from('defect_reports')
         .select('approved_repair_value')
         .in('status', ['Approvata', 'Approvata Parzialmente']);
+      
+      if (dateFrom) {
+        approvedValuesQuery = approvedValuesQuery.filter('created_at', 'gte', dateFrom.toISOString());
+      }
+      
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        approvedValuesQuery = approvedValuesQuery.filter('created_at', 'lte', endDate.toISOString());
+      }
+      
+      const { data: approvedReports, error: approvedValuesError } = await approvedValuesQuery;
 
       if (openError || closedError || approvedError || approvedValuesError) {
         console.error('Error fetching defect report stats:', openError || closedError || approvedError || approvedValuesError);
