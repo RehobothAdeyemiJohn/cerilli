@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
@@ -26,6 +27,8 @@ const VehicleList: React.FC<VehicleListProps> = ({
 }) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
   
   const handleCardClick = (vehicle: Vehicle) => {
@@ -35,10 +38,12 @@ const VehicleList: React.FC<VehicleListProps> = ({
   
   const handleEdit = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
+    setShowEditDialog(true);
   };
   
   const handleDelete = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
+    setShowDeleteDialog(true);
   };
   
   const handleDuplicate = (vehicle: Vehicle) => {
@@ -78,7 +83,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
         open={showDetailsDialog}
         onOpenChange={setShowDetailsDialog}
         onVehicleUpdated={onVehicleUpdated}
-        onVehicleDeleted={id => onVehicleDeleted(id)}
+        onVehicleDeleted={onVehicleDeleted}
         onCreateQuote={onCreateQuote}
         onReserve={onReserve}
         isDealerStock={isDealerStock}
@@ -86,20 +91,17 @@ const VehicleList: React.FC<VehicleListProps> = ({
       
       <VehicleEditDialog
         vehicle={selectedVehicle}
-        open={!!selectedVehicle}
-        onOpenChange={open => {
-          if (!open) setSelectedVehicle(null);
-        }}
-        onVehicleUpdated={onVehicleUpdated}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onComplete={vehicle => onVehicleUpdated()}
+        onCancel={() => setShowEditDialog(false)}
       />
       
       <VehicleDeleteDialog
         vehicle={selectedVehicle}
-        open={!!selectedVehicle}
-        onOpenChange={open => {
-          if (!open) setSelectedVehicle(null);
-        }}
-        onVehicleDeleted={async () => {
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={async () => {
           if (selectedVehicle) {
             try {
               await onVehicleDeleted(selectedVehicle.id);
@@ -115,6 +117,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
               });
             } finally {
               setSelectedVehicle(null);
+              setShowDeleteDialog(false);
             }
           }
         }}

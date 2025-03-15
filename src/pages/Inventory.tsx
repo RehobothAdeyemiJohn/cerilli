@@ -5,7 +5,7 @@ import { filterVehicles } from '@/utils/vehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import InventoryHeader from '@/components/vehicles/InventoryHeader';
-import { Filter as VehicleFilter } from '@/types';
+import { Filter as VehicleFilter, Vehicle } from '@/types';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
@@ -127,6 +127,16 @@ const Inventory = () => {
       throw error;
     }
   };
+
+  const handleCreateQuote = (vehicle: Vehicle) => {
+    // Implementation for creating a quote
+    console.log("Creating quote for vehicle:", vehicle.id);
+  };
+
+  const handleReserve = (vehicle: Vehicle) => {
+    // Implementation for reserving a vehicle
+    console.log("Reserving vehicle:", vehicle.id);
+  };
   
   if (isLoading) {
     return <div className="container mx-auto py-6 px-4">Caricamento inventario...</div>;
@@ -186,6 +196,8 @@ const Inventory = () => {
                 vehicles={stockCMCVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
+                onCreateQuote={handleCreateQuote}
+                onReserve={handleReserve}
               />
             </TabsContent>
 
@@ -194,6 +206,8 @@ const Inventory = () => {
                 vehicles={stockVirtualeVehicles} 
                 onVehicleUpdated={handleVehicleUpdate}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
+                onCreateQuote={handleCreateQuote}
+                onReserve={handleReserve}
               />
             </TabsContent>
             
@@ -211,6 +225,8 @@ const Inventory = () => {
                   vehicles={filteredVehicles} 
                   onVehicleUpdated={handleVehicleUpdate}
                   onVehicleDeleted={handleVehicleDeleteWrapper}
+                  onCreateQuote={handleCreateQuote}
+                  onReserve={handleReserve}
                 />
               </TabsContent>
             )}
