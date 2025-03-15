@@ -22,7 +22,8 @@ import {
   Settings, 
   Truck, 
   AlertTriangle, 
-  PackageOpen 
+  PackageOpen,
+  Store
 } from 'lucide-react';
 
 const AppSidebar = () => {
@@ -72,7 +73,17 @@ const AppSidebar = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            {/* Dealer Contracts Link - Add after Orders link */}
+            {/* Dealer Stock Link */}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={location.pathname === '/dealer-stock'}>
+                <NavLink to="/dealer-stock">
+                  <Store className="w-5 h-5" />
+                  <span>Stock Dealer</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            {/* Dealer Contracts Link */}
             {isAdmin && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={location.pathname === '/contracts'}>
