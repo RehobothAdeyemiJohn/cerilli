@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock, Layers } from 'lucide-react';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -88,9 +87,22 @@ const VehicleCard = ({
             <h3 className="font-medium">{vehicle.model}</h3>
             {!isVirtualStock && <p className="text-sm text-gray-500">{vehicle.trim}</p>}
           </div>
-          <Badge variant="outline" className={statusColors[vehicle.status]}>
-            {vehicle.status === 'delivered' ? 'Disponibile' : statusTranslations[vehicle.status]}
-          </Badge>
+          
+          <div className="flex items-center gap-2">
+            {isVirtualStock && !isDealer && (
+              <button
+                onClick={(e) => handleActionClick(e, onDuplicate)}
+                className="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                aria-label="Duplica veicolo"
+                type="button"
+              >
+                <Layers className="h-4 w-4" />
+              </button>
+            )}
+            <Badge variant="outline" className={statusColors[vehicle.status]}>
+              {vehicle.status === 'delivered' ? 'Disponibile' : statusTranslations[vehicle.status]}
+            </Badge>
+          </div>
         </div>
         
         <div className="mt-2 space-y-2">
@@ -168,14 +180,6 @@ const VehicleCard = ({
         
         {!isDealer && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
-            <button 
-              onClick={(e) => handleActionClick(e, onDuplicate)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-              aria-label="Duplica veicolo"
-              type="button"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
             <button 
               onClick={(e) => handleActionClick(e, onEdit)}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"

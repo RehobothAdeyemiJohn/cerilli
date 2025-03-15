@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
@@ -41,7 +40,6 @@ const VehicleList: React.FC<VehicleListProps> = ({
     openDialog?: boolean;
   } | null;
 
-  // Reset dialog state when vehicles list changes
   useEffect(() => {
     if (!openVehicleDetails) {
       setRequestedAction(undefined);
@@ -70,6 +68,11 @@ const VehicleList: React.FC<VehicleListProps> = ({
   };
   
   const handleDuplicateVehicle = (vehicle: Vehicle) => {
+    if (vehicle.location !== 'Stock Virtuale') {
+      console.log("Duplication not allowed for non-virtual vehicles:", vehicle.location);
+      return;
+    }
+    
     if (processingAction) {
       console.log("Already processing an action, ignoring duplicate request");
       return;
@@ -104,7 +107,6 @@ const VehicleList: React.FC<VehicleListProps> = ({
     setOpenVehicleDetails(false);
     setRequestedAction(undefined);
     setProcessingAction(false);
-    // Refresh the data when dialog closes
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
 

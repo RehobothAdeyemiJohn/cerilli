@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Vehicle } from '@/types';
 import { useInventoryMutations } from './useMutations';
@@ -31,7 +30,6 @@ export const useVehicleActions = () => {
     setIsDeleting(true);
     
     try {
-      // Directly call the delete mutation with the vehicle ID
       await deleteMutation.mutateAsync(vehicleId);
       
       console.log('Vehicle successfully deleted:', vehicleId);
@@ -58,7 +56,6 @@ export const useVehicleActions = () => {
   };
   
   const handleVehicleDuplicate = async (vehicleId: string) => {
-    // Prevent duplicate calls if already processing
     if (isDuplicating) {
       console.log('Already duplicating, ignoring duplicate request');
       return null;
@@ -72,7 +69,6 @@ export const useVehicleActions = () => {
       
       console.log('Vehicle successfully duplicated:', duplicatedVehicle);
       
-      // Immediately invalidate the vehicles query to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       toast({

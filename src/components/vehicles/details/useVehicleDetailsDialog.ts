@@ -21,10 +21,12 @@ export function useVehicleDetailsDialog(
   const [actionProcessed, setActionProcessed] = useState(false);
   const queryClient = useQueryClient();
   
+  // Import isDuplicating flag from hook to prevent concurrent operations
   const { handleVehicleDuplicate, isDuplicating: isActionDuplicating } = useVehicleActions();
   
   // Make handleDuplicate a useCallback to prevent unnecessary rerenders
   const handleDuplicate = useCallback(async () => {
+    // Multiple checks to prevent duplicate operations
     if (!vehicle || !vehicle.id || isDuplicating || isActionDuplicating) {
       console.error("Cannot duplicate: Invalid vehicle, missing ID, or already duplicating");
       return;
@@ -59,10 +61,25 @@ export function useVehicleDetailsDialog(
     }
   }, [vehicle, handleVehicleDuplicate, queryClient, onClose, isDuplicating, isActionDuplicating]);
   
-  // Handle automatic duplication when requested - but only once
+  // Clear any action request when component unmounts
   useEffect(() => {
-    // Only proceed if we haven't processed this action yet
-    if (requestedAction === 'duplicate' && vehicle && vehicle.id && !actionProcessed && !isDuplicating && !isActionDuplicating) {
+    return () => {
+      setActionProcessed(false);
+    };
+  }, []);
+  
+  // Only attempt automatic duplication for virtual stock vehicles
+  useEffect(() => {
+    // Only proceed if we haven't processed this action yet and it's not already duplicating
+    if (
+      requestedAction === 'duplicate' && 
+      vehicle && 
+      vehicle.id && 
+      vehicle.location === 'Stock Virtuale' && 
+      !actionProcessed && 
+      !isDuplicating && 
+      !isActionDuplicating
+    ) {
       console.log("Auto-duplicating vehicle based on requestedAction:", vehicle.id);
       setActionProcessed(true);
       handleDuplicate();
@@ -118,6 +135,7 @@ export function useVehicleDetailsDialog(
     onClose();
   };
   
+  // Return only handleDuplicate for Stock Virtuale
   return {
     isEditing,
     isReserving,
@@ -135,6 +153,6 @@ export function useVehicleDetailsDialog(
     cancelCreatingOrder,
     handleVehicleUpdated,
     handleDelete,
-    handleDuplicate,
+    handleDuplicate: vehicle.location === 'Stock Virtuale' ? handleDuplicate : undefined,
   };
 }
