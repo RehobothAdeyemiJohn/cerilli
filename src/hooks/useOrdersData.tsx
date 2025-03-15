@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -59,33 +60,32 @@ export const useOrdersData = (filters: {
           const details = await orderDetailsApi.getByOrderId(order.id);
           console.log(`Details for order ${order.id}:`, details);
           
-          // Check for valid details structure with direct property or nested structures
+          // Check for valid details structure or create default if malformed
           if (details) {
             // Create a normalized details object
             let normalizedDetails: OrderDetails | null = null;
             
             if (typeof details === 'object') {
+              // Check if it's the malformed structure with _type and value properties
+              const detailsAny = details as any;
+              if (detailsAny._type === "undefined" && detailsAny.value === "undefined") {
+                console.log(`Found malformed details for order ${order.id} with _type and value both "undefined"`);
+                normalizedDetails = createDefaultOrderDetails(order.id);
+              } 
               // Case 1: details is already a valid OrderDetails object
-              if ('odlGenerated' in details) {
+              else if ('odlGenerated' in details) {
                 normalizedDetails = details as OrderDetails;
               }
-              // Case 2: details has a nested value property (using type assertion)
+              // Case 2: details has a nested value property
+              else if (detailsAny.value && 
+                      typeof detailsAny.value === 'object' && 
+                      'odlGenerated' in detailsAny.value) {
+                normalizedDetails = detailsAny.value as OrderDetails;
+              }
+              // Any other unhandled format
               else {
-                const detailsAny = details as any;
-                
-                // Check if details has a value property with content
-                if (detailsAny.value && 
-                    typeof detailsAny.value === 'object' && 
-                    'odlGenerated' in detailsAny.value) {
-                  normalizedDetails = detailsAny.value as OrderDetails;
-                }
-                // Handle the case where value is a string or with special values like "undefined"
-                else if (detailsAny._type !== undefined) {
-                  // This is the malformed case we're seeing in logs
-                  // Create a default OrderDetails object since the real data is corrupted
-                  console.log(`Malformed details for order ${order.id} with _type: ${detailsAny._type}, value: ${detailsAny.value}`);
-                  normalizedDetails = createDefaultOrderDetails(order.id);
-                }
+                console.log(`Unrecognized details format for order ${order.id}:`, details);
+                normalizedDetails = createDefaultOrderDetails(order.id);
               }
             }
             
