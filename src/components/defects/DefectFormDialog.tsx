@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -108,24 +107,24 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
     try {
       setIsSubmitting(true);
       
+      const submissionData = {
+        ...values,
+        dealerId: values.dealerId || user?.dealerId || '', // Ensure dealerId is always provided
+        dealerName: values.dealerName || user?.dealerName || '', // Ensure dealerName is always provided
+        vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
+        paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
+      };
+      
       if (defectId) {
         // Update existing defect
-        await defectReportsApi.update(defectId, {
-          ...values,
-          vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
-          paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
-        });
+        await defectReportsApi.update(defectId, submissionData);
         toast({
           title: "Difformità aggiornata",
           description: "La segnalazione di difformità è stata aggiornata con successo",
         });
       } else {
         // Create new defect
-        await defectReportsApi.create({
-          ...values,
-          vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
-          paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
-        });
+        await defectReportsApi.create(submissionData);
         toast({
           title: "Difformità creata",
           description: "La segnalazione di difformità è stata creata con successo",

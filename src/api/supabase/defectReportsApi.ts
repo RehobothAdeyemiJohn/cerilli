@@ -125,14 +125,14 @@ export const defectReportsApi = {
   },
 
   async getStats(): Promise<DefectReportStats> {
-    const { data: openReports, error: openError } = await supabase
+    const { data: openReportsData, error: openError } = await supabase
       .from('defect_reports')
-      .select('count', { count: 'exact' })
+      .select('count', { count: 'exact', head: true })
       .eq('status', 'Aperta');
 
-    const { data: closedReports, error: closedError } = await supabase
+    const { data: closedReportsData, error: closedError } = await supabase
       .from('defect_reports')
-      .select('count', { count: 'exact' })
+      .select('count', { count: 'exact', head: true })
       .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
 
     const { data: paidReports, error: paidError } = await supabase
@@ -145,11 +145,13 @@ export const defectReportsApi = {
       throw openError || closedError || paidError;
     }
 
+    const openReportsCount = openReportsData?.count || 0;
+    const closedReportsCount = closedReportsData?.count || 0;
     const totalPaid = paidReports?.reduce((sum, report) => sum + (report.repair_cost || 0), 0) || 0;
 
     return {
-      openReports: openReports?.count || 0,
-      closedReports: closedReports?.count || 0,
+      openReports: openReportsCount,
+      closedReports: closedReportsCount,
       totalPaid
     };
   }
