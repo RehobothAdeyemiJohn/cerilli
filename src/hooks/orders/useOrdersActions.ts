@@ -15,25 +15,34 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         console.log("Order details for delivery check:", order.details);
         
-        // Fixed check - we need to handle both direct property access and the odd _type/_value format
+        // Check if ODL has been generated before allowing delivery
         let odlGenerated = false;
         
         if (order.details) {
-          // Handle the case where details is an object with _type and value
-          if (order.details._type === 'undefined' || order.details._value === 'undefined') {
-            console.log('Cannot deliver order - malformed order details:', order);
-            throw new Error("Dettagli dell'ordine in formato non valido. Genera l'ODL prima di consegnare.");
-          }
+          // Handle different structure possibilities for order.details
           
-          // Check if details is already the correct structure
-          if (typeof order.details === 'object' && order.details.odlGenerated === true) {
-            odlGenerated = true;
-          }
-          
-          // Check if there's a nested value property that might contain our data
-          if (typeof order.details === 'object' && order.details.value && 
-              typeof order.details.value === 'object' && order.details.value.odlGenerated === true) {
-            odlGenerated = true;
+          // Check if details is a plain JavaScript object that might have been serialized/deserialized
+          if (typeof order.details === 'object') {
+            // Check if it's the expected OrderDetails object with odlGenerated property
+            if ('odlGenerated' in order.details) {
+              odlGenerated = Boolean(order.details.odlGenerated);
+            } 
+            // Check if it has a malformed structure (sometimes returned by the API)
+            else if (typeof order.details === 'object') {
+              // Try to access potential nested properties safely
+              const detailsObj = order.details as any; // Use any to bypass TypeScript checks
+              
+              if (detailsObj.odlGenerated === true) {
+                odlGenerated = true;
+              }
+              
+              // Try to access potentially nested value property
+              if (detailsObj.value && typeof detailsObj.value === 'object') {
+                if (detailsObj.value.odlGenerated === true) {
+                  odlGenerated = true;
+                }
+              }
+            }
           }
         }
         

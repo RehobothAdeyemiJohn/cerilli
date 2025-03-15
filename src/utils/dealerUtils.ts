@@ -14,9 +14,6 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
   
   console.log(`Calculating available credit for dealer ${dealer.companyName} with credit limit ${dealer.creditLimit}`);
   
-  // If we're looking at the individual order details, we don't subtract this order's value
-  const orderAmountToExclude = currentOrder?.vehicle?.price || 0;
-  
   // Start with the credit limit
   let availableCredit = dealer.creditLimit;
   
@@ -38,7 +35,7 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
     deliveredOrders.forEach(order => {
       if (order.vehicle && typeof order.vehicle.price === 'number') {
         availableCredit -= order.vehicle.price;
-        console.log(`Subtracting ${order.vehicle.price} from credit limit for order ${order.id}`);
+        console.log(`Subtracting ${order.vehicle.price} from credit limit for order ${order.id}, new available credit: ${availableCredit}`);
       } else {
         console.log(`Order ${order.id} has no valid vehicle price:`, order.vehicle);
       }

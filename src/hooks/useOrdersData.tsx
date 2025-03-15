@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -40,14 +41,15 @@ export const useOrdersData = (filters: {
           const details = await orderDetailsApi.getByOrderId(order.id);
           console.log(`Details for order ${order.id}:`, details);
           
-          // Check if the details actually have the ODL generated flag
+          // Only include valid details
           if (details && typeof details === 'object' && 'odlGenerated' in details) {
             return {
               ...order,
               details: details
             };
           } else {
-            console.log(`Invalid details format for order ${order.id}:`, details);
+            // If details doesn't have the expected structure, log it and set to null
+            console.log(`Invalid or missing details format for order ${order.id}:`, details);
             return {
               ...order,
               details: null
@@ -151,6 +153,7 @@ export const useOrdersData = (filters: {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['dealers'] });
     refetchOrders();
     refetchOrdersWithDetails();
   };
