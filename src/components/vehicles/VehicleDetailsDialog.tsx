@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -20,6 +19,7 @@ interface VehicleDetailsDialogProps {
   onReserve?: (vehicle: Vehicle) => void;
   onCreateQuote?: (vehicle: Vehicle) => void;
   isDealerStock?: boolean;
+  isVirtualStock?: boolean;
 }
 
 const VehicleDetailsDialog = ({
@@ -30,7 +30,8 @@ const VehicleDetailsDialog = ({
   onVehicleDeleted,
   onReserve,
   onCreateQuote,
-  isDealerStock = false
+  isDealerStock = false,
+  isVirtualStock = false
 }: VehicleDetailsDialogProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
@@ -187,18 +188,25 @@ const VehicleDetailsDialog = ({
   };
   
   const isAdmin = user?.type === 'admin';
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  
   const showEditButton = isAdmin && vehicle?.status !== 'ordered';
   const showDeleteButton = isAdmin && vehicle?.status !== 'ordered';
   const showDuplicateButton = isAdmin;
-  const showCreateQuoteButton = (isDealer || isAdmin) && 
+  
+  const showCreateQuoteButton = !isVirtualStock && 
+                               (isDealer || isAdmin) && 
                                (vehicle?.status === 'available' || vehicle?.status === 'delivered') && 
                                onCreateQuote !== undefined;
+                               
   const showReserveButton = (isDealer || isAdmin) && 
                            (vehicle?.status === 'available' || vehicle?.status === 'delivered') && 
                            vehicle?.location !== 'Stock Dealer' && 
                            onReserve !== undefined;
+                           
   const showCancelReservationButton = vehicle?.status === 'reserved' && 
     ((isDealer && vehicle.reservedBy === user?.dealerName) || isAdmin);
+    
   const showCreateOrderButton = isAdmin && vehicle?.status === 'reserved';
   
   return (

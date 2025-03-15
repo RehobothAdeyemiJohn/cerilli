@@ -15,6 +15,7 @@ interface VehicleListProps {
   onCreateQuote?: (vehicle: Vehicle) => void;
   onReserve?: (vehicle: Vehicle) => void;
   isDealerStock?: boolean;
+  isVirtualStock?: boolean;
 }
 
 const VehicleList: React.FC<VehicleListProps> = ({ 
@@ -23,7 +24,8 @@ const VehicleList: React.FC<VehicleListProps> = ({
   onVehicleDeleted,
   onCreateQuote,
   onReserve,
-  isDealerStock = false
+  isDealerStock = false,
+  isVirtualStock = false
 }) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -84,7 +86,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
-            onCreateQuote={onCreateQuote ? handleCreateQuote : undefined}
+            onCreateQuote={!isVirtualStock ? onCreateQuote ? handleCreateQuote : undefined : undefined}
             onReserve={onReserve ? handleReserve : undefined}
           />
         ))}
@@ -96,9 +98,10 @@ const VehicleList: React.FC<VehicleListProps> = ({
         onOpenChange={setShowDetailsDialog}
         onVehicleUpdated={onVehicleUpdated}
         onVehicleDeleted={onVehicleDeleted}
-        onCreateQuote={onCreateQuote}
+        onCreateQuote={!isVirtualStock ? onCreateQuote : undefined}
         onReserve={onReserve}
         isDealerStock={isDealerStock}
+        isVirtualStock={isVirtualStock}
       />
       
       <VehicleEditDialog

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -56,16 +55,14 @@ const Inventory = () => {
   const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   
-  // Periodicamente aggiorniamo i dati più frequentemente
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 2000); // Update every 2 seconds for more immediate feedback
+    }, 2000);
     
     return () => clearInterval(interval);
   }, [refetch]);
   
-  // Aggiungi un effetto per forzare l'aggiornamento dei dati quando la pagina diventa attiva
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -94,7 +91,6 @@ const Inventory = () => {
         const result = await addVehicle(newVehicle);
         console.log("Veicolo aggiunto con successo:", result);
         
-        // Force data update after addition
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
         refetch();
       }
@@ -131,13 +127,11 @@ const Inventory = () => {
     }
   };
 
-  // Wrapper functions with correct signatures for VehicleList component
   const handleVehicleUpdateWrapper = () => {
     refetch();
   };
   
   const handleCreateQuote = (vehicle: Vehicle) => {
-    // Navigate to quotes page with the vehicle ID
     navigate('/quotes', {
       state: {
         fromInventory: true,
@@ -147,7 +141,6 @@ const Inventory = () => {
   };
 
   const handleReserve = (vehicle: Vehicle) => {
-    // Navigate to inventory with this vehicle ID for reservation
     navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
   };
   
@@ -219,8 +212,8 @@ const Inventory = () => {
                 vehicles={stockVirtualeVehicles} 
                 onVehicleUpdated={handleVehicleUpdateWrapper}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
-                onCreateQuote={handleCreateQuote}
                 onReserve={handleReserve}
+                isVirtualStock={true}
               />
             </TabsContent>
             
