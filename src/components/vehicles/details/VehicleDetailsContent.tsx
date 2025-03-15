@@ -52,31 +52,40 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <h2 className="text-2xl font-bold">{vehicle.model}</h2>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          {onReserve && vehicle.status === 'available' && (
+      {/* Header with title and badge */}
+      <div className="flex flex-col md:flex-row justify-between items-start mb-2">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">{vehicle.model}</h2>
+          <Badge className={statusColors[vehicle.status]}>
+            {statusTranslations[vehicle.status]}
+          </Badge>
+        </div>
+      </div>
+      
+      {/* Action buttons - made larger and more visible */}
+      {(onReserve || onCreateQuote) && vehicle.status === 'available' && (
+        <div className="flex flex-wrap gap-3 mb-4">
+          {onReserve && (
             <Button 
               onClick={onReserve}
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base"
+              size="lg"
             >
               Prenota
             </Button>
           )}
           
-          {onCreateQuote && vehicle.status === 'available' && !isVirtualStockVehicle && (
+          {onCreateQuote && !isVirtualStockVehicle && (
             <Button 
               onClick={onCreateQuote}
-              variant="default"
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base"
+              size="lg"
             >
               Crea Preventivo
             </Button>
           )}
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
@@ -90,13 +99,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         )}
         
         <div className={hideImage ? "w-full" : "md:w-1/2"}>
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-xl">{vehicle.trim}</h3>
-              <Badge className={statusColors[vehicle.status]}>
-                {statusTranslations[vehicle.status]}
-              </Badge>
-            </div>
+          <div className="mb-4">
+            <h3 className="text-xl">{vehicle.trim}</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -182,6 +186,39 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
             <p className="text-gray-700">{vehicle.telaio}</p>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Admin action buttons */}
+      {(onEdit || onDelete || onClose) && (
+        <div className="flex justify-end gap-2 mt-4">
+          {onEdit && (
+            <Button 
+              onClick={onEdit}
+              variant="outline"
+              size="sm"
+            >
+              Modifica
+            </Button>
+          )}
+          {onDelete && (
+            <Button 
+              onClick={onDelete}
+              variant="destructive"
+              size="sm"
+            >
+              Elimina
+            </Button>
+          )}
+          {onClose && (
+            <Button 
+              onClick={onClose}
+              variant="outline"
+              size="sm"
+            >
+              Chiudi
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
