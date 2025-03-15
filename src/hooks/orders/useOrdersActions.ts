@@ -36,9 +36,18 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
             // Case 3: dealing with the malformed case (_type and value are strings)
             else if (detailsObj._type !== undefined && detailsObj.value !== undefined) {
               // In this case, details is corrupted - we treat as ODL not generated
+              console.log('Malformed details detected, treating as ODL not generated');
               odlGenerated = false;
             }
           }
+        }
+        
+        // Special handling for null or completely malformed details
+        if (!order.details || 
+            (typeof order.details === 'object' && 
+            Object.keys(order.details).length === 0)) {
+          console.log('Empty or missing details, creating order details first');
+          throw new Error("I dettagli dell'ordine devono essere compilati prima di poter consegnare l'ordine");
         }
         
         if (!odlGenerated) {

@@ -30,6 +30,25 @@ export const useOrdersData = (filters: {
     staleTime: 0,
   });
 
+  // Create a default OrderDetails object
+  const createDefaultOrderDetails = (orderId: string): OrderDetails => {
+    console.log(`Creating default OrderDetails for order ${orderId} due to missing or malformed data`);
+    return {
+      id: '',
+      orderId: orderId,
+      isLicensable: false,
+      hasProforma: false,
+      isPaid: false,
+      isInvoiced: false,
+      hasConformity: false,
+      transportCosts: 0,
+      restorationCosts: 0,
+      odlGenerated: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  };
+
   // Fetch order details for each order
   const fetchOrderDetails = async (orders: Order[]) => {
     console.log(`Fetching details for ${orders.length} orders`);
@@ -61,24 +80,11 @@ export const useOrdersData = (filters: {
                   normalizedDetails = detailsAny.value as OrderDetails;
                 }
                 // Handle the case where value is a string (seen in logs)
-                else if (detailsAny._type && detailsAny.value !== undefined) {
+                else if (detailsAny._type !== undefined && detailsAny.value !== undefined) {
                   // This is the malformed case we're seeing in logs
                   // Create a default OrderDetails object since the real data is corrupted
                   console.log(`Malformed details for order ${order.id} with _type: ${detailsAny._type}`);
-                  normalizedDetails = {
-                    id: '',
-                    orderId: order.id,
-                    isLicensable: false,
-                    hasProforma: false,
-                    isPaid: false,
-                    isInvoiced: false,
-                    hasConformity: false,
-                    transportCosts: 0,
-                    restorationCosts: 0,
-                    odlGenerated: false,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                  };
+                  normalizedDetails = createDefaultOrderDetails(order.id);
                 }
               }
             }
