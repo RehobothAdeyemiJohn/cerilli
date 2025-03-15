@@ -85,31 +85,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
-      {/* Action buttons - Spostati qui prima del contenuto principale ma dopo l'header */}
-      <div className="flex flex-wrap gap-3 mb-6 bg-white py-3 border rounded-md shadow-sm p-3">
-        {onReserve && (
-          <Button 
-            onClick={onReserve}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full sm:w-auto"
-            size="lg"
-          >
-            <Plus className="h-5 w-5 mr-1" />
-            Prenota
-          </Button>
-        )}
-        
-        {onCreateQuote && !isVirtualStockVehicle && (
-          <Button 
-            onClick={onCreateQuote}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full sm:w-auto"
-            size="lg"
-          >
-            <FileCheck className="h-5 w-5 mr-1" />
-            Crea Preventivo
-          </Button>
-        )}
-      </div>
-
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
           <div className="md:w-1/2">
@@ -210,6 +185,31 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Pulsanti di azione principali - posizionati dopo le informazioni del veicolo ma prima dei pulsanti admin */}
+      <div className="flex flex-col md:flex-row gap-3">
+        {onCreateQuote && !isVirtualStockVehicle && (
+          <Button 
+            onClick={onCreateQuote}
+            className="bg-[#F8F9FA] text-[#212529] border border-gray-300 hover:bg-gray-100 w-full"
+            size="lg"
+          >
+            <FileCheck className="h-5 w-5 mr-1" />
+            Crea Preventivo
+          </Button>
+        )}
+        
+        {onReserve && (
+          <Button 
+            onClick={onReserve}
+            className="bg-[#0E1A38] hover:bg-blue-900 text-white w-full"
+            size="lg"
+          >
+            <Plus className="h-5 w-5 mr-1" />
+            Prenota
+          </Button>
+        )}
+      </div>
       
       {/* Admin action buttons */}
       {(onEdit || onDelete || onClose) && (

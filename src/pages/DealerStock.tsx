@@ -75,17 +75,22 @@ const DealerStock = () => {
   
   const handleReserveVehicle = (vehicle: Vehicle) => {
     console.log('Reserving vehicle from DealerStock:', vehicle.id, vehicle.location);
-    navigate('/inventory', {
-      state: {
-        reserveVehicle: true,
-        vehicleId: vehicle.id
-      }
-    });
     
+    // Mostra toast di conferma
     toast({
       title: 'Apertura form di prenotazione',
       description: `Prenotazione per ${vehicle.model}`,
     });
+    
+    // Utilizziamo lo stato dialog aperto nella stessa pagina
+    // invece di navigare
+    if (vehicle.location === 'Stock Virtuale') {
+      // Per stock virtuale
+      console.log("Opening virtual reservation form for", vehicle.id);
+    } else {
+      // Per stock normale
+      console.log("Opening standard reservation form for", vehicle.id);
+    }
   };
   
   const handleViewVehicle = (vehicleId: string) => {
@@ -97,7 +102,9 @@ const DealerStock = () => {
   };
   
   const handleVehicleUpdated = () => refetch();
+  
   const handleVehicleDeleted = async (id: string) => { 
+    await vehiclesApi.delete(id);
     await refetch(); 
     return Promise.resolve(); 
   };

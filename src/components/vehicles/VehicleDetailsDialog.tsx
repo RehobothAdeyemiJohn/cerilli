@@ -37,8 +37,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReservationForm, setShowVirtualReservationForm] = useState(false);
   const { user } = useAuth();
-  // Correggiamo la logica per canReserve
+
+  // Un dealer può prenotare se è di tipo dealer o vendor e il veicolo è disponibile
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const canReserve = isDealer && vehicle?.status === 'available';
+  const canEdit = user?.type === 'admin';
   
   // Effect to handle the shouldReserve prop
   useEffect(() => {
@@ -117,21 +120,16 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
-  // Semplifichiamo la logica per una migliore comprensione
-  // Un utente può prenotare se è un dealer e il veicolo è disponibile
-  const canReserve = isDealer && vehicle.status === 'available';
-  const canEdit = user?.type === 'admin';
-  
+  // Logs per debug
   console.log("VehicleDetailsDialog state:", { 
     canReserve, 
     canEdit, 
     userType: user?.type, 
     isDealer, 
     vehicleStatus: vehicle.status,
-    onReserve: Boolean(onReserve),
-    onCreateQuote: Boolean(onCreateQuote),
-    isDealerStock,
-    isVirtualStock
+    onReserveSet: Boolean(onReserve),
+    onCreateQuoteSet: Boolean(onCreateQuote),
+    showReserveButton: canReserve && Boolean(onReserve)
   });
 
   return (
