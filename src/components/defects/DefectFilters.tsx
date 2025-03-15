@@ -95,7 +95,7 @@ const DefectFilters = ({ onFilterChange }: DefectFiltersProps) => {
             <SelectValue placeholder="Tutti gli stati" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tutti gli stati</SelectItem>
+            <SelectItem value="all">Tutti gli stati</SelectItem>
             <SelectItem value="Aperta">Aperta</SelectItem>
             <SelectItem value="Approvata">Approvata</SelectItem>
             <SelectItem value="Approvata Parzialmente">Approvata Parzialmente</SelectItem>
@@ -109,7 +109,7 @@ const DefectFilters = ({ onFilterChange }: DefectFiltersProps) => {
               <SelectValue placeholder="Tutti i dealer" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tutti i dealer</SelectItem>
+              <SelectItem value="all">Tutti i dealer</SelectItem>
               {dealers.map((dealer) => (
                 <SelectItem key={dealer.id} value={dealer.id}>
                   {dealer.companyName}

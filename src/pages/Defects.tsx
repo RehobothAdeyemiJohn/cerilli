@@ -43,7 +43,7 @@ const Defects = () => {
         // Apply filters
         return reports.filter(report => {
           // Status filter
-          if (filters.status && report.status !== filters.status) {
+          if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
             return false;
           }
           
@@ -66,12 +66,12 @@ const Defects = () => {
         // Apply filters
         return reports.filter(report => {
           // Status filter
-          if (filters.status && report.status !== filters.status) {
+          if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
             return false;
           }
           
           // Dealer filter
-          if (filters.dealerId && report.dealerId !== filters.dealerId) {
+          if (filters.dealerId && filters.dealerId !== 'all' && report.dealerId !== filters.dealerId) {
             return false;
           }
           
