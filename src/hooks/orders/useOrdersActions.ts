@@ -16,15 +16,14 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         console.log("Order details for delivery check:", order.details);
         
-        // Completely skip the structure check and directly query the order details from API
-        // This is more reliable than trying to interpret the potentially malformed order.details
+        // Directly query the order details from API to ensure we have accurate data
         try {
-          // Try to get order details directly from the API
+          // Get order details directly from the API
           const orderDetails = await orderDetailsApi.getByOrderId(orderId);
           console.log("Retrieved order details directly from API:", orderDetails);
           
-          // If we have details and ODL is not generated, prevent delivery
-          if (orderDetails && !orderDetails.odlGenerated) {
+          // If we have orderDetails and odlGenerated is false, prevent delivery
+          if (orderDetails && orderDetails.odlGenerated === false) {
             console.log('Order details exist but ODL not generated');
             throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
           }
@@ -32,15 +31,19 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
           // If no details found at all (null response), prevent delivery
           if (!orderDetails) {
             console.log('No order details found - ODL not generated');
-            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
+            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine. Aprire i dettagli dell'ordine e generare l'ODL.");
           }
+          
+          // Additional logging to help debug
+          console.log("ODL generation status:", orderDetails.odlGenerated);
+          
         } catch (detailsError) {
           // If there was an error fetching details, we should prevent delivery
           console.error("Error fetching order details:", detailsError);
           throw new Error("Impossibile verificare lo stato dell'ODL. Aprire i dettagli dell'ordine e generare l'ODL.");
         }
         
-        // If we get here, either ODL is generated or we've handled all error cases
+        // If we get here, the order can be delivered
         
         if (order.vehicle && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
@@ -64,6 +67,7 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       
       refreshAllOrderData();
       toast({
