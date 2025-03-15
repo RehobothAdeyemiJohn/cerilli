@@ -130,7 +130,10 @@ const Inventory = () => {
 
   // Wrapper functions with correct signatures for VehicleList component
   const handleVehicleUpdateWrapper = () => {
-    handleVehicleUpdate();
+    // Pass a dummy vehicle object or get the currently selected vehicle
+    // since handleVehicleUpdate expects a vehicle parameter
+    const dummyVehicle = {} as Vehicle;
+    handleVehicleUpdate(dummyVehicle);
   };
   
   const handleCreateQuote = (vehicle: Vehicle) => {
