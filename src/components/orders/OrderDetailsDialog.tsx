@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -47,7 +46,6 @@ const OrderDetailsDialog = ({
   const [isVehicleLoading, setIsVehicleLoading] = useState(false);
   const [isDealerLoading, setIsDealerLoading] = useState(false);
 
-  // Usa la nuova struttura di query key per migliore gestione della cache
   const {
     data: orderDetails,
     isLoading: isLoadingDetails,
@@ -57,7 +55,7 @@ const OrderDetailsDialog = ({
     queryKey: ['orderDetails', order.id],
     queryFn: () => orderDetailsApi.getByOrderId(order.id),
     enabled: !!order.id && open,
-    staleTime: 0, // Sempre recuperare dati freschi
+    staleTime: 0,
   });
 
   const fetchVehicleDetails = async () => {
@@ -104,16 +102,18 @@ const OrderDetailsDialog = ({
 
   useEffect(() => {
     if (open && order) {
-      // Forza il recupero dei dettagli dell'ordine quando il dialog si apre
       refetch();
       
-      // Fetch vehicle and dealer details
       if (!vehicleData && order.vehicleId) {
         fetchVehicleDetails();
       }
       
       if (!dealerData && order.dealerId) {
         fetchDealerDetails();
+      }
+
+      if (order.details) {
+        console.log("Order details structure:", JSON.stringify(order.details));
       }
     }
   }, [open, order, refetch, vehicleData, dealerData]);
@@ -132,16 +132,17 @@ const OrderDetailsDialog = ({
 
   const availableCredit = dealerData ? calculateAvailableCredit(dealerData, order) : null;
   const orderCost = vehicleData?.price || 0;
+  
+  console.log("Dealer data for plafond calculation:", dealerData);
+  console.log("Available credit calculation result:", availableCredit);
 
   const handleGenerateODL = (details: OrderDetails) => {
     if (onGenerateODL) {
       onGenerateODL(details);
     }
     
-    // Aggiornamento dello stato locale per riflettere i cambiamenti
     refetch();
     
-    // Invalidazione di tutte le query correlate per garantire l'aggiornamento corretto dell'UI
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
@@ -155,10 +156,8 @@ const OrderDetailsDialog = ({
   const handleSuccess = () => {
     console.log('OrderDetailsForm reported success, notifying parent component');
     
-    // Aggiornamento dei dati del form
     refetch();
     
-    // Forza un recupero immediato di tutti gli ordini per aggiornare l'UI
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
@@ -167,7 +166,6 @@ const OrderDetailsDialog = ({
       onSuccess();
     }
     
-    // Chiudi il dialog quando il salvataggio ha successo
     onOpenChange(false);
   };
 

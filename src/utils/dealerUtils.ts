@@ -12,6 +12,8 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
     return null;
   }
   
+  console.log(`Calculating available credit for dealer ${dealer.companyName} with credit limit ${dealer.creditLimit}`);
+  
   // If we're looking at the individual order details, we don't subtract this order's value
   const orderAmountToExclude = currentOrder?.vehicle?.price || 0;
   
@@ -25,18 +27,27 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
       order.status === 'delivered' && order.id !== currentOrder?.id
     );
     
-    console.log('Delivered orders for plafond calculation:', deliveredOrders);
+    console.log(`Found ${deliveredOrders.length} delivered orders for dealer ${dealer.companyName}`);
+    
+    // Log each delivered order for debugging
+    deliveredOrders.forEach(order => {
+      console.log(`Delivered order ${order.id}: Status: ${order.status}, Vehicle:`, order.vehicle);
+    });
     
     // Subtract the price of each delivered vehicle from the credit limit
     deliveredOrders.forEach(order => {
-      if (order.vehicle && order.vehicle.price) {
+      if (order.vehicle && typeof order.vehicle.price === 'number') {
         availableCredit -= order.vehicle.price;
         console.log(`Subtracting ${order.vehicle.price} from credit limit for order ${order.id}`);
+      } else {
+        console.log(`Order ${order.id} has no valid vehicle price:`, order.vehicle);
       }
     });
+  } else {
+    console.log(`No orders found for dealer ${dealer.companyName} or orders is not an array:`, dealer.orders);
   }
   
-  console.log(`Final available credit for dealer ${dealer.companyName}:`, availableCredit);
+  console.log(`Final available credit for dealer ${dealer.companyName}: ${availableCredit}`);
   return availableCredit;
 };
 

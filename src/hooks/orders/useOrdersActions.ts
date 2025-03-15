@@ -13,17 +13,31 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       try {
         const order = await ordersApi.getById(orderId);
         
-        // Enhanced check for ODL generation - log the full details for debugging
         console.log("Order details for delivery check:", order.details);
         
-        // First check if order details exist at all
-        if (!order.details) {
-          console.log('Cannot deliver order - order details missing:', order);
-          throw new Error("Dettagli dell'ordine mancanti. Genera l'ODL prima di consegnare.");
+        // Fixed check - we need to handle both direct property access and the odd _type/_value format
+        let odlGenerated = false;
+        
+        if (order.details) {
+          // Handle the case where details is an object with _type and value
+          if (order.details._type === 'undefined' || order.details._value === 'undefined') {
+            console.log('Cannot deliver order - malformed order details:', order);
+            throw new Error("Dettagli dell'ordine in formato non valido. Genera l'ODL prima di consegnare.");
+          }
+          
+          // Check if details is already the correct structure
+          if (typeof order.details === 'object' && order.details.odlGenerated === true) {
+            odlGenerated = true;
+          }
+          
+          // Check if there's a nested value property that might contain our data
+          if (typeof order.details === 'object' && order.details.value && 
+              typeof order.details.value === 'object' && order.details.value.odlGenerated === true) {
+            odlGenerated = true;
+          }
         }
         
-        // Then check specifically for odlGenerated
-        if (order.details.odlGenerated !== true) {
+        if (!odlGenerated) {
           console.log('Cannot deliver order - ODL not generated:', order.details);
           throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
         }

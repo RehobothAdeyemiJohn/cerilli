@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -33,14 +32,27 @@ export const useOrdersData = (filters: {
 
   // Fetch order details for each order
   const fetchOrderDetails = async (orders: Order[]) => {
+    console.log(`Fetching details for ${orders.length} orders`);
+    
     const ordersWithDetailsFull = await Promise.all(
       orders.map(async (order) => {
         try {
           const details = await orderDetailsApi.getByOrderId(order.id);
-          return {
-            ...order,
-            details: details || null
-          };
+          console.log(`Details for order ${order.id}:`, details);
+          
+          // Check if the details actually have the ODL generated flag
+          if (details && typeof details === 'object' && 'odlGenerated' in details) {
+            return {
+              ...order,
+              details: details
+            };
+          } else {
+            console.log(`Invalid details format for order ${order.id}:`, details);
+            return {
+              ...order,
+              details: null
+            };
+          }
         } catch (error) {
           console.error(`Error fetching details for order ${order.id}:`, error);
           return {
