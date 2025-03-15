@@ -24,7 +24,7 @@ const Defects = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filters, setFilters = useState<{
+  const [filters, setFilters] = useState<{
     status?: string;
     dealerId?: string;
     search?: string;
