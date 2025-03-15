@@ -164,6 +164,14 @@ export const defectReportsApi = {
   },
 
   async delete(id: string) {
+    // Check authentication first
+    const { data: authData, error: authError } = await supabase.auth.getSession();
+    
+    if (authError || !authData.session) {
+      console.error('Authentication error:', authError || 'No session found');
+      throw new Error('Authentication error. Please log in again.');
+    }
+    
     const { error } = await supabase
       .from('defect_reports')
       .delete()

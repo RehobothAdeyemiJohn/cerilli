@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -13,6 +12,7 @@ import DefectDeleteDialog from '@/components/defects/DefectDeleteDialog';
 import DefectFilters from '@/components/defects/DefectFilters';
 import DefectStats from '@/components/defects/DefectStats';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Defects = () => {
   const { user } = useAuth();
@@ -40,6 +40,19 @@ const Defects = () => {
     queryFn: async () => {
       console.log("Fetching defect reports with filters:", filters);
       try {
+        // Check authentication first to fail early
+        const { data: authData, error: authError } = await supabase.auth.getSession();
+        
+        if (authError || !authData.session) {
+          console.error('Authentication error:', authError || 'No session found');
+          toast({
+            title: "Errore di autenticazione",
+            description: "Effettua il login per continuare",
+            variant: "destructive",
+          });
+          return [];
+        }
+        
         if (isDealer) {
           const reports = await defectReportsApi.getByDealerId(dealerId!);
           console.log("Fetched dealer reports:", reports);

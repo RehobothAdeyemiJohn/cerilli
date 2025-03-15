@@ -288,7 +288,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Starting form submission...");
+      console.log("Starting form submission with values:", values);
       
       if (!values.dealerId) {
         toast({
@@ -303,6 +303,19 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       let newTransportDocUrl = transportDocUrl;
       let newRepairQuoteUrl = repairQuoteUrl;
       let newPhotoUrls = photoUrls;
+      
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session.session) {
+        console.error('Authentication error:', sessionError || 'No session found');
+        toast({
+          title: "Errore di autenticazione",
+          description: "Effettua il login per continuare",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
       
       const { data: bucketList } = await supabase.storage.listBuckets();
       const bucketNames = bucketList?.map(b => b.name) || [];
@@ -358,8 +371,8 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         reason: values.reason,
         description: values.description,
         repairCost: values.repairCost,
-        approvedRepairValue: values.approvedRepairValue,
-        sparePartsRequest: values.sparePartsRequest,
+        approvedRepairValue: values.approvedRepairValue || 0,
+        sparePartsRequest: values.sparePartsRequest || '',
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
         paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : null,
         vehicleId: values.vehicleId || '',
