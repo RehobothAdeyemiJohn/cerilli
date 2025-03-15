@@ -118,7 +118,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   
   // Fixed: Fix the logic to properly determine if the user can reserve vehicles
   const canReserve = vehicle.status === 'available' && isDealer;
-  // Fix: Correct the admin check to include both admin and superAdmin
+  
+  // Fix: Fixed the admin check using proper type checking
   const canEdit = user?.type === 'admin' || user?.type === 'superAdmin';
   
   console.log("VehicleDetailsDialog state:", { 
