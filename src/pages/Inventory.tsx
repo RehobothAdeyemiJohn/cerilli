@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -144,11 +143,12 @@ const Inventory = () => {
 
   const handleReserve = (vehicle: Vehicle) => {
     console.log('Reserving vehicle from Inventory page:', vehicle);
-    // Fix: Invece di navigare, apri il modulo di prenotazione direttamente
-    // nel dialog dei dettagli del veicolo
-    if (vehicle && vehicle.location === 'Stock CMC') {
-      // Aggiungi log per debug
-      console.log('Opening reservation form for Stock CMC vehicle', vehicle.id);
+    
+    if (vehicle) {
+      console.log('Opening reservation form for vehicle:', vehicle.id, vehicle.location);
+      
+      const isVirtual = vehicle.location === 'Stock Virtuale';
+      
       navigate('/inventory', {
         state: {
           reserveVehicle: true,
@@ -156,14 +156,10 @@ const Inventory = () => {
           openDialog: true
         }
       });
-    } else if (vehicle && vehicle.location === 'Stock Virtuale') {
-      console.log('Opening virtual reservation for Stock Virtuale vehicle', vehicle.id);
-      navigate('/inventory', {
-        state: {
-          reserveVehicle: true,
-          vehicleId: vehicle.id,
-          openDialog: true
-        }
+      
+      toast({
+        title: `Apertura form di prenotazione`,
+        description: `Prenotazione ${isVirtual ? 'virtuale' : ''} per ${vehicle.model}`,
       });
     }
   };
