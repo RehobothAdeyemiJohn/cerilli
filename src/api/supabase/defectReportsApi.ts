@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
@@ -159,18 +160,29 @@ export const defectReportsApi = {
       throw new Error("ID is required for update operation");
     }
     
-    // Format all fields correctly for the database (camelCase to snake_case)
-    const payload = createDbPayload(report);
+    // Utilizziamo lo stesso approccio del metodo create per l'aggiornamento
+    const payload = {
+      dealer_id: report.dealerId,
+      dealer_name: report.dealerName,
+      vehicle_id: report.vehicleId || null,
+      email: report.email || '',
+      status: report.status,
+      reason: report.reason,
+      description: report.description,
+      vehicle_receipt_date: report.vehicleReceiptDate,
+      repair_cost: typeof report.repairCost === 'string' ? parseFloat(report.repairCost) : report.repairCost || 0,
+      approved_repair_value: typeof report.approvedRepairValue === 'string' ? parseFloat(report.approvedRepairValue) : report.approvedRepairValue || 0,
+      spare_parts_request: report.sparePartsRequest || '',
+      transport_document_url: report.transportDocumentUrl || '',
+      photo_report_urls: report.photoReportUrls || [],
+      repair_quote_url: report.repairQuoteUrl || '',
+      admin_notes: report.adminNotes || '',
+      payment_date: report.paymentDate
+    };
     
     console.log("Prepared update payload:", JSON.stringify(payload, null, 2));
     
     try {
-      if (Object.keys(payload).length === 0) {
-        console.warn("No fields to update were provided");
-        // If no changes, just return the existing report
-        return await this.getById(id);
-      }
-      
       // Execute the update operation with a single call
       const { data, error } = await supabase
         .from('defect_reports')
