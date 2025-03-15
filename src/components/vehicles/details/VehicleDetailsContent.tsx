@@ -85,6 +85,33 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
+      {/* ACTION BUTTONS AT THE TOP - MORE VISIBLE */}
+      {(onReserve || onCreateQuote) && (
+        <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+          {onCreateQuote && !isVirtualStockVehicle && (
+            <Button 
+              onClick={onCreateQuote}
+              className="bg-green-600 hover:bg-green-700 text-white w-full"
+              size="lg"
+            >
+              <FileCheck className="h-5 w-5 mr-2" />
+              Crea Preventivo
+            </Button>
+          )}
+          
+          {onReserve && (
+            <Button 
+              onClick={onReserve}
+              className="bg-blue-700 hover:bg-blue-800 text-white w-full"
+              size="lg"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Prenota
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
           <div className="md:w-1/2">
@@ -185,31 +212,33 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </CardContent>
         </Card>
       )}
-
-      {/* Pulsanti di azione principali - posizionati dopo le informazioni del veicolo ma prima dei pulsanti admin */}
-      <div className="flex flex-col md:flex-row gap-3">
-        {onCreateQuote && !isVirtualStockVehicle && (
-          <Button 
-            onClick={onCreateQuote}
-            className="bg-[#F8F9FA] text-[#212529] border border-gray-300 hover:bg-gray-100 w-full"
-            size="lg"
-          >
-            <FileCheck className="h-5 w-5 mr-1" />
-            Crea Preventivo
-          </Button>
-        )}
-        
-        {onReserve && (
-          <Button 
-            onClick={onReserve}
-            className="bg-[#0E1A38] hover:bg-blue-900 text-white w-full"
-            size="lg"
-          >
-            <Plus className="h-5 w-5 mr-1" />
-            Prenota
-          </Button>
-        )}
-      </div>
+      
+      {/* ALTERNATE BOTTOM ACTION BUTTONS - in case the top ones don't work */}
+      {(onReserve || onCreateQuote) && (
+        <div className="flex flex-col md:flex-row gap-3 mt-4">
+          {onCreateQuote && !isVirtualStockVehicle && (
+            <Button 
+              onClick={onCreateQuote}
+              className="bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200 w-full"
+              size="lg"
+            >
+              <FileCheck className="h-5 w-5 mr-2" />
+              Crea Preventivo
+            </Button>
+          )}
+          
+          {onReserve && (
+            <Button 
+              onClick={onReserve}
+              className="bg-blue-700 hover:bg-blue-800 text-white w-full"
+              size="lg"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Prenota
+            </Button>
+          )}
+        </div>
+      )}
       
       {/* Admin action buttons */}
       {(onEdit || onDelete || onClose) && (

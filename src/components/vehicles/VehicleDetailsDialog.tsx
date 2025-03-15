@@ -38,7 +38,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [showVirtualReservationForm, setShowVirtualReservationForm] = useState(false);
   const { user } = useAuth();
 
-  // Un dealer può prenotare se è di tipo dealer o vendor e il veicolo è disponibile
+  // Determine if the user is a dealer and can reserve vehicles
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const canReserve = isDealer && vehicle?.status === 'available';
   const canEdit = user?.type === 'admin';
@@ -120,7 +120,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
-  // Logs per debug
+  // Debug logs
   console.log("VehicleDetailsDialog state:", { 
     canReserve, 
     canEdit, 
@@ -131,6 +131,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onCreateQuoteSet: Boolean(onCreateQuote),
     showReserveButton: canReserve && Boolean(onReserve)
   });
+
+  // IMPORTANT: Determine which actions to pass to VehicleDetailsContent
+  // This ensures the button visibility is determined by both user permissions and available callbacks
+  const showReserveButton = Boolean(onReserve) && canReserve;
+  const showCreateQuoteButton = Boolean(onCreateQuote) && canReserve && !isVirtualStock;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,8 +167,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             vehicle={vehicle} 
             onEdit={canEdit ? handleEditClick : undefined}
             onDelete={canEdit ? handleDeleteClick : undefined}
-            onReserve={canReserve && onReserve ? handleReserveClick : undefined}
-            onCreateQuote={canReserve && onCreateQuote && !isVirtualStock ? handleCreateQuoteClick : undefined}
+            onReserve={showReserveButton ? handleReserveClick : undefined}
+            onCreateQuote={showCreateQuoteButton ? handleCreateQuoteClick : undefined}
             onClose={handleDialogClose}
             isDealerStock={isDealerStock}
             isVirtualStock={isVirtualStock}

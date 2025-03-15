@@ -76,21 +76,22 @@ const DealerStock = () => {
   const handleReserveVehicle = (vehicle: Vehicle) => {
     console.log('Reserving vehicle from DealerStock:', vehicle.id, vehicle.location);
     
-    // Mostra toast di conferma
+    // Display confirmation toast
     toast({
       title: 'Apertura form di prenotazione',
       description: `Prenotazione per ${vehicle.model}`,
     });
     
-    // Utilizziamo lo stato dialog aperto nella stessa pagina
-    // invece di navigare
-    if (vehicle.location === 'Stock Virtuale') {
-      // Per stock virtuale
-      console.log("Opening virtual reservation form for", vehicle.id);
-    } else {
-      // Per stock normale
-      console.log("Opening standard reservation form for", vehicle.id);
-    }
+    // We'll open the reservation form directly in the same page dialog
+    // by passing the vehicle ID via state to the VehicleList component
+    navigate('/inventory', {
+      state: {
+        reserveVehicle: true, 
+        vehicleId: vehicle.id,
+        openDialog: true,
+        keepState: true // Prevent state from being cleared
+      }
+    });
   };
   
   const handleViewVehicle = (vehicleId: string) => {
