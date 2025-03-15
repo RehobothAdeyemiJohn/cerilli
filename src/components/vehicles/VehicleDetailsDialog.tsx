@@ -35,9 +35,9 @@ const VehicleDetailsDialog = ({
   isVirtualStock = false
 }: VehicleDetailsDialogProps) => {
   const { user } = useAuth();
-  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -165,6 +165,7 @@ const VehicleDetailsDialog = ({
   };
   const handleCreateQuoteAction = () => {
     if (vehicle && onCreateQuote) {
+      console.log("Creating quote for vehicle:", vehicle);
       onCreateQuote(vehicle);
       onOpenChange(false);
     }
@@ -174,6 +175,7 @@ const VehicleDetailsDialog = ({
       if (vehicle.location === 'Stock Virtuale') {
         setShowVirtualReserveForm(true);
       } else if (onReserve) {
+        console.log("Reserving vehicle:", vehicle);
         onReserve(vehicle);
         onOpenChange(false);
       } else {

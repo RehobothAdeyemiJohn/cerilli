@@ -64,7 +64,7 @@ const DealerStock = () => {
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   
   const handleCreateQuote = (vehicle: Vehicle) => {
-    console.log('Creating quote for vehicle:', vehicle);
+    console.log('Creating quote for vehicle from DealerStock:', vehicle);
     navigate('/quotes', { 
       state: { 
         fromInventory: true,
@@ -129,8 +129,13 @@ const DealerStock = () => {
                   onVehicleDeleted={handleVehicleDeleted}
                   onCreateQuote={handleCreateQuote}
                   onReserve={(vehicle) => {
-                    // Navigate to inventory with this vehicle ID for reservation
-                    navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
+                    // Updated to use state-based navigation for consistency
+                    navigate('/inventory', {
+                      state: {
+                        reserveVehicle: true,
+                        vehicleId: vehicle.id
+                      }
+                    });
                   }}
                   isDealerStock={true}
                   isVirtualStock={false}

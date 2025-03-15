@@ -41,7 +41,7 @@ const QuoteForm = ({
     );
   }
   
-  // For vehicle-based quotes, use the existing form
+  // For vehicle-based quotes, use the existing form with proper checks
   const {
     form,
     showTradeIn,
@@ -65,10 +65,10 @@ const QuoteForm = ({
   if (!vehicle) {
     return (
       <div className="text-center p-6">
-        <h3 className="text-lg font-medium mb-4">Selezione Veicolo</h3>
+        <h3 className="text-lg font-medium mb-4">Nessun Veicolo Selezionato</h3>
         <p className="text-gray-500 mb-4">
-          In questa sezione sarà possibile selezionare un veicolo per il preventivo.
-          Questa funzionalità è in sviluppo.
+          Non è stato selezionato nessun veicolo per il preventivo.
+          Torna indietro e seleziona un veicolo.
         </p>
         <Button variant="outline" onClick={onCancel}>
           Torna Indietro

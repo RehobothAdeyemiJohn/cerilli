@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -133,16 +132,25 @@ const Inventory = () => {
   };
   
   const handleCreateQuote = (vehicle: Vehicle) => {
-    navigate('/quotes', {
-      state: {
+    console.log('Creating quote for vehicle:', vehicle);
+    navigate('/quotes', { 
+      state: { 
         fromInventory: true,
-        vehicleId: vehicle.id
-      }
+        vehicleId: vehicle.id 
+      } 
     });
   };
 
   const handleReserve = (vehicle: Vehicle) => {
-    navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
+    console.log('Reserving vehicle:', vehicle);
+    if (vehicle) {
+      navigate('/inventory', {
+        state: {
+          reserveVehicle: true,
+          vehicleId: vehicle.id
+        }
+      });
+    }
   };
   
   if (isLoading) {
