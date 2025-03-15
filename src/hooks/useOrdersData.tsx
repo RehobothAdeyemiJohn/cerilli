@@ -51,9 +51,14 @@ export const useOrdersData = (filters: {
               if ('odlGenerated' in details) {
                 normalizedDetails = details as OrderDetails;
               }
-              // Case 2: details has a nested value property
-              else if ('value' in details && typeof details.value === 'object' && details.value && 'odlGenerated' in details.value) {
-                normalizedDetails = details.value as OrderDetails;
+              // Case 2: details has a nested value property (using type assertion)
+              else {
+                const detailsAny = details as any;
+                if (detailsAny.value && 
+                    typeof detailsAny.value === 'object' && 
+                    'odlGenerated' in detailsAny.value) {
+                  normalizedDetails = detailsAny.value as OrderDetails;
+                }
               }
             }
             
