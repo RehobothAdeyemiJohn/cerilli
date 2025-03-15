@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -20,27 +19,15 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         if (order.details) {
           // Handle different structure possibilities for order.details
+          const detailsObj = order.details as any; // Use any to bypass TypeScript checks
           
-          // Check if details is a plain JavaScript object that might have been serialized/deserialized
-          if (typeof order.details === 'object') {
-            // Check if it's the expected OrderDetails object with odlGenerated property
-            if ('odlGenerated' in order.details) {
-              odlGenerated = Boolean(order.details.odlGenerated);
-            } 
-            // Check if it has a malformed structure (sometimes returned by the API)
-            else if (typeof order.details === 'object') {
-              // Try to access potential nested properties safely
-              const detailsObj = order.details as any; // Use any to bypass TypeScript checks
-              
-              if (detailsObj.odlGenerated === true) {
-                odlGenerated = true;
-              }
-              
-              // Try to access potentially nested value property
-              if (detailsObj.value && typeof detailsObj.value === 'object') {
-                if (detailsObj.value.odlGenerated === true) {
-                  odlGenerated = true;
-                }
+          // Try different ways to extract the odlGenerated flag
+          if (typeof detailsObj === 'object') {
+            if ('odlGenerated' in detailsObj) {
+              odlGenerated = Boolean(detailsObj.odlGenerated);
+            } else if (detailsObj.value && typeof detailsObj.value === 'object') {
+              if ('odlGenerated' in detailsObj.value) {
+                odlGenerated = Boolean(detailsObj.value.odlGenerated);
               }
             }
           }

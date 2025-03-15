@@ -41,15 +41,28 @@ export const useOrdersData = (filters: {
           const details = await orderDetailsApi.getByOrderId(order.id);
           console.log(`Details for order ${order.id}:`, details);
           
-          // Only include valid details
-          if (details && typeof details === 'object' && 'odlGenerated' in details) {
+          // Check for valid details structure with direct property or nested structures
+          if (details) {
+            // Create a normalized details object
+            let normalizedDetails: OrderDetails | null = null;
+            
+            if (typeof details === 'object') {
+              // Case 1: details is already a valid OrderDetails object
+              if ('odlGenerated' in details) {
+                normalizedDetails = details as OrderDetails;
+              }
+              // Case 2: details has a nested value property
+              else if ('value' in details && typeof details.value === 'object' && details.value && 'odlGenerated' in details.value) {
+                normalizedDetails = details.value as OrderDetails;
+              }
+            }
+            
             return {
               ...order,
-              details: details
+              details: normalizedDetails
             };
           } else {
-            // If details doesn't have the expected structure, log it and set to null
-            console.log(`Invalid or missing details format for order ${order.id}:`, details);
+            console.log(`Missing details for order ${order.id}`);
             return {
               ...order,
               details: null
