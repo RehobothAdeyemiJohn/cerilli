@@ -4,6 +4,7 @@ import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide-react';
 
 interface VehicleDetailsContentProps {
@@ -51,48 +52,28 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col space-y-4">
         <h2 className="text-2xl font-bold">{vehicle.model}</h2>
-        <div className="flex gap-2">
+        
+        <div className="flex flex-wrap items-center gap-2">
           {onReserve && vehicle.status === 'available' && (
-            <button
+            <Button 
               onClick={onReserve}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               Prenota
-            </button>
+            </Button>
           )}
-          {onCreateQuote && vehicle.status === 'available' && (
-            <button
+          
+          {onCreateQuote && vehicle.status === 'available' && !isVirtualStockVehicle && (
+            <Button 
               onClick={onCreateQuote}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              variant="default"
+              className="bg-green-600 hover:bg-green-700"
             >
               Crea Preventivo
-            </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-            >
-              Modifica
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              Elimina
-            </button>
-          )}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-            >
-              Chiudi
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -171,7 +152,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       </div>
       
       <Card>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 pt-6">
           <h3 className="text-lg font-semibold">Accessori</h3>
           {vehicle.accessories && vehicle.accessories.length > 0 ? (
             <ul className="list-disc pl-5">
@@ -187,7 +168,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       
       {vehicle.previousChassis && (
         <Card>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-6">
             <h3 className="text-lg font-semibold">Telaio Precedente</h3>
             <p className="text-gray-700">{vehicle.previousChassis}</p>
           </CardContent>
@@ -196,7 +177,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       
       {vehicle.telaio && (
         <Card>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-6">
             <h3 className="text-lg font-semibold">Telaio</h3>
             <p className="text-gray-700">{vehicle.telaio}</p>
           </CardContent>
