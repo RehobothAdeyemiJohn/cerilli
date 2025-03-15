@@ -160,29 +160,32 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
               isVirtualStock={isVirtualStock}
             />
             
-            <DialogFooter className="mt-6">
-              <div className="flex w-full gap-3 justify-between">
-                {showCreateQuoteButton && (
-                  <Button 
-                    onClick={handleCreateQuoteClick}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300"
-                  >
-                    <FileText className="h-5 w-5 mr-2" />
-                    Crea Preventivo
-                  </Button>
-                )}
-                
-                {showReserveButton && (
-                  <Button 
-                    onClick={handleReserveClick}
-                    className="flex-1 bg-blue-700 hover:bg-blue-800 text-white"
-                  >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Prenota
-                  </Button>
-                )}
-              </div>
-            </DialogFooter>
+            {/* Footer with action buttons */}
+            {(showReserveButton || showCreateQuoteButton) && (
+              <DialogFooter className="mt-4 pt-4 border-t">
+                <div className="flex w-full gap-3 justify-between">
+                  {showCreateQuoteButton && (
+                    <Button 
+                      onClick={handleCreateQuoteClick}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300"
+                    >
+                      <FileText className="h-5 w-5 mr-2" />
+                      Crea Preventivo
+                    </Button>
+                  )}
+                  
+                  {showReserveButton && (
+                    <Button 
+                      onClick={handleReserveClick}
+                      className="flex-1 bg-blue-700 hover:bg-blue-800 text-white"
+                    >
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Prenota
+                    </Button>
+                  )}
+                </div>
+              </DialogFooter>
+            )}
           </>
         );
     }

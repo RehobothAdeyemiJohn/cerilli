@@ -4,8 +4,7 @@ import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard, Hash } from 'lucide-react';
+import { Fuel, Car, PaintBucket, CreditCard, Clock, CalendarClock, Hash } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { modelsApi } from '@/api/localStorage';
 import { Separator } from '@/components/ui/separator';
@@ -60,31 +59,34 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const estimatedArrival = isVirtualStockVehicle ? calculateEstimatedArrival(vehicle) : null;
 
   return (
-    <div className="space-y-6">
-      {/* Status badge at the top */}
-      <div className="flex items-center">
+    <div className="space-y-4">
+      {/* Vehicle image */}
+      {!hideImage && (
+        <div className="w-full">
+          <img
+            src={modelImage || vehicle.imageUrl || "/placeholder.svg"}
+            alt={`${vehicle.model} ${vehicle.trim}`}
+            className="w-full h-auto rounded-lg object-cover aspect-video"
+          />
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center">
         <Badge className={statusColors[vehicle.status]}>
           {statusTranslations[vehicle.status]}
         </Badge>
+        
+        <div className="text-xl font-bold">
+          {vehicle.price > 0 && formatCurrency(vehicle.price)}
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Image section */}
-        {!hideImage && (
-          <div>
-            <img
-              src={modelImage || vehicle.imageUrl || "/placeholder.svg"}
-              alt={`${vehicle.model} ${vehicle.trim}`}
-              className="w-full h-auto rounded-lg object-cover aspect-video"
-            />
-          </div>
-        )}
-        
-        {/* Details section */}
+      {/* Main vehicle details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h3 className="text-lg font-semibold mb-4">{vehicle.trim || vehicle.model}</h3>
+          <h3 className="text-lg font-semibold mb-2">{vehicle.model} {vehicle.trim}</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3">
+          <div className="space-y-2">
             {vehicle.fuelType && (
               <div className="flex items-center gap-2">
                 <Fuel className="h-4 w-4 text-gray-500" />
@@ -106,14 +108,22 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
               </div>
             )}
             
-            {vehicle.price && (
+            {vehicle.telaio && (
               <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700 font-medium">
-                  {formatCurrency(vehicle.price)}
-                </span>
+                <Hash className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">{vehicle.telaio}</span>
               </div>
             )}
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Informazioni</h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-gray-500" />
+              <span className="text-gray-700">Posizione: {vehicle.location}</span>
+            </div>
             
             {daysInStock !== null && (
               <div className="flex items-center gap-2">
@@ -131,10 +141,15 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
               </div>
             )}
             
-            {vehicle.telaio && (
+            {isVirtualStockVehicle && vehicle.originalStock && (
               <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{vehicle.telaio}</span>
+                <span className="text-gray-700">Origine: Stock {vehicle.originalStock}</span>
+              </div>
+            )}
+            
+            {vehicle.reservedBy && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-700">Riservato per: {vehicle.reservedBy}</span>
               </div>
             )}
           </div>
@@ -142,27 +157,15 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       </div>
       
       {/* Accessories section */}
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-2">Accessori</h3>
-          {vehicle.accessories && vehicle.accessories.length > 0 ? (
+      {vehicle.accessories && vehicle.accessories.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-2">Accessori</h3>
             <ul className="list-disc pl-5">
               {vehicle.accessories.map((accessory, index) => (
                 <li key={index} className="text-gray-700">{accessory}</li>
               ))}
             </ul>
-          ) : (
-            <p className="text-gray-500">Nessun accessorio disponibile.</p>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Telaio section */}
-      {vehicle.telaio && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-2">Telaio</h3>
-            <p className="text-gray-700">{vehicle.telaio}</p>
           </CardContent>
         </Card>
       )}
@@ -171,22 +174,20 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
       {(onEdit || onDelete) && (
         <div className="flex justify-end gap-2 mt-4">
           {onEdit && (
-            <Button 
+            <button 
               onClick={onEdit}
-              variant="outline"
-              size="sm"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Modifica
-            </Button>
+            </button>
           )}
           {onDelete && (
-            <Button 
+            <button 
               onClick={onDelete}
-              variant="destructive"
-              size="sm"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
             >
               Elimina
-            </Button>
+            </button>
           )}
         </div>
       )}
