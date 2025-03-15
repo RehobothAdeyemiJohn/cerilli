@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { modelsApi } from '@/api/localStorage';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
@@ -46,9 +48,27 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     delivered: 'Consegnata',
   };
 
+  // Fetch model data to get the model image if available
+  const { data: models = [] } = useQuery({
+    queryKey: ['models'],
+    queryFn: modelsApi.getAll,
+  });
+
+  // Find the matching model to get its image
+  const modelData = models.find(m => m.name === vehicle.model);
+  const modelImage = modelData?.imageUrl;
+  
   const isVirtualStockVehicle = vehicle.location === 'Stock Virtuale';
   const daysInStock = !isVirtualStockVehicle ? calculateDaysInStock(vehicle.dateAdded) : null;
   const estimatedArrival = isVirtualStockVehicle ? calculateEstimatedArrival(vehicle) : null;
+
+  console.log("VehicleDetailsContent props:", { 
+    onReserve, 
+    onCreateQuote, 
+    status: vehicle.status, 
+    isVirtualStock, 
+    model: vehicle.model 
+  });
 
   return (
     <div className="space-y-6">
@@ -61,39 +81,39 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
               {statusTranslations[vehicle.status]}
             </Badge>
           </div>
-          
-          {/* Move buttons to the header section for better visibility */}
-          {vehicle.status === 'available' && (
-            <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
-              {onReserve && (
-                <Button 
-                  onClick={onReserve}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full md:w-auto"
-                  size="lg"
-                >
-                  Prenota
-                </Button>
-              )}
-              
-              {onCreateQuote && !isVirtualStockVehicle && (
-                <Button 
-                  onClick={onCreateQuote}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full md:w-auto"
-                  size="lg"
-                >
-                  Crea Preventivo
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Action buttons - Make them very visible at the top */}
+      {vehicle.status === 'available' && (
+        <div className="flex flex-wrap gap-3 mb-4">
+          {onReserve && (
+            <Button 
+              onClick={onReserve}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full sm:w-auto"
+              size="lg"
+            >
+              Prenota
+            </Button>
+          )}
+          
+          {onCreateQuote && !isVirtualStockVehicle && (
+            <Button 
+              onClick={onCreateQuote}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full sm:w-auto"
+              size="lg"
+            >
+              Crea Preventivo
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
           <div className="md:w-1/2">
             <img
-              src={vehicle.imageUrl || "/placeholder.svg"}
+              src={modelImage || vehicle.imageUrl || "/placeholder.svg"}
               alt={`${vehicle.model} ${vehicle.trim}`}
               className="w-full h-auto rounded-lg object-cover aspect-video"
             />

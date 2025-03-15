@@ -115,9 +115,18 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
+  // Determine if the user can reserve vehicles and create quotes
   const canReserve = vehicle.status === 'available' && isDealer;
-  const canEdit = !isDealer;
+  const canEdit = user?.type === 'admin' || user?.type === 'superAdmin';
   
+  console.log("VehicleDetailsDialog state:", { 
+    canReserve, 
+    canEdit, 
+    userType: user?.type, 
+    isDealer, 
+    vehicleStatus: vehicle.status 
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

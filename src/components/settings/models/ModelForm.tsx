@@ -32,6 +32,16 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onChange }) => {
           placeholder="es. 15000"
         />
       </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="imageUrl">URL Immagine</Label>
+        <Input
+          id="imageUrl"
+          value={model.imageUrl || ''}
+          onChange={(e) => onChange('imageUrl', e.target.value)}
+          placeholder="URL dell'immagine del modello"
+        />
+      </div>
     </div>
   );
 };
