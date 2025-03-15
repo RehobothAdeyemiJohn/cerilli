@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -39,7 +40,7 @@ const Defects = () => {
         const reports = await defectReportsApi.getByDealerId(dealerId!);
         
         return reports.filter(report => {
-          if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
+          if (filters.status && report.status !== filters.status) {
             return false;
           }
           
@@ -58,11 +59,11 @@ const Defects = () => {
         let reports = await defectReportsApi.getAll();
         
         return reports.filter(report => {
-          if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
+          if (filters.status && report.status !== filters.status) {
             return false;
           }
           
-          if (filters.dealerId && filters.dealerId !== 'all' && report.dealerId !== filters.dealerId) {
+          if (filters.dealerId && report.dealerId !== filters.dealerId) {
             return false;
           }
           

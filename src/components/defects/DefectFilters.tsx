@@ -38,8 +38,8 @@ const DefectFilters = ({ onFilterChange }: DefectFiltersProps) => {
   const handleStatusChange = (value: string) => {
     setStatus(value);
     onFilterChange({
-      status: value || undefined,
-      dealerId: selectedDealer || undefined,
+      status: value !== 'all' ? value : undefined,
+      dealerId: selectedDealer !== 'all' ? selectedDealer : undefined,
       search: search || undefined
     });
   };
@@ -47,8 +47,8 @@ const DefectFilters = ({ onFilterChange }: DefectFiltersProps) => {
   const handleDealerChange = (value: string) => {
     setSelectedDealer(value);
     onFilterChange({
-      status: status || undefined,
-      dealerId: value || undefined,
+      status: status !== 'all' ? status : undefined,
+      dealerId: value !== 'all' ? value : undefined,
       search: search || undefined
     });
   };
@@ -60,8 +60,8 @@ const DefectFilters = ({ onFilterChange }: DefectFiltersProps) => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onFilterChange({
-      status: status || undefined,
-      dealerId: selectedDealer || undefined,
+      status: status !== 'all' ? status : undefined,
+      dealerId: selectedDealer !== 'all' ? selectedDealer : undefined,
       search: search || undefined
     });
   };

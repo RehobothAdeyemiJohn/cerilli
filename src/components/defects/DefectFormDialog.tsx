@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
+import { dealersApi } from '@/api/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -75,6 +76,12 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
 
+  // Fetch all dealers for the select dropdown
+  const { data: dealers = [] } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -123,6 +130,17 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       setPhotoUrls(defect.photoReportUrls || []);
     }
   }, [defect, form]);
+
+  // Update dealerName when dealerId changes
+  useEffect(() => {
+    const dealerId = form.watch('dealerId');
+    if (dealerId) {
+      const selectedDealer = dealers.find(d => d.id === dealerId);
+      if (selectedDealer) {
+        form.setValue('dealerName', selectedDealer.companyName);
+      }
+    }
+  }, [form.watch('dealerId'), dealers, form]);
 
   // Functions to handle file uploads
   const handleTransportDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -365,7 +383,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Stato</FormLabel>
+                        <FormLabel>Status</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
@@ -388,25 +406,34 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                     )}
                   />
 
-                  {!isDealer && (
-                    <FormField
-                      control={form.control}
-                      name="dealerId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Dealer *</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="dealerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dealer *</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isDealer}
+                        >
                           <FormControl>
-                            <Input 
-                              {...field} 
-                              disabled={isDealer}
-                              placeholder="ID del dealer"
-                            />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona dealer" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                          <SelectContent>
+                            {dealers.map((dealer) => (
+                              <SelectItem key={dealer.id} value={dealer.id}>
+                                {dealer.companyName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -458,7 +485,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                             step="0.01"
                             {...field}
                             value={field.value}
-                            onChange={e => field.onChange(parseFloat(e.target.value))}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                             disabled={!isAdmin && defect?.status !== 'Aperta'}
                           />
                         </FormControl>
@@ -614,7 +641,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                                 step="0.01"
                                 {...field}
                                 value={field.value || 0}
-                                onChange={e => field.onChange(parseFloat(e.target.value))}
+                                onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
