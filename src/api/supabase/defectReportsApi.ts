@@ -1,7 +1,6 @@
 
 import { supabase } from './client';
 import { DefectReport, DefectReportStats } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 
 export const defectReportsApi = {
   async getAll() {
@@ -56,7 +55,7 @@ export const defectReportsApi = {
       dealer_id: report.dealerId,
       dealer_name: report.dealerName,
       vehicle_id: report.vehicleId || null,
-      email: report.email,
+      email: report.email || '',
       status: report.status || 'Aperta',
       reason: report.reason,
       description: report.description,
@@ -92,24 +91,24 @@ export const defectReportsApi = {
     console.log("Updating defect report with id:", id, "and data:", report);
     
     // Format all fields correctly for the database
-    const payload = {
-      dealer_id: report.dealerId,
-      dealer_name: report.dealerName,
-      vehicle_id: report.vehicleId || null,
-      email: report.email,
-      status: report.status,
-      reason: report.reason,
-      description: report.description,
-      vehicle_receipt_date: report.vehicleReceiptDate,
-      repair_cost: report.repairCost || 0,
-      approved_repair_value: report.approvedRepairValue || 0,
-      spare_parts_request: report.sparePartsRequest || '',
-      transport_document_url: report.transportDocumentUrl || '',
-      photo_report_urls: report.photoReportUrls || [],
-      repair_quote_url: report.repairQuoteUrl || '',
-      admin_notes: report.adminNotes || '',
-      payment_date: report.paymentDate || null
-    };
+    const payload: Record<string, any> = {};
+    
+    if (report.dealerId !== undefined) payload.dealer_id = report.dealerId;
+    if (report.dealerName !== undefined) payload.dealer_name = report.dealerName;
+    if (report.vehicleId !== undefined) payload.vehicle_id = report.vehicleId;
+    if (report.email !== undefined) payload.email = report.email;
+    if (report.status !== undefined) payload.status = report.status;
+    if (report.reason !== undefined) payload.reason = report.reason;
+    if (report.description !== undefined) payload.description = report.description;
+    if (report.vehicleReceiptDate !== undefined) payload.vehicle_receipt_date = report.vehicleReceiptDate;
+    if (report.repairCost !== undefined) payload.repair_cost = report.repairCost;
+    if (report.approvedRepairValue !== undefined) payload.approved_repair_value = report.approvedRepairValue;
+    if (report.sparePartsRequest !== undefined) payload.spare_parts_request = report.sparePartsRequest;
+    if (report.transportDocumentUrl !== undefined) payload.transport_document_url = report.transportDocumentUrl;
+    if (report.photoReportUrls !== undefined) payload.photo_report_urls = report.photoReportUrls;
+    if (report.repairQuoteUrl !== undefined) payload.repair_quote_url = report.repairQuoteUrl;
+    if (report.adminNotes !== undefined) payload.admin_notes = report.adminNotes;
+    if (report.paymentDate !== undefined) payload.payment_date = report.paymentDate;
     
     console.log("Submitting update payload to Supabase:", payload);
     
