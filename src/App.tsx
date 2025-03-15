@@ -41,9 +41,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -62,10 +62,10 @@ function App() {
               <Route path="/migration" element={<ProtectedRoute><Migration /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-          <Toaster />
-        </ThemeProvider>
-      </AuthProvider>
+            <Toaster />
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
