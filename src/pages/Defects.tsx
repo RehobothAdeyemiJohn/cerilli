@@ -12,7 +12,6 @@ import DefectDeleteDialog from '@/components/defects/DefectDeleteDialog';
 import DefectFilters from '@/components/defects/DefectFilters';
 import DefectStats from '@/components/defects/DefectStats';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const Defects = () => {
   const { user } = useAuth();
@@ -40,19 +39,6 @@ const Defects = () => {
     queryFn: async () => {
       console.log("Fetching defect reports with filters:", filters);
       try {
-        // Check authentication first to fail early
-        const { data: authData, error: authError } = await supabase.auth.getSession();
-        
-        if (authError || !authData.session) {
-          console.error('Authentication error:', authError || 'No session found');
-          toast({
-            title: "Errore di autenticazione",
-            description: "Effettua il login per continuare",
-            variant: "destructive",
-          });
-          return [];
-        }
-        
         if (isDealer) {
           const reports = await defectReportsApi.getByDealerId(dealerId!);
           console.log("Fetched dealer reports:", reports);
@@ -99,46 +85,31 @@ const Defects = () => {
             return true;
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching defect reports:", err);
-        toast({
-          title: "Errore",
-          description: "Si è verificato un errore durante il caricamento delle segnalazioni: " + (err as Error).message,
-          variant: "destructive",
-        });
+        
+        let errorMessage = "Si è verificato un errore durante il caricamento delle segnalazioni";
+        
+        if (err.message && err.message.includes("Authentication error")) {
+          errorMessage = "Errore di autenticazione. Effettua il login per continuare.";
+          toast({
+            title: "Errore di autenticazione",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Errore",
+            description: errorMessage + (err.message ? ": " + err.message : ""),
+            variant: "destructive",
+          });
+        }
+        
         return [];
       }
     },
     refetchOnWindowFocus: false
   });
-
-  const handleFilterChange = (newFilters: {
-    status?: string;
-    dealerId?: string;
-    search?: string;
-  }) => {
-    setFilters(newFilters);
-  };
-
-  const handleCreateNew = () => {
-    setSelectedDefectId(null);
-    setFormDialogOpen(true);
-  };
-
-  const handleEdit = (id: string) => {
-    setSelectedDefectId(id);
-    setFormDialogOpen(true);
-  };
-
-  const handleView = (id: string) => {
-    setSelectedDefectId(id);
-    setDetailsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    setSelectedDefectId(id);
-    setDeleteDialogOpen(true);
-  };
 
   const handleSuccess = useCallback(() => {
     console.log("Defect operation successful, refetching data...");
@@ -152,6 +123,34 @@ const Defects = () => {
   const selectedDefect = selectedDefectId
     ? defectReports.find(d => d.id === selectedDefectId)
     : undefined;
+
+  function handleCreateNew() {
+    setSelectedDefectId(null);
+    setFormDialogOpen(true);
+  }
+
+  function handleEdit(id: string) {
+    setSelectedDefectId(id);
+    setFormDialogOpen(true);
+  }
+
+  function handleView(id: string) {
+    setSelectedDefectId(id);
+    setDetailsDialogOpen(true);
+  }
+
+  function handleDelete(id: string) {
+    setSelectedDefectId(id);
+    setDeleteDialogOpen(true);
+  }
+
+  function handleFilterChange(newFilters: {
+    status?: string;
+    dealerId?: string;
+    search?: string;
+  }) {
+    setFilters(newFilters);
+  }
 
   return (
     <div className="container mx-auto py-6 px-4">

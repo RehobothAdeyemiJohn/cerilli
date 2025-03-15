@@ -304,53 +304,63 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       let newRepairQuoteUrl = repairQuoteUrl;
       let newPhotoUrls = photoUrls;
       
-      const { data: session, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session.session) {
-        console.error('Authentication error:', sessionError || 'No session found');
+      try {
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session.session) {
+          toast({
+            title: "Errore di autenticazione",
+            description: "Effettua il login per continuare",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const { data: bucketList } = await supabase.storage.listBuckets();
+        const bucketNames = bucketList?.map(b => b.name) || [];
+        
+        if (transportDoc && !bucketNames.includes('defect-documents')) {
+          const { error } = await supabase.storage.createBucket('defect-documents', {
+            public: true
+          });
+          if (error) console.error('Error creating documents bucket:', error);
+        }
+        
+        if (repairQuote && !bucketNames.includes('defect-quotes')) {
+          const { error } = await supabase.storage.createBucket('defect-quotes', {
+            public: true
+          });
+          if (error) console.error('Error creating quotes bucket:', error);
+        }
+        
+        if (photos.length > 0 && !bucketNames.includes('defect-photos')) {
+          const { error } = await supabase.storage.createBucket('defect-photos', {
+            public: true
+          });
+          if (error) console.error('Error creating photos bucket:', error);
+        }
+        
+        if (transportDoc) {
+          newTransportDocUrl = await uploadTransportDoc();
+        }
+        
+        if (repairQuote) {
+          newRepairQuoteUrl = await uploadRepairQuote();
+        }
+        
+        if (photos.length > 0) {
+          newPhotoUrls = await uploadPhotos();
+        }
+      } catch (error) {
+        console.error('Error during file uploads:', error);
         toast({
-          title: "Errore di autenticazione",
-          description: "Effettua il login per continuare",
+          title: "Errore di caricamento",
+          description: "Si è verificato un errore durante il caricamento dei file. Verifica la tua connessione e riprova.",
           variant: "destructive",
         });
         setIsSubmitting(false);
         return;
-      }
-      
-      const { data: bucketList } = await supabase.storage.listBuckets();
-      const bucketNames = bucketList?.map(b => b.name) || [];
-      
-      if (transportDoc && !bucketNames.includes('defect-documents')) {
-        const { error } = await supabase.storage.createBucket('defect-documents', {
-          public: true
-        });
-        if (error) console.error('Error creating documents bucket:', error);
-      }
-      
-      if (repairQuote && !bucketNames.includes('defect-quotes')) {
-        const { error } = await supabase.storage.createBucket('defect-quotes', {
-          public: true
-        });
-        if (error) console.error('Error creating quotes bucket:', error);
-      }
-      
-      if (photos.length > 0 && !bucketNames.includes('defect-photos')) {
-        const { error } = await supabase.storage.createBucket('defect-photos', {
-          public: true
-        });
-        if (error) console.error('Error creating photos bucket:', error);
-      }
-      
-      if (transportDoc) {
-        newTransportDocUrl = await uploadTransportDoc();
-      }
-      
-      if (repairQuote) {
-        newRepairQuoteUrl = await uploadRepairQuote();
-      }
-      
-      if (photos.length > 0) {
-        newPhotoUrls = await uploadPhotos();
       }
       
       if (!newPhotoUrls.length && !defectId) {
@@ -384,29 +394,47 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       
       console.log("Submitting data:", submissionData);
       
-      if (defectId) {
-        const updatedReport = await defectReportsApi.update(defectId, submissionData);
-        console.log("Updated report:", updatedReport);
+      try {
+        if (defectId) {
+          const updatedReport = await defectReportsApi.update(defectId, submissionData);
+          console.log("Updated report:", updatedReport);
+          toast({
+            title: "Difformità aggiornata",
+            description: "La segnalazione di difformità è stata aggiornata con successo",
+          });
+        } else {
+          const newReport = await defectReportsApi.create(submissionData);
+          console.log("Created new report:", newReport);
+          toast({
+            title: "Difformità creata",
+            description: "La segnalazione di difformità è stata creata con successo",
+          });
+        }
+        
+        onSuccess();
+        onClose();
+      } catch (error: any) {
+        console.error('Error submitting defect report:', error);
+        
+        let errorMessage = "Si è verificato un errore durante il salvataggio";
+        
+        if (error.message && error.message.includes("Authentication error")) {
+          errorMessage = "Errore di autenticazione. Effettua il login per continuare.";
+        } else if (error.message) {
+          errorMessage += ": " + error.message;
+        }
+        
         toast({
-          title: "Difformità aggiornata",
-          description: "La segnalazione di difformità è stata aggiornata con successo",
-        });
-      } else {
-        const newReport = await defectReportsApi.create(submissionData);
-        console.log("Created new report:", newReport);
-        toast({
-          title: "Difformità creata",
-          description: "La segnalazione di difformità è stata creata con successo",
+          title: "Errore",
+          description: errorMessage,
+          variant: "destructive",
         });
       }
-      
-      onSuccess();
-      onClose();
     } catch (error) {
-      console.error('Error submitting defect report:', error);
+      console.error('Unexpected error during form submission:', error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante il salvataggio: " + (error as Error).message,
+        description: "Si è verificato un errore imprevisto. Riprova più tardi.",
         variant: "destructive",
       });
     } finally {

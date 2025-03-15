@@ -2,8 +2,23 @@
 import { supabase } from './client';
 import { DefectReport, DefectReportStats } from '@/types';
 
+// Helper function to check authentication and get session
+const getAuthenticatedSession = async () => {
+  const { data, error } = await supabase.auth.getSession();
+  
+  if (error || !data.session) {
+    console.error('Authentication error:', error?.message || 'No active session found');
+    throw new Error('Authentication error: ' + (error?.message || 'Sessione non valida. Effettua il login.'));
+  }
+  
+  return data.session;
+};
+
 export const defectReportsApi = {
   async getAll() {
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
+    
     const { data, error } = await supabase
       .from('defect_reports')
       .select('*')
@@ -18,6 +33,9 @@ export const defectReportsApi = {
   },
 
   async getById(id: string) {
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
+    
     const { data, error } = await supabase
       .from('defect_reports')
       .select('*')
@@ -33,6 +51,9 @@ export const defectReportsApi = {
   },
 
   async getByDealerId(dealerId: string) {
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
+    
     const { data, error } = await supabase
       .from('defect_reports')
       .select('*')
@@ -49,6 +70,9 @@ export const defectReportsApi = {
 
   async create(report: Omit<DefectReport, 'id' | 'caseNumber' | 'createdAt' | 'updatedAt'>) {
     console.log("Creating defect report with data:", report);
+    
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
     
     // Make sure we have all required fields and they are in the correct format
     const payload = {
@@ -72,18 +96,6 @@ export const defectReportsApi = {
     console.log("Submitting payload to Supabase:", payload);
     
     try {
-      // Make sure the user is authenticated before submitting
-      const { data: authData, error: authError } = await supabase.auth.getSession();
-      
-      if (authError) {
-        console.error('Authentication error:', authError);
-        throw new Error('Authentication error: ' + authError.message);
-      }
-      
-      if (!authData.session) {
-        throw new Error('User not authenticated');
-      }
-      
       const { data, error } = await supabase
         .from('defect_reports')
         .insert([payload])
@@ -106,6 +118,9 @@ export const defectReportsApi = {
 
   async update(id: string, report: Partial<DefectReport>) {
     console.log("Updating defect report with id:", id, "and data:", report);
+    
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
     
     // Format all fields correctly for the database
     const payload: Record<string, any> = {};
@@ -130,18 +145,6 @@ export const defectReportsApi = {
     console.log("Submitting update payload to Supabase:", payload);
     
     try {
-      // Make sure the user is authenticated before submitting
-      const { data: authData, error: authError } = await supabase.auth.getSession();
-      
-      if (authError) {
-        console.error('Authentication error:', authError);
-        throw new Error('Authentication error: ' + authError.message);
-      }
-      
-      if (!authData.session) {
-        throw new Error('User not authenticated');
-      }
-      
       const { data, error } = await supabase
         .from('defect_reports')
         .update(payload)
@@ -164,13 +167,8 @@ export const defectReportsApi = {
   },
 
   async delete(id: string) {
-    // Check authentication first
-    const { data: authData, error: authError } = await supabase.auth.getSession();
-    
-    if (authError || !authData.session) {
-      console.error('Authentication error:', authError || 'No session found');
-      throw new Error('Authentication error. Please log in again.');
-    }
+    // Ensure user is authenticated before proceeding
+    await getAuthenticatedSession();
     
     const { error } = await supabase
       .from('defect_reports')
@@ -186,42 +184,55 @@ export const defectReportsApi = {
   },
 
   async getStats(): Promise<DefectReportStats> {
-    // For open reports count
-    const { count: openCount, error: openError } = await supabase
-      .from('defect_reports')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'Aperta');
+    // Ensure user is authenticated before proceeding
+    try {
+      await getAuthenticatedSession();
+      
+      // For open reports count
+      const { count: openCount, error: openError } = await supabase
+        .from('defect_reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Aperta');
 
-    // For closed reports count
-    const { count: closedCount, error: closedError } = await supabase
-      .from('defect_reports')
-      .select('*', { count: 'exact', head: true })
-      .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
+      // For closed reports count
+      const { count: closedCount, error: closedError } = await supabase
+        .from('defect_reports')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
 
-    // For approved reports count
-    const { count: approvedCount, error: approvedError } = await supabase
-      .from('defect_reports')
-      .select('*', { count: 'exact', head: true })
-      .in('status', ['Approvata', 'Approvata Parzialmente']);
+      // For approved reports count
+      const { count: approvedCount, error: approvedError } = await supabase
+        .from('defect_reports')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['Approvata', 'Approvata Parzialmente']);
 
-    // For paid reports
-    const { data: paidReports, error: paidError } = await supabase
-      .from('defect_reports')
-      .select('approved_repair_value')
-      .not('payment_date', 'is', null);
+      // For paid reports
+      const { data: paidReports, error: paidError } = await supabase
+        .from('defect_reports')
+        .select('approved_repair_value')
+        .not('payment_date', 'is', null);
 
-    if (openError || closedError || paidError || approvedError) {
-      console.error('Error fetching defect report stats:', openError || closedError || paidError || approvedError);
-      throw openError || closedError || paidError || approvedError;
+      if (openError || closedError || paidError || approvedError) {
+        console.error('Error fetching defect report stats:', openError || closedError || paidError || approvedError);
+        throw openError || closedError || paidError || approvedError;
+      }
+
+      const totalPaid = paidReports?.reduce((sum, report) => sum + (report.approved_repair_value || 0), 0) || 0;
+
+      return {
+        openReports: openCount || 0,
+        closedReports: closedCount || 0,
+        approvedReports: approvedCount || 0,
+        totalPaid
+      };
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      return {
+        openReports: 0,
+        closedReports: 0,
+        approvedReports: 0,
+        totalPaid: 0
+      };
     }
-
-    const totalPaid = paidReports?.reduce((sum, report) => sum + (report.approved_repair_value || 0), 0) || 0;
-
-    return {
-      openReports: openCount || 0,
-      closedReports: closedCount || 0,
-      approvedReports: approvedCount || 0,
-      totalPaid
-    };
   }
 };
