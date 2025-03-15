@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './client';
 import { Vehicle } from '@/types';
@@ -321,6 +322,37 @@ export const vehiclesApi = {
     const updatedVehicle: Partial<Vehicle> = {
       status: 'ordered',
     };
+    
+    // Create an order record
+    try {
+      const { ordersApi } = await import('@/api/supabase/ordersApi');
+      
+      // Find the dealer ID by name
+      let dealerId = '00000000-0000-0000-0000-000000000000';
+      
+      if (vehicle.reservedBy) {
+        const { dealersApi } = await import('@/api/supabase/dealersApi');
+        const dealers = await dealersApi.getAll();
+        const dealer = dealers.find(d => d.companyName === vehicle.reservedBy);
+        
+        if (dealer) {
+          dealerId = dealer.id;
+        }
+      }
+      
+      // Create the order
+      await ordersApi.create({
+        vehicleId: id,
+        dealerId: dealerId,
+        customerName: vehicle.reservedBy || 'Cliente sconosciuto',
+        status: 'processing',
+        orderDate: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Error creating order record:', error);
+      // Continue with vehicle status update even if order creation fails
+    }
     
     return vehiclesApi.update(id, updatedVehicle);
   }

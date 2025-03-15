@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { Order, OrderDetails } from '@/types';
+import { useLocation } from 'react-router-dom';
 
 export const useOrdersData = (filters: {
   isLicensable: boolean | null;
@@ -16,6 +17,7 @@ export const useOrdersData = (filters: {
 }) => {
   const queryClient = useQueryClient();
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const location = useLocation();
 
   // Fetch base orders data
   const {
@@ -74,6 +76,17 @@ export const useOrdersData = (filters: {
       }
     }
   }, [isDetailsDialogOpen, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
+
+  // Effect to refresh data when we navigate to the orders page
+  useEffect(() => {
+    console.log('Orders page navigated to, refreshing orders data');
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
+    refetchOrders();
+    if (ordersData.length > 0) {
+      refetchOrdersWithDetails();
+    }
+  }, [location.pathname, queryClient, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
 
   // Filter orders based on specified criteria
   const filterOrders = (orders: Order[], status?: string) => {

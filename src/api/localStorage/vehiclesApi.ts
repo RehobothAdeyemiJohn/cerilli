@@ -163,6 +163,34 @@ export const vehiclesApi = {
       status: 'ordered',
     };
     
+    // Create an order record
+    const { ordersApi } = await import('@/api/localStorage/ordersApi');
+    await ordersApi.create({
+      vehicleId: id,
+      dealerId: vehicle.reservedBy ? 
+        // Try to find dealer ID by name
+        await vehiclesApi.findDealerIdByName(vehicle.reservedBy) :
+        // Use a dummy ID if dealer not found
+        '00000000-0000-0000-0000-000000000000',
+      customerName: vehicle.reservedBy || 'Cliente sconosciuto',
+      status: 'processing',
+      orderDate: new Date().toISOString()
+    });
+    
     return vehiclesApi.update(id, updatedVehicle);
+  },
+  
+  // Helper function to find dealer ID by name
+  findDealerIdByName: async (dealerName: string): Promise<string> => {
+    try {
+      const { dealersApi } = await import('@/api/localStorage/dealersApi');
+      const dealers = await dealersApi.getAll();
+      const dealer = dealers.find(d => d.companyName === dealerName);
+      
+      return dealer?.id || '00000000-0000-0000-0000-000000000000';
+    } catch (error) {
+      console.error('Error finding dealer ID by name:', error);
+      return '00000000-0000-0000-0000-000000000000';
+    }
   }
 };
