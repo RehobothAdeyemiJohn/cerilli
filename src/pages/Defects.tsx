@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -28,6 +29,8 @@ const Defects = () => {
     status?: string;
     dealerId?: string;
     search?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
   }>({});
 
   console.log("Current user context:", user);
@@ -61,6 +64,23 @@ const Defects = () => {
               }
             }
             
+            // Apply date filtering
+            if (filters.dateFrom || filters.dateTo) {
+              const reportDate = new Date(report.createdAt);
+              
+              if (filters.dateFrom && reportDate < filters.dateFrom) {
+                return false;
+              }
+              
+              if (filters.dateTo) {
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59);
+                if (reportDate > endDate) {
+                  return false;
+                }
+              }
+            }
+            
             return true;
           });
         } else {
@@ -83,6 +103,23 @@ const Defects = () => {
               const matchesDealer = report.dealerName.toLowerCase().includes(searchLower);
               if (!matchesNumber && !matchesDescription && !matchesDealer) {
                 return false;
+              }
+            }
+            
+            // Apply date filtering
+            if (filters.dateFrom || filters.dateTo) {
+              const reportDate = new Date(report.createdAt);
+              
+              if (filters.dateFrom && reportDate < filters.dateFrom) {
+                return false;
+              }
+              
+              if (filters.dateTo) {
+                const endDate = new Date(filters.dateTo);
+                endDate.setHours(23, 59, 59);
+                if (reportDate > endDate) {
+                  return false;
+                }
               }
             }
             
@@ -175,6 +212,8 @@ const Defects = () => {
     status?: string;
     dealerId?: string;
     search?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
   }) {
     setFilters(newFilters);
   }
@@ -193,7 +232,7 @@ const Defects = () => {
         </Button>
       </div>
 
-      <DefectStats />
+      <DefectStats dateFrom={filters.dateFrom} dateTo={filters.dateTo} />
 
       <div className="mb-6">
         <DefectFilters onFilterChange={handleFilterChange} />
