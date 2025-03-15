@@ -25,14 +25,18 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
       order.status === 'delivered' && order.id !== currentOrder?.id
     );
     
+    console.log('Delivered orders for plafond calculation:', deliveredOrders);
+    
     // Subtract the price of each delivered vehicle from the credit limit
     deliveredOrders.forEach(order => {
       if (order.vehicle && order.vehicle.price) {
         availableCredit -= order.vehicle.price;
+        console.log(`Subtracting ${order.vehicle.price} from credit limit for order ${order.id}`);
       }
     });
   }
   
+  console.log(`Final available credit for dealer ${dealer.companyName}:`, availableCredit);
   return availableCredit;
 };
 

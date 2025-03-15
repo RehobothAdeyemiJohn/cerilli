@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -32,8 +33,10 @@ export const dealersApi = {
       creditLimit: dealer.credit_limit
     })) as Dealer[];
     
+    // Fetch all orders for each dealer (especially important for delivered ones)
     for (const dealer of formattedDealers) {
       try {
+        console.log(`Fetching orders for dealer ${dealer.id} (${dealer.companyName})`);
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select('*, vehicles(*)')
@@ -50,6 +53,9 @@ export const dealersApi = {
             deliveryDate: order.deliverydate,
             vehicle: order.vehicles
           }));
+          
+          console.log(`Found ${dealer.orders.length} orders for dealer ${dealer.companyName}`);
+          console.log(`Delivered orders: ${dealer.orders.filter(o => o.status === 'delivered').length}`);
         }
       } catch (err) {
         console.error(`Error fetching orders for dealer ${dealer.id}:`, err);
@@ -87,7 +93,9 @@ export const dealersApi = {
       creditLimit: data.credit_limit
     } as Dealer;
     
+    // Fetch all orders for this dealer to calculate plafond correctly
     try {
+      console.log(`Fetching orders for dealer ${id} (${formattedDealer.companyName})`);
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*, vehicles(*)')
@@ -104,6 +112,9 @@ export const dealersApi = {
           deliveryDate: order.deliverydate,
           vehicle: order.vehicles
         }));
+        
+        console.log(`Found ${formattedDealer.orders.length} orders for dealer ${formattedDealer.companyName}`);
+        console.log(`Delivered orders: ${formattedDealer.orders.filter(o => o.status === 'delivered').length}`);
       }
     } catch (err) {
       console.error(`Error fetching orders for dealer ${id}:`, err);

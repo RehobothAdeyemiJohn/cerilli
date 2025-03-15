@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Order } from '@/types';
 import {
@@ -86,6 +87,15 @@ const OrdersTable = ({
     if (creditLimit < 10000) return 'text-red-600';
     return 'text-red-600';
   };
+
+  // Log delivered vehicles to debug plafond calculation
+  React.useEffect(() => {
+    orders.forEach((order) => {
+      if (order.status === 'delivered' && order.vehicle) {
+        console.log(`Delivered vehicle for order ${order.id}: ${order.vehicle.model}, Price: ${order.vehicle.price}`);
+      }
+    });
+  }, [orders]);
 
   return (
     <div className="rounded-md border">

@@ -13,9 +13,18 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       try {
         const order = await ordersApi.getById(orderId);
         
-        // Check if order details exist and if ODL is generated
-        if (!order.details || order.details.odlGenerated !== true) {
-          console.log('Cannot deliver order - ODL not generated:', order);
+        // Enhanced check for ODL generation - log the full details for debugging
+        console.log("Order details for delivery check:", order.details);
+        
+        // First check if order details exist at all
+        if (!order.details) {
+          console.log('Cannot deliver order - order details missing:', order);
+          throw new Error("Dettagli dell'ordine mancanti. Genera l'ODL prima di consegnare.");
+        }
+        
+        // Then check specifically for odlGenerated
+        if (order.details.odlGenerated !== true) {
+          console.log('Cannot deliver order - ODL not generated:', order.details);
           throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
         }
         
