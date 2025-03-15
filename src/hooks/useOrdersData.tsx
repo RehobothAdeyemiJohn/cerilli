@@ -79,11 +79,11 @@ export const useOrdersData = (filters: {
                     'odlGenerated' in detailsAny.value) {
                   normalizedDetails = detailsAny.value as OrderDetails;
                 }
-                // Handle the case where value is a string (seen in logs)
-                else if (detailsAny._type !== undefined && detailsAny.value !== undefined) {
+                // Handle the case where value is a string or with special values like "undefined"
+                else if (detailsAny._type !== undefined) {
                   // This is the malformed case we're seeing in logs
                   // Create a default OrderDetails object since the real data is corrupted
-                  console.log(`Malformed details for order ${order.id} with _type: ${detailsAny._type}`);
+                  console.log(`Malformed details for order ${order.id} with _type: ${detailsAny._type}, value: ${detailsAny.value}`);
                   normalizedDetails = createDefaultOrderDetails(order.id);
                 }
               }

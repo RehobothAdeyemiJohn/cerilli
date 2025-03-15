@@ -14,6 +14,16 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         console.log("Order details for delivery check:", order.details);
         
+        // Check if order details exist - if not, we need to create them first
+        if (!order.details || 
+            (typeof order.details === 'object' && Object.keys(order.details).length === 0) ||
+            (typeof order.details === 'object' && 
+             order.details._type === "undefined" && 
+             order.details.value === "undefined")) {
+          console.log('Order is missing details: user needs to open details form first');
+          throw new Error("È necessario inserire i dettagli dell'ordine e generare l'ODL prima di poter consegnare");
+        }
+        
         // Check if ODL has been generated before allowing delivery
         let odlGenerated = false;
         
@@ -33,26 +43,12 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
                     'odlGenerated' in detailsObj.value) {
               odlGenerated = Boolean(detailsObj.value.odlGenerated);
             }
-            // Case 3: dealing with the malformed case (_type and value are strings)
-            else if (detailsObj._type !== undefined && detailsObj.value !== undefined) {
-              // In this case, details is corrupted - we treat as ODL not generated
-              console.log('Malformed details detected, treating as ODL not generated');
-              odlGenerated = false;
-            }
           }
-        }
-        
-        // Special handling for null or completely malformed details
-        if (!order.details || 
-            (typeof order.details === 'object' && 
-            Object.keys(order.details).length === 0)) {
-          console.log('Empty or missing details, creating order details first');
-          throw new Error("I dettagli dell'ordine devono essere compilati prima di poter consegnare l'ordine");
         }
         
         if (!odlGenerated) {
           console.log('Cannot deliver order - ODL not generated:', order.details);
-          throw new Error("L'ODL deve essere generato prima di poter consegnare l'ordine");
+          throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
         }
         
         if (order.vehicle && order.dealerId) {
