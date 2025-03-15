@@ -66,7 +66,7 @@ export const useVehicleActions = () => {
       
       toast({
         title: "Veicolo duplicato",
-        description: "Il veicolo è stato duplicato con successo.",
+        description: "Il veicolo è stato duplicato con successo nell'inventario.",
       });
       
       setIsDuplicating(false);

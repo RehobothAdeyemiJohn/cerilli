@@ -65,7 +65,9 @@ const VehicleCard = ({
 
   const handleActionClick = (e: React.MouseEvent, action: (vehicle: Vehicle) => void) => {
     e.stopPropagation();
-    action(vehicle);
+    if (action) {
+      action(vehicle);
+    }
   };
 
   const getFormattedLocation = () => {
@@ -170,6 +172,7 @@ const VehicleCard = ({
               onClick={(e) => handleActionClick(e, onDuplicate)}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
               aria-label="Duplica veicolo"
+              type="button"
             >
               <Copy className="h-4 w-4" />
             </button>
@@ -177,6 +180,7 @@ const VehicleCard = ({
               onClick={(e) => handleActionClick(e, onEdit)}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
               aria-label="Modifica veicolo"
+              type="button"
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -184,6 +188,7 @@ const VehicleCard = ({
               onClick={(e) => handleActionClick(e, onDelete)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
               aria-label="Elimina veicolo"
+              type="button"
             >
               <Trash2 className="h-4 w-4" />
             </button>

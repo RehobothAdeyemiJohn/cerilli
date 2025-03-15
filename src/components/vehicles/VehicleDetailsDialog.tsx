@@ -9,6 +9,7 @@ import EditVehicleForm from './EditVehicleForm';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
 import VehicleDetailsContent from './details/VehicleDetailsContent';
+import { useVehicleDetailsDialog } from './details/useVehicleDetailsDialog';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -34,7 +35,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   onReserve,
   isDealerStock = false,
   isVirtualStock = false,
-  shouldReserve = false
+  shouldReserve = false,
+  requestedAction
 }) => {
   const [currentView, setCurrentView] = React.useState<'details' | 'edit' | 'reserve' | 'virtualReserve'>('details');
   const { user } = useAuth();
@@ -42,6 +44,15 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
   const canEdit = isAdmin;
+  
+  // Initialize the useVehicleDetailsDialog hook
+  const { handleDuplicate } = useVehicleDetailsDialog(
+    vehicle || {} as Vehicle, 
+    onVehicleUpdated,
+    (id: string) => onVehicleDeleted(id),
+    () => onOpenChange(false),
+    requestedAction
+  );
   
   React.useEffect(() => {
     if (open && vehicle && shouldReserve) {
@@ -51,7 +62,15 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         setCurrentView('reserve');
       }
     }
-  }, [open, vehicle, shouldReserve]);
+    
+    // Handle duplication when the dialog opens with the requestedAction
+    if (open && vehicle && requestedAction === 'duplicate') {
+      console.log("Attempting to duplicate vehicle from dialog:", vehicle.id);
+      handleDuplicate();
+      // Close the dialog after initiating duplication
+      onOpenChange(false);
+    }
+  }, [open, vehicle, shouldReserve, requestedAction, handleDuplicate]);
   
   React.useEffect(() => {
     if (!open) {
