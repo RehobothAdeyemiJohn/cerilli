@@ -117,9 +117,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   };
   
   // Fix: We need to properly determine if the user can reserve vehicles
-  // The issue was that we needed to pass onReserve and onCreateQuote directly to the content
-  // to determine if these features are available in this context
-  const canReserve = vehicle.status === 'available' && isDealer;
+  const canReserve = isDealer;
   
   // Fixed: Correct the admin check to properly check for admin type
   const canEdit = user?.type === 'admin';
@@ -129,7 +127,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     canEdit, 
     userType: user?.type, 
     isDealer, 
-    vehicleStatus: vehicle.status 
+    vehicleStatus: vehicle.status,
+    onReserve: Boolean(onReserve),
+    onCreateQuote: Boolean(onCreateQuote) 
   });
 
   return (
@@ -162,8 +162,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             vehicle={vehicle} 
             onEdit={canEdit ? handleEditClick : undefined}
             onDelete={canEdit ? handleDeleteClick : undefined}
-            onReserve={canReserve ? handleReserveClick : undefined}
-            onCreateQuote={canReserve && !isVirtualStock ? handleCreateQuoteClick : undefined}
+            onReserve={canReserve && onReserve && vehicle.status === 'available' ? handleReserveClick : undefined}
+            onCreateQuote={canReserve && onCreateQuote && vehicle.status === 'available' && !isVirtualStock ? handleCreateQuoteClick : undefined}
             onClose={handleDialogClose}
             isDealerStock={isDealerStock}
             isVirtualStock={isVirtualStock}

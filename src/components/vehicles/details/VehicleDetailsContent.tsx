@@ -5,7 +5,7 @@ import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide-react';
+import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard, FileCheck, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { modelsApi } from '@/api/localStorage';
 
@@ -67,11 +67,9 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     onCreateQuote, 
     status: vehicle.status, 
     isVirtualStock, 
-    model: vehicle.model 
+    model: vehicle.model,
+    availability: vehicle.status === 'available'
   });
-
-  // Show action buttons only when vehicle is available
-  const showActionButtons = vehicle.status === 'available';
 
   return (
     <div className="space-y-6">
@@ -87,30 +85,30 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
-      {/* Action buttons - Made more prominent and visible */}
-      {showActionButtons && (
-        <div className="flex flex-wrap gap-3 mb-6 sticky top-0 z-10 bg-white py-3 shadow-sm rounded-md">
-          {onReserve && (
-            <Button 
-              onClick={onReserve}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full sm:w-auto"
-              size="lg"
-            >
-              Prenota
-            </Button>
-          )}
-          
-          {onCreateQuote && !isVirtualStockVehicle && (
-            <Button 
-              onClick={onCreateQuote}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full sm:w-auto"
-              size="lg"
-            >
-              Crea Preventivo
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Action buttons - Always show them if the handlers are provided */}
+      <div className="flex flex-wrap gap-3 mb-6 sticky top-0 z-10 bg-white py-3 shadow-sm rounded-md">
+        {onReserve && (
+          <Button 
+            onClick={onReserve}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full sm:w-auto"
+            size="lg"
+          >
+            <Plus className="h-5 w-5 mr-1" />
+            Prenota
+          </Button>
+        )}
+        
+        {onCreateQuote && !isVirtualStockVehicle && (
+          <Button 
+            onClick={onCreateQuote}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full sm:w-auto"
+            size="lg"
+          >
+            <FileCheck className="h-5 w-5 mr-1" />
+            Crea Preventivo
+          </Button>
+        )}
+      </div>
 
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
