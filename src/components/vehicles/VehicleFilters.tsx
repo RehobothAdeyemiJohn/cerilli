@@ -20,13 +20,15 @@ interface VehicleFiltersProps {
   inventory: Vehicle[]; // Still need inventory for locations
   dealers?: Dealer[]; // Add dealers prop
   showDealerFilter?: boolean; // Flag to show/hide dealer filter
+  isDealerStock?: boolean; // Flag to identify if this is Stock Dealer page
 }
 
 const VehicleFilters = ({ 
   onFiltersChange, 
   inventory = [], 
   dealers = [],
-  showDealerFilter = false
+  showDealerFilter = false,
+  isDealerStock = false
 }: VehicleFiltersProps) => {
   const { user } = useAuth();
   
@@ -185,13 +187,23 @@ const VehicleFilters = ({
       />
       
       <Accordion type="multiple" defaultValue={['model']}>
+        {/* Conditionally render DealerFilter before ModelFilter for Stock Dealer page */}
+        {isDealerStock && showDealerFilter && user?.type === 'admin' && (
+          <DealerFilter 
+            dealers={dealers}
+            selectedDealers={selectedDealers}
+            onToggleDealer={toggleDealer}
+          />
+        )}
+        
         <ModelFilter 
           models={modelSettings}
           selectedModels={selectedModels}
           onToggleModel={toggleModel}
         />
         
-        {showDealerFilter && user?.type === 'admin' && (
+        {/* Render DealerFilter after ModelFilter for other pages */}
+        {!isDealerStock && showDealerFilter && user?.type === 'admin' && (
           <DealerFilter 
             dealers={dealers}
             selectedDealers={selectedDealers}

@@ -96,6 +96,7 @@ const DealerStock = () => {
             onFiltersChange={handleFiltersChange}
             dealers={dealers}
             showDealerFilter={user?.type === 'admin'}
+            isDealerStock={true} // Added this prop to identify it's the Stock Dealer page
           />
         </div>
         

@@ -116,6 +116,7 @@ export type Filter = {
   priceRange: [number, number];
   status: string[];
   searchText?: string;
+  dealers?: string[]; // Added dealers property to Filter type
 };
 
 export type Stat = {
