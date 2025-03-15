@@ -3,7 +3,7 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
-import { VirtualReservationFormValues } from './useVirtualReservation';
+import { VirtualReservationFormValues } from './schema';
 
 interface VirtualReservationDestinationProps {
   form: UseFormReturn<VirtualReservationFormValues>;
@@ -27,8 +27,9 @@ const VirtualReservationDestination = ({ form }: VirtualReservationDestinationPr
               </SelectTrigger>
             </FormControl>
             <SelectContent>
+              <SelectItem value="Conto Esposizione">Conto Esposizione</SelectItem>
+              <SelectItem value="Stock">Stock</SelectItem>
               <SelectItem value="Contratto Abbinato">Contratto Abbinato</SelectItem>
-              <SelectItem value="Stock Dealer">Stock Dealer</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />

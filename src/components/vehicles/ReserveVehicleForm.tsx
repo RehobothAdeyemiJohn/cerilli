@@ -13,13 +13,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { vehiclesApi } from '@/api/supabase';
+import { useQuery } from '@tanstack/react-query';
+import { dealersApi } from '@/api/supabase/dealersApi';
 
 const reserveSchema = z.object({
+  dealerId: z.string().optional(),
   destinazione: z.string().min(1, {
     message: "È necessario specificare una destinazione per la prenotazione.",
   })
@@ -42,16 +44,48 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
   const { user } = useAuth();
   const dealerId = user?.dealerId || '';
   const dealerName = user?.dealerName || '';
+  const isAdmin = user?.type === 'admin';
+  
+  // Get dealers list for admin selection
+  const { data: dealers = [], isLoading: loadingDealers } = useQuery({
+    queryKey: ['dealers'],
+    queryFn: dealersApi.getAll,
+    enabled: isAdmin,
+  });
+  
+  // Active dealers only
+  const activeDealers = dealers.filter(dealer => dealer.isActive);
   
   const form = useForm<ReserveFormValues>({
     resolver: zodResolver(reserveSchema),
     defaultValues: {
+      dealerId: isAdmin ? '' : dealerId,
       destinazione: '',
     },
   });
   
   const onSubmit = async (data: ReserveFormValues) => {
-    if (!dealerId || !dealerName) {
+    // For admin, use selected dealer. For dealer, use their own ID
+    const finalDealerId = isAdmin ? data.dealerId : dealerId;
+    
+    // If dealer ID is missing, show error and return
+    if (!finalDealerId) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un concessionario prima di procedere.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // For admin, get dealer name from selected dealer
+    let finalDealerName = dealerName;
+    if (isAdmin && data.dealerId) {
+      const selectedDealer = activeDealers.find(d => d.id === data.dealerId);
+      finalDealerName = selectedDealer ? selectedDealer.companyName : '';
+    }
+    
+    if (!finalDealerName) {
       toast({
         title: "Errore",
         description: "Dati del dealer mancanti. Impossibile procedere con la prenotazione.",
@@ -63,12 +97,12 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     setIsSubmitting(true);
     console.log("Form data:", data);
     console.log("Reserving vehicle:", vehicle.id);
-    console.log("Dealer ID:", dealerId);
-    console.log("Dealer Name:", dealerName);
+    console.log("Dealer ID:", finalDealerId);
+    console.log("Dealer Name:", finalDealerName);
     
     try {
       // Call the Supabase API directly to reserve the vehicle
-      await vehiclesApi.reserve(vehicle.id, dealerId, dealerName, [], undefined, data.destinazione);
+      await vehiclesApi.reserve(vehicle.id, finalDealerId, finalDealerName, [], undefined, data.destinazione);
       
       toast({
         title: "Veicolo Prenotato",
@@ -98,6 +132,32 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Dealer selection for admin only */}
+          {isAdmin && (
+            <FormField
+              control={form.control}
+              name="dealerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Concessionario</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleziona concessionario" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {activeDealers.map(dealer => (
+                        <SelectItem key={dealer.id} value={dealer.id}>{dealer.companyName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          
           <FormField
             control={form.control}
             name="destinazione"
@@ -111,9 +171,9 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Sede">Sede</SelectItem>
-                    <SelectItem value="Fiera">Fiera</SelectItem>
-                    <SelectItem value="Cliente">Cliente</SelectItem>
+                    <SelectItem value="Conto Esposizione">Conto Esposizione</SelectItem>
+                    <SelectItem value="Stock">Stock</SelectItem>
+                    <SelectItem value="Contratto Abbinato">Contratto Abbinato</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

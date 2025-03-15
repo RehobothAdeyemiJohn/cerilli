@@ -4,12 +4,15 @@ import { z } from 'zod';
 // Create a strict enum for original stock options
 const originalStockEnum = z.enum(['Cina', 'Germania']);
 
+// Create a strict enum for destination options
+const destinationEnum = z.enum(['Conto Esposizione', 'Stock', 'Contratto Abbinato']);
+
 export const virtualReservationSchema = z.object({
   // Dealer selection (only for admin)
   dealerId: z.string().optional(),
   
   // Reservation destination
-  reservationDestination: z.string().min(1, "La destinazione è obbligatoria"),
+  reservationDestination: destinationEnum,
   
   // Vehicle configuration
   trim: z.string().min(1, "L'allestimento è obbligatorio"),
