@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
@@ -8,9 +9,26 @@ import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
   hideImage?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => Promise<void>;
+  onReserve?: () => void;
+  onCreateQuote?: () => void;
+  onClose?: () => void;
+  isDealerStock?: boolean;
+  isVirtualStock?: boolean;
 }
 
-const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, hideImage }) => {
+const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ 
+  vehicle, 
+  hideImage,
+  onEdit,
+  onDelete,
+  onReserve,
+  onCreateQuote,
+  onClose,
+  isDealerStock,
+  isVirtualStock
+}) => {
   const statusColors = {
     available: 'bg-green-100 text-green-800',
     reserved: 'bg-amber-100 text-amber-800',
@@ -27,12 +45,58 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, 
     delivered: 'Consegnata',
   };
 
-  const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const daysInStock = !isVirtualStock ? calculateDaysInStock(vehicle.dateAdded) : null;
-  const estimatedArrival = isVirtualStock ? calculateEstimatedArrival(vehicle) : null;
+  const isVirtualStockVehicle = vehicle.location === 'Stock Virtuale';
+  const daysInStock = !isVirtualStockVehicle ? calculateDaysInStock(vehicle.dateAdded) : null;
+  const estimatedArrival = isVirtualStockVehicle ? calculateEstimatedArrival(vehicle) : null;
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">{vehicle.model}</h2>
+        <div className="flex gap-2">
+          {onReserve && vehicle.status === 'available' && (
+            <button
+              onClick={onReserve}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Prenota
+            </button>
+          )}
+          {onCreateQuote && vehicle.status === 'available' && (
+            <button
+              onClick={onCreateQuote}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Crea Preventivo
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Modifica
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Elimina
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Chiudi
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
           <div className="md:w-1/2">
@@ -47,16 +111,15 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, 
         <div className={hideImage ? "w-full" : "md:w-1/2"}>
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-2xl font-bold">{vehicle.model}</h2>
-              {!isVirtualStock && <p className="text-lg text-gray-600">{vehicle.trim}</p>}
+              <h3 className="text-xl">{vehicle.trim}</h3>
+              <Badge className={statusColors[vehicle.status]}>
+                {statusTranslations[vehicle.status]}
+              </Badge>
             </div>
-            <Badge className={statusColors[vehicle.status]}>
-              {statusTranslations[vehicle.status]}
-            </Badge>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {!isVirtualStock && (
+            {!isVirtualStockVehicle && (
               <>
                 {vehicle.fuelType && (
                   <div className="flex items-center gap-2">
@@ -84,7 +147,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, 
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-gray-500" />
               <span className="text-gray-700">
-                {isVirtualStock ? 'Prezzo da configurare' : formatCurrency(vehicle.price)}
+                {isVirtualStockVehicle ? 'Prezzo da configurare' : formatCurrency(vehicle.price)}
               </span>
             </div>
             
@@ -95,7 +158,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ vehicle, 
               </div>
             )}
             
-            {isVirtualStock && estimatedArrival && (
+            {isVirtualStockVehicle && estimatedArrival && (
               <div className="flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-gray-500" />
                 <span className="text-gray-700">
