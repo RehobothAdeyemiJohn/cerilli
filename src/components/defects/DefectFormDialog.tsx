@@ -71,7 +71,6 @@ const DefectFormDialog = ({
   const isDealer = user?.type === 'dealer';
   const { toast } = useToast();
   
-  // Use external or internal state for isSubmitting
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
   const isSubmitting = externalIsSubmitting !== undefined ? externalIsSubmitting : internalIsSubmitting;
   const setIsSubmitting = externalSetIsSubmitting || setInternalIsSubmitting;
@@ -89,7 +88,6 @@ const DefectFormDialog = ({
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   
-  // Add a logging state to track upload progress
   const [uploadStatus, setUploadStatus] = useState<string>('');
 
   const { data: dealers = [], isLoading: loadingDealers } = useQuery({
@@ -272,7 +270,6 @@ const DefectFormDialog = ({
       
       const newPhotoUrls: string[] = [];
       
-      // Upload photos one by one to better track progress
       for (let i = 0; i < photos.length; i++) {
         const photo = photos[i];
         const fileName = `${Date.now()}-${photo.name}`;
@@ -291,7 +288,7 @@ const DefectFormDialog = ({
             description: `Errore durante il caricamento della foto ${i+1}: ${error.message}`,
             variant: "destructive",
           });
-          continue; // Try to upload the rest
+          continue;
         }
         
         const { data: urlData } = supabase.storage
@@ -305,7 +302,6 @@ const DefectFormDialog = ({
       const allPhotoUrls = [...photoUrls, ...newPhotoUrls];
       setPhotoUrls(allPhotoUrls);
       
-      // Clean up preview URLs
       photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
       setPhotoPreviewUrls([]);
       setPhotos([]);
@@ -340,7 +336,6 @@ const DefectFormDialog = ({
         return;
       }
       
-      // Check if we have photos - either already uploaded or new ones
       if (!photoUrls.length && !photos.length && !defectId) {
         toast({
           title: "Attenzione",
@@ -356,7 +351,6 @@ const DefectFormDialog = ({
       let newPhotoUrls = photoUrls;
       
       try {
-        // Upload files directly - buckets already exist with proper permissions
         if (transportDoc) {
           newTransportDocUrl = await uploadTransportDoc();
         }
@@ -379,7 +373,6 @@ const DefectFormDialog = ({
         return;
       }
       
-      // Additional check after uploads
       if (!newPhotoUrls.length && !defectId) {
         toast({
           title: "Attenzione",
@@ -392,6 +385,14 @@ const DefectFormDialog = ({
       
       setUploadStatus('Salvataggio della segnalazione...');
       
+      const formattedVehicleReceiptDate = values.vehicleReceiptDate instanceof Date
+        ? format(values.vehicleReceiptDate, 'yyyy-MM-dd')
+        : values.vehicleReceiptDate;
+
+      const formattedPaymentDate = values.paymentDate instanceof Date
+        ? format(values.paymentDate, 'yyyy-MM-dd')
+        : values.paymentDate;
+      
       const submissionData = {
         dealerId: values.dealerId,
         dealerName: values.dealerName,
@@ -399,11 +400,11 @@ const DefectFormDialog = ({
         status: values.status,
         reason: values.reason,
         description: values.description,
-        repairCost: values.repairCost,
-        approvedRepairValue: values.approvedRepairValue || 0,
+        repairCost: Number(values.repairCost),
+        approvedRepairValue: Number(values.approvedRepairValue || 0),
         sparePartsRequest: values.sparePartsRequest || '',
-        vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
-        paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : null,
+        vehicleReceiptDate: formattedVehicleReceiptDate,
+        paymentDate: formattedPaymentDate,
         vehicleId: values.vehicleId || '',
         transportDocumentUrl: newTransportDocUrl || '',
         photoReportUrls: newPhotoUrls,
@@ -415,6 +416,7 @@ const DefectFormDialog = ({
       
       try {
         if (defectId) {
+          console.log(`Updating defect report with ID: ${defectId}`);
           const updatedReport = await defectReportsApi.update(defectId, submissionData);
           console.log("Updated report:", updatedReport);
           toast({
@@ -447,7 +449,6 @@ const DefectFormDialog = ({
           variant: "destructive",
         });
         
-        // Call onError callback if provided
         if (onError) {
           onError(error);
         }
@@ -460,7 +461,6 @@ const DefectFormDialog = ({
         variant: "destructive",
       });
       
-      // Call onError callback if provided
       if (onError) {
         onError(error);
       }

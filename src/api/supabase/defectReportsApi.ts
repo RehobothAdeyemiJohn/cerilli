@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
@@ -130,6 +131,11 @@ export const defectReportsApi = {
     console.log("Starting update for defect report with id:", id);
     console.log("Update data received:", report);
     
+    if (!id) {
+      console.error("Missing required ID for update operation");
+      throw new Error("ID is required for update operation");
+    }
+    
     // Format all fields correctly for the database (camelCase to snake_case)
     const payload: Record<string, any> = {};
     
@@ -162,7 +168,7 @@ export const defectReportsApi = {
       // Debug what's happening during the update
       console.log(`Executing update query for report ${id} with payload:`, JSON.stringify(payload, null, 2));
       
-      // Explicitly perform the update without returning data first
+      // First try the update operation
       const { error: updateError } = await supabase
         .from('defect_reports')
         .update(payload)
@@ -174,8 +180,8 @@ export const defectReportsApi = {
         throw updateError;
       }
 
-      // Then fetch the updated record separately
-      console.log("Update succeeded, fetching updated record");
+      // After successful update, fetch the updated record
+      console.log("Update operation succeeded, fetching updated record");
       const { data: updatedData, error: fetchError } = await supabase
         .from('defect_reports')
         .select('*')
