@@ -78,6 +78,10 @@ export const defectReportsApi = {
     console.log("Submitting payload to Supabase:", payload);
     
     try {
+      // ⚠️ Skip bucket creation - this should be done by an admin in the Supabase dashboard
+      // Since this operation requires admin privileges, we'll proceed directly to inserting the record
+      // and assume buckets are already created by admin
+
       const { data, error } = await supabase
         .from('defect_reports')
         .insert([payload])

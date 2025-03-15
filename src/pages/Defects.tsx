@@ -24,6 +24,7 @@ const Defects = () => {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filters, setFilters] = useState<{
     status?: string;
     dealerId?: string;
@@ -117,12 +118,23 @@ const Defects = () => {
 
   const handleSuccess = useCallback(() => {
     console.log("Defect operation successful, refetching data...");
+    setIsSubmitting(false);
     refetch();
     toast({
       title: "Operazione completata",
       description: "I dati sono stati aggiornati con successo.",
     });
   }, [refetch, toast]);
+
+  const handleError = useCallback((error: any) => {
+    console.error("Operation failed:", error);
+    setIsSubmitting(false);
+    toast({
+      title: "Errore",
+      description: "Si è verificato un errore durante l'operazione: " + (error.message || ''),
+      variant: "destructive",
+    });
+  }, [toast]);
 
   const selectedDefect = selectedDefectId
     ? defectReports.find(d => d.id === selectedDefectId)
@@ -160,8 +172,12 @@ const Defects = () => {
     <div className="container mx-auto py-6 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Segnalazioni Difformità</h1>
-        <Button onClick={handleCreateNew}>
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <Button onClick={handleCreateNew} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <PlusCircle className="h-4 w-4 mr-2" />
+          )}
           Nuova Segnalazione
         </Button>
       </div>
@@ -204,6 +220,9 @@ const Defects = () => {
           onClose={() => setFormDialogOpen(false)}
           defectId={selectedDefectId || undefined}
           onSuccess={handleSuccess}
+          onError={handleError}
+          setIsSubmitting={setIsSubmitting}
+          isSubmitting={isSubmitting}
         />
       )}
 
