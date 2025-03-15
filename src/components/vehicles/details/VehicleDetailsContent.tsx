@@ -70,7 +70,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     model: vehicle.model 
   });
 
-  // Flag to show action buttons only when available
+  // Show action buttons only when vehicle is available
   const showActionButtons = vehicle.status === 'available';
 
   return (
@@ -87,9 +87,9 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
-      {/* Action buttons - Make them very visible at the top always */}
+      {/* Action buttons - Made more prominent and visible */}
       {showActionButtons && (
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6 sticky top-0 z-10 bg-white py-3 shadow-sm rounded-md">
           {onReserve && (
             <Button 
               onClick={onReserve}

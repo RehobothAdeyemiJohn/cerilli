@@ -116,11 +116,12 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
-  // Fixed: Fix the logic to properly determine if the user can reserve vehicles
+  // Fix: We need to properly determine if the user can reserve vehicles
+  // The issue was that we needed to pass onReserve and onCreateQuote directly to the content
+  // to determine if these features are available in this context
   const canReserve = vehicle.status === 'available' && isDealer;
   
   // Fixed: Correct the admin check to properly check for admin type
-  // The error was comparing with 'superAdmin' which is a Role, not a UserType
   const canEdit = user?.type === 'admin';
   
   console.log("VehicleDetailsDialog state:", { 
