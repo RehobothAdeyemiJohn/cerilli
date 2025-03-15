@@ -51,6 +51,20 @@ const VehicleList: React.FC<VehicleListProps> = ({
     setSelectedVehicle(vehicle);
     setShowDetailsDialog(true);
   };
+
+  const handleCreateQuote = (vehicle: Vehicle) => {
+    if (onCreateQuote) {
+      setSelectedVehicle(vehicle);
+      onCreateQuote(vehicle);
+    }
+  };
+
+  const handleReserve = (vehicle: Vehicle) => {
+    if (onReserve) {
+      setSelectedVehicle(vehicle);
+      onReserve(vehicle);
+    }
+  };
   
   if (vehicles.length === 0) {
     return (
@@ -72,8 +86,8 @@ const VehicleList: React.FC<VehicleListProps> = ({
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
-            onCreateQuote={onCreateQuote}
-            onReserve={onReserve}
+            onCreateQuote={onCreateQuote ? handleCreateQuote : undefined}
+            onReserve={onReserve ? handleReserve : undefined}
           />
         ))}
       </div>

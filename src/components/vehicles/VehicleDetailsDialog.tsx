@@ -161,6 +161,48 @@ const VehicleDetailsDialog = ({
   // Hide image when it's a dealer stock vehicle
   const shouldHideImage = isDealerStock;
   
+  // Function handlers to pass to VehicleDialogHeader
+  const handleEdit = () => setShowEditDialog(true);
+  const handleDelete = () => setShowDeleteDialog(true);
+  const handleDuplicate = () => {
+    if (vehicle) handleDuplicateVehicle(vehicle.id);
+  };
+  const handleCreateQuoteAction = () => {
+    if (vehicle && onCreateQuote) {
+      onCreateQuote(vehicle);
+      onOpenChange(false);
+    }
+  };
+  const handleReserveAction = () => {
+    if (vehicle) {
+      if (vehicle.location === 'Stock Virtuale') {
+        setShowVirtualReserveForm(true);
+      } else if (onReserve) {
+        onReserve(vehicle);
+        onOpenChange(false);
+      } else {
+        setShowReserveForm(true);
+      }
+    }
+  };
+  const handleCancelReservationAction = () => {
+    setShowCancelReservationForm(true);
+  };
+  const handleCreateOrderAction = () => {
+    if (vehicle) handleCreateOrder(vehicle.id);
+  };
+  
+  // Determine which buttons to show based on vehicle properties and user type
+  const isAdmin = user?.type === 'admin';
+  const showEditButton = isAdmin && vehicle?.status !== 'ordered';
+  const showDeleteButton = isAdmin && vehicle?.status !== 'ordered';
+  const showDuplicateButton = isAdmin;
+  const showCreateQuoteButton = (isDealer || isAdmin) && vehicle?.status === 'available' && onCreateQuote !== undefined;
+  const showReserveButton = (isDealer || isAdmin) && vehicle?.status === 'available' && vehicle?.location !== 'Stock Dealer';
+  const showCancelReservationButton = vehicle?.status === 'reserved' && 
+    ((isDealer && vehicle.reservedBy === user?.dealerName) || isAdmin);
+  const showCreateOrderButton = isAdmin && vehicle?.status === 'reserved';
+  
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,7 +210,17 @@ const VehicleDetailsDialog = ({
           {vehicle && (
             <>
               <DialogHeader>
-                <VehicleDialogHeader vehicle={vehicle} />
+                <VehicleDialogHeader 
+                  vehicle={vehicle}
+                  onEdit={showEditButton ? handleEdit : undefined}
+                  onDelete={showDeleteButton ? handleDelete : undefined}
+                  onDuplicate={showDuplicateButton ? handleDuplicate : undefined}
+                  onCreateQuote={showCreateQuoteButton ? handleCreateQuoteAction : undefined}
+                  onReserve={showReserveButton ? handleReserveAction : undefined}
+                  onCancelReservation={showCancelReservationButton ? handleCancelReservationAction : undefined}
+                  onCreateOrder={showCreateOrderButton ? handleCreateOrderAction : undefined}
+                  isDealer={isDealer}
+                />
               </DialogHeader>
               
               <VehicleDialogContent
@@ -201,7 +253,7 @@ const VehicleDetailsDialog = ({
         vehicle={vehicle}
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        onComplete={vehicle => {
+        onComplete={() => {
           if (onVehicleUpdated) onVehicleUpdated();
         }}
         onCancel={() => setShowEditDialog(false)}
