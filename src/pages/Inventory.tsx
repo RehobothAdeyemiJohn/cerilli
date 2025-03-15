@@ -12,6 +12,7 @@ import AddVehicleForm from '@/components/vehicles/AddVehicleForm';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -20,6 +21,8 @@ const Inventory = () => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const dealerName = user?.dealerName || '';
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const {
     inventory,
@@ -130,20 +133,22 @@ const Inventory = () => {
 
   // Wrapper functions with correct signatures for VehicleList component
   const handleVehicleUpdateWrapper = () => {
-    // Pass a dummy vehicle object or get the currently selected vehicle
-    // since handleVehicleUpdate expects a vehicle parameter
-    const dummyVehicle = {} as Vehicle;
-    handleVehicleUpdate(dummyVehicle);
+    refetch();
   };
   
   const handleCreateQuote = (vehicle: Vehicle) => {
-    // Implementation for creating a quote
-    console.log("Creating quote for vehicle:", vehicle.id);
+    // Navigate to quotes page with the vehicle ID
+    navigate('/quotes', {
+      state: {
+        fromInventory: true,
+        vehicleId: vehicle.id
+      }
+    });
   };
 
   const handleReserve = (vehicle: Vehicle) => {
-    // Implementation for reserving a vehicle
-    console.log("Reserving vehicle:", vehicle.id);
+    // Navigate to inventory with this vehicle ID for reservation
+    navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
   };
   
   if (isLoading) {

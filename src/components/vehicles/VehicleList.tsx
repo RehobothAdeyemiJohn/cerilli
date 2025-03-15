@@ -54,14 +54,12 @@ const VehicleList: React.FC<VehicleListProps> = ({
 
   const handleCreateQuote = (vehicle: Vehicle) => {
     if (onCreateQuote) {
-      setSelectedVehicle(vehicle);
       onCreateQuote(vehicle);
     }
   };
 
   const handleReserve = (vehicle: Vehicle) => {
     if (onReserve) {
-      setSelectedVehicle(vehicle);
       onReserve(vehicle);
     }
   };
