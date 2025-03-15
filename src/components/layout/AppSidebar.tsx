@@ -23,7 +23,7 @@ import {
   ChevronDown,
   ChevronRight,
   UserCog,
-  Tool
+  Wrench
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -141,7 +141,7 @@ const AppSidebar = () => {
               <SidebarMenuItem>
                 <Collapsible open={openSections.service} onOpenChange={() => toggleSection('service')}>
                   <CollapsibleTrigger className="flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                    <Tool className="w-5 h-5" />
+                    <Wrench className="w-5 h-5" />
                     <span className="flex-1">Service</span>
                     {openSections.service ? 
                       <ChevronDown className="w-4 h-4" /> : 
