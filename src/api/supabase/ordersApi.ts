@@ -1,6 +1,6 @@
 
 import { Order } from '@/types';
-import { supabase } from './client';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
@@ -37,7 +37,9 @@ export const ordersApi = {
       status: order.status,
       orderDate: order.orderdate,
       deliveryDate: order.deliverydate,
-      progressiveNumber: order.progressive_number, // Add the progressive number from the database
+      progressiveNumber: order.progressive_number,
+      price: order.price,
+      contractId: order.contract_id,
       // Include related data
       vehicle: order.vehicles,
       dealer: order.dealers
@@ -69,6 +71,9 @@ export const ordersApi = {
       status: data.status,
       orderDate: data.orderdate,
       deliveryDate: data.deliverydate,
+      progressiveNumber: data.progressive_number,
+      price: data.price,
+      contractId: data.contract_id,
       // Include related data
       vehicle: data.vehicles,
       dealer: data.dealers
@@ -87,7 +92,9 @@ export const ordersApi = {
       customername: order.customerName,
       status: order.status,
       orderdate: order.orderDate,
-      deliverydate: order.deliveryDate
+      deliverydate: order.deliveryDate,
+      price: order.price,
+      contract_id: order.contractId
     };
     
     console.log("Formatted order for Supabase insert:", newOrder);
@@ -114,6 +121,9 @@ export const ordersApi = {
       status: data.status,
       orderDate: data.orderdate,
       deliveryDate: data.deliverydate,
+      progressiveNumber: data.progressive_number,
+      price: data.price,
+      contractId: data.contract_id,
       // Include related data
       vehicle: data.vehicles,
       dealer: data.dealers
@@ -132,7 +142,9 @@ export const ordersApi = {
       customername: updates.customerName,
       status: updates.status,
       orderdate: updates.orderDate,
-      deliverydate: updates.deliveryDate
+      deliverydate: updates.deliveryDate,
+      price: updates.price,
+      contract_id: updates.contractId
     };
     
     // Remove undefined fields
@@ -163,6 +175,9 @@ export const ordersApi = {
       status: data.status,
       orderDate: data.orderdate,
       deliveryDate: data.deliverydate,
+      progressiveNumber: data.progressive_number,
+      price: data.price, 
+      contractId: data.contract_id,
       // Include related data
       vehicle: data.vehicles,
       dealer: data.dealers

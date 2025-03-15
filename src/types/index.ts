@@ -82,7 +82,9 @@ export type Order = {
   status: 'processing' | 'delivered' | 'cancelled';
   orderDate: string;
   deliveryDate?: string;
-  progressiveNumber?: number; // Add the progressiveNumber property
+  progressiveNumber?: number;
+  price?: number;  // Aggiungiamo il campo price
+  contractId?: string;  // Aggiungiamo il campo contractId
   vehicle?: Vehicle;
   dealer?: any;
   details?: OrderDetails;
@@ -108,6 +110,20 @@ export type OrderDetails = {
   createdAt: string;
   updatedAt: string;
   notes?: string;
+};
+
+// Nuovo tipo per i contratti dealer
+export type DealerContract = {
+  id: string;
+  dealerId: string;
+  carId: string;
+  contractDate: string;
+  contractDetails?: any; // JSONB in Supabase
+  status: 'attivo' | 'completato';
+  createdAt: string;
+  updatedAt: string;
+  dealer?: Dealer;
+  vehicle?: Vehicle;
 };
 
 export type Filter = {
@@ -148,6 +164,8 @@ export interface Dealer {
   isActive: boolean;
   logo?: string;
   creditLimit?: number;
+  esposizione?: number;      // Nuovo campo per l'esposizione
+  nuovoPlafond?: number;     // Nuovo campo per il plafond aggiornato
   orders?: Order[];
 }
 

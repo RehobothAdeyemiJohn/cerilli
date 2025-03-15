@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Order } from '@/types';
 import {
@@ -29,10 +28,12 @@ interface OrdersTableProps {
   onDeleteClick: (orderId: string) => void;
   onDeleteConfirm: () => void;
   onPrintOrder: (order: Order) => void;
+  onCreateContract?: (order: Order) => void;
   isDealer: boolean;
   markAsDeliveredPending: boolean;
   cancelOrderPending: boolean;
   deleteOrderPending: boolean;
+  createContractPending?: boolean;
 }
 
 const OrdersTable = ({
@@ -51,10 +52,12 @@ const OrdersTable = ({
   onDeleteClick,
   onDeleteConfirm,
   onPrintOrder,
+  onCreateContract,
   isDealer,
   markAsDeliveredPending,
   cancelOrderPending,
-  deleteOrderPending
+  deleteOrderPending,
+  createContractPending
 }: OrdersTableProps) => {
   
   const getStatusBadgeClass = (status: string) => {
@@ -70,26 +73,21 @@ const OrdersTable = ({
     }
   };
 
-  // Sort orders by progressive number if available, or by date as fallback
   const sortedOrders = [...orders].sort((a, b) => {
-    // First try to sort by progressive number
     if (a.progressiveNumber && b.progressiveNumber) {
       return a.progressiveNumber - b.progressiveNumber;
     }
     
-    // Fall back to date sorting
     const dateA = new Date(a.orderDate || 0).getTime();
     const dateB = new Date(b.orderDate || 0).getTime();
     return dateA - dateB;
   });
 
   const getOrderNumber = (order: Order): string => {
-    // Use progressive number from database if available
     if (order.progressiveNumber) {
       return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
     }
     
-    // Fallback to index for backward compatibility
     const index = sortedOrders.findIndex(o => o.id === order.id);
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
@@ -164,6 +162,8 @@ const OrdersTable = ({
                 const orderNumber = getOrderNumber(order);
                 
                 const canDeliverOrder = order.status === 'processing' && (order.details?.odlGenerated === true);
+                
+                const hasContract = !!order.contractId;
                 
                 return (
                   <TableRow key={order.id}>
@@ -288,6 +288,18 @@ const OrdersTable = ({
                           <Printer className="h-4 w-4 mr-1" />
                           Stampa ordine
                         </Button>
+                        
+                        {onCreateContract && order.status === 'processing' && !hasContract && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-200"
+                            onClick={() => onCreateContract(order)}
+                            disabled={createContractPending}
+                          >
+                            {createContractPending ? 'Creazione...' : 'Trasforma in Contratto'}
+                          </Button>
+                        )}
                         
                         {!isDealer && order.status === 'processing' && (
                           <>

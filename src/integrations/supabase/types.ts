@@ -51,6 +51,54 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_contracts: {
+        Row: {
+          car_id: string
+          contract_date: string | null
+          contract_details: Json | null
+          created_at: string | null
+          dealer_id: string
+          id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          car_id: string
+          contract_date?: string | null
+          contract_details?: Json | null
+          created_at?: string | null
+          dealer_id: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          car_id?: string
+          contract_date?: string | null
+          contract_details?: Json | null
+          created_at?: string | null
+          dealer_id?: string
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_contracts_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealer_contracts_dealer_id_fkey"
+            columns: ["dealer_id"]
+            isOneToOne: false
+            referencedRelation: "dealers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealers: {
         Row: {
           address: string
@@ -60,9 +108,11 @@ export type Database = {
           created_at: string | null
           credit_limit: number | null
           email: string
+          esposizione: number | null
           id: string
           isactive: boolean | null
           logo: string | null
+          nuovo_plafond: number | null
           password: string
           province: string
           updated_at: string | null
@@ -76,9 +126,11 @@ export type Database = {
           created_at?: string | null
           credit_limit?: number | null
           email: string
+          esposizione?: number | null
           id: string
           isactive?: boolean | null
           logo?: string | null
+          nuovo_plafond?: number | null
           password: string
           province: string
           updated_at?: string | null
@@ -92,9 +144,11 @@ export type Database = {
           created_at?: string | null
           credit_limit?: number | null
           email?: string
+          esposizione?: number | null
           id?: string
           isactive?: boolean | null
           logo?: string | null
+          nuovo_plafond?: number | null
           password?: string
           province?: string
           updated_at?: string | null
@@ -259,12 +313,14 @@ export type Database = {
       }
       orders: {
         Row: {
+          contract_id: string | null
           customername: string
           dealerid: string
           deliverydate: string | null
           id: string
           notes: string | null
           orderdate: string | null
+          price: number | null
           progressive_number: number
           quoteid: string | null
           status: string | null
@@ -272,12 +328,14 @@ export type Database = {
           vehicleid: string
         }
         Insert: {
+          contract_id?: string | null
           customername: string
           dealerid: string
           deliverydate?: string | null
           id?: string
           notes?: string | null
           orderdate?: string | null
+          price?: number | null
           progressive_number?: number
           quoteid?: string | null
           status?: string | null
@@ -285,12 +343,14 @@ export type Database = {
           vehicleid: string
         }
         Update: {
+          contract_id?: string | null
           customername?: string
           dealerid?: string
           deliverydate?: string | null
           id?: string
           notes?: string | null
           orderdate?: string | null
+          price?: number | null
           progressive_number?: number
           quoteid?: string | null
           status?: string | null
@@ -298,6 +358,13 @@ export type Database = {
           vehicleid?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_dealerid_fkey"
             columns: ["dealerid"]

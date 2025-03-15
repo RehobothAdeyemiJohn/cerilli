@@ -1,151 +1,225 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ShoppingBag,
-  Store,
-  ClipboardList, 
-  Truck,
-  Users,
-  KeyRound,
-  Settings,
-  Database,
-  FileText,
-  AlertTriangle,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
+import { Switch } from "@/components/ui/switch"
+import { Moon, Sun, LayoutDashboard, ShoppingCart, FileText, Users, Settings, Truck, AlertTriangle, PackageOpen } from 'lucide-react';
 
-interface SidebarProps {
-  isOpen: boolean;
-}
+const Sidebar = () => {
+  const { isAdmin } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(true); // Sidebar is open by default
 
-const Sidebar = ({ isOpen }: SidebarProps) => {
-  const location = useLocation();
-  const { user } = useAuth();
-  const isAdmin = user?.type === 'admin';
-  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
-  
-  const menuItems = [
-    { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', showForDealer: true },
-    { title: 'Preventivi', icon: FileText, path: '/quotes', showForDealer: true, showForAdmin: true },
-    { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
-    { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
-    { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
-    { title: 'Difformità', icon: AlertTriangle, path: '/defects', showForDealer: true, showForAdmin: true },
-    { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
-    { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
-  ];
-  
-  const footerItems = [
-    { title: 'Impostazioni', icon: Settings, path: '/settings', showForDealer: false, showForAdmin: true },
-  ];
-  
-  const adminItems = [
-    { title: 'Credenziali', icon: KeyRound, path: '/credentials' },
-    { title: 'Migrazione Dati', icon: Database, path: '/migration' },
-  ];
-  
-  const isActive = (path: string) => {
-    if (location.pathname === path) return true;
-    
-    if (path === '/inventory' && location.pathname.startsWith('/inventory/')) return true;
-    
-    return false;
+  // Function to close sidebar on mobile after clicking a link
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth <= 768) {
+      setIsOpen(false);
+    }
   };
-  
+
+  // Effect to handle window resize and close sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsOpen(false);
+      } else {
+        setIsOpen(true);
+      }
+    };
+
+    // Set initial state on mount
+    handleResize();
+
+    // Add event listener for resize
+    window.addEventListener('resize', handleResize);
+
+    // Clean up event listener on unmount
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div 
-      className={`${
-        isOpen ? 'w-64' : 'w-16'
-      } h-screen bg-[#141c2e] text-white flex flex-col flex-shrink-0 transition-all duration-300 overflow-hidden`}
-    >
-      <div className="flex items-center justify-center h-16 p-4 flex-shrink-0">
-        {isOpen ? (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold">
-            CN
-          </div>
-        ) : (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold">
-            CN
-          </div>
-        )}
-      </div>
-      
-      <div className="flex flex-col flex-1 py-2 overflow-y-auto">
-        <nav className="flex-1 px-2 space-y-1">
-          {menuItems
-            .filter(item => (isAdmin && (item.showForAdmin !== false)) || (isDealer && item.showForDealer))
-            .map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center p-2 rounded-md transition-colors my-1",
-                  isActive(item.path)
-                    ? "bg-white text-[#141c2e]"
-                    : "text-gray-300 hover:bg-gray-700"
-                )}
+    <aside className={`sidebar-container ${isOpen ? 'open' : ''}`}>
+      <div className="sidebar-content">
+        {/* Logo */}
+        <div className="sidebar-logo">
+          <img src="/cirelli-logo.svg" alt="Cirelli Motor Company Logo" />
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="sidebar-nav">
+          <ul className="space-y-1">
+            {/* Dashboard Link */}
+            <li>
+              <NavLink 
+                to="/dashboard"
+                className={({ isActive }) => 
+                  `sidebar-link ${isActive ? 'active' : ''}`
+                }
+                onClick={closeSidebarOnMobile}
               >
-                <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
-                {isOpen && (
-                  <span className="ml-3 text-sm">{item.title}</span>
-                )}
-              </Link>
-            ))}
+                <LayoutDashboard className="sidebar-icon" />
+                <span>Dashboard</span>
+              </NavLink>
+            </li>
+
+            {/* Inventory Link */}
+            <li>
+              <NavLink 
+                to="/inventory"
+                className={({ isActive }) => 
+                  `sidebar-link ${isActive ? 'active' : ''}`
+                }
+                onClick={closeSidebarOnMobile}
+              >
+                <ShoppingCart className="sidebar-icon" />
+                <span>Inventario</span>
+              </NavLink>
+            </li>
+
+            {/* Orders Link */}
+            <li>
+              <NavLink 
+                to="/orders"
+                className={({ isActive }) => 
+                  `sidebar-link ${isActive ? 'active' : ''}`
+                }
+                onClick={closeSidebarOnMobile}
+              >
+                <PackageOpen className="sidebar-icon" />
+                <span>Ordini</span>
+              </NavLink>
+            </li>
+
+            {/* Dealer Contracts Link - Add after Orders link */}
+            {isAdmin && (
+              <li>
+                <NavLink 
+                  to="/contracts"
+                  className={({ isActive }) => 
+                    `sidebar-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebarOnMobile}
+                >
+                  <FileText className="sidebar-icon" />
+                  <span>Contratti Dealer</span>
+                </NavLink>
+              </li>
+            )}
+
+            {/* Quotes Link */}
+            <li>
+              <NavLink 
+                to="/quotes"
+                className={({ isActive }) => 
+                  `sidebar-link ${isActive ? 'active' : ''}`
+                }
+                onClick={closeSidebarOnMobile}
+              >
+                <FileText className="sidebar-icon" />
+                <span>Preventivi</span>
+              </NavLink>
+            </li>
+
+            {/* Dealers Link - Visible only to admins */}
+            {isAdmin && (
+              <li>
+                <NavLink 
+                  to="/dealers"
+                  className={({ isActive }) => 
+                    `sidebar-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebarOnMobile}
+                >
+                  <Users className="sidebar-icon" />
+                  <span>Concessionari</span>
+                </NavLink>
+              </li>
+            )}
+
+            {/* Credentials Link - Visible only to admins */}
+            {isAdmin && (
+              <li>
+                <NavLink 
+                  to="/credentials"
+                  className={({ isActive }) => 
+                    `sidebar-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebarOnMobile}
+                >
+                  <Users className="sidebar-icon" />
+                  <span>Credenziali</span>
+                </NavLink>
+              </li>
+            )}
+
+            {/* Deliveries Link - Visible only to admins */}
+            {isAdmin && (
+              <li>
+                <NavLink 
+                  to="/deliveries"
+                  className={({ isActive }) => 
+                    `sidebar-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebarOnMobile}
+                >
+                  <Truck className="sidebar-icon" />
+                  <span>Trasporti</span>
+                </NavLink>
+              </li>
+            )}
+
+            {/* Defects Link - Visible only to admins */}
+            {isAdmin && (
+              <li>
+                <NavLink 
+                  to="/defects"
+                  className={({ isActive }) => 
+                    `sidebar-link ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebarOnMobile}
+                >
+                  <AlertTriangle className="sidebar-icon" />
+                  <span>Difettosità</span>
+                </NavLink>
+              </li>
+            )}
+
+            {/* Settings Link */}
+            <li>
+              <NavLink 
+                to="/settings"
+                className={({ isActive }) => 
+                  `sidebar-link ${isActive ? 'active' : ''}`
+                }
+                onClick={closeSidebarOnMobile}
+              >
+                <Settings className="sidebar-icon" />
+                <span>Impostazioni</span>
+              </NavLink>
+            </li>
+          </ul>
         </nav>
-        
-        {isAdmin && (
-          <div className="pt-2 px-2">
-            <nav className="space-y-1">
-              {adminItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center p-2 rounded-md transition-colors my-1",
-                    isActive(item.path)
-                      ? "bg-white text-[#141c2e]"
-                      : "text-gray-300 hover:bg-gray-700"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
-                  {isOpen && (
-                    <span className="ml-3 text-sm">{item.title}</span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        )}
-        
-        {/* Footer Navigation */}
-        <div className="mt-auto px-2 pb-4">
-          <nav className="space-y-1">
-            {footerItems
-              .filter(item => (isAdmin && (item.showForAdmin !== false)) || (isDealer && item.showForDealer))
-              .map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center p-2 rounded-md transition-colors my-1",
-                    isActive(item.path)
-                      ? "bg-white text-[#141c2e]"
-                      : "text-gray-300 hover:bg-gray-700"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", isActive(item.path) ? "text-[#141c2e]" : "text-gray-300")} />
-                  {isOpen && (
-                    <span className="ml-3 text-sm">{item.title}</span>
-                  )}
-                </Link>
-              ))}
-          </nav>
+
+        {/* Theme Toggle */}
+        <div className="sidebar-theme-toggle">
+          <Sun className="h-4 w-4 text-yellow-500" />
+          <Switch
+            checked={theme === "dark"}
+            onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+          />
+          <Moon className="h-4 w-4 text-blue-300" />
+        </div>
+
+        {/* Version Info */}
+        <div className="sidebar-version">
+          <p>Cirelli Motor Company</p>
+          <p>v1.0.0</p>
         </div>
       </div>
-    </div>
+      
+      {/* Backdrop for mobile */}
+      <div className="sidebar-backdrop" onClick={() => setIsOpen(false)}></div>
+    </aside>
   );
 };
 
