@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 const Header = ({ children }: HeaderProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -18,14 +18,24 @@ const Header = ({ children }: HeaderProps) => {
     navigate('/login');
   };
 
+  // Determine the title to show in the header
+  const headerTitle = isAdmin 
+    ? "Cirelli Motor Company" 
+    : user?.dealerName || "Cirelli Motor Company";
+
   return (
     <header className="border-b bg-background">
       <div className="flex h-16 items-center px-4 gap-4">
         {/* Left side - SidebarTrigger */}
         {children}
 
+        {/* Center - Company/Dealer Name */}
+        <div className="text-xl font-semibold flex-1 text-left">
+          {headerTitle}
+        </div>
+
         {/* Right side - User info and logout */}
-        <div className="ml-auto flex items-center gap-4">
+        <div className="flex items-center gap-4">
           {user && (
             <div className="flex items-center gap-4">
               <div className="text-sm">
