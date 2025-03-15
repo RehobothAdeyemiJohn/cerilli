@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -37,7 +36,6 @@ const VehicleDetailsDialog = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Local state management
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -46,7 +44,6 @@ const VehicleDetailsDialog = ({
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
   
-  // Handlers
   const handleDuplicateVehicle = async (vehicleId: string) => {
     if (!vehicle) return;
     try {
@@ -135,10 +132,8 @@ const VehicleDetailsDialog = ({
     if (!vehicle) return;
     
     try {
-      // Call the transformToOrder API
       await vehiclesApi.transformToOrder(vehicleId);
       
-      // Refresh queries
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
@@ -158,10 +153,8 @@ const VehicleDetailsDialog = ({
     }
   };
 
-  // Hide image when it's a dealer stock vehicle
   const shouldHideImage = isDealerStock;
   
-  // Function handlers to pass to VehicleDialogHeader
   const handleEdit = () => setShowEditDialog(true);
   const handleDelete = () => setShowDeleteDialog(true);
   const handleDuplicate = () => {
@@ -192,13 +185,17 @@ const VehicleDetailsDialog = ({
     if (vehicle) handleCreateOrder(vehicle.id);
   };
   
-  // Determine which buttons to show based on vehicle properties and user type
   const isAdmin = user?.type === 'admin';
   const showEditButton = isAdmin && vehicle?.status !== 'ordered';
   const showDeleteButton = isAdmin && vehicle?.status !== 'ordered';
   const showDuplicateButton = isAdmin;
-  const showCreateQuoteButton = (isDealer || isAdmin) && vehicle?.status === 'available' && onCreateQuote !== undefined;
-  const showReserveButton = (isDealer || isAdmin) && vehicle?.status === 'available' && vehicle?.location !== 'Stock Dealer';
+  const showCreateQuoteButton = (isDealer || isAdmin) && 
+                               (vehicle?.status === 'available' || vehicle?.status === 'delivered') && 
+                               onCreateQuote !== undefined;
+  const showReserveButton = (isDealer || isAdmin) && 
+                           (vehicle?.status === 'available' || vehicle?.status === 'delivered') && 
+                           vehicle?.location !== 'Stock Dealer' && 
+                           onReserve !== undefined;
   const showCancelReservationButton = vehicle?.status === 'reserved' && 
     ((isDealer && vehicle.reservedBy === user?.dealerName) || isAdmin);
   const showCreateOrderButton = isAdmin && vehicle?.status === 'reserved';

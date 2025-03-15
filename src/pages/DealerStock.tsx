@@ -64,6 +64,7 @@ const DealerStock = () => {
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   
   const handleCreateQuote = (vehicle: Vehicle) => {
+    console.log('Creating quote for vehicle:', vehicle);
     navigate('/quotes', { 
       state: { 
         fromInventory: true,
@@ -165,7 +166,7 @@ const DealerStock = () => {
                   vehicles={filteredVehicles}
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
-                  onCreateQuote={user?.type !== 'admin' ? handleCreateQuote : undefined}
+                  onCreateQuote={handleCreateQuote}
                   isDealerStock={true}
                 />
               )}
