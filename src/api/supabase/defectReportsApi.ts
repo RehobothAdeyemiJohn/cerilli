@@ -248,18 +248,19 @@ export const defectReportsApi = {
         .select('*', { count: 'exact', head: true })
         .in('status', ['Approvata', 'Approvata Parzialmente']);
 
-      // For paid reports
-      const { data: paidReports, error: paidError } = await supabase
+      // For total approved repair value
+      const { data: approvedReports, error: approvedValuesError } = await supabase
         .from('defect_reports')
         .select('approved_repair_value')
-        .not('payment_date', 'is', null);
+        .in('status', ['Approvata', 'Approvata Parzialmente']);
 
-      if (openError || closedError || paidError || approvedError) {
-        console.error('Error fetching defect report stats:', openError || closedError || paidError || approvedError);
-        throw openError || closedError || paidError || approvedError;
+      if (openError || closedError || approvedError || approvedValuesError) {
+        console.error('Error fetching defect report stats:', openError || closedError || approvedError || approvedValuesError);
+        throw openError || closedError || approvedError || approvedValuesError;
       }
 
-      const totalPaid = paidReports?.reduce((sum, report) => sum + (report.approved_repair_value || 0), 0) || 0;
+      const totalPaid = approvedReports?.reduce((sum, report) => sum + (report.approved_repair_value || 0), 0) || 0;
+      console.log("Total paid amount calculated:", totalPaid);
 
       return {
         openReports: openCount || 0,
