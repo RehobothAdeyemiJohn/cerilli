@@ -22,7 +22,7 @@ export const useVirtualReservationForm = (vehicle: Vehicle) => {
     exteriorColor: '',
     transmission: '',
     accessories: [],
-    reservationDestination: '',
+    reservationDestination: 'Conto Esposizione', // Fixed by using a valid value from the enum
     originalStock: undefined
   };
   

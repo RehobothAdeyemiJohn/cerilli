@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Vehicle } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { FileText, ShoppingCart } from 'lucide-react';
+import { FileText, ShoppingCart, Package } from 'lucide-react';
 import EditVehicleForm from './EditVehicleForm';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
@@ -103,8 +103,18 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
 
+  const handleTransformToOrder = () => {
+    console.log("Transform to order button clicked for vehicle:", vehicle.id);
+    // In a real implementation, this would call an API
+    // For now let's just close the dialog and update the vehicle
+    onVehicleUpdated();
+    onOpenChange(false);
+  };
+
   // Show buttons if the vehicle is available - for ALL users, not just dealers
   const showActionButtons = vehicle.status === 'available';
+  // Show transform to order button if the vehicle is reserved
+  const showTransformOrderButton = vehicle.status === 'reserved';
   
   // Dialog content based on current view
   const renderDialogContent = () => {
@@ -159,31 +169,45 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
               isVirtualStock={isVirtualStock}
             />
             
-            {/* Footer with action buttons - now visible for ALL users if vehicle is available */}
-            {showActionButtons && (
-              <DialogFooter className="mt-4 pt-4 border-t">
-                <div className="flex w-full gap-3 justify-end">
-                  {onCreateQuote && !isVirtualStock && (
-                    <Button 
-                      onClick={handleCreateQuoteClick}
-                      variant="outline"
-                    >
-                      <FileText className="h-5 w-5 mr-2" />
-                      Preventivo
-                    </Button>
-                  )}
-                  
-                  {onReserve && (
-                    <Button 
-                      onClick={handleReserveClick}
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-2" />
-                      Prenota
-                    </Button>
-                  )}
-                </div>
-              </DialogFooter>
-            )}
+            {/* Footer with action buttons */}
+            <DialogFooter className="mt-4 pt-4 border-t">
+              <div className="flex w-full gap-3 justify-end">
+                {showActionButtons && (
+                  <>
+                    {onCreateQuote && !isVirtualStock && (
+                      <Button 
+                        onClick={handleCreateQuoteClick}
+                        variant="outline"
+                      >
+                        <FileText className="h-5 w-5 mr-2" />
+                        Preventivo
+                      </Button>
+                    )}
+                    
+                    {onReserve && (
+                      <Button 
+                        onClick={handleReserveClick}
+                      >
+                        <ShoppingCart className="h-5 w-5 mr-2" />
+                        Prenota
+                      </Button>
+                    )}
+                  </>
+                )}
+                
+                {/* Transform to Order button for reserved vehicles */}
+                {showTransformOrderButton && (
+                  <Button 
+                    onClick={handleTransformToOrder}
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Package className="h-5 w-5 mr-2" />
+                    Trasforma in Ordine
+                  </Button>
+                )}
+              </div>
+            </DialogFooter>
           </>
         );
     }
