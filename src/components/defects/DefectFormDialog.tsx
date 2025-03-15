@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -106,14 +107,20 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       setIsSubmitting(true);
       
       const submissionData = {
-        ...values,
         dealerId: values.dealerId || user?.dealerId || '', // Ensure dealerId is always provided
         dealerName: values.dealerName || user?.dealerName || '', // Ensure dealerName is always provided
         status: values.status, // Ensure status is always provided
         reason: values.reason, // Ensure reason is always provided
         description: values.description, // Ensure description is always provided
+        repairCost: values.repairCost, // Ensure repairCost is always provided
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
         paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
+        vehicleId: values.vehicleId,
+        email: values.email,
+        transportDocumentUrl: values.transportDocumentUrl,
+        photoReportUrls: values.photoReportUrls,
+        repairQuoteUrl: values.repairQuoteUrl,
+        adminNotes: values.adminNotes
       };
       
       if (defectId) {

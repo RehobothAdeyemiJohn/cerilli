@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/layout/Layout';
 
 // Pages
 import Index from './pages/Index';
@@ -40,104 +41,107 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/inventory" 
-              element={
-                <ProtectedRoute>
-                  <Inventory />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/dealer-stock" 
-              element={
-                <ProtectedRoute>
-                  <DealerStock />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/quotes" 
-              element={
-                <ProtectedRoute>
-                  <Quotes />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/orders" 
-              element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/defects" 
-              element={
-                <ProtectedRoute>
-                  <Defects />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/deliveries" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Deliveries />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/dealers" 
-              element={
-                <ProtectedRoute>
-                  <Dealers />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/credentials" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Credentials />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Settings />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/migration" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Migration />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Protected routes with layout */}
+            <Route element={<Layout />}>
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/inventory" 
+                element={
+                  <ProtectedRoute>
+                    <Inventory />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/dealer-stock" 
+                element={
+                  <ProtectedRoute>
+                    <DealerStock />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/quotes" 
+                element={
+                  <ProtectedRoute>
+                    <Quotes />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/orders" 
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/defects" 
+                element={
+                  <ProtectedRoute>
+                    <Defects />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/deliveries" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <Deliveries />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/dealers" 
+                element={
+                  <ProtectedRoute>
+                    <Dealers />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/credentials" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <Credentials />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/migration" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <Migration />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
             
             <Route path="*" element={<NotFound />} />
           </Routes>
