@@ -52,40 +52,42 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header with title and badge */}
-      <div className="flex flex-col md:flex-row justify-between items-start mb-2">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">{vehicle.model}</h2>
-          <Badge className={statusColors[vehicle.status]}>
-            {statusTranslations[vehicle.status]}
-          </Badge>
+      {/* Header with title, badge and main action buttons */}
+      <div className="flex flex-col space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{vehicle.model}</h2>
+            <Badge className={statusColors[vehicle.status]}>
+              {statusTranslations[vehicle.status]}
+            </Badge>
+          </div>
+          
+          {/* Move buttons to the header section for better visibility */}
+          {vehicle.status === 'available' && (
+            <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+              {onReserve && (
+                <Button 
+                  onClick={onReserve}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base w-full md:w-auto"
+                  size="lg"
+                >
+                  Prenota
+                </Button>
+              )}
+              
+              {onCreateQuote && !isVirtualStockVehicle && (
+                <Button 
+                  onClick={onCreateQuote}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base w-full md:w-auto"
+                  size="lg"
+                >
+                  Crea Preventivo
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Action buttons - made larger and more visible */}
-      {(onReserve || onCreateQuote) && vehicle.status === 'available' && (
-        <div className="flex flex-wrap gap-3 mb-4">
-          {onReserve && (
-            <Button 
-              onClick={onReserve}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-base"
-              size="lg"
-            >
-              Prenota
-            </Button>
-          )}
-          
-          {onCreateQuote && !isVirtualStockVehicle && (
-            <Button 
-              onClick={onCreateQuote}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-base"
-              size="lg"
-            >
-              Crea Preventivo
-            </Button>
-          )}
-        </div>
-      )}
 
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
