@@ -191,7 +191,7 @@ const VehicleCard = ({
         
         {isDealer && vehicle.status === 'available' && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
-            {onCreateQuote && (
+            {onCreateQuote && !isVirtualStock && (
               <Button 
                 size="sm"
                 onClick={(e) => {

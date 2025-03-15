@@ -133,6 +133,7 @@ const DealerStock = () => {
                     navigate(`/inventory?vehicleId=${vehicle.id}&action=reserve`);
                   }}
                   isDealerStock={true}
+                  isVirtualStock={false}
                 />
               )}
             </TabsContent>
@@ -150,6 +151,7 @@ const DealerStock = () => {
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
                   isDealerStock={true}
+                  isVirtualStock={false}
                 />
               )}
             </TabsContent>
@@ -168,6 +170,7 @@ const DealerStock = () => {
                   onVehicleDeleted={handleVehicleDeleted}
                   onCreateQuote={handleCreateQuote}
                   isDealerStock={true}
+                  isVirtualStock={false}
                 />
               )}
             </TabsContent>

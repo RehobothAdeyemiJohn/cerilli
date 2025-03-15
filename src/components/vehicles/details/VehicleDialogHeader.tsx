@@ -15,6 +15,7 @@ interface VehicleDialogHeaderProps {
   onCancelReservation?: () => void;
   onCreateOrder?: () => void;
   isDealer?: boolean;
+  isVirtualStock?: boolean;
 }
 
 const VehicleDialogHeader = ({ 
@@ -26,7 +27,8 @@ const VehicleDialogHeader = ({
   onReserve,
   onCancelReservation,
   onCreateOrder,
-  isDealer
+  isDealer,
+  isVirtualStock
 }: VehicleDialogHeaderProps) => {
   const getDialogTitle = () => {
     if (vehicle.status === 'reserved') {
@@ -64,7 +66,7 @@ const VehicleDialogHeader = ({
           </Button>
         )}
         
-        {onCreateQuote && (
+        {onCreateQuote && !isVirtualStock && (
           <Button variant="outline" size="sm" onClick={onCreateQuote} className="h-8 text-green-600 border-green-200 hover:bg-green-50">
             <FileText className="h-4 w-4 mr-1" /> Crea Preventivo
           </Button>

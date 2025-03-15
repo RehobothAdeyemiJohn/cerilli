@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -225,6 +226,7 @@ const VehicleDetailsDialog = ({
                   onCancelReservation={showCancelReservationButton ? handleCancelReservationAction : undefined}
                   onCreateOrder={showCreateOrderButton ? handleCreateOrderAction : undefined}
                   isDealer={isDealer}
+                  isVirtualStock={isVirtualStock}
                 />
               </DialogHeader>
               

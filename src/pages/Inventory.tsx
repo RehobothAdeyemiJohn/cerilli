@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
@@ -204,6 +205,7 @@ const Inventory = () => {
                 onVehicleDeleted={handleVehicleDeleteWrapper}
                 onCreateQuote={handleCreateQuote}
                 onReserve={handleReserve}
+                isVirtualStock={false}
               />
             </TabsContent>
 
@@ -222,6 +224,7 @@ const Inventory = () => {
                 vehicles={reservedVehicles} 
                 onVehicleUpdated={handleVehicleUpdateWrapper}
                 onVehicleDeleted={handleVehicleDeleteWrapper}
+                isVirtualStock={false}
               />
             </TabsContent>
             
@@ -233,6 +236,7 @@ const Inventory = () => {
                   onVehicleDeleted={handleVehicleDeleteWrapper}
                   onCreateQuote={handleCreateQuote}
                   onReserve={handleReserve}
+                  isVirtualStock={false}
                 />
               </TabsContent>
             )}

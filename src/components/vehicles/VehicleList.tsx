@@ -86,7 +86,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
-            onCreateQuote={!isVirtualStock ? onCreateQuote ? handleCreateQuote : undefined : undefined}
+            onCreateQuote={isVirtualStock ? undefined : onCreateQuote ? handleCreateQuote : undefined}
             onReserve={onReserve ? handleReserve : undefined}
           />
         ))}
@@ -98,7 +98,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
         onOpenChange={setShowDetailsDialog}
         onVehicleUpdated={onVehicleUpdated}
         onVehicleDeleted={onVehicleDeleted}
-        onCreateQuote={!isVirtualStock ? onCreateQuote : undefined}
+        onCreateQuote={isVirtualStock ? undefined : onCreateQuote}
         onReserve={onReserve}
         isDealerStock={isDealerStock}
         isVirtualStock={isVirtualStock}
