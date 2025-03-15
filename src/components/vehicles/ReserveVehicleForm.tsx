@@ -15,6 +15,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { vehiclesApi } from '@/api/supabase';
 
 // Dynamic schema based on user type (admin or dealer)
 const createReservationSchema = (isAdmin: boolean) => {
@@ -55,7 +56,13 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
   const isAdmin = user?.type === 'admin';
   const dealerId = user?.dealerId || '';
   const dealerName = user?.dealerName || '';
-  const { handleVehicleUpdate } = useInventory();
+  
+  console.log("ReserveVehicleForm initialized with:", {
+    vehicle,
+    dealerId,
+    dealerName,
+    isAdmin
+  });
   
   // Get all accessories
   const { data: accessories = [] } = useQuery({
@@ -138,6 +145,8 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
 
   const onSubmit = async (data: ReservationFormValues) => {
     try {
+      console.log("Form submission data:", data);
+      
       // Determine dealer ID and name based on user role
       let selectedDealerId = '';
       let selectedDealerName = '';
@@ -153,16 +162,22 @@ const ReserveVehicleForm = ({ vehicle, onCancel, onReservationComplete }: Reserv
         selectedDealerName = dealerName;
       }
       
-      // Update vehicle status to reserved
-      const updatedVehicle: Vehicle = {
-        ...vehicle,
-        status: 'reserved',
-        reservedBy: selectedDealerName,
-        reservedAccessories: data.accessories || [],
-        reservationDestination: data.destination,
-      };
+      console.log("Reserving vehicle with dealer info:", {
+        selectedDealerId,
+        selectedDealerName,
+        accessories: data.accessories,
+        destination: data.destination
+      });
       
-      await handleVehicleUpdate(updatedVehicle);
+      // Using Supabase vehicles API to create the reservation
+      await vehiclesApi.reserve(
+        vehicle.id, 
+        selectedDealerId, 
+        selectedDealerName,
+        data.accessories,
+        undefined,
+        data.destination
+      );
       
       toast({
         title: "Veicolo Prenotato",

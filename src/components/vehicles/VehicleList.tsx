@@ -3,10 +3,7 @@ import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
 import VehicleDetailsDialog from './VehicleDetailsDialog';
-import VehicleEditDialog from './VehicleEditDialog';
-import VehicleDeleteDialog from './VehicleDeleteDialog';
-import { useToast } from '@/hooks/use-toast';
-import { AlertCircle } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -18,9 +15,9 @@ interface VehicleListProps {
   isVirtualStock?: boolean;
 }
 
-const VehicleList: React.FC<VehicleListProps> = ({ 
-  vehicles, 
-  onVehicleUpdated, 
+const VehicleList: React.FC<VehicleListProps> = ({
+  vehicles,
+  onVehicleUpdated,
   onVehicleDeleted,
   onCreateQuote,
   onReserve,
@@ -28,114 +25,93 @@ const VehicleList: React.FC<VehicleListProps> = ({
   isVirtualStock = false
 }) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   
-  const handleCardClick = (vehicle: Vehicle) => {
+  // Effetto per aprire il dialogo se viene passato un vehicleId nella navigazione
+  React.useEffect(() => {
+    const state = location.state as any;
+    console.log("VehicleList location state:", state);
+    
+    if (state && state.vehicleId) {
+      const vehicle = vehicles.find(v => v.id === state.vehicleId);
+      if (vehicle) {
+        setSelectedVehicle(vehicle);
+        setIsDialogOpen(true);
+        
+        // Clear navigation state after opening dialog
+        if (!state.keepState) {
+          navigate(location.pathname, { replace: true });
+        }
+      }
+    }
+  }, [location, vehicles, navigate]);
+  
+  const handleVehicleClick = (vehicle: Vehicle) => {
+    console.log("Clicked on vehicle:", vehicle);
     setSelectedVehicle(vehicle);
-    setShowDetailsDialog(true);
+    setIsDialogOpen(true);
   };
   
-  const handleEdit = (vehicle: Vehicle) => {
+  const handleVehicleEdit = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
-    setShowEditDialog(true);
+    setIsDialogOpen(true);
   };
   
-  const handleDelete = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    setShowDeleteDialog(true);
-  };
-  
-  const handleDuplicate = (vehicle: Vehicle) => {
-    // This will be handled by the VehicleDetailsDialog
-    setSelectedVehicle(vehicle);
-    setShowDetailsDialog(true);
-  };
-
-  const handleCreateQuote = (vehicle: Vehicle) => {
-    if (onCreateQuote) {
-      onCreateQuote(vehicle);
+  const handleVehicleDelete = async (vehicle: Vehicle) => {
+    try {
+      await onVehicleDeleted(vehicle.id);
+    } catch (error) {
+      console.error('Error handling vehicle delete:', error);
     }
   };
-
+  
+  const handleVehicleDuplicate = (vehicle: Vehicle) => {
+    console.log('Duplicating vehicle from list:', vehicle.id);
+  };
+  
+  // Aggiungiamo logging al comportamento di prenotazione
   const handleReserve = (vehicle: Vehicle) => {
+    console.log("Reserve requested for vehicle:", vehicle.id, vehicle.location);
     if (onReserve) {
       onReserve(vehicle);
     }
   };
   
-  if (vehicles.length === 0) {
-    return (
-      <div className="text-center py-10 text-gray-500">
-        <AlertCircle className="mx-auto h-12 w-12 mb-4 text-gray-400" />
-        <p>Nessun veicolo trovato con i filtri selezionati.</p>
-      </div>
-    );
-  }
-  
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {vehicles.map(vehicle => (
-          <VehicleCard
-            key={vehicle.id}
-            vehicle={vehicle}
-            onClick={handleCardClick}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-            onCreateQuote={isVirtualStock ? undefined : onCreateQuote ? handleCreateQuote : undefined}
-            onReserve={onReserve ? handleReserve : undefined}
-          />
-        ))}
-      </div>
+      {vehicles.length === 0 ? (
+        <div className="text-center py-10 bg-gray-50 rounded-lg">
+          <p className="text-gray-500">Nessun veicolo trovato.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {vehicles.map((vehicle) => (
+            <VehicleCard
+              key={vehicle.id}
+              vehicle={vehicle}
+              onClick={handleVehicleClick}
+              onEdit={handleVehicleEdit}
+              onDelete={handleVehicleDelete}
+              onDuplicate={handleVehicleDuplicate}
+              onCreateQuote={onCreateQuote}
+              onReserve={handleReserve}
+            />
+          ))}
+        </div>
+      )}
       
       <VehicleDetailsDialog
         vehicle={selectedVehicle}
-        open={showDetailsDialog}
-        onOpenChange={setShowDetailsDialog}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         onVehicleUpdated={onVehicleUpdated}
         onVehicleDeleted={onVehicleDeleted}
-        onCreateQuote={isVirtualStock ? undefined : onCreateQuote}
-        onReserve={onReserve}
+        onCreateQuote={onCreateQuote}
+        onReserve={handleReserve}
         isDealerStock={isDealerStock}
         isVirtualStock={isVirtualStock}
-      />
-      
-      <VehicleEditDialog
-        vehicle={selectedVehicle}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onComplete={() => onVehicleUpdated()}
-        onCancel={() => setShowEditDialog(false)}
-      />
-      
-      <VehicleDeleteDialog
-        vehicle={selectedVehicle}
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={async () => {
-          if (selectedVehicle) {
-            try {
-              await onVehicleDeleted(selectedVehicle.id);
-              toast({
-                title: "Veicolo eliminato",
-                description: "Il veicolo è stato eliminato con successo dall'inventario.",
-              });
-            } catch (error) {
-              toast({
-                title: "Errore",
-                description: "Si è verificato un errore durante l'eliminazione del veicolo.",
-                variant: "destructive",
-              });
-            } finally {
-              setSelectedVehicle(null);
-              setShowDeleteDialog(false);
-            }
-          }
-        }}
       />
     </div>
   );

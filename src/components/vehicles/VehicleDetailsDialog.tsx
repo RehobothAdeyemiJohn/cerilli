@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
 import VehicleDialogHeader from './details/VehicleDialogHeader';
@@ -10,6 +9,7 @@ import VehicleDeleteDialog from './VehicleDeleteDialog';
 import { useToast } from '@/hooks/use-toast';
 import { vehiclesApi } from '@/api/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -38,6 +38,7 @@ const VehicleDetailsDialog = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const location = useLocation();
   
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -46,6 +47,23 @@ const VehicleDetailsDialog = ({
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+
+  useEffect(() => {
+    if (vehicle && open && location.state) {
+      console.log('Checking location state for reserve intent:', location.state);
+      const { reserveVehicle, vehicleId, openDialog } = location.state as any;
+      
+      if (reserveVehicle && vehicleId === vehicle.id && openDialog) {
+        console.log('Should open reservation form for:', vehicle);
+        
+        if (vehicle.location === 'Stock Virtuale') {
+          setShowVirtualReserveForm(true);
+        } else {
+          setShowReserveForm(true);
+        }
+      }
+    }
+  }, [vehicle, open, location.state]);
   
   const handleDuplicateVehicle = async (vehicleId: string) => {
     if (!vehicle) return;
@@ -172,13 +190,15 @@ const VehicleDetailsDialog = ({
   };
   const handleReserveAction = () => {
     if (vehicle) {
+      console.log("Reserve action for vehicle:", vehicle, "isVirtual:", isVirtualStock);
       if (vehicle.location === 'Stock Virtuale') {
         setShowVirtualReserveForm(true);
       } else if (onReserve) {
-        console.log("Reserving vehicle:", vehicle);
+        console.log("Calling external onReserve for vehicle:", vehicle);
         onReserve(vehicle);
         onOpenChange(false);
       } else {
+        console.log("Showing standard reserve form for Stock CMC");
         setShowReserveForm(true);
       }
     }

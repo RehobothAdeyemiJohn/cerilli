@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -196,7 +197,10 @@ const VehicleCard = ({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCreateQuote(vehicle);
+                  if (onCreateQuote) {
+                    console.log("Create quote button clicked for:", vehicle.id);
+                    onCreateQuote(vehicle);
+                  }
                 }}
                 className="flex items-center gap-1"
               >
@@ -210,7 +214,10 @@ const VehicleCard = ({
                 variant="secondary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onReserve(vehicle);
+                  if (onReserve) {
+                    console.log("Reserve button clicked for:", vehicle.id, vehicle.location);
+                    onReserve(vehicle);
+                  }
                 }}
                 className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
               >
