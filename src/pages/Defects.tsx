@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -116,15 +117,25 @@ const Defects = () => {
     setFormDialogOpen(false);
     setDetailsDialogOpen(false);
     setDeleteDialogOpen(false);
+    setSelectedDefectId(null);
     
     // Force refetch to update the UI with the latest data
-    refetch().then(() => {
-      toast({
-        title: "Operazione completata",
-        description: "I dati sono stati aggiornati con successo.",
+    setTimeout(() => {
+      refetch().then(() => {
+        toast({
+          title: "Operazione completata",
+          description: "I dati sono stati aggiornati con successo.",
+        });
+        console.log("Data refetched successfully");
+      }).catch(err => {
+        console.error("Error refetching data:", err);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante l'aggiornamento dei dati.",
+          variant: "destructive",
+        });
       });
-      console.log("Data refetched successfully");
-    });
+    }, 500);
   }, [refetch, toast]);
 
   const handleError = useCallback((error: any) => {

@@ -123,7 +123,6 @@ const DefectFormDialog = ({
     if (defect) {
       console.log("Loading defect data into form:", defect);
       
-      // Process dates properly
       const vehicleReceiptDate = defect.vehicleReceiptDate ? 
         (typeof defect.vehicleReceiptDate === 'string' ? 
           new Date(defect.vehicleReceiptDate) : defect.vehicleReceiptDate) : 
@@ -397,11 +396,13 @@ const DefectFormDialog = ({
       setUploadStatus('Salvataggio della segnalazione...');
       
       const formattedVehicleReceiptDate = values.vehicleReceiptDate instanceof Date
-        ? format(values.vehicleReceiptDate, 'yyyy-MM-dd')
-        : values.vehicleReceiptDate;
+        ? values.vehicleReceiptDate.toISOString().split('T')[0]
+        : typeof values.vehicleReceiptDate === 'string'
+          ? values.vehicleReceiptDate
+          : null;
 
       const formattedPaymentDate = values.paymentDate instanceof Date
-        ? format(values.paymentDate, 'yyyy-MM-dd')
+        ? values.paymentDate.toISOString().split('T')[0]
         : values.paymentDate;
       
       const submissionData = {

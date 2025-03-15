@@ -171,42 +171,27 @@ export const defectReportsApi = {
         return await this.getById(id);
       }
       
-      // Debug what's happening during the update
-      console.log(`Executing update query for report ${id} with payload:`, JSON.stringify(payload, null, 2));
-      
-      // First try the update operation
-      const { error: updateError } = await supabase
+      // Execute the update operation
+      const { data, error } = await supabase
         .from('defect_reports')
         .update(payload)
-        .eq('id', id);
-
-      if (updateError) {
-        console.error(`Error updating defect report with id ${id}:`, updateError);
-        console.error('Error details:', updateError.details, updateError.message, updateError.hint);
-        throw updateError;
-      }
-
-      console.log("Update operation succeeded, fetching updated record");
-      
-      // After successful update, fetch the updated record
-      const { data: updatedData, error: fetchError } = await supabase
-        .from('defect_reports')
-        .select('*')
         .eq('id', id)
+        .select('*')
         .single();
 
-      if (fetchError) {
-        console.error(`Error fetching updated defect report with id ${id}:`, fetchError);
-        throw fetchError;
+      if (error) {
+        console.error(`Error updating defect report with id ${id}:`, error);
+        console.error('Error details:', error.details, error.message, error.hint);
+        throw error;
       }
 
-      if (!updatedData) {
-        console.error(`No data returned when fetching updated report with id ${id}`);
+      if (!data) {
+        console.error(`No data returned when updating report with id ${id}`);
         throw new Error('Could not retrieve updated record');
       }
 
-      console.log("Successfully retrieved updated defect report:", updatedData);
-      return mapDefectReport(updatedData);
+      console.log("Successfully updated defect report:", data);
+      return mapDefectReport(data);
     } catch (error) {
       console.error('Error in defect report update:', error);
       throw error;
