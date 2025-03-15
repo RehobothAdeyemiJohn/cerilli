@@ -116,6 +116,42 @@
   @apply hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
 }
 
+/* Collapsible section styles */
+.app-sidebar [data-state="open"] > [data-collapsible-trigger] {
+  @apply bg-sidebar-accent bg-opacity-30;
+}
+
+.app-sidebar [data-collapsible-content] [data-collapsible-content] {
+  animation: none;
+}
+
+.app-sidebar [data-collapsible-content] {
+  overflow: hidden;
+  animation: collapsibleOpenAnimation 200ms ease-out;
+}
+
+.app-sidebar [data-collapsible-content][data-state="closed"] {
+  animation: collapsibleCloseAnimation 200ms ease-in;
+}
+
+@keyframes collapsibleOpenAnimation {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes collapsibleCloseAnimation {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
 /* Print styles */
 @media print {
   body * {
