@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
@@ -211,7 +210,9 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </Card>
       )}
       
-      {/* Admin action buttons */}
+      {/* Main action buttons - moved to the top */}
+      
+      {/* Admin action buttons - kept at the bottom */}
       {(onEdit || onDelete || onClose) && (
         <div className="flex justify-end gap-2 mt-4">
           {onEdit && (
