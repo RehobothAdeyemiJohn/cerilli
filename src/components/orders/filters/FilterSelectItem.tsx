@@ -30,13 +30,15 @@ const FilterSelectItem = ({
           onChange(selectedValue === "all" ? null : selectedValue);
         }}
       >
-        <SelectTrigger className="w-full border-gray-300 bg-white">
+        <SelectTrigger className="w-full border border-gray-300 bg-white">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white z-50 shadow-lg border border-gray-200">
           <SelectItem value="all">Tutti</SelectItem>
           {options.map(option => (
-            <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>
+            <SelectItem key={option.id} value={option.id} className="hover:bg-gray-100">
+              {option.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

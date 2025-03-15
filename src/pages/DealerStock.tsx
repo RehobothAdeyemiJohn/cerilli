@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +14,6 @@ import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
 import { filterVehicles } from '@/utils/vehicleFilters';
 import FilterCard from '@/components/orders/filters/FilterCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FilterSelectItem from '@/components/orders/filters/FilterSelectItem';
 
 const DealerStock = () => {
@@ -26,7 +24,6 @@ const DealerStock = () => {
   const [activeFilters, setActiveFilters] = useState<Filter | null>(null);
   const [selectedDealer, setSelectedDealer] = useState<string | null>(null);
   
-  // Fetch all vehicles from Supabase
   const { 
     data: vehicles = [], 
     isLoading, 
@@ -38,7 +35,6 @@ const DealerStock = () => {
     staleTime: 0,
   });
   
-  // Fetch all dealers for filtering
   const {
     data: dealers = [],
     isLoading: loadingDealers
@@ -48,19 +44,14 @@ const DealerStock = () => {
     staleTime: 0,
   });
   
-  // Debug the state of selectedDealer
   useEffect(() => {
     console.log("Selected dealer state changed:", selectedDealer);
   }, [selectedDealer]);
   
-  // Filter vehicles with location "Stock Dealer" AND filter by selected dealer if needed
   const dealerStockVehicles = vehicles.filter(v => {
-    // First filter by location
     if (v.location !== 'Stock Dealer') return false;
     
-    // If user is admin, show all dealer stock vehicles
     if (user?.type === 'admin') {
-      // If a dealer filter is active, only show for that dealer
       if (selectedDealer) {
         const dealer = dealers.find(d => d.id === selectedDealer);
         return dealer && v.reservedBy === dealer.companyName;
@@ -68,7 +59,6 @@ const DealerStock = () => {
       return true;
     }
     
-    // If user is dealer or vendor, only show vehicles reserved by this dealer
     return v.reservedBy === user?.dealerName;
   });
 
@@ -101,7 +91,6 @@ const DealerStock = () => {
     setActiveFilters(filters);
   };
   
-  // Clear all filters including dealer filter
   const handleClearAllFilters = () => {
     setActiveFilters(null);
     setSelectedDealer(null);
@@ -110,7 +99,6 @@ const DealerStock = () => {
   const handleVehicleUpdated = () => refetch();
   const handleVehicleDeleted = async () => { await refetch(); return Promise.resolve(); };
   
-  // Format dealer filter options
   const dealerFilterOptions = dealers
     .filter(dealer => dealer.isActive)
     .sort((a, b) => a.companyName.localeCompare(b.companyName))
@@ -119,7 +107,6 @@ const DealerStock = () => {
       name: dealer.companyName
     }));
   
-  // For admin users, add a dealer quick filter dropdown
   const DealerFilter = () => {
     if (!user || user.type !== 'admin' || dealers.length === 0) return null;
     
