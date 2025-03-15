@@ -41,10 +41,10 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
           {dealers.map((dealer) => {
             const creditLimit = dealer.creditLimit || 0;
             const esposizione = dealer.esposizione || 0;
-            const nuovoPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : creditLimit - esposizione;
+            const nuovoPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : creditLimit;
             
-            // Calcolo della percentuale utilizzata
-            const usedPercentage = creditLimit > 0 ? Math.min(100, Math.round((esposizione / creditLimit) * 100)) : 0;
+            // Calcolo della percentuale disponibile (non utilizzata)
+            const availablePercentage = creditLimit > 0 ? Math.min(100, Math.round(((creditLimit - esposizione) / creditLimit) * 100)) : 0;
             
             return (
               <div key={dealer.id} className="space-y-1">
@@ -54,10 +54,10 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
                     {formatCurrency(nuovoPlafond)} / {formatCurrency(creditLimit)}
                   </span>
                 </div>
-                <Progress value={usedPercentage} className="h-2" />
+                <Progress value={availablePercentage} className="h-2" />
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Esposizione: {formatCurrency(esposizione)}</span>
-                  <span>{100 - usedPercentage}% disponibile</span>
+                  <span>{availablePercentage}% disponibile</span>
                 </div>
               </div>
             );

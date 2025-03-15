@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/api/supabase/client';
 
 export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
   const [dealerPlafond, setDealerPlafond] = useState<number>(0);
@@ -34,7 +33,10 @@ export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
     if (dealer) {
       setDealerId(dealer.id);
       setDealerPlafond(dealer.creditLimit || 0);
-      setNuovoPlafond(dealer.nuovoPlafond || 0);
+      
+      // Set nuovo plafond from the dealer record directly
+      const nuovoPlafondValue = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : (dealer.creditLimit || 0) - (dealer.esposizione || 0);
+      setNuovoPlafond(nuovoPlafondValue);
       
       // Calculate total value of vehicles in "Stock Dealer" that belong to this dealer
       const dealerVehicles = vehicles.filter(vehicle => 
@@ -60,6 +62,8 @@ export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
       
       if (dealerVehicles.length > 0) {
         setAverageDays(Math.round(totalDays / dealerVehicles.length));
+      } else {
+        setAverageDays(0);
       }
       
       const totalValue = dealerVehicles.reduce((sum, vehicle) => 

@@ -15,11 +15,10 @@ const DealerStockValueCard: React.FC<DealerStockValueCardProps> = ({
 }) => {
   const { dealerPlafond, stockValue, nuovoPlafond, isLoading } = useDealerStockValue(dealerName);
   
-  const remainingCredit = nuovoPlafond || 0;
   const usedPercentage = dealerPlafond > 0 ? Math.min(100, (stockValue / dealerPlafond) * 100) : 0;
   
   const getStatusColor = () => {
-    if (remainingCredit <= 50000) return 'text-red-600';
+    if (nuovoPlafond <= 50000) return 'text-red-600';
     if (usedPercentage >= 70) return 'text-orange-500';
     return 'text-green-600';
   };
@@ -60,11 +59,11 @@ const DealerStockValueCard: React.FC<DealerStockValueCardProps> = ({
           <div>
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Plafond Disponibile</h3>
             <p className={`text-2xl font-bold ${getStatusColor()}`}>
-              {formatCurrency(remainingCredit)}
+              {formatCurrency(nuovoPlafond)}
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2 dark:bg-gray-700">
               <div 
-                className={`h-2.5 rounded-full ${remainingCredit <= 50000 ? 'bg-red-600' : usedPercentage >= 70 ? 'bg-orange-500' : 'bg-green-600'}`} 
+                className={`h-2.5 rounded-full ${nuovoPlafond <= 50000 ? 'bg-red-600' : usedPercentage >= 70 ? 'bg-orange-500' : 'bg-green-600'}`} 
                 style={{ width: `${usedPercentage}%` }}
               ></div>
             </div>
