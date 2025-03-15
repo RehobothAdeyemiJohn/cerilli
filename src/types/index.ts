@@ -8,19 +8,19 @@ export type Vehicle = {
   price: number;
   location: string;
   imageUrl?: string;
-  customImageUrl?: string; // New field for custom vehicle image
+  customImageUrl?: string;
   status: 'available' | 'reserved' | 'sold' | 'ordered' | 'delivered';
   dateAdded: string;
   transmission?: string;
   telaio: string;
-  previousChassis?: string; // New field for RIF (previous chassis) in virtual stock
-  originalStock?: 'Cina' | 'Germania'; // Strictly define allowed values
+  previousChassis?: string;
+  originalStock?: 'Cina' | 'Germania';
   year?: string;
   reservedBy?: string;
   reservedAccessories?: string[];
   reservationDestination?: string;
-  reservationTimestamp?: string; // Timestamp when reservation was made
-  estimatedArrivalDays?: number; // New field for fixed estimated arrival days
+  reservationTimestamp?: string;
+  estimatedArrivalDays?: number;
   virtualConfig?: {
     trim: string;
     fuelType: string;
@@ -29,6 +29,7 @@ export type Vehicle = {
     accessories: string[];
     price: number;
   };
+  _action?: string;
 };
 
 export type User = {
@@ -63,12 +64,12 @@ export type Quote = {
   accessories?: string[];
   accessoryPrice?: number;
   notes?: string;
-  manualEntry?: boolean; // Added the manualEntry property
-  licensePlateBonus?: number; // New field for Premio Targa
-  tradeInBonus?: number; // New field for Premio Permuta
-  safetyKit?: number; // New field for Kit Sicurezza
-  tradeInHandlingFee?: number; // New field for Gestione Usato
-  roadPreparationFee?: number; // Made this explicit in the type
+  manualEntry?: boolean;
+  licensePlateBonus?: number;
+  tradeInBonus?: number;
+  safetyKit?: number;
+  tradeInHandlingFee?: number;
+  roadPreparationFee?: number;
 };
 
 export type Order = {
@@ -81,8 +82,8 @@ export type Order = {
   orderDate: string;
   deliveryDate?: string;
   vehicle?: Vehicle;
-  dealer?: any; // Using any temporarily as we don't have a complete Dealer type defined
-  details?: OrderDetails; // New field for order administrative details
+  dealer?: any;
+  details?: OrderDetails;
 };
 
 export type OrderDetails = {
@@ -104,7 +105,7 @@ export type OrderDetails = {
   odlGenerated: boolean;
   createdAt: string;
   updatedAt: string;
-  notes?: string; // Add notes field to OrderDetails
+  notes?: string;
 };
 
 export type Filter = {
@@ -116,7 +117,7 @@ export type Filter = {
   priceRange: [number, number];
   status: string[];
   searchText?: string;
-  dealers?: string[]; // Added dealers property to Filter type
+  dealers?: string[];
 };
 
 export type Stat = {
@@ -144,7 +145,7 @@ export type Dealer = {
   password: string;
   contactName: string;
   logo?: string;
-  creditLimit?: number; // Added the creditLimit property
+  creditLimit?: number;
 };
 
 export type Vendor = {
@@ -161,46 +162,46 @@ export interface VehicleModel {
   id: string;
   name: string;
   basePrice: number;
-  imageUrl?: string; // Add this property
+  imageUrl?: string;
 }
 
 export type VehicleTrim = {
   id: string;
   name: string;
   basePrice: number;
-  compatibleModels: string[]; // Array of model IDs, empty means all models
-};
+  compatibleModels: string[];
+}
 
 export type FuelType = {
   id: string;
   name: string;
   priceAdjustment: number;
-  compatibleModels: string[]; // Array of model IDs, empty means all models
-};
+  compatibleModels: string[];
+}
 
 export type ExteriorColor = {
   id: string;
   name: string;
   type: string;
   priceAdjustment: number;
-  compatibleModels: string[]; // Array of model IDs, empty means all models
-};
+  compatibleModels: string[];
+}
 
 export type Transmission = {
   id: string;
   name: string;
   priceAdjustment: number;
-  compatibleModels: string[]; // Array of model IDs, empty means all models
-};
+  compatibleModels: string[];
+}
 
 export type Accessory = {
   id: string;
   name: string;
   priceWithVAT: number;
   priceWithoutVAT: number;
-  compatibleModels: string[]; // Array of model IDs, empty means all models
-  compatibleTrims: string[]; // Array of trim IDs, empty means all trims
-};
+  compatibleModels: string[];
+  compatibleTrims: string[];
+}
 
 export type DefectReport = {
   id: string;
@@ -223,11 +224,11 @@ export type DefectReport = {
   updatedAt: string;
   adminNotes?: string;
   paymentDate?: string;
-};
+}
 
 export type DefectReportStats = {
   openReports: number;
   closedReports: number;
   approvedReports: number;
   totalPaid: number;
-};
+}

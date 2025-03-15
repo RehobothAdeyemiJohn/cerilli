@@ -110,11 +110,20 @@ export const vehiclesApi = {
   duplicate: async (id: string): Promise<Vehicle> => {
     const vehicle = await vehiclesApi.getById(id);
     
+    // Extract all properties except the ID
     const { id: _, ...vehicleWithoutId } = vehicle;
     
+    // Create a new vehicle based on the current one
     return vehiclesApi.create({
       ...vehicleWithoutId,
       dateAdded: new Date().toISOString().split('T')[0],
+      // If it's a reserved vehicle, make the duplicate available
+      status: 'available',
+      reservedBy: undefined,
+      reservationTimestamp: undefined,
+      reservedAccessories: [],
+      virtualConfig: undefined,
+      reservationDestination: undefined
     });
   },
   

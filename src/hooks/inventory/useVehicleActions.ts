@@ -56,9 +56,13 @@ export const useVehicleActions = () => {
   };
   
   const handleVehicleDuplicate = async (vehicleId: string) => {
+    console.log('useVehicleActions: Duplicating vehicle with ID:', vehicleId);
     setIsDuplicating(true);
+    
     try {
-      await vehiclesApi.duplicate(vehicleId);
+      const duplicatedVehicle = await vehiclesApi.duplicate(vehicleId);
+      
+      console.log('Vehicle successfully duplicated:', duplicatedVehicle);
       
       toast({
         title: "Veicolo duplicato",
@@ -66,6 +70,7 @@ export const useVehicleActions = () => {
       });
       
       setIsDuplicating(false);
+      return duplicatedVehicle;
     } catch (error) {
       console.error('Errore durante la duplicazione del veicolo:', error);
       

@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
+import { Grid } from '@/components/ui/grid';
+import VehicleDeleteDialog from './VehicleDeleteDialog';
 import VehicleDetailsDialog from './VehicleDetailsDialog';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -11,132 +14,127 @@ interface VehicleListProps {
   onVehicleDeleted: (id: string) => Promise<void>;
   onCreateQuote?: (vehicle: Vehicle) => void;
   onReserve?: (vehicle: Vehicle) => void;
-  isDealerStock?: boolean;
   isVirtualStock?: boolean;
 }
 
-const VehicleList: React.FC<VehicleListProps> = ({
+const VehicleList = ({ 
   vehicles,
   onVehicleUpdated,
   onVehicleDeleted,
   onCreateQuote,
   onReserve,
-  isDealerStock = false,
   isVirtualStock = false
-}) => {
+}: VehicleListProps) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [shouldReserve, setShouldReserve] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  // Effect to open the dialog if a vehicleId is passed in navigation
-  useEffect(() => {
-    const state = location.state as any;
-    console.log("VehicleList location state:", state);
-    
-    if (state) {
-      if (state.vehicleId) {
-        const vehicle = vehicles.find(v => v.id === state.vehicleId);
-        console.log("Found vehicle for ID:", state.vehicleId, vehicle);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+  const queryClient = useQueryClient();
+
+  const showDetails = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setIsDetailsOpen(true);
+  };
+
+  const hideDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedVehicle(null);
+  };
+
+  const showDeleteDialog = (vehicle: Vehicle) => {
+    setVehicleToDelete(vehicle);
+  };
+
+  const hideDeleteDialog = () => {
+    setVehicleToDelete(null);
+  };
+
+  const handleVehicleDeleted = async () => {
+    if (vehicleToDelete) {
+      try {
+        console.log("VehicleList: Initiating vehicle deletion for ID:", vehicleToDelete.id);
+        await onVehicleDeleted(vehicleToDelete.id);
         
-        if (vehicle) {
-          setSelectedVehicle(vehicle);
-          setIsDialogOpen(true);
-          
-          // Check if we should automatically open the reserve form
-          if (state.reserveVehicle) {
-            console.log("Should reserve vehicle after dialog opens:", vehicle.id);
-            setShouldReserve(true);
-          }
-          
-          // Clear navigation state after opening dialog
-          if (!state.keepState) {
-            navigate(location.pathname, { replace: true });
-          }
-        } else {
-          console.log("Vehicle not found for ID:", state.vehicleId);
+        // Close any open dialogs
+        hideDeleteDialog();
+        
+        if (selectedVehicle && selectedVehicle.id === vehicleToDelete.id) {
+          hideDetails();
         }
+        
+        // Invalidate queries to refresh the data
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        
+        toast({
+          title: "Veicolo eliminato",
+          description: "Il veicolo è stato eliminato con successo.",
+        });
+      } catch (error) {
+        console.error("VehicleList: Error deleting vehicle:", error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante l'eliminazione del veicolo.",
+          variant: "destructive",
+        });
       }
     }
-  }, [location, vehicles, navigate]);
-  
-  const handleVehicleClick = (vehicle: Vehicle) => {
-    console.log("Clicked on vehicle:", vehicle);
-    setSelectedVehicle(vehicle);
-    setShouldReserve(false);
-    setIsDialogOpen(true);
   };
-  
-  const handleVehicleEdit = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    setShouldReserve(false);
-    setIsDialogOpen(true);
-  };
-  
-  const handleVehicleDelete = async (vehicle: Vehicle) => {
-    try {
-      await onVehicleDeleted(vehicle.id);
-    } catch (error) {
-      console.error('Error handling vehicle delete:', error);
-    }
-  };
-  
-  const handleVehicleDuplicate = (vehicle: Vehicle) => {
-    console.log('Duplicating vehicle from list:', vehicle.id);
-  };
-  
-  // Add logging to reserve handler
-  const handleReserve = (vehicle: Vehicle) => {
-    console.log("Reserve requested for vehicle:", vehicle.id, vehicle.location);
-    if (onReserve) {
-      onReserve(vehicle);
-    }
-  };
-  
-  // Handle dialog closed
-  const handleDialogOpenChange = (open: boolean) => {
-    setIsDialogOpen(open);
-    if (!open) {
-      setShouldReserve(false);
-    }
-  };
-  
+
   return (
-    <div>
+    <div className="mb-8">
       {vehicles.length === 0 ? (
-        <div className="text-center py-10 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Nessun veicolo trovato.</p>
+        <div className="text-center p-8 bg-gray-50 rounded-lg">
+          <p className="text-gray-500">Nessun veicolo trovato con i filtri selezionati.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
+        <Grid columns={[1, 2, 3, 4]} gap={4}>
+          {vehicles.map(vehicle => (
+            <VehicleCard 
+              key={vehicle.id} 
               vehicle={vehicle}
-              onClick={handleVehicleClick}
-              onEdit={handleVehicleEdit}
-              onDelete={handleVehicleDelete}
-              onDuplicate={handleVehicleDuplicate}
+              onClick={showDetails}
+              onEdit={() => showDetails(vehicle)}
+              onDelete={(v) => showDeleteDialog(v)}
+              onDuplicate={(v) => {
+                console.log("Duplicate button clicked for vehicle:", v.id);
+                // We just open details dialog with a duplicate flag
+                setSelectedVehicle({...v, _action: 'duplicate'});
+                setIsDetailsOpen(true);
+              }}
               onCreateQuote={onCreateQuote}
-              onReserve={handleReserve}
+              onReserve={onReserve}
             />
           ))}
-        </div>
+        </Grid>
       )}
-      
-      <VehicleDetailsDialog
-        vehicle={selectedVehicle}
-        open={isDialogOpen}
-        onOpenChange={handleDialogOpenChange}
-        onVehicleUpdated={onVehicleUpdated}
-        onVehicleDeleted={onVehicleDeleted}
-        onCreateQuote={onCreateQuote}
-        onReserve={handleReserve}
-        isDealerStock={isDealerStock}
-        isVirtualStock={isVirtualStock}
-        shouldReserve={shouldReserve}
-      />
+
+      {selectedVehicle && (
+        <VehicleDetailsDialog 
+          open={isDetailsOpen}
+          onOpenChange={setIsDetailsOpen}
+          vehicle={selectedVehicle}
+          onVehicleUpdated={onVehicleUpdated}
+          onVehicleDeleted={() => {
+            if (selectedVehicle) {
+              showDeleteDialog(selectedVehicle);
+            }
+          }}
+          onCreateQuote={onCreateQuote}
+          onReserve={onReserve}
+          isVirtualStock={isVirtualStock}
+          requestedAction={selectedVehicle._action}
+        />
+      )}
+
+      {vehicleToDelete && (
+        <VehicleDeleteDialog 
+          vehicle={vehicleToDelete}
+          open={!!vehicleToDelete}
+          onOpenChange={(open) => {
+            if (!open) hideDeleteDialog();
+          }}
+          onConfirm={handleVehicleDeleted}
+        />
+      )}
     </div>
   );
 };
