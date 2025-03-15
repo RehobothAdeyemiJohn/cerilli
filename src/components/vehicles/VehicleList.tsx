@@ -115,14 +115,16 @@ const VehicleList = ({
           onOpenChange={setIsDetailsOpen}
           vehicle={selectedVehicle}
           onVehicleUpdated={onVehicleUpdated}
-          onVehicleDeleted={() => {
+          onVehicleDeleted={(id: string) => {
             if (selectedVehicle) {
               showDeleteDialog(selectedVehicle);
             }
+            return Promise.resolve();
           }}
           onCreateQuote={onCreateQuote}
           onReserve={onReserve}
           isVirtualStock={isVirtualStock}
+          isDealerStock={isDealerStock}
           requestedAction={selectedVehicle._action}
         />
       )}
