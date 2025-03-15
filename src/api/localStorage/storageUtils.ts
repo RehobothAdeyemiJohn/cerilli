@@ -1,4 +1,3 @@
-
 export const initLocalStorage = () => {
   if (typeof localStorage === 'undefined') {
     return;
@@ -31,9 +30,9 @@ export const KEYS = {
   COLORS: 'colors',
   TRANSMISSIONS: 'transmissions',
   ACCESSORIES: 'accessories',
+  DEALERS: 'dealers',
 };
 
-// Add the missing utility functions for getting and setting items in localStorage
 export const getStorageItem = <T>(key: string): T | null => {
   if (typeof localStorage === 'undefined') {
     return null;
