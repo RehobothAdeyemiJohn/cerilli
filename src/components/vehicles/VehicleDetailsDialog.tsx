@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -20,6 +21,7 @@ interface VehicleDetailsDialogProps {
   isDealerStock?: boolean;
   isVirtualStock?: boolean;
   shouldReserve?: boolean;
+  requestedAction?: string;
 }
 
 const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
