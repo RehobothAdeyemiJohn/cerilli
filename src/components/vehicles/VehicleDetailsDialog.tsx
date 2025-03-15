@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -35,16 +34,13 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   isVirtualStock = false,
   shouldReserve = false
 }) => {
-  // State for different dialog modes
   const [currentView, setCurrentView] = React.useState<'details' | 'edit' | 'reserve' | 'virtualReserve'>('details');
   const { user } = useAuth();
 
-  // Determine if the user is a dealer and can reserve vehicles
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const isAdmin = user?.type === 'admin';
   const canEdit = isAdmin;
   
-  // Effect to handle the shouldReserve prop
   React.useEffect(() => {
     if (open && vehicle && shouldReserve) {
       if (vehicle.location === 'Stock Virtuale') {
@@ -55,7 +51,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   }, [open, vehicle, shouldReserve]);
   
-  // Reset state when dialog closes
   React.useEffect(() => {
     if (!open) {
       setCurrentView('details');
@@ -103,20 +98,23 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
 
-  const handleTransformToOrder = () => {
+  const handleTransformToOrder = async () => {
     console.log("Transform to order button clicked for vehicle:", vehicle.id);
-    // In a real implementation, this would call an API
-    // For now let's just close the dialog and update the vehicle
-    onVehicleUpdated();
-    onOpenChange(false);
+    
+    try {
+      const { vehiclesApi } = await import('@/api/supabase');
+      await vehiclesApi.transformToOrder(vehicle.id);
+      console.log("Vehicle successfully transformed into an order:", vehicle.id);
+      onVehicleUpdated();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error transforming vehicle to order:", error);
+    }
   };
 
-  // Show buttons if the vehicle is available - for ALL users, not just dealers
   const showActionButtons = vehicle.status === 'available';
-  // Show transform to order button if the vehicle is reserved
   const showTransformOrderButton = vehicle.status === 'reserved';
   
-  // Dialog content based on current view
   const renderDialogContent = () => {
     switch(currentView) {
       case 'edit':
@@ -169,7 +167,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
               isVirtualStock={isVirtualStock}
             />
             
-            {/* Footer with action buttons */}
             <DialogFooter className="mt-4 pt-4 border-t">
               <div className="flex w-full gap-3 justify-end">
                 {showActionButtons && (
@@ -195,7 +192,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                   </>
                 )}
                 
-                {/* Transform to Order button for reserved vehicles */}
                 {showTransformOrderButton && (
                   <Button 
                     onClick={handleTransformToOrder}
