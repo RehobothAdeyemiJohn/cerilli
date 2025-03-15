@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import QuoteForm from '@/components/quotes/QuoteForm';
 import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
 import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
@@ -87,7 +87,9 @@ const Quotes = () => {
   useEffect(() => {
     if (location.state?.fromInventory) {
       const vehicleId = location.state.vehicleId;
+      console.log("Quote page received vehicleId from navigation:", vehicleId);
       if (vehicleId) {
+        console.log("Opening create quote dialog with vehicleId:", vehicleId);
         handleOpenCreateQuoteDialog(vehicleId);
       }
     }
@@ -149,6 +151,14 @@ const Quotes = () => {
             <DialogTitle>
               {isManualQuote ? 'Crea Nuovo Preventivo Manuale' : 'Crea Nuovo Preventivo'}
             </DialogTitle>
+            <DialogDescription>
+              {isManualQuote 
+                ? 'Compila il modulo per creare un preventivo manuale senza un veicolo selezionato'
+                : selectedVehicleId 
+                  ? 'Configura un preventivo per il veicolo selezionato'
+                  : 'Seleziona un veicolo e configura le opzioni per il preventivo'
+              }
+            </DialogDescription>
           </DialogHeader>
           
           <QuoteForm 

@@ -53,7 +53,10 @@ export const useQuotesData = () => {
   });
 
   const getVehicleById = (id: string) => {
-    return vehicles.find(vehicle => vehicle.id === id);
+    console.log("Searching for vehicle with ID:", id);
+    const vehicle = vehicles.find(vehicle => vehicle.id === id);
+    console.log("Found vehicle:", vehicle);
+    return vehicle;
   };
   
   const getDealerName = (id: string) => {

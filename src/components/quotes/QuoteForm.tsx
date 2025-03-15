@@ -77,6 +77,8 @@ const QuoteForm = ({
     );
   }
 
+  console.log("Rendering quote form for vehicle:", vehicle);
+
   return (
     <div className="w-full text-sm">
       {/* Form */}
