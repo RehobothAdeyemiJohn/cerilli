@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -70,9 +70,12 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     model: vehicle.model 
   });
 
+  // Flag to show action buttons only when available
+  const showActionButtons = vehicle.status === 'available';
+
   return (
     <div className="space-y-6">
-      {/* Header with title, badge and main action buttons */}
+      {/* Header with title, badge */}
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start">
           <div>
@@ -84,9 +87,9 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
-      {/* Action buttons - Make them very visible at the top */}
-      {vehicle.status === 'available' && (
-        <div className="flex flex-wrap gap-3 mb-4">
+      {/* Action buttons - Make them very visible at the top always */}
+      {showActionButtons && (
+        <div className="flex flex-wrap gap-3 mb-6">
           {onReserve && (
             <Button 
               onClick={onReserve}

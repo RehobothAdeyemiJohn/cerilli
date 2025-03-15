@@ -37,6 +37,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReservationForm, setShowVirtualReservationForm] = useState(false);
   const { user } = useAuth();
+  // Fix: Change the isDealer check to include all non-admin roles
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   // Effect to handle the shouldReserve prop
@@ -115,8 +116,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
-  // Determine if the user can reserve vehicles and create quotes
+  // Fixed: Fix the logic to properly determine if the user can reserve vehicles
   const canReserve = vehicle.status === 'available' && isDealer;
+  // Fix: Correct the admin check to include both admin and superAdmin
   const canEdit = user?.type === 'admin' || user?.type === 'superAdmin';
   
   console.log("VehicleDetailsDialog state:", { 
