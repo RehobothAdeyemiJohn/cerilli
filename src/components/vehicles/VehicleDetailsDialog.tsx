@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
-import VehicleDetails from './VehicleDetails';
-import VehicleEditForm from './form/VehicleEditForm';
+import { useAuth } from '@/context/AuthContext';
+import VehicleDetailsContent from './details/VehicleDetailsContent';
+import EditVehicleForm from './EditVehicleForm';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
-import { useAuth } from '@/context/AuthContext';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -122,7 +122,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         {showEditForm ? (
-          <VehicleEditForm 
+          <EditVehicleForm 
             vehicle={vehicle}
             onComplete={() => {
               onVehicleUpdated();
@@ -144,7 +144,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             onCancel={() => setShowVirtualReservationForm(false)}
           />
         ) : (
-          <VehicleDetails 
+          <VehicleDetailsContent 
             vehicle={vehicle} 
             onEdit={canEdit ? handleEditClick : undefined}
             onDelete={canEdit ? handleDeleteClick : undefined}
