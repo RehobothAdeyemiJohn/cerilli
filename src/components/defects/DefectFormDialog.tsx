@@ -111,6 +111,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         dealerName: values.dealerName || user?.dealerName || '', // Ensure dealerName is always provided
         status: values.status, // Ensure status is always provided
         reason: values.reason, // Ensure reason is always provided
+        description: values.description, // Ensure description is always provided
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
         paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
       };
