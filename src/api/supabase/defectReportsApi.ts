@@ -2,6 +2,32 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
+// Helper function to convert snake_case DB response to camelCase for our app
+const mapDefectReport = (dbReport: any): DefectReport => {
+  return {
+    id: dbReport.id,
+    caseNumber: dbReport.case_number,
+    dealerId: dbReport.dealer_id,
+    dealerName: dbReport.dealer_name,
+    vehicleId: dbReport.vehicle_id,
+    email: dbReport.email || '',
+    status: dbReport.status,
+    reason: dbReport.reason,
+    description: dbReport.description,
+    vehicleReceiptDate: dbReport.vehicle_receipt_date,
+    repairCost: dbReport.repair_cost || 0,
+    approvedRepairValue: dbReport.approved_repair_value || 0,
+    sparePartsRequest: dbReport.spare_parts_request || '',
+    transportDocumentUrl: dbReport.transport_document_url || '',
+    photoReportUrls: dbReport.photo_report_urls || [],
+    repairQuoteUrl: dbReport.repair_quote_url || '',
+    adminNotes: dbReport.admin_notes || '',
+    paymentDate: dbReport.payment_date || null,
+    createdAt: dbReport.created_at,
+    updatedAt: dbReport.updated_at
+  };
+};
+
 export const defectReportsApi = {
   async getAll() {
     console.log('Fetching all defect reports');
@@ -16,7 +42,7 @@ export const defectReportsApi = {
       throw error;
     }
 
-    return data as DefectReport[];
+    return data.map(mapDefectReport);
   },
 
   async getById(id: string) {
@@ -33,7 +59,7 @@ export const defectReportsApi = {
       throw error;
     }
 
-    return data as DefectReport;
+    return mapDefectReport(data);
   },
 
   async getByDealerId(dealerId: string) {
@@ -50,13 +76,13 @@ export const defectReportsApi = {
       throw error;
     }
 
-    return data as DefectReport[];
+    return data.map(mapDefectReport);
   },
 
   async create(report: Omit<DefectReport, 'id' | 'caseNumber' | 'createdAt' | 'updatedAt'>) {
     console.log("Creating defect report with data:", report);
     
-    // Make sure we have all required fields and they are in the correct format
+    // Convert from camelCase to snake_case for the database
     const payload = {
       dealer_id: report.dealerId,
       dealer_name: report.dealerName,
@@ -78,7 +104,7 @@ export const defectReportsApi = {
     console.log("Submitting payload to Supabase:", payload);
     
     try {
-      // The buckets are now created and configured with open permissions
+      // The buckets are already created and configured with open permissions
       // We can proceed directly to inserting the record
       
       const { data, error } = await supabase
@@ -94,7 +120,7 @@ export const defectReportsApi = {
       }
 
       console.log("Created defect report:", data);
-      return data as DefectReport;
+      return mapDefectReport(data);
     } catch (error) {
       console.error('Error in defect report creation:', error);
       throw error;
@@ -104,7 +130,7 @@ export const defectReportsApi = {
   async update(id: string, report: Partial<DefectReport>) {
     console.log("Updating defect report with id:", id, "and data:", report);
     
-    // Format all fields correctly for the database
+    // Format all fields correctly for the database (camelCase to snake_case)
     const payload: Record<string, any> = {};
     
     if (report.dealerId !== undefined) payload.dealer_id = report.dealerId;
@@ -141,7 +167,7 @@ export const defectReportsApi = {
       }
 
       console.log("Updated defect report:", data);
-      return data as DefectReport;
+      return mapDefectReport(data);
     } catch (error) {
       console.error('Error in defect report update:', error);
       throw error;
