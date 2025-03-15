@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -203,6 +202,22 @@ export const useOrdersData = (filters: {
     refetchOrdersWithDetails();
   };
 
+  // This ensures order numbers are based on all orders collectively,
+  // so they're always progressive and never reset
+  const getOrderNumber = (order: Order, allOrders: Order[]): string => {
+    if (!order || !order.id) return "#000";
+    
+    // Sort all orders by date, regardless of current filter or status
+    const sortedOrders = [...allOrders].sort((a, b) => {
+      const dateA = new Date(a.orderDate || 0).getTime();
+      const dateB = new Date(b.orderDate || 0).getTime();
+      return dateA - dateB;
+    });
+    
+    const index = sortedOrders.findIndex(o => o.id === order.id);
+    return `#${(index + 1).toString().padStart(3, '0')}`;
+  };
+
   return {
     ordersData,
     ordersWithDetails,
@@ -216,6 +231,7 @@ export const useOrdersData = (filters: {
     isDetailsDialogOpen,
     setIsDetailsDialogOpen,
     refetchOrders,
-    refetchOrdersWithDetails
+    refetchOrdersWithDetails,
+    getOrderNumber
   };
 };

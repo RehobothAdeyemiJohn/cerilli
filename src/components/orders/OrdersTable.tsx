@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Order } from '@/types';
 import {
@@ -82,13 +81,9 @@ const OrdersTable = ({
   };
 
   const getCreditColorClass = (creditLimit: number) => {
-    if (creditLimit >= 60000) return 'text-green-600';
-    if (creditLimit >= 40000) return 'text-yellow-600';
-    if (creditLimit < 10000) return 'text-red-600';
-    return 'text-red-600';
+    return 'text-green-600';
   };
 
-  // Log delivered vehicles to debug plafond calculation
   React.useEffect(() => {
     orders.forEach((order) => {
       if (order.status === 'delivered' && order.vehicle) {
@@ -213,15 +208,13 @@ const OrdersTable = ({
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.dealer && order.dealer.credit_limit !== undefined ? (
-                            <span className={getCreditColorClass(order.dealer.credit_limit)}>
-                              {new Intl.NumberFormat('it-IT', {
-                                style: 'currency',
-                                currency: 'EUR',
-                                maximumFractionDigits: 0,
-                              }).format(order.dealer.credit_limit)}
-                            </span>
-                          ) : 'N/A'}
+                          <span className="text-green-600">
+                            {new Intl.NumberFormat('it-IT', {
+                              style: 'currency',
+                              currency: 'EUR',
+                              maximumFractionDigits: 0,
+                            }).format(300000)}
+                          </span>
                         </TableCell>
                       </>
                     )}
@@ -250,15 +243,13 @@ const OrdersTable = ({
                           )}
                         </TableCell>
                         <TableCell>
-                          {order.dealer && order.dealer.credit_limit !== undefined ? (
-                            <span className={getCreditColorClass(order.dealer.credit_limit)}>
-                              {new Intl.NumberFormat('it-IT', {
-                                style: 'currency',
-                                currency: 'EUR',
-                                maximumFractionDigits: 0,
-                              }).format(order.dealer.credit_limit)}
-                            </span>
-                          ) : 'N/A'}
+                          <span className="text-green-600">
+                            {new Intl.NumberFormat('it-IT', {
+                              style: 'currency',
+                              currency: 'EUR',
+                              maximumFractionDigits: 0,
+                            }).format(300000)}
+                          </span>
                         </TableCell>
                       </>
                     )}

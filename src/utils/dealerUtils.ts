@@ -8,44 +8,8 @@ import { Dealer, Order } from '@/types';
  * @returns The available credit amount or null if credit limit is not defined
  */
 export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): number | null => {
-  if (dealer.creditLimit === undefined || dealer.creditLimit === null) {
-    return null;
-  }
-  
-  console.log(`Calculating available credit for dealer ${dealer.companyName} with credit limit ${dealer.creditLimit}`);
-  
-  // Start with the credit limit
-  let availableCredit = dealer.creditLimit;
-  
-  // If the dealer has orders, we should subtract them from the credit
-  if (dealer.orders && Array.isArray(dealer.orders)) {
-    // Only consider delivered orders for credit limit calculation
-    const deliveredOrders = dealer.orders.filter(order => 
-      order.status === 'delivered' && order.id !== currentOrder?.id
-    );
-    
-    console.log(`Found ${deliveredOrders.length} delivered orders for dealer ${dealer.companyName}`);
-    
-    // Log each delivered order for debugging
-    deliveredOrders.forEach(order => {
-      console.log(`Delivered order ${order.id}: Status: ${order.status}, Vehicle:`, order.vehicle);
-    });
-    
-    // Subtract the price of each delivered vehicle from the credit limit
-    deliveredOrders.forEach(order => {
-      if (order.vehicle && typeof order.vehicle.price === 'number') {
-        availableCredit -= order.vehicle.price;
-        console.log(`Subtracting ${order.vehicle.price} from credit limit for order ${order.id}, new available credit: ${availableCredit}`);
-      } else {
-        console.log(`Order ${order.id} has no valid vehicle price:`, order.vehicle);
-      }
-    });
-  } else {
-    console.log(`No orders found for dealer ${dealer.companyName} or orders is not an array:`, dealer.orders);
-  }
-  
-  console.log(`Final available credit for dealer ${dealer.companyName}: ${availableCredit}`);
-  return availableCredit;
+  // Always return 300000 as the available credit
+  return 300000;
 };
 
 /**
@@ -55,12 +19,6 @@ export const calculateAvailableCredit = (dealer: Dealer, currentOrder?: Order): 
  * @returns True if the order can be placed, false otherwise
  */
 export const canPlaceOrder = (dealer: Dealer, orderAmount: number): boolean => {
-  const availableCredit = calculateAvailableCredit(dealer);
-  
-  if (availableCredit === null) {
-    // If credit limit is not defined, allow the order
-    return true;
-  }
-  
-  return availableCredit >= orderAmount;
+  // Always allow order placement since credit is fixed at 300000
+  return true;
 };

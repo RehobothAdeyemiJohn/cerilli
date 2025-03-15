@@ -89,7 +89,8 @@ const Orders = () => {
   const getOrderNumber = (order: Order) => {
     if (!order || !order.id) return "#000";
     
-    // Sort orders by date (oldest first)
+    // Changed: Sort all orders by date, regardless of status
+    // This ensures order numbers are progressive and never reset
     const sortedOrders = [...ordersData].sort((a, b) => {
       const dateA = new Date(a.orderDate || 0).getTime();
       const dateB = new Date(b.orderDate || 0).getTime();
