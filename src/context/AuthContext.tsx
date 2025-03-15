@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextProps extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -114,13 +115,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     navigate('/');
   };
+
+  // Determine if user is admin
+  const isAdmin = authState.user?.type === 'admin' || authState.user?.role === 'admin' || authState.user?.role === 'superAdmin';
   
   return (
     <AuthContext.Provider
       value={{
         ...authState,
         login,
-        logout
+        logout,
+        isAdmin
       }}
     >
       {children}

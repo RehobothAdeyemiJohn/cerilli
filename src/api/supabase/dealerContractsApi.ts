@@ -3,6 +3,74 @@ import { DealerContract } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to map database fields to our frontend types
+const mapDealerDbToFrontend = (dealer: any) => {
+  if (!dealer) return null;
+  return {
+    id: dealer.id,
+    companyName: dealer.companyname,
+    address: dealer.address,
+    city: dealer.city,
+    province: dealer.province,
+    zipCode: dealer.zipcode,
+    email: dealer.email,
+    password: dealer.password,
+    contactName: dealer.contactname,
+    createdAt: dealer.created_at,
+    isActive: dealer.isactive,
+    logo: dealer.logo,
+    creditLimit: dealer.credit_limit,
+    esposizione: dealer.esposizione,
+    nuovoPlafond: dealer.nuovo_plafond
+  };
+};
+
+// Helper function to map database vehicle to frontend type
+const mapVehicleDbToFrontend = (vehicle: any) => {
+  if (!vehicle) return null;
+  return {
+    id: vehicle.id,
+    model: vehicle.model,
+    trim: vehicle.trim,
+    fuelType: vehicle.fueltype,
+    exteriorColor: vehicle.exteriorcolor,
+    accessories: vehicle.accessories || [],
+    price: vehicle.price,
+    location: vehicle.location,
+    imageUrl: vehicle.imageurl,
+    customImageUrl: vehicle.custom_image_url,
+    status: vehicle.status,
+    dateAdded: vehicle.dateadded,
+    transmission: vehicle.transmission,
+    telaio: vehicle.telaio,
+    previousChassis: vehicle.previous_chassis,
+    originalStock: vehicle.original_stock,
+    year: vehicle.year,
+    reservedBy: vehicle.reservedby,
+    reservedAccessories: vehicle.reservedaccessories,
+    reservationDestination: vehicle.reservation_destination,
+    reservationTimestamp: vehicle.reservation_timestamp,
+    estimatedArrivalDays: vehicle.estimated_arrival_days,
+    virtualConfig: vehicle.virtualconfig
+  };
+};
+
+// Helper function to map database contract to frontend type
+const mapContractDbToFrontend = (contract: any): DealerContract => {
+  return {
+    id: contract.id,
+    dealerId: contract.dealer_id,
+    carId: contract.car_id,
+    contractDate: contract.contract_date,
+    contractDetails: contract.contract_details,
+    status: contract.status,
+    createdAt: contract.created_at,
+    updatedAt: contract.updated_at,
+    dealer: contract.dealers ? mapDealerDbToFrontend(contract.dealers) : undefined,
+    vehicle: contract.vehicles ? mapVehicleDbToFrontend(contract.vehicles) : undefined
+  };
+};
+
 export const dealerContractsApi = {
   getAll: async (): Promise<DealerContract[]> => {
     console.log("Fetching all dealer contracts from Supabase");
@@ -29,22 +97,11 @@ export const dealerContractsApi = {
       throw error;
     }
 
-    // Formatta la risposta per rispettare l'interfaccia DealerContract
-    const formattedContracts = data.map(contract => ({
-      id: contract.id,
-      dealerId: contract.dealer_id,
-      carId: contract.car_id,
-      contractDate: contract.contract_date,
-      contractDetails: contract.contract_details,
-      status: contract.status,
-      createdAt: contract.created_at,
-      updatedAt: contract.updated_at,
-      dealer: contract.dealers,
-      vehicle: contract.vehicles
-    }));
+    // Map database response to frontend types
+    const formattedContracts = data.map(mapContractDbToFrontend);
 
     console.log("Dealer contracts fetched successfully:", formattedContracts);
-    return formattedContracts as DealerContract[];
+    return formattedContracts;
   },
 
   getById: async (id: string): Promise<DealerContract> => {
@@ -60,21 +117,7 @@ export const dealerContractsApi = {
       throw error || new Error('Dealer contract not found');
     }
 
-    // Formatta la risposta per rispettare l'interfaccia DealerContract
-    const formattedContract = {
-      id: data.id,
-      dealerId: data.dealer_id,
-      carId: data.car_id,
-      contractDate: data.contract_date,
-      contractDetails: data.contract_details,
-      status: data.status,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      dealer: data.dealers,
-      vehicle: data.vehicles
-    };
-
-    return formattedContract as DealerContract;
+    return mapContractDbToFrontend(data);
   },
 
   create: async (contract: Omit<DealerContract, 'id' | 'createdAt' | 'updatedAt'>): Promise<DealerContract> => {
@@ -104,21 +147,7 @@ export const dealerContractsApi = {
     
     console.log("Dealer contract created successfully:", data);
     
-    // Formatta la risposta per rispettare l'interfaccia DealerContract
-    const formattedContract = {
-      id: data.id,
-      dealerId: data.dealer_id,
-      carId: data.car_id,
-      contractDate: data.contract_date,
-      contractDetails: data.contract_details,
-      status: data.status,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      dealer: data.dealers,
-      vehicle: data.vehicles
-    };
-
-    return formattedContract as DealerContract;
+    return mapContractDbToFrontend(data);
   },
 
   update: async (id: string, updates: Partial<DealerContract>): Promise<DealerContract> => {
@@ -152,21 +181,7 @@ export const dealerContractsApi = {
       throw error || new Error('Dealer contract not found');
     }
     
-    // Formatta la risposta per rispettare l'interfaccia DealerContract
-    const formattedContract = {
-      id: data.id,
-      dealerId: data.dealer_id,
-      carId: data.car_id,
-      contractDate: data.contract_date,
-      contractDetails: data.contract_details,
-      status: data.status,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      dealer: data.dealers,
-      vehicle: data.vehicles
-    };
-
-    return formattedContract as DealerContract;
+    return mapContractDbToFrontend(data);
   },
 
   delete: async (id: string): Promise<void> => {
@@ -232,20 +247,6 @@ export const dealerContractsApi = {
       // Non blocchiamo l'operazione se l'aggiornamento fallisce, ma logghiamo l'errore
     }
     
-    // Formatta la risposta
-    const formattedContract = {
-      id: data.id,
-      dealerId: data.dealer_id,
-      carId: data.car_id,
-      contractDate: data.contract_date,
-      contractDetails: data.contract_details,
-      status: data.status,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      dealer: data.dealers,
-      vehicle: data.vehicles
-    };
-    
-    return formattedContract as DealerContract;
+    return mapContractDbToFrontend(data);
   }
 };

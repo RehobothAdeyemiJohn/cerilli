@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,11 +31,11 @@ const queryClient = new QueryClient({
 });
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser } = useAuth();
-  if (!currentUser) {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" />;
   }
-  return children;
+  return <>{children}</>;
 };
 
 function App() {
@@ -47,26 +48,25 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/quotes" element={<Quotes />} />
-                <Route path="/dealers" element={<Dealers />} />
-                <Route path="/contracts" element={<Contracts />} /> {/* Aggiungi la nuova rotta */}
-                <Route path="/credentials" element={<Credentials />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/dealer-stock" element={<DealerStock />} />
-                <Route path="/deliveries" element={<Deliveries />} />
-                <Route path="/defects" element={<Defects />} />
-                <Route path="/migration" element={<Migration />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+              <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+              <Route path="/dealers" element={<ProtectedRoute><Dealers /></ProtectedRoute>} />
+              <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+              <Route path="/credentials" element={<ProtectedRoute><Credentials /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/dealer-stock" element={<ProtectedRoute><DealerStock /></ProtectedRoute>} />
+              <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
+              <Route path="/defects" element={<ProtectedRoute><Defects /></ProtectedRoute>} />
+              <Route path="/migration" element={<ProtectedRoute><Migration /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
           <Toaster />
         </ThemeProvider>
       </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

@@ -2,6 +2,77 @@
 import { Order } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to map database dealer to frontend type
+const mapDealerDbToFrontend = (dealer: any) => {
+  if (!dealer) return null;
+  return {
+    id: dealer.id,
+    companyName: dealer.companyname,
+    address: dealer.address,
+    city: dealer.city,
+    province: dealer.province,
+    zipCode: dealer.zipcode,
+    email: dealer.email,
+    password: dealer.password,
+    contactName: dealer.contactname,
+    createdAt: dealer.created_at,
+    isActive: dealer.isactive,
+    logo: dealer.logo,
+    creditLimit: dealer.credit_limit,
+    esposizione: dealer.esposizione,
+    nuovoPlafond: dealer.nuovo_plafond
+  };
+};
+
+// Helper function to map database vehicle to frontend type
+const mapVehicleDbToFrontend = (vehicle: any) => {
+  if (!vehicle) return null;
+  return {
+    id: vehicle.id,
+    model: vehicle.model,
+    trim: vehicle.trim,
+    fuelType: vehicle.fueltype,
+    exteriorColor: vehicle.exteriorcolor,
+    accessories: vehicle.accessories || [],
+    price: vehicle.price,
+    location: vehicle.location,
+    imageUrl: vehicle.imageurl,
+    customImageUrl: vehicle.custom_image_url,
+    status: vehicle.status,
+    dateAdded: vehicle.dateadded,
+    transmission: vehicle.transmission,
+    telaio: vehicle.telaio,
+    previousChassis: vehicle.previous_chassis,
+    originalStock: vehicle.original_stock,
+    year: vehicle.year,
+    reservedBy: vehicle.reservedby,
+    reservedAccessories: vehicle.reservedaccessories,
+    reservationDestination: vehicle.reservation_destination,
+    reservationTimestamp: vehicle.reservation_timestamp,
+    estimatedArrivalDays: vehicle.estimated_arrival_days,
+    virtualConfig: vehicle.virtualconfig
+  };
+};
+
+// Helper function to map database order to frontend type
+const mapOrderDbToFrontend = (order: any): Order => {
+  return {
+    id: order.id,
+    vehicleId: order.vehicleid,
+    dealerId: order.dealerid,
+    customerName: order.customername,
+    status: order.status,
+    orderDate: order.orderdate,
+    deliveryDate: order.deliverydate,
+    progressiveNumber: order.progressive_number,
+    price: order.price,
+    contractId: order.contract_id,
+    // Include related data
+    vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : undefined,
+    dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : undefined
+  };
+};
+
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
@@ -28,25 +99,11 @@ export const ordersApi = {
       throw error;
     }
 
-    // Format response to match expected Order interface
-    const formattedOrders = data.map(order => ({
-      id: order.id,
-      vehicleId: order.vehicleid,
-      dealerId: order.dealerid,
-      customerName: order.customername,
-      status: order.status,
-      orderDate: order.orderdate,
-      deliveryDate: order.deliverydate,
-      progressiveNumber: order.progressive_number,
-      price: order.price,
-      contractId: order.contract_id,
-      // Include related data
-      vehicle: order.vehicles,
-      dealer: order.dealers
-    }));
+    // Map database response to frontend types
+    const formattedOrders = data.map(mapOrderDbToFrontend);
 
     console.log("Orders fetched successfully:", formattedOrders);
-    return formattedOrders as Order[];
+    return formattedOrders;
   },
 
   getById: async (id: string): Promise<Order> => {
@@ -62,24 +119,7 @@ export const ordersApi = {
       throw error || new Error('Order not found');
     }
 
-    // Format response to match expected Order interface
-    const formattedOrder = {
-      id: data.id,
-      vehicleId: data.vehicleid,
-      dealerId: data.dealerid,
-      customerName: data.customername,
-      status: data.status,
-      orderDate: data.orderdate,
-      deliveryDate: data.deliverydate,
-      progressiveNumber: data.progressive_number,
-      price: data.price,
-      contractId: data.contract_id,
-      // Include related data
-      vehicle: data.vehicles,
-      dealer: data.dealers
-    };
-
-    return formattedOrder as Order;
+    return mapOrderDbToFrontend(data);
   },
 
   create: async (order: Omit<Order, 'id'>): Promise<Order> => {
@@ -112,24 +152,7 @@ export const ordersApi = {
     
     console.log("Order created successfully:", data);
     
-    // Format response to match expected Order interface
-    const formattedOrder = {
-      id: data.id,
-      vehicleId: data.vehicleid,
-      dealerId: data.dealerid,
-      customerName: data.customername,
-      status: data.status,
-      orderDate: data.orderdate,
-      deliveryDate: data.deliverydate,
-      progressiveNumber: data.progressive_number,
-      price: data.price,
-      contractId: data.contract_id,
-      // Include related data
-      vehicle: data.vehicles,
-      dealer: data.dealers
-    };
-
-    return formattedOrder as Order;
+    return mapOrderDbToFrontend(data);
   },
 
   update: async (id: string, updates: Partial<Order>): Promise<Order> => {
@@ -166,24 +189,7 @@ export const ordersApi = {
       throw error || new Error('Order not found');
     }
     
-    // Format response to match expected Order interface
-    const formattedOrder = {
-      id: data.id,
-      vehicleId: data.vehicleid,
-      dealerId: data.dealerid,
-      customerName: data.customername,
-      status: data.status,
-      orderDate: data.orderdate,
-      deliveryDate: data.deliverydate,
-      progressiveNumber: data.progressive_number,
-      price: data.price, 
-      contractId: data.contract_id,
-      // Include related data
-      vehicle: data.vehicles,
-      dealer: data.dealers
-    };
-
-    return formattedOrder as Order;
+    return mapOrderDbToFrontend(data);
   },
 
   delete: async (id: string): Promise<void> => {

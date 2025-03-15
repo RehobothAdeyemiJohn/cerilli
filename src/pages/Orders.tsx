@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
 import { useOrderFilters } from '@/hooks/useOrderFilters';
@@ -7,8 +8,8 @@ import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import OrdersHeader from '@/components/orders/OrdersHeader';
 import OrdersTable from '@/components/orders/OrdersTable';
 import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Order } from '@/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Order, OrderDetails } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,14 +18,13 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { toast } from '@/hooks/use-toast';
 import { useReactToPrint } from 'react-to-print';
 import OrderPrintTemplate from '@/components/orders/OrderPrintTemplate';
-import { useRef } from 'react';
 import ContractFormDialog from '@/components/contracts/ContractFormDialog';
+import { Navigate } from 'react-router-dom';
 
 const Orders = () => {
   const { isAdmin } = useAuth();
@@ -51,7 +51,7 @@ const Orders = () => {
     deleteOrderMutation,
     handleMarkAsDelivered,
     handleCancelOrder,
-    handleDeleteOrder,
+    handleDeleteOrder: deleteOrderAction,
     handleGenerateODL
   } = useOrdersActions(refreshAllOrderData);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
@@ -101,7 +101,11 @@ const Orders = () => {
 
   const handlePrint = useCallback(async (order: Order) => {
     setSelectedOrder(order);
-    triggerPrint();
+    setTimeout(() => {
+      if (printRef.current) {
+        triggerPrint();
+      }
+    }, 100);
   }, []);
 
   const handleOpenDetailsDialog = (order: Order) => {
@@ -109,33 +113,24 @@ const Orders = () => {
     setIsDetailsDialogOpen(true);
   };
 
-  const filteredOrders = (status?: string) => {
-    let filtered = ordersWithDetails;
-
-    if (status && status !== 'all') {
-      filtered = filtered.filter(o => o.status === status);
-    }
-
-    return filtered;
-  };
-
   const handleDeleteClick = (orderId: string) => {
     setOrderToDelete(orderId);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteOrder = () => {
+  const confirmDeleteOrder = () => {
     if (orderToDelete) {
-      handleDeleteOrder(orderToDelete);
+      deleteOrderAction(orderToDelete);
       setIsDeleteDialogOpen(false);
       setOrderToDelete(null);
     }
   };
 
-  const componentRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
   const triggerPrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: `Order-${selectedOrder?.id}`,
+    documentTitle: selectedOrder ? `Order-${selectedOrder.id}` : 'Order',
+    onAfterPrint: () => console.log('Print completed'),
+    removeAfterPrint: true,
   });
 
   return (
@@ -146,9 +141,10 @@ const Orders = () => {
 
       <div className="container mx-auto py-6">
         <OrdersHeader 
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          resetFilters={resetFilters}
+          searchText={filters.searchText || ''}
+          onSearch={(text) => handleFilterChange('searchText', text)}
+          onDateFilterChange={(dates) => handleFilterChange('dateRange', dates)}
+          onReset={resetFilters}
         />
 
         <Tabs defaultValue="processing" className="mt-6">
@@ -178,9 +174,9 @@ const Orders = () => {
               onMarkAsDelivered={handleMarkAsDelivered}
               onCancelOrder={handleCancelOrder}
               onDeleteClick={handleDeleteClick}
-              onDeleteConfirm={handleDeleteOrder}
+              onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract} // Passa la funzione per creare contratti
+              onCreateContract={handleCreateContract} 
               tabName="processing"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -203,9 +199,9 @@ const Orders = () => {
               onMarkAsDelivered={handleMarkAsDelivered}
               onCancelOrder={handleCancelOrder}
               onDeleteClick={handleDeleteClick}
-              onDeleteConfirm={handleDeleteOrder}
+              onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract} // Passa la funzione per creare contratti
+              onCreateContract={handleCreateContract}
               tabName="delivered"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -228,9 +224,9 @@ const Orders = () => {
               onMarkAsDelivered={handleMarkAsDelivered}
               onCancelOrder={handleCancelOrder}
               onDeleteClick={handleDeleteClick}
-              onDeleteConfirm={handleDeleteOrder}
+              onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract} // Passa la funzione per creare contratti
+              onCreateContract={handleCreateContract}
               tabName="cancelled"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -253,9 +249,9 @@ const Orders = () => {
               onMarkAsDelivered={handleMarkAsDelivered}
               onCancelOrder={handleCancelOrder}
               onDeleteClick={handleDeleteClick}
-              onDeleteConfirm={handleDeleteOrder}
+              onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract} // Passa la funzione per creare contratti
+              onCreateContract={handleCreateContract}
               tabName="all"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -269,8 +265,8 @@ const Orders = () => {
         </Tabs>
 
         <OrderDetailsDialog
-          isOpen={isDetailsDialogOpen}
-          onClose={() => setIsDetailsDialogOpen(false)}
+          open={isDetailsDialogOpen}
+          onOpenChange={setIsDetailsDialogOpen}
           order={selectedOrder}
           onGenerateODL={handleGenerateODL}
         />
@@ -285,7 +281,7 @@ const Orders = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Annulla</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteOrder} disabled={deleteOrderMutation.isPending}>
+              <AlertDialogAction onClick={() => confirmDeleteOrder()} disabled={deleteOrderMutation.isPending}>
                 {deleteOrderMutation.isPending ? 'Eliminazione...' : 'Elimina'}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -294,11 +290,10 @@ const Orders = () => {
 
         {selectedOrder && (
           <div style={{ display: "none" }}>
-            <OrderPrintTemplate ref={componentRef} order={selectedOrder} getOrderNumber={getOrderNumber} />
+            <OrderPrintTemplate ref={printRef} order={selectedOrder} getOrderNumber={getOrderNumber} />
           </div>
         )}
 
-        {/* Aggiungi il dialog per la creazione del contratto */}
         <ContractFormDialog
           isOpen={isContractFormOpen}
           onClose={() => setIsContractFormOpen(false)}
