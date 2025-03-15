@@ -130,7 +130,11 @@ const Defects = () => {
   const handleSuccess = useCallback(() => {
     console.log("Defect operation successful, refetching data...");
     refetch();
-  }, [refetch]);
+    toast({
+      title: "Operazione completata",
+      description: "I dati sono stati aggiornati con successo.",
+    });
+  }, [refetch, toast]);
 
   const selectedDefect = selectedDefectId
     ? defectReports.find(d => d.id === selectedDefectId)

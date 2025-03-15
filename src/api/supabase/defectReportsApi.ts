@@ -71,20 +71,37 @@ export const defectReportsApi = {
     
     console.log("Submitting payload to Supabase:", payload);
     
-    const { data, error } = await supabase
-      .from('defect_reports')
-      .insert([payload])
-      .select()
-      .single();
+    try {
+      // Make sure the user is authenticated before submitting
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      
+      if (authError) {
+        console.error('Authentication error:', authError);
+        throw new Error('Authentication error: ' + authError.message);
+      }
+      
+      if (!authData.session) {
+        throw new Error('User not authenticated');
+      }
+      
+      const { data, error } = await supabase
+        .from('defect_reports')
+        .insert([payload])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error creating defect report:', error);
-      console.error('Error details:', error.details, error.message, error.hint);
+      if (error) {
+        console.error('Error creating defect report:', error);
+        console.error('Error details:', error.details, error.message, error.hint);
+        throw error;
+      }
+
+      console.log("Created defect report:", data);
+      return data as DefectReport;
+    } catch (error) {
+      console.error('Error in defect report creation:', error);
       throw error;
     }
-
-    console.log("Created defect report:", data);
-    return data as DefectReport;
   },
 
   async update(id: string, report: Partial<DefectReport>) {
@@ -112,21 +129,38 @@ export const defectReportsApi = {
     
     console.log("Submitting update payload to Supabase:", payload);
     
-    const { data, error } = await supabase
-      .from('defect_reports')
-      .update(payload)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      // Make sure the user is authenticated before submitting
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      
+      if (authError) {
+        console.error('Authentication error:', authError);
+        throw new Error('Authentication error: ' + authError.message);
+      }
+      
+      if (!authData.session) {
+        throw new Error('User not authenticated');
+      }
+      
+      const { data, error } = await supabase
+        .from('defect_reports')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error(`Error updating defect report with id ${id}:`, error);
-      console.error('Error details:', error.details, error.message, error.hint);
+      if (error) {
+        console.error(`Error updating defect report with id ${id}:`, error);
+        console.error('Error details:', error.details, error.message, error.hint);
+        throw error;
+      }
+
+      console.log("Updated defect report:", data);
+      return data as DefectReport;
+    } catch (error) {
+      console.error('Error in defect report update:', error);
       throw error;
     }
-
-    console.log("Updated defect report:", data);
-    return data as DefectReport;
   },
 
   async delete(id: string) {
