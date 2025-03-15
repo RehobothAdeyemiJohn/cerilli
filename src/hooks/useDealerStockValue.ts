@@ -3,13 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/api/supabase/client';
 
 export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
   const [dealerPlafond, setDealerPlafond] = useState<number>(0);
   const [stockValue, setStockValue] = useState<number>(0);
+  const [nuovoPlafond, setNuovoPlafond] = useState<number>(0);
   const [dealerId, setDealerId] = useState<string | null>(null);
+  const [stockCount, setStockCount] = useState<number>(0);
+  const [averageDays, setAverageDays] = useState<number>(0);
 
-  // Fetch all dealers to find CMC
+  // Fetch all dealers to find the requested dealer
   const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
@@ -30,12 +34,33 @@ export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
     if (dealer) {
       setDealerId(dealer.id);
       setDealerPlafond(dealer.creditLimit || 0);
+      setNuovoPlafond(dealer.nuovoPlafond || 0);
       
       // Calculate total value of vehicles in "Stock Dealer" that belong to this dealer
       const dealerVehicles = vehicles.filter(vehicle => 
         vehicle.location === 'Stock Dealer' && 
         vehicle.reservedBy === dealer.companyName
       );
+      
+      // Calculate stock count
+      setStockCount(dealerVehicles.length);
+      
+      // Calculate average days in stock
+      const now = new Date();
+      let totalDays = 0;
+      
+      dealerVehicles.forEach(vehicle => {
+        if (vehicle.dateAdded) {
+          const dateAdded = new Date(vehicle.dateAdded);
+          const diffTime = Math.abs(now.getTime() - dateAdded.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          totalDays += diffDays;
+        }
+      });
+      
+      if (dealerVehicles.length > 0) {
+        setAverageDays(Math.round(totalDays / dealerVehicles.length));
+      }
       
       const totalValue = dealerVehicles.reduce((sum, vehicle) => 
         sum + (vehicle.price || 0), 0
@@ -50,6 +75,9 @@ export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
     dealerPlafond,
     stockValue,
     dealerId,
+    nuovoPlafond,
+    stockCount,
+    averageDays,
     isLoading: isLoadingDealers || isLoadingVehicles
   };
 };

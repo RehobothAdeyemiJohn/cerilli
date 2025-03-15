@@ -28,7 +28,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const AppSidebar = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const location = useLocation();
   
   // State for tracking open/closed collapsible sections
@@ -122,16 +122,14 @@ const AppSidebar = () => {
                       </SidebarMenuItem>
 
                       {/* Dealer Contracts Link - Only visible to admins */}
-                      {isAdmin && (
-                        <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={location.pathname === '/contracts'}>
-                            <NavLink to="/contracts">
-                              <FileText className="w-5 h-5" />
-                              <span>Contratti Dealer</span>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )}
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === '/contracts'}>
+                          <NavLink to="/contracts">
+                            <FileText className="w-5 h-5" />
+                            <span>Contratti Dealer</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     </SidebarMenu>
                   </CollapsibleContent>
                 </Collapsible>
@@ -151,58 +149,54 @@ const AppSidebar = () => {
                   <CollapsibleContent className="pl-8">
                     <SidebarMenu>
                       {/* Defects Link - renamed to Difformità Consegna */}
-                      {isAdmin && (
-                        <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={location.pathname === '/defects'}>
-                            <NavLink to="/defects">
-                              <AlertTriangle className="w-5 h-5" />
-                              <span>Difformità Consegna</span>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )}
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === '/defects'}>
+                          <NavLink to="/defects">
+                            <AlertTriangle className="w-5 h-5" />
+                            <span>Difformità Consegna</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
 
                       {/* Deliveries Link - renamed from Trasporti to Consegne */}
-                      {isAdmin && (
-                        <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={location.pathname === '/deliveries'}>
-                            <NavLink to="/deliveries">
-                              <Truck className="w-5 h-5" />
-                              <span>Consegne</span>
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )}
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={location.pathname === '/deliveries'}>
+                          <NavLink to="/deliveries">
+                            <Truck className="w-5 h-5" />
+                            <span>Consegne</span>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     </SidebarMenu>
                   </CollapsibleContent>
                 </Collapsible>
               </SidebarMenuItem>
 
-              {/* Settings Group Collapsible */}
-              <SidebarMenuItem>
-                <Collapsible open={openSections.settings} onOpenChange={() => toggleSection('settings')}>
-                  <CollapsibleTrigger className="flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                    <Settings className="w-5 h-5" />
-                    <span className="flex-1">Impostazioni</span>
-                    {openSections.settings ? 
-                      <ChevronDown className="w-4 h-4" /> : 
-                      <ChevronRight className="w-4 h-4" />
-                    }
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pl-8">
-                    <SidebarMenu>
-                      {/* Settings Link */}
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={location.pathname === '/settings'}>
-                          <NavLink to="/settings">
-                            <Settings className="w-5 h-5" />
-                            <span>Impostazioni</span>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+              {/* Settings Group Collapsible - Only visible to admins */}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <Collapsible open={openSections.settings} onOpenChange={() => toggleSection('settings')}>
+                    <CollapsibleTrigger className="flex items-center w-full gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                      <Settings className="w-5 h-5" />
+                      <span className="flex-1">Impostazioni</span>
+                      {openSections.settings ? 
+                        <ChevronDown className="w-4 h-4" /> : 
+                        <ChevronRight className="w-4 h-4" />
+                      }
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-8">
+                      <SidebarMenu>
+                        {/* Settings Link */}
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={location.pathname === '/settings'}>
+                            <NavLink to="/settings">
+                              <Settings className="w-5 h-5" />
+                              <span>Impostazioni</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
 
-                      {/* Credentials Link - Visible only to admins */}
-                      {isAdmin && (
+                        {/* Credentials Link - Visible only to admins */}
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={location.pathname === '/credentials'}>
                             <NavLink to="/credentials">
@@ -211,10 +205,8 @@ const AppSidebar = () => {
                             </NavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
-                      )}
 
-                      {/* Dealers Link - Visible only to admins */}
-                      {isAdmin && (
+                        {/* Dealers Link - Visible only to admins */}
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={location.pathname === '/dealers'}>
                             <NavLink to="/dealers">
@@ -223,11 +215,11 @@ const AppSidebar = () => {
                             </NavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
-                      )}
-                    </SidebarMenu>
-                  </CollapsibleContent>
-                </Collapsible>
-              </SidebarMenuItem>
+                      </SidebarMenu>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
