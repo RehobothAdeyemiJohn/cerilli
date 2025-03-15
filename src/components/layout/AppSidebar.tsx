@@ -2,8 +2,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
-import { Switch } from "@/components/ui/switch";
 import { 
   SidebarMenu,
   SidebarMenuItem,
@@ -13,8 +11,6 @@ import {
   SidebarGroupContent
 } from "@/components/ui/sidebar";
 import { 
-  Moon, 
-  Sun, 
   LayoutDashboard, 
   ShoppingCart, 
   FileText, 
@@ -28,7 +24,6 @@ import {
 
 const AppSidebar = () => {
   const { isAdmin } = useAuth();
-  const { theme, setTheme } = useTheme();
   const location = useLocation();
 
   return (
@@ -173,16 +168,6 @@ const AppSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      </div>
-
-      {/* Theme Toggle */}
-      <div className="mt-auto p-4 flex items-center gap-2">
-        <Sun className="h-4 w-4 text-yellow-500" />
-        <Switch
-          checked={theme === "dark"}
-          onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-        />
-        <Moon className="h-4 w-4 text-blue-300" />
       </div>
 
       {/* Version Info */}
