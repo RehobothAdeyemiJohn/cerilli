@@ -33,7 +33,11 @@ const FilterSelectItem = ({
         <SelectTrigger className="w-full border border-gray-300 bg-white">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="bg-white z-50 shadow-lg border border-gray-200">
+        <SelectContent 
+          className="bg-white z-[100] shadow-lg border border-gray-200 rounded-md overflow-hidden"
+          position="popper"
+          sideOffset={5}
+        >
           <SelectItem value="all">Tutti</SelectItem>
           {options.map(option => (
             <SelectItem key={option.id} value={option.id} className="hover:bg-gray-100">

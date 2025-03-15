@@ -5,7 +5,7 @@ import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { Vehicle, Filter, Dealer } from '@/types';
 import { Button } from '@/components/ui/button';
-import { FileText, Eye, Filter as FilterIcon } from 'lucide-react';
+import { FileText, Eye } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +20,6 @@ const DealerStock = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Filter | null>(null);
   const [selectedDealer, setSelectedDealer] = useState<string | null>(null);
   
@@ -85,15 +84,8 @@ const DealerStock = () => {
     navigate(`/inventory?vehicleId=${vehicleId}`);
   };
 
-  const toggleFilters = () => setShowFilters(!showFilters);
-  
   const handleFiltersChange = (filters: Filter) => {
     setActiveFilters(filters);
-  };
-  
-  const handleClearAllFilters = () => {
-    setActiveFilters(null);
-    setSelectedDealer(null);
   };
   
   const handleVehicleUpdated = () => refetch();
@@ -111,7 +103,7 @@ const DealerStock = () => {
     if (!user || user.type !== 'admin' || dealers.length === 0) return null;
     
     return (
-      <div className="w-64">
+      <div className="w-full mb-6">
         <FilterSelectItem
           label="Filtra per dealer"
           value={selectedDealer}
@@ -121,7 +113,7 @@ const DealerStock = () => {
           }}
           options={dealerFilterOptions}
           placeholder="Tutti i dealer"
-          className="w-full"
+          className="w-full md:w-64"
         />
       </div>
     );
@@ -129,37 +121,13 @@ const DealerStock = () => {
   
   return (
     <div className="container mx-auto py-6 px-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Stock Dealer</h1>
-        <div className="flex flex-col md:flex-row gap-2 mt-4 md:mt-0">
-          {user?.type === 'admin' && !loadingDealers && <DealerFilter />}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleFilters}
-            className="flex items-center gap-1"
-          >
-            <FilterIcon className="h-4 w-4" />
-            {showFilters ? 'Nascondi Filtri' : 'Mostra Filtri'}
-          </Button>
-          {(selectedDealer || activeFilters) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearAllFilters}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Cancella tutti i filtri
-            </Button>
-          )}
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-4">Stock Dealer</h1>
+        {user?.type === 'admin' && !loadingDealers && <DealerFilter />}
       </div>
       
       <div className="flex flex-col md:flex-row gap-6">
-        <div className={`
-          ${showFilters ? 'block' : 'hidden'}
-          md:block w-full md:w-64 flex-shrink-0
-        `}>
+        <div className="w-full md:w-64 flex-shrink-0">
           <VehicleFilters 
             inventory={dealerStockVehicles}
             onFiltersChange={handleFiltersChange}
