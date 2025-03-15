@@ -1,7 +1,9 @@
+
 import { initLocalStorage } from './storageUtils';
 import { vehiclesApi } from './vehiclesApi';
 import { quotesApi } from './quotesApi';
 import { ordersApi } from './ordersApi';
+import { dealersApi } from './dealersApi';
 import { 
   initSettingsData, 
   modelsApi as localModelsApi, 
@@ -50,3 +52,4 @@ export * from './quotesApi';
 export * from './vehiclesApi';
 export * from './settingsApi';
 export * from './adminUsersApi';
+export * from './dealersApi';  // Export the dealersApi module

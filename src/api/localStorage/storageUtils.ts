@@ -1,3 +1,4 @@
+
 export const initLocalStorage = () => {
   if (typeof localStorage === 'undefined') {
     return;
@@ -14,6 +15,7 @@ export const initLocalStorage = () => {
     localStorage.setItem('colors', JSON.stringify([]));
     localStorage.setItem('transmissions', JSON.stringify([]));
     localStorage.setItem('accessories', JSON.stringify([]));
+    localStorage.setItem('dealers', JSON.stringify([]));  // Initialize dealers storage
     localStorage.setItem('initialized', 'true');
   }
 };

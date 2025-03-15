@@ -2,6 +2,8 @@
 import { Vehicle } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { KEYS, initLocalStorage } from './storageUtils';
+import { dealersApi } from './dealersApi';
+import { ordersApi } from './ordersApi';
 
 export const vehiclesApi = {
   getAll: async (): Promise<Vehicle[]> => {
@@ -164,7 +166,6 @@ export const vehiclesApi = {
     };
     
     // Create an order record
-    const { ordersApi } = await import('@/api/localStorage/ordersApi');
     await ordersApi.create({
       vehicleId: id,
       dealerId: vehicle.reservedBy ? 
@@ -183,7 +184,6 @@ export const vehiclesApi = {
   // Helper function to find dealer ID by name
   findDealerIdByName: async (dealerName: string): Promise<string> => {
     try {
-      const { dealersApi } = await import('@/api/localStorage/dealersApi');
       const dealers = await dealersApi.getAll();
       const dealer = dealers.find(d => d.companyName === dealerName);
       
