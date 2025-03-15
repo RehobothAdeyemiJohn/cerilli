@@ -65,13 +65,10 @@ const DealerStock = () => {
     return v.reservedBy === user?.dealerName;
   });
 
-  // Apply additional filters if provided
   const filteredVehicles = activeFilters 
     ? filterVehicles(dealerStockVehicles, activeFilters)
     : dealerStockVehicles;
   
-  // Split vehicles by status
-  // Delivered vehicles should be shown as available with a green ribbon
   const availableVehicles = filteredVehicles.filter(v => 
     v.status === 'available' || v.status === 'delivered'
   );
@@ -79,7 +76,6 @@ const DealerStock = () => {
   const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
   
   const handleCreateQuote = (vehicle: Vehicle) => {
-    // Navigate to quotes page with the selected vehicle info
     navigate('/quotes', { 
       state: { 
         fromInventory: true,
@@ -89,8 +85,6 @@ const DealerStock = () => {
   };
   
   const handleViewVehicle = (vehicleId: string) => {
-    // Open vehicle details dialog logic would go here
-    // For now, we'll just navigate to the inventory with a filter
     navigate(`/inventory?vehicleId=${vehicleId}`);
   };
 
@@ -106,7 +100,6 @@ const DealerStock = () => {
     setSelectedDealer(null);
   };
   
-  // Handles actions for the VehicleList component
   const handleVehicleUpdated = () => refetch();
   const handleVehicleDeleted = async () => { await refetch(); return Promise.resolve(); };
   
@@ -123,7 +116,10 @@ const DealerStock = () => {
       <div className="w-64">
         <Select
           value={selectedDealer || "all"}
-          onValueChange={(value) => setSelectedDealer(value === "all" ? null : value)}
+          onValueChange={(value) => {
+            // Fix: Explicitly handle the "all" case to set null
+            setSelectedDealer(value === "all" ? null : value);
+          }}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Filtra per dealer" />
