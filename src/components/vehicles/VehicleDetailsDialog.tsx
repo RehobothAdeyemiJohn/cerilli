@@ -188,7 +188,6 @@ const VehicleDetailsDialog = ({
   };
   
   const isAdmin = user?.type === 'admin';
-  const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   const showEditButton = isAdmin && vehicle?.status !== 'ordered';
   const showDeleteButton = isAdmin && vehicle?.status !== 'ordered';
