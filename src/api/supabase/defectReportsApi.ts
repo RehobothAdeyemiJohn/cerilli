@@ -153,6 +153,12 @@ export const defectReportsApi = {
     console.log("Submitting update payload to Supabase:", payload);
     
     try {
+      if (Object.keys(payload).length === 0) {
+        console.warn("No fields to update were provided");
+        // If no changes, just return the existing report
+        return await this.getById(id);
+      }
+      
       const { data, error } = await supabase
         .from('defect_reports')
         .update(payload)
