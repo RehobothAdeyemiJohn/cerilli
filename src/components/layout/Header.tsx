@@ -29,7 +29,7 @@ const Header = ({ children }: HeaderProps) => {
           {user && (
             <div className="flex items-center gap-4">
               <div className="text-sm">
-                <p className="font-medium">{user.name}</p>
+                <p className="font-medium">{user.firstName} {user.lastName}</p>
                 <p className="text-muted-foreground">{user.role === 'admin' ? 'Amministratore' : 'Concessionario'}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
