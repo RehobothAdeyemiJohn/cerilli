@@ -58,6 +58,12 @@ export const useVehicleActions = () => {
   };
   
   const handleVehicleDuplicate = async (vehicleId: string) => {
+    // Prevent duplicate calls if already processing
+    if (isDuplicating) {
+      console.log('Already duplicating, ignoring duplicate request');
+      return null;
+    }
+    
     console.log('useVehicleActions: Duplicating vehicle with ID:', vehicleId);
     setIsDuplicating(true);
     

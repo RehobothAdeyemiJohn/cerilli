@@ -31,6 +31,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [requestedAction, setRequestedAction] = useState<string | undefined>(undefined);
+  const [processingAction, setProcessingAction] = useState(false);
   const queryClient = useQueryClient();
   
   const location = useLocation();
@@ -44,6 +45,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
   useEffect(() => {
     if (!openVehicleDetails) {
       setRequestedAction(undefined);
+      setProcessingAction(false);
     }
   }, [vehicles, openVehicleDetails]);
   
@@ -52,6 +54,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
     setSelectedVehicle(vehicle);
     setOpenVehicleDetails(true);
     setRequestedAction(undefined); // Reset any requested action
+    setProcessingAction(false);
   };
   
   const handleEditVehicle = (vehicle: Vehicle) => {
@@ -67,9 +70,15 @@ const VehicleList: React.FC<VehicleListProps> = ({
   };
   
   const handleDuplicateVehicle = (vehicle: Vehicle) => {
+    if (processingAction) {
+      console.log("Already processing an action, ignoring duplicate request");
+      return;
+    }
+    
     console.log("Duplicate vehicle initiated:", vehicle.id);
     setSelectedVehicle(vehicle);
     setRequestedAction('duplicate');
+    setProcessingAction(true);
     setOpenVehicleDetails(true);
   };
   
@@ -94,6 +103,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
   const handleDialogClose = () => {
     setOpenVehicleDetails(false);
     setRequestedAction(undefined);
+    setProcessingAction(false);
     // Refresh the data when dialog closes
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };

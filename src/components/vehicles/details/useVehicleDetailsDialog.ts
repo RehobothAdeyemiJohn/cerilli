@@ -21,12 +21,12 @@ export function useVehicleDetailsDialog(
   const [actionProcessed, setActionProcessed] = useState(false);
   const queryClient = useQueryClient();
   
-  const { handleVehicleDuplicate } = useVehicleActions();
+  const { handleVehicleDuplicate, isDuplicating: isActionDuplicating } = useVehicleActions();
   
   // Make handleDuplicate a useCallback to prevent unnecessary rerenders
   const handleDuplicate = useCallback(async () => {
-    if (!vehicle || !vehicle.id) {
-      console.error("Cannot duplicate: Invalid vehicle or missing ID");
+    if (!vehicle || !vehicle.id || isDuplicating || isActionDuplicating) {
+      console.error("Cannot duplicate: Invalid vehicle, missing ID, or already duplicating");
       return;
     }
     
@@ -57,16 +57,17 @@ export function useVehicleDetailsDialog(
     } finally {
       setIsDuplicating(false);
     }
-  }, [vehicle, handleVehicleDuplicate, queryClient, onClose]);
+  }, [vehicle, handleVehicleDuplicate, queryClient, onClose, isDuplicating, isActionDuplicating]);
   
-  // Handle automatic duplication when requested
+  // Handle automatic duplication when requested - but only once
   useEffect(() => {
-    if (requestedAction === 'duplicate' && vehicle && vehicle.id && !actionProcessed) {
+    // Only proceed if we haven't processed this action yet
+    if (requestedAction === 'duplicate' && vehicle && vehicle.id && !actionProcessed && !isDuplicating && !isActionDuplicating) {
       console.log("Auto-duplicating vehicle based on requestedAction:", vehicle.id);
       setActionProcessed(true);
       handleDuplicate();
     }
-  }, [requestedAction, vehicle, handleDuplicate, actionProcessed]);
+  }, [requestedAction, vehicle, handleDuplicate, actionProcessed, isDuplicating, isActionDuplicating]);
   
   const startEditing = () => {
     setIsEditing(true);
