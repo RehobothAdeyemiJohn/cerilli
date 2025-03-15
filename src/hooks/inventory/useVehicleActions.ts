@@ -4,6 +4,7 @@ import { Vehicle } from '@/types';
 import { useInventoryMutations } from './useMutations';
 import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useVehicleActions = () => {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -11,6 +12,7 @@ export const useVehicleActions = () => {
   const [isDuplicating, setIsDuplicating] = useState(false);
   
   const { updateMutation, deleteMutation } = useInventoryMutations();
+  const queryClient = useQueryClient();
   
   const handleVehicleUpdate = async (vehicle: Vehicle) => {
     setIsUpdating(true);
@@ -63,6 +65,9 @@ export const useVehicleActions = () => {
       const duplicatedVehicle = await vehiclesApi.duplicate(vehicleId);
       
       console.log('Vehicle successfully duplicated:', duplicatedVehicle);
+      
+      // Immediately invalidate the vehicles query to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       
       toast({
         title: "Veicolo duplicato",

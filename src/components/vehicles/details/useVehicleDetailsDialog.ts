@@ -18,6 +18,7 @@ export function useVehicleDetailsDialog(
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isCancellingReservation, setIsCancellingReservation] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [actionProcessed, setActionProcessed] = useState(false);
   const queryClient = useQueryClient();
   
   const { handleVehicleDuplicate } = useVehicleActions();
@@ -60,11 +61,12 @@ export function useVehicleDetailsDialog(
   
   // Handle automatic duplication when requested
   useEffect(() => {
-    if (requestedAction === 'duplicate' && vehicle && vehicle.id) {
+    if (requestedAction === 'duplicate' && vehicle && vehicle.id && !actionProcessed) {
       console.log("Auto-duplicating vehicle based on requestedAction:", vehicle.id);
+      setActionProcessed(true);
       handleDuplicate();
     }
-  }, [requestedAction, vehicle, handleDuplicate]);
+  }, [requestedAction, vehicle, handleDuplicate, actionProcessed]);
   
   const startEditing = () => {
     setIsEditing(true);

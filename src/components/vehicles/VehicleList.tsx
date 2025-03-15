@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
 import VehicleDetailsDialog from './VehicleDetailsDialog';
 import VehicleDeleteDialog from './VehicleDeleteDialog';
 import { useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface VehicleListProps {
   vehicles: Vehicle[];
@@ -30,6 +31,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const [requestedAction, setRequestedAction] = useState<string | undefined>(undefined);
+  const queryClient = useQueryClient();
   
   const location = useLocation();
   const locationState = location.state as { 
@@ -37,6 +39,13 @@ const VehicleList: React.FC<VehicleListProps> = ({
     vehicleId?: string;
     openDialog?: boolean;
   } | null;
+
+  // Reset dialog state when vehicles list changes
+  useEffect(() => {
+    if (!openVehicleDetails) {
+      setRequestedAction(undefined);
+    }
+  }, [vehicles, openVehicleDetails]);
   
   const handleViewVehicle = (vehicle: Vehicle) => {
     console.log("Opening vehicle details:", vehicle);
@@ -58,10 +67,16 @@ const VehicleList: React.FC<VehicleListProps> = ({
   };
   
   const handleDuplicateVehicle = (vehicle: Vehicle) => {
-    console.log("Duplicate vehicle:", vehicle.id);
+    console.log("Duplicate vehicle initiated:", vehicle.id);
     setSelectedVehicle(vehicle);
     setRequestedAction('duplicate');
     setOpenVehicleDetails(true);
+  };
+  
+  const handleVehicleUpdated = () => {
+    console.log("Vehicle updated, refreshing data");
+    onVehicleUpdated();
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
   
   const handleConfirmDelete = async () => {
@@ -74,6 +89,13 @@ const VehicleList: React.FC<VehicleListProps> = ({
         console.error("Error deleting vehicle:", error);
       }
     }
+  };
+
+  const handleDialogClose = () => {
+    setOpenVehicleDetails(false);
+    setRequestedAction(undefined);
+    // Refresh the data when dialog closes
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
 
   if (vehicles.length === 0) {
@@ -101,19 +123,21 @@ const VehicleList: React.FC<VehicleListProps> = ({
         ))}
       </div>
       
-      <VehicleDetailsDialog
-        vehicle={selectedVehicle}
-        open={openVehicleDetails}
-        onOpenChange={setOpenVehicleDetails}
-        onVehicleUpdated={onVehicleUpdated}
-        onVehicleDeleted={onVehicleDeleted}
-        onCreateQuote={onCreateQuote}
-        onReserve={onReserve}
-        isDealerStock={isDealerStock}
-        isVirtualStock={isVirtualStock}
-        shouldReserve={locationState?.reserveVehicle && locationState?.vehicleId === selectedVehicle?.id}
-        requestedAction={requestedAction}
-      />
+      {selectedVehicle && (
+        <VehicleDetailsDialog
+          vehicle={selectedVehicle}
+          open={openVehicleDetails}
+          onOpenChange={handleDialogClose}
+          onVehicleUpdated={handleVehicleUpdated}
+          onVehicleDeleted={onVehicleDeleted}
+          onCreateQuote={onCreateQuote}
+          onReserve={onReserve}
+          isDealerStock={isDealerStock}
+          isVirtualStock={isVirtualStock}
+          shouldReserve={locationState?.reserveVehicle && locationState?.vehicleId === selectedVehicle?.id}
+          requestedAction={requestedAction}
+        />
+      )}
       
       <VehicleDeleteDialog
         open={openDeleteDialog}
