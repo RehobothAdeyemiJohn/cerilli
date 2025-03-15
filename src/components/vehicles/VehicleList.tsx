@@ -15,6 +15,7 @@ interface VehicleListProps {
   onCreateQuote?: (vehicle: Vehicle) => void;
   onReserve?: (vehicle: Vehicle) => void;
   isVirtualStock?: boolean;
+  isDealerStock?: boolean;
 }
 
 const VehicleList = ({ 
@@ -23,7 +24,8 @@ const VehicleList = ({
   onVehicleDeleted,
   onCreateQuote,
   onReserve,
-  isVirtualStock = false
+  isVirtualStock = false,
+  isDealerStock = false
 }: VehicleListProps) => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);

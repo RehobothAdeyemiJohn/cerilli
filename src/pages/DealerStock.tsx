@@ -103,10 +103,9 @@ const DealerStock = () => {
   
   const handleVehicleUpdated = () => refetch();
   
-  const handleVehicleDeleted = async (id: string) => { 
+  const handleVehicleDeleted = async (id: string): Promise<void> => { 
     await vehiclesApi.delete(id);
     await refetch(); 
-    return Promise.resolve(); 
   };
   
   // Just for debugging - log that callbacks are defined
