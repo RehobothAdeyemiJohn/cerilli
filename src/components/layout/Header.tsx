@@ -1,75 +1,42 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { MenuIcon, UserCircle, LogOut } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
 interface HeaderProps {
-  toggleSidebar: () => void;
+  children?: ReactNode;
 }
 
-const Header = ({ toggleSidebar }: HeaderProps) => {
+const Header = ({ children }: HeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
-  
-  // Get dealer name for dealers or vendor users
-  const dealerName = user?.type === 'dealer' || user?.type === 'vendor' 
-    ? user.dealerName 
-    : 'Cirelli Motor Company';
-  
+
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 flex-shrink-0 w-full">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none mr-2"
-          >
-            <MenuIcon className="h-5 w-5" />
-          </button>
-          
-          <div className="font-semibold text-lg md:text-xl text-gray-800">
-            {dealerName}
-          </div>
-        </div>
-        
-        <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-2 hover:bg-gray-100 p-2 rounded-lg focus:outline-none">
-                <UserCircle className="h-6 w-6 text-gray-600" />
-                <span className="hidden md:inline text-sm text-gray-700">
-                  {user?.firstName} {user?.lastName}
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                <LogOut className="h-4 w-4 mr-2" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <header className="border-b bg-background">
+      <div className="flex h-16 items-center px-4 gap-4">
+        {/* Left side - SidebarTrigger */}
+        {children}
+
+        {/* Right side - User info and logout */}
+        <div className="ml-auto flex items-center gap-4">
+          {user && (
+            <div className="flex items-center gap-4">
+              <div className="text-sm">
+                <p className="font-medium">{user.name}</p>
+                <p className="text-muted-foreground">{user.role === 'admin' ? 'Amministratore' : 'Concessionario'}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

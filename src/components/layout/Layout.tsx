@@ -1,26 +1,34 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import { 
+  SidebarProvider, 
+  Sidebar as ShadcnSidebar, 
+  SidebarContent,
+  SidebarTrigger
+} from '@/components/ui/sidebar';
 import Header from './Header';
+import AppSidebar from './AppSidebar';
 
 const Layout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-auto p-4">
-          <Outlet />
-        </main>
+    <SidebarProvider>
+      <div className="flex h-screen w-screen overflow-hidden">
+        <ShadcnSidebar>
+          <SidebarContent>
+            <AppSidebar />
+          </SidebarContent>
+        </ShadcnSidebar>
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Header>
+            <SidebarTrigger />
+          </Header>
+          <main className="flex-1 overflow-auto p-4">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
