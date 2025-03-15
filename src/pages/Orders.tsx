@@ -88,7 +88,15 @@ const Orders = () => {
 
   const getOrderNumber = (order: Order) => {
     if (!order || !order.id) return "#000";
-    const index = ordersData.findIndex(o => o.id === order.id);
+    
+    // Sort orders by date (oldest first)
+    const sortedOrders = [...ordersData].sort((a, b) => {
+      const dateA = new Date(a.orderDate || 0).getTime();
+      const dateB = new Date(b.orderDate || 0).getTime();
+      return dateA - dateB;
+    });
+    
+    const index = sortedOrders.findIndex(o => o.id === order.id);
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
 

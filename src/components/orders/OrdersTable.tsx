@@ -69,7 +69,14 @@ const OrdersTable = ({
     }
   };
 
-  const getOrderNumber = (index: number): string => {
+  const sortedOrders = [...orders].sort((a, b) => {
+    const dateA = new Date(a.orderDate || 0).getTime();
+    const dateB = new Date(b.orderDate || 0).getTime();
+    return dateA - dateB;
+  });
+
+  const getOrderNumber = (order: Order): string => {
+    const index = sortedOrders.findIndex(o => o.id === order.id);
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
 
@@ -129,18 +136,13 @@ const OrdersTable = ({
                   Errore durante il caricamento degli ordini.
                 </TableCell>
               </TableRow>
-            ) : orders.length > 0 ? (
-              orders.map((order, index) => {
+            ) : sortedOrders.length > 0 ? (
+              sortedOrders.map((order) => {
                 const vehicleInfo = order.vehicle ? 
                   `${order.vehicle.model} ${order.vehicle.trim || ''}` : 
                   'Veicolo non disponibile';
                 
-                const orderNumber = getOrderNumber(
-                  tabName === 'all' ? index : 
-                  tabName === 'processing' ? processingOrders.indexOf(order) :
-                  tabName === 'delivered' ? deliveredOrders.indexOf(order) :
-                  cancelledOrders.indexOf(order)
-                );
+                const orderNumber = getOrderNumber(order);
                 
                 const canDeliverOrder = order.status === 'processing' && (order.details?.odlGenerated === true);
                 
