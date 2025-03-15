@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -11,6 +10,7 @@ import DefectFormDialog from '@/components/defects/DefectFormDialog';
 import DefectDetailsDialog from '@/components/defects/DefectDetailsDialog';
 import DefectDeleteDialog from '@/components/defects/DefectDeleteDialog';
 import DefectFilters from '@/components/defects/DefectFilters';
+import DefectStats from '@/components/defects/DefectStats';
 
 const Defects = () => {
   const { user } = useAuth();
@@ -27,7 +27,6 @@ const Defects = () => {
     search?: string;
   }>({});
 
-  // Query for fetching defect reports
   const {
     data: defectReports = [],
     isLoading,
@@ -36,18 +35,14 @@ const Defects = () => {
   } = useQuery({
     queryKey: ['defectReports', dealerId, filters],
     queryFn: async () => {
-      // For dealers, only show their reports
       if (isDealer) {
         const reports = await defectReportsApi.getByDealerId(dealerId!);
         
-        // Apply filters
         return reports.filter(report => {
-          // Status filter
           if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
             return false;
           }
           
-          // Search filter
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             const matchesNumber = report.caseNumber.toString().includes(filters.search);
@@ -60,22 +55,17 @@ const Defects = () => {
           return true;
         });
       } else {
-        // For admin, potentially get all reports with API filtering
         let reports = await defectReportsApi.getAll();
         
-        // Apply filters
         return reports.filter(report => {
-          // Status filter
           if (filters.status && filters.status !== 'all' && report.status !== filters.status) {
             return false;
           }
           
-          // Dealer filter
           if (filters.dealerId && filters.dealerId !== 'all' && report.dealerId !== filters.dealerId) {
             return false;
           }
           
-          // Search filter
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             const matchesNumber = report.caseNumber.toString().includes(filters.search);
@@ -124,7 +114,6 @@ const Defects = () => {
     refetch();
   };
 
-  // Find the selected defect for the delete dialog
   const selectedDefect = selectedDefectId
     ? defectReports.find(d => d.id === selectedDefectId)
     : undefined;
@@ -138,6 +127,8 @@ const Defects = () => {
           Nuova Segnalazione
         </Button>
       </div>
+
+      <DefectStats />
 
       <div className="mb-6">
         <DefectFilters onFilterChange={handleFilterChange} />
@@ -169,7 +160,6 @@ const Defects = () => {
         </div>
       )}
 
-      {/* Dialogs */}
       {formDialogOpen && (
         <DefectFormDialog
           isOpen={formDialogOpen}

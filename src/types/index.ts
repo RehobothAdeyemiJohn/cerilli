@@ -214,6 +214,8 @@ export type DefectReport = {
   description: string;
   vehicleReceiptDate: string;
   repairCost: number;
+  approvedRepairValue?: number;
+  sparePartsRequest?: string;
   transportDocumentUrl?: string;
   photoReportUrls?: string[];
   repairQuoteUrl?: string;
@@ -226,6 +228,6 @@ export type DefectReport = {
 export type DefectReportStats = {
   openReports: number;
   closedReports: number;
+  approvedReports: number;
   totalPaid: number;
 };
-

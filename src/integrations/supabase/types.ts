@@ -105,6 +105,7 @@ export type Database = {
       defect_reports: {
         Row: {
           admin_notes: string | null
+          approved_repair_value: number | null
           case_number: number
           created_at: string | null
           dealer_id: string
@@ -117,6 +118,7 @@ export type Database = {
           reason: string
           repair_cost: number | null
           repair_quote_url: string | null
+          spare_parts_request: string | null
           status: string
           transport_document_url: string | null
           updated_at: string | null
@@ -125,6 +127,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          approved_repair_value?: number | null
           case_number?: number
           created_at?: string | null
           dealer_id: string
@@ -137,6 +140,7 @@ export type Database = {
           reason: string
           repair_cost?: number | null
           repair_quote_url?: string | null
+          spare_parts_request?: string | null
           status?: string
           transport_document_url?: string | null
           updated_at?: string | null
@@ -145,6 +149,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          approved_repair_value?: number | null
           case_number?: number
           created_at?: string | null
           dealer_id?: string
@@ -157,6 +162,7 @@ export type Database = {
           reason?: string
           repair_cost?: number | null
           repair_quote_url?: string | null
+          spare_parts_request?: string | null
           status?: string
           transport_document_url?: string | null
           updated_at?: string | null

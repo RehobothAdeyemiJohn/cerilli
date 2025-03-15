@@ -62,6 +62,8 @@ export const defectReportsApi = {
         description: report.description,
         vehicle_receipt_date: report.vehicleReceiptDate,
         repair_cost: report.repairCost,
+        approved_repair_value: report.approvedRepairValue,
+        spare_parts_request: report.sparePartsRequest,
         transport_document_url: report.transportDocumentUrl,
         photo_report_urls: report.photoReportUrls,
         repair_quote_url: report.repairQuoteUrl,
@@ -92,6 +94,8 @@ export const defectReportsApi = {
         description: report.description,
         vehicle_receipt_date: report.vehicleReceiptDate,
         repair_cost: report.repairCost,
+        approved_repair_value: report.approvedRepairValue,
+        spare_parts_request: report.sparePartsRequest,
         transport_document_url: report.transportDocumentUrl,
         photo_report_urls: report.photoReportUrls,
         repair_quote_url: report.repairQuoteUrl,
@@ -137,22 +141,29 @@ export const defectReportsApi = {
       .select('*', { count: 'exact', head: true })
       .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
 
+    // For approved reports count
+    const { count: approvedCount, error: approvedError } = await supabase
+      .from('defect_reports')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['Approvata', 'Approvata Parzialmente']);
+
     // For paid reports
     const { data: paidReports, error: paidError } = await supabase
       .from('defect_reports')
-      .select('repair_cost')
+      .select('approved_repair_value')
       .not('payment_date', 'is', null);
 
-    if (openError || closedError || paidError) {
-      console.error('Error fetching defect report stats:', openError || closedError || paidError);
-      throw openError || closedError || paidError;
+    if (openError || closedError || paidError || approvedError) {
+      console.error('Error fetching defect report stats:', openError || closedError || paidError || approvedError);
+      throw openError || closedError || paidError || approvedError;
     }
 
-    const totalPaid = paidReports?.reduce((sum, report) => sum + (report.repair_cost || 0), 0) || 0;
+    const totalPaid = paidReports?.reduce((sum, report) => sum + (report.approved_repair_value || 0), 0) || 0;
 
     return {
       openReports: openCount || 0,
       closedReports: closedCount || 0,
+      approvedReports: approvedCount || 0,
       totalPaid
     };
   }

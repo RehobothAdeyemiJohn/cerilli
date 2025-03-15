@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, X, Upload, Camera } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 type DefectFormDialogProps = {
   isOpen: boolean;
@@ -37,7 +38,7 @@ const formSchema = z.object({
   dealerId: z.string().min(1, 'Seleziona un dealer'),
   dealerName: z.string().min(1, 'Nome dealer richiesto'),
   vehicleId: z.string().optional(),
-  email: z.string().email('Email non valida').optional().or(z.literal('')),
+  email: z.string().email('Email non valida').min(1, 'Email di riferimento obbligatoria'),
   status: z.enum(['Aperta', 'Approvata', 'Approvata Parzialmente', 'Respinta']),
   reason: z.enum(['Danni da trasporto', 'Difformità Pre-Garanzia Tecnica', 'Carrozzeria']),
   description: z.string().min(1, 'Descrizione richiesta'),
@@ -45,10 +46,9 @@ const formSchema = z.object({
     required_error: "Data ricevimento richiesta",
   }),
   repairCost: z.number().min(0, 'Il costo deve essere un numero positivo'),
-  transportDocumentUrl: z.string().optional().or(z.literal('')),
-  photoReportUrls: z.array(z.string()).optional(),
-  repairQuoteUrl: z.string().optional().or(z.literal('')),
-  adminNotes: z.string().optional().or(z.literal('')),
+  approvedRepairValue: z.number().min(0, 'Il valore deve essere un numero positivo').optional(),
+  sparePartsRequest: z.string().optional(),
+  adminNotes: z.string().optional(),
   paymentDate: z.date().optional().nullable(),
 });
 
@@ -57,8 +57,23 @@ type FormValues = z.infer<typeof formSchema>;
 const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDialogProps) => {
   const { user } = useAuth();
   const isAdmin = user?.type === 'admin';
+  const isDealer = user?.type === 'dealer';
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // States for file uploads
+  const [transportDoc, setTransportDoc] = useState<File | null>(null);
+  const [uploadingTransportDoc, setUploadingTransportDoc] = useState(false);
+  const [transportDocUrl, setTransportDocUrl] = useState<string>('');
+  
+  const [repairQuote, setRepairQuote] = useState<File | null>(null);
+  const [uploadingRepairQuote, setUploadingRepairQuote] = useState(false);
+  const [repairQuoteUrl, setRepairQuoteUrl] = useState<string>('');
+  
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -70,7 +85,10 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       description: '',
       vehicleReceiptDate: new Date(),
       repairCost: 0,
-      photoReportUrls: [],
+      approvedRepairValue: 0,
+      sparePartsRequest: '',
+      adminNotes: '',
+      email: '',
       paymentDate: null,
     }
   });
@@ -93,33 +111,203 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         description: defect.description,
         vehicleReceiptDate: new Date(defect.vehicleReceiptDate),
         repairCost: defect.repairCost,
-        transportDocumentUrl: defect.transportDocumentUrl || '',
-        photoReportUrls: defect.photoReportUrls || [],
-        repairQuoteUrl: defect.repairQuoteUrl || '',
+        approvedRepairValue: defect.approvedRepairValue || 0,
+        sparePartsRequest: defect.sparePartsRequest || '',
         adminNotes: defect.adminNotes || '',
         paymentDate: defect.paymentDate ? new Date(defect.paymentDate) : null,
       });
+
+      // Set file URLs from defect
+      setTransportDocUrl(defect.transportDocumentUrl || '');
+      setRepairQuoteUrl(defect.repairQuoteUrl || '');
+      setPhotoUrls(defect.photoReportUrls || []);
     }
   }, [defect, form]);
+
+  // Functions to handle file uploads
+  const handleTransportDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setTransportDoc(e.target.files[0]);
+    }
+  };
+
+  const handleRepairQuoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setRepairQuote(e.target.files[0]);
+    }
+  };
+
+  const handlePhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setPhotos(prev => [...prev, ...newFiles]);
+      
+      // Create preview URLs
+      const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
+      setPhotoPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    
+    // Revoke the URL to avoid memory leaks
+    URL.revokeObjectURL(photoPreviewUrls[index]);
+    setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadTransportDoc = async () => {
+    if (!transportDoc) return '';
+    setUploadingTransportDoc(true);
+    
+    try {
+      const fileName = `${Date.now()}-${transportDoc.name}`;
+      const { data, error } = await supabase.storage
+        .from('defect-documents')
+        .upload(fileName, transportDoc);
+      
+      if (error) throw error;
+      
+      const { data: urlData } = supabase.storage
+        .from('defect-documents')
+        .getPublicUrl(fileName);
+      
+      setTransportDocUrl(urlData.publicUrl);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading transport document:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare il documento di trasporto",
+        variant: "destructive",
+      });
+      return '';
+    } finally {
+      setUploadingTransportDoc(false);
+    }
+  };
+
+  const uploadRepairQuote = async () => {
+    if (!repairQuote) return '';
+    setUploadingRepairQuote(true);
+    
+    try {
+      const fileName = `${Date.now()}-${repairQuote.name}`;
+      const { data, error } = await supabase.storage
+        .from('defect-quotes')
+        .upload(fileName, repairQuote);
+      
+      if (error) throw error;
+      
+      const { data: urlData } = supabase.storage
+        .from('defect-quotes')
+        .getPublicUrl(fileName);
+      
+      setRepairQuoteUrl(urlData.publicUrl);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading repair quote:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare il preventivo",
+        variant: "destructive",
+      });
+      return '';
+    } finally {
+      setUploadingRepairQuote(false);
+    }
+  };
+
+  const uploadPhotos = async () => {
+    if (photos.length === 0) return photoUrls;
+    setUploadingPhotos(true);
+    
+    try {
+      const uploadPromises = photos.map(async (photo) => {
+        const fileName = `${Date.now()}-${photo.name}`;
+        const { data, error } = await supabase.storage
+          .from('defect-photos')
+          .upload(fileName, photo);
+        
+        if (error) throw error;
+        
+        const { data: urlData } = supabase.storage
+          .from('defect-photos')
+          .getPublicUrl(fileName);
+        
+        return urlData.publicUrl;
+      });
+      
+      const newPhotoUrls = await Promise.all(uploadPromises);
+      const allPhotoUrls = [...photoUrls, ...newPhotoUrls];
+      setPhotoUrls(allPhotoUrls);
+      
+      // Clean up preview URLs
+      photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      setPhotoPreviewUrls([]);
+      setPhotos([]);
+      
+      return allPhotoUrls;
+    } catch (error) {
+      console.error('Error uploading photos:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare le fotografie",
+        variant: "destructive",
+      });
+      return photoUrls;
+    } finally {
+      setUploadingPhotos(false);
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
       
+      // Upload all files first
+      let newTransportDocUrl = transportDocUrl;
+      let newRepairQuoteUrl = repairQuoteUrl;
+      let newPhotoUrls = photoUrls;
+      
+      if (transportDoc) {
+        newTransportDocUrl = await uploadTransportDoc();
+      }
+      
+      if (repairQuote) {
+        newRepairQuoteUrl = await uploadRepairQuote();
+      }
+      
+      if (photos.length > 0) {
+        newPhotoUrls = await uploadPhotos();
+      }
+      
+      if (!newPhotoUrls.length && !defectId) {
+        toast({
+          title: "Attenzione",
+          description: "È obbligatorio allegare almeno una fotografia",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       const submissionData = {
-        dealerId: values.dealerId || user?.dealerId || '', // Ensure dealerId is always provided
-        dealerName: values.dealerName || user?.dealerName || '', // Ensure dealerName is always provided
-        status: values.status, // Ensure status is always provided
-        reason: values.reason, // Ensure reason is always provided
-        description: values.description, // Ensure description is always provided
-        repairCost: values.repairCost, // Ensure repairCost is always provided
+        dealerId: values.dealerId,
+        dealerName: values.dealerName,
+        email: values.email,
+        status: values.status,
+        reason: values.reason,
+        description: values.description,
+        repairCost: values.repairCost,
+        approvedRepairValue: values.approvedRepairValue,
+        sparePartsRequest: values.sparePartsRequest,
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
         paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
         vehicleId: values.vehicleId,
-        email: values.email,
-        transportDocumentUrl: values.transportDocumentUrl,
-        photoReportUrls: values.photoReportUrls,
-        repairQuoteUrl: values.repairQuoteUrl,
+        transportDocumentUrl: newTransportDocUrl || undefined,
+        photoReportUrls: newPhotoUrls.length > 0 ? newPhotoUrls : undefined,
+        repairQuoteUrl: newRepairQuoteUrl || undefined,
         adminNotes: values.adminNotes
       };
       
@@ -174,10 +362,10 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="reason"
+                    name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Motivo della segnalazione *</FormLabel>
+                        <FormLabel>Stato</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
@@ -185,55 +373,54 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleziona il motivo" />
+                              <SelectValue placeholder="Seleziona lo stato" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Danni da trasporto">Danni da trasporto</SelectItem>
-                            <SelectItem value="Difformità Pre-Garanzia Tecnica">Difformità Pre-Garanzia Tecnica</SelectItem>
-                            <SelectItem value="Carrozzeria">Carrozzeria</SelectItem>
+                            <SelectItem value="Aperta">Aperta</SelectItem>
+                            <SelectItem value="Approvata">Approvata</SelectItem>
+                            <SelectItem value="Approvata Parzialmente">Approvata Parzialmente</SelectItem>
+                            <SelectItem value="Respinta">Respinta</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {!isDealer && (
+                    <FormField
+                      control={form.control}
+                      name="dealerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dealer *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              disabled={isDealer}
+                              placeholder="ID del dealer"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   <FormField
                     control={form.control}
-                    name="vehicleReceiptDate"
+                    name="email"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data ricevimento veicolo *</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                disabled={!isAdmin && defect?.status !== 'Aperta'}
-                              >
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>Seleziona data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date > new Date()}
-                            />
-                          </PopoverContent>
-                        </Popover>
+                      <FormItem>
+                        <FormLabel>Email di riferimento (service) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Email per comunicazioni"
+                            disabled={!isAdmin && defect?.status !== 'Aperta'}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -244,7 +431,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Descrizione *</FormLabel>
+                        <FormLabel>Descrizione difformità *</FormLabel>
                         <FormControl>
                           <Textarea 
                             {...field} 
@@ -263,7 +450,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                     name="repairCost"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Costo riparazione (€) *</FormLabel>
+                        <FormLabel>Costo Riparazione Stimato (€) *</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -283,52 +470,109 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                 
                 {/* Second column */}
                 <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email di riferimento</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="Email per comunicazioni"
-                            disabled={!isAdmin && defect?.status !== 'Aperta'}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-2">
+                    <FormLabel>Carica Documento trasporto</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        onChange={handleTransportDocChange}
+                        disabled={uploadingTransportDoc || (!isAdmin && defect?.status !== 'Aperta')}
+                        className="flex-1"
+                      />
+                      {uploadingTransportDoc && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    {transportDocUrl && (
+                      <a 
+                        href={transportDocUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        <span>Documento caricato</span>
+                      </a>
                     )}
-                  />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <FormLabel>Allegare report fotografico *</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        onChange={handlePhotosChange}
+                        disabled={uploadingPhotos || (!isAdmin && defect?.status !== 'Aperta')}
+                        className="flex-1"
+                        accept="image/*"
+                        multiple
+                      />
+                      {uploadingPhotos && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    
+                    {/* Photo previews */}
+                    {(photoPreviewUrls.length > 0 || photoUrls.length > 0) && (
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {photoUrls.map((url, index) => (
+                          <div key={`existing-${index}`} className="relative rounded overflow-hidden h-20">
+                            <img 
+                              src={url} 
+                              alt={`Photo ${index}`} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        ))}
+                        {photoPreviewUrls.map((url, index) => (
+                          <div key={`new-${index}`} className="relative rounded overflow-hidden h-20">
+                            <img 
+                              src={url} 
+                              alt={`New photo ${index}`} 
+                              className="w-full h-full object-cover" 
+                            />
+                            <button
+                              type="button"
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                              onClick={() => removePhoto(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <FormLabel>Allegare Preventivo</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        onChange={handleRepairQuoteChange}
+                        disabled={uploadingRepairQuote || (!isAdmin && defect?.status !== 'Aperta')}
+                        className="flex-1"
+                      />
+                      {uploadingRepairQuote && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    {repairQuoteUrl && (
+                      <a 
+                        href={repairQuoteUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        <span>Preventivo caricato</span>
+                      </a>
+                    )}
+                  </div>
                   
                   <FormField
                     control={form.control}
-                    name="transportDocumentUrl"
+                    name="sparePartsRequest"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Link documento di trasporto</FormLabel>
+                        <FormLabel>Richiesta Ricambio</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Textarea 
                             {...field} 
-                            placeholder="URL del documento"
-                            disabled={!isAdmin && defect?.status !== 'Aperta'}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="repairQuoteUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Link preventivo riparazione</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="URL del preventivo"
+                            placeholder="Dettagli sulla richiesta di ricambi"
+                            rows={3}
                             disabled={!isAdmin && defect?.status !== 'Aperta'}
                           />
                         </FormControl>
@@ -341,72 +585,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                     <>
                       <FormField
                         control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Stato</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona lo stato" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Aperta">Aperta</SelectItem>
-                                <SelectItem value="Approvata">Approvata</SelectItem>
-                                <SelectItem value="Approvata Parzialmente">Approvata Parzialmente</SelectItem>
-                                <SelectItem value="Respinta">Respinta</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="paymentDate"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Data pagamento</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "dd/MM/yyyy")
-                                    ) : (
-                                      <span>Seleziona data di pagamento</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value || undefined}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date > new Date()}
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
                         name="adminNotes"
                         render={({ field }) => (
                           <FormItem>
@@ -416,6 +594,27 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                                 {...field} 
                                 placeholder="Note interne per amministratori"
                                 rows={3}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="approvedRepairValue"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Valore Riparazione Approvata (€)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="0" 
+                                step="0.01"
+                                {...field}
+                                value={field.value || 0}
+                                onChange={e => field.onChange(parseFloat(e.target.value))}
                               />
                             </FormControl>
                             <FormMessage />

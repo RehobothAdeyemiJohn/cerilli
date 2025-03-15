@@ -39,7 +39,7 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>Segnalazione Difformità #{defect.caseNumber}</DialogTitle>
@@ -59,6 +59,13 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
               <p className="text-base">{defect.reason}</p>
             </div>
             
+            {defect.email && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Email di riferimento</h3>
+                <p className="text-base">{defect.email}</p>
+              </div>
+            )}
+            
             <div>
               <h3 className="text-sm font-medium text-gray-500">Data ricevimento veicolo</h3>
               <p className="text-base">
@@ -67,9 +74,16 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
             </div>
             
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Costo riparazione</h3>
+              <h3 className="text-sm font-medium text-gray-500">Costo riparazione stimato</h3>
               <p className="text-base">€{defect.repairCost.toLocaleString('it-IT')}</p>
             </div>
+
+            {defect.approvedRepairValue > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Valore riparazione approvata</h3>
+                <p className="text-base">€{defect.approvedRepairValue.toLocaleString('it-IT')}</p>
+              </div>
+            )}
             
             <div>
               <h3 className="text-sm font-medium text-gray-500">Data apertura pratica</h3>
@@ -80,13 +94,6 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
           </div>
           
           <div className="space-y-4">
-            {defect.email && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Email di riferimento</h3>
-                <p className="text-base">{defect.email}</p>
-              </div>
-            )}
-            
             {defect.transportDocumentUrl && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Documento di trasporto</h3>
@@ -115,6 +122,13 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
               </div>
             )}
             
+            {defect.sparePartsRequest && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Richiesta ricambio</h3>
+                <p className="text-base whitespace-pre-wrap">{defect.sparePartsRequest}</p>
+              </div>
+            )}
+            
             {defect.paymentDate && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Data pagamento</h3>
@@ -136,9 +150,32 @@ const DefectDetailsDialog = ({ isOpen, onClose, defectId }: DefectDetailsDialogP
         <Separator />
         
         <div className="py-4">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Descrizione</h3>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">Descrizione difformità</h3>
           <p className="text-base whitespace-pre-wrap">{defect.description}</p>
         </div>
+        
+        {defect.photoReportUrls && defect.photoReportUrls.length > 0 && (
+          <div className="py-4">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Report fotografico</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {defect.photoReportUrls.map((url, index) => (
+                <a 
+                  key={index} 
+                  href={url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="block"
+                >
+                  <img 
+                    src={url} 
+                    alt={`Photo ${index + 1}`} 
+                    className="w-full h-48 object-cover rounded shadow-md hover:shadow-lg transition-shadow"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         
         <DialogFooter>
           <Button onClick={onClose}>Chiudi</Button>
