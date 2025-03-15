@@ -171,7 +171,7 @@ export const defectReportsApi = {
         return await this.getById(id);
       }
       
-      // Execute the update operation
+      // Execute the update operation with a single call
       const { data, error } = await supabase
         .from('defect_reports')
         .update(payload)

@@ -405,6 +405,21 @@ const DefectFormDialog = ({
         ? values.paymentDate.toISOString().split('T')[0]
         : values.paymentDate;
       
+      const approvedValue = typeof values.approvedRepairValue === 'string' 
+        ? parseFloat(values.approvedRepairValue) 
+        : values.approvedRepairValue || 0;
+      
+      const repairCost = typeof values.repairCost === 'string'
+        ? parseFloat(values.repairCost)
+        : values.repairCost || 0;
+      
+      console.log("Processing numeric values:", {
+        approvedRepairValue: values.approvedRepairValue,
+        parsedApprovedValue: approvedValue,
+        repairCost: values.repairCost,
+        parsedRepairCost: repairCost
+      });
+      
       const submissionData = {
         dealerId: values.dealerId,
         dealerName: values.dealerName,
@@ -412,8 +427,8 @@ const DefectFormDialog = ({
         status: values.status,
         reason: values.reason,
         description: values.description,
-        repairCost: Number(values.repairCost),
-        approvedRepairValue: Number(values.approvedRepairValue || 0),
+        repairCost: repairCost,
+        approvedRepairValue: approvedValue,
         sparePartsRequest: values.sparePartsRequest || '',
         vehicleReceiptDate: formattedVehicleReceiptDate,
         paymentDate: formattedPaymentDate,
