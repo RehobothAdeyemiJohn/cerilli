@@ -12,9 +12,11 @@ import DefectDetailsDialog from '@/components/defects/DefectDetailsDialog';
 import DefectDeleteDialog from '@/components/defects/DefectDeleteDialog';
 import DefectFilters from '@/components/defects/DefectFilters';
 import DefectStats from '@/components/defects/DefectStats';
+import { useToast } from '@/hooks/use-toast';
 
 const Defects = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const isDealer = user?.type === 'dealer';
   const dealerId = user?.dealerId;
 
@@ -36,49 +38,62 @@ const Defects = () => {
   } = useQuery({
     queryKey: ['defectReports', dealerId, filters],
     queryFn: async () => {
-      if (isDealer) {
-        const reports = await defectReportsApi.getByDealerId(dealerId!);
-        
-        return reports.filter(report => {
-          if (filters.status && report.status !== filters.status) {
-            return false;
-          }
+      console.log("Fetching defect reports with filters:", filters);
+      try {
+        if (isDealer) {
+          const reports = await defectReportsApi.getByDealerId(dealerId!);
+          console.log("Fetched dealer reports:", reports);
           
-          if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            const matchesNumber = report.caseNumber.toString().includes(filters.search);
-            const matchesDescription = report.description.toLowerCase().includes(searchLower);
-            if (!matchesNumber && !matchesDescription) {
+          return reports.filter(report => {
+            if (filters.status && report.status !== filters.status) {
               return false;
             }
-          }
+            
+            if (filters.search) {
+              const searchLower = filters.search.toLowerCase();
+              const matchesNumber = report.caseNumber.toString().includes(filters.search);
+              const matchesDescription = report.description.toLowerCase().includes(searchLower);
+              if (!matchesNumber && !matchesDescription) {
+                return false;
+              }
+            }
+            
+            return true;
+          });
+        } else {
+          let reports = await defectReportsApi.getAll();
+          console.log("Fetched all reports:", reports);
           
-          return true;
-        });
-      } else {
-        let reports = await defectReportsApi.getAll();
-        
-        return reports.filter(report => {
-          if (filters.status && report.status !== filters.status) {
-            return false;
-          }
-          
-          if (filters.dealerId && report.dealerId !== filters.dealerId) {
-            return false;
-          }
-          
-          if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            const matchesNumber = report.caseNumber.toString().includes(filters.search);
-            const matchesDescription = report.description.toLowerCase().includes(searchLower);
-            const matchesDealer = report.dealerName.toLowerCase().includes(searchLower);
-            if (!matchesNumber && !matchesDescription && !matchesDealer) {
+          return reports.filter(report => {
+            if (filters.status && report.status !== filters.status) {
               return false;
             }
-          }
-          
-          return true;
+            
+            if (filters.dealerId && report.dealerId !== filters.dealerId) {
+              return false;
+            }
+            
+            if (filters.search) {
+              const searchLower = filters.search.toLowerCase();
+              const matchesNumber = report.caseNumber.toString().includes(filters.search);
+              const matchesDescription = report.description.toLowerCase().includes(searchLower);
+              const matchesDealer = report.dealerName.toLowerCase().includes(searchLower);
+              if (!matchesNumber && !matchesDescription && !matchesDealer) {
+                return false;
+              }
+            }
+            
+            return true;
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching defect reports:", err);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante il caricamento delle segnalazioni",
+          variant: "destructive",
         });
+        return [];
       }
     }
   });
@@ -112,6 +127,7 @@ const Defects = () => {
   };
 
   const handleSuccess = () => {
+    console.log("Defect operation successful, refetching data...");
     refetch();
   };
 

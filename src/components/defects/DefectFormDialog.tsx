@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,7 +61,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // States for file uploads
   const [transportDoc, setTransportDoc] = useState<File | null>(null);
   const [uploadingTransportDoc, setUploadingTransportDoc] = useState(false);
   const [transportDocUrl, setTransportDocUrl] = useState<string>('');
@@ -76,7 +74,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
 
-  // Fetch all dealers for the select dropdown
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
@@ -124,14 +121,12 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         paymentDate: defect.paymentDate ? new Date(defect.paymentDate) : null,
       });
 
-      // Set file URLs from defect
       setTransportDocUrl(defect.transportDocumentUrl || '');
       setRepairQuoteUrl(defect.repairQuoteUrl || '');
       setPhotoUrls(defect.photoReportUrls || []);
     }
   }, [defect, form]);
 
-  // Update dealerName when dealerId changes
   useEffect(() => {
     const dealerId = form.watch('dealerId');
     if (dealerId) {
@@ -142,7 +137,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
     }
   }, [form.watch('dealerId'), dealers, form]);
 
-  // Functions to handle file uploads
   const handleTransportDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setTransportDoc(e.target.files[0]);
@@ -160,7 +154,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       const newFiles = Array.from(e.target.files);
       setPhotos(prev => [...prev, ...newFiles]);
       
-      // Create preview URLs
       const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
       setPhotoPreviewUrls(prev => [...prev, ...newPreviewUrls]);
     }
@@ -169,7 +162,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const removePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
     
-    // Revoke the URL to avoid memory leaks
     URL.revokeObjectURL(photoPreviewUrls[index]);
     setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
@@ -260,7 +252,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       const allPhotoUrls = [...photoUrls, ...newPhotoUrls];
       setPhotoUrls(allPhotoUrls);
       
-      // Clean up preview URLs
       photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
       setPhotoPreviewUrls([]);
       setPhotos([]);
@@ -282,8 +273,8 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
+      console.log("Starting form submission...");
       
-      // Upload all files first
       let newTransportDocUrl = transportDocUrl;
       let newRepairQuoteUrl = repairQuoteUrl;
       let newPhotoUrls = photoUrls;
@@ -321,24 +312,26 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         approvedRepairValue: values.approvedRepairValue,
         sparePartsRequest: values.sparePartsRequest,
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
-        paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
-        vehicleId: values.vehicleId,
-        transportDocumentUrl: newTransportDocUrl || undefined,
-        photoReportUrls: newPhotoUrls.length > 0 ? newPhotoUrls : undefined,
-        repairQuoteUrl: newRepairQuoteUrl || undefined,
-        adminNotes: values.adminNotes
+        paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : null,
+        vehicleId: values.vehicleId || '',
+        transportDocumentUrl: newTransportDocUrl || '',
+        photoReportUrls: newPhotoUrls,
+        repairQuoteUrl: newRepairQuoteUrl || '',
+        adminNotes: values.adminNotes || ''
       };
       
+      console.log("Submitting data:", submissionData);
+      
       if (defectId) {
-        // Update existing defect
-        await defectReportsApi.update(defectId, submissionData);
+        const updatedReport = await defectReportsApi.update(defectId, submissionData);
+        console.log("Updated report:", updatedReport);
         toast({
           title: "Difformità aggiornata",
           description: "La segnalazione di difformità è stata aggiornata con successo",
         });
       } else {
-        // Create new defect
-        await defectReportsApi.create(submissionData);
+        const newReport = await defectReportsApi.create(submissionData);
+        console.log("Created new report:", newReport);
         toast({
           title: "Difformità creata",
           description: "La segnalazione di difformità è stata creata con successo",
@@ -376,7 +369,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* First column */}
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
@@ -495,7 +487,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                   />
                 </div>
                 
-                {/* Second column */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <FormLabel>Carica Documento trasporto</FormLabel>
@@ -534,7 +525,6 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                       {uploadingPhotos && <Loader2 className="h-4 w-4 animate-spin" />}
                     </div>
                     
-                    {/* Photo previews */}
                     {(photoPreviewUrls.length > 0 || photoUrls.length > 0) && (
                       <div className="mt-2 grid grid-cols-3 gap-2">
                         {photoUrls.map((url, index) => (

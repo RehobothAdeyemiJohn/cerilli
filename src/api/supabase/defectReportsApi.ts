@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { DefectReport, DefectReportStats } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,6 +48,7 @@ export const defectReportsApi = {
   },
 
   async create(report: Omit<DefectReport, 'id' | 'caseNumber' | 'createdAt' | 'updatedAt'>) {
+    console.log("Creating defect report with data:", report);
     const { data, error } = await supabase
       .from('defect_reports')
       .insert([{
@@ -75,13 +75,16 @@ export const defectReportsApi = {
 
     if (error) {
       console.error('Error creating defect report:', error);
+      console.error('Error details:', error.details, error.message, error.hint);
       throw error;
     }
 
+    console.log("Created defect report:", data);
     return data as DefectReport;
   },
 
   async update(id: string, report: Partial<DefectReport>) {
+    console.log("Updating defect report with id:", id, "and data:", report);
     const { data, error } = await supabase
       .from('defect_reports')
       .update({
@@ -108,9 +111,11 @@ export const defectReportsApi = {
 
     if (error) {
       console.error(`Error updating defect report with id ${id}:`, error);
+      console.error('Error details:', error.details, error.message, error.hint);
       throw error;
     }
 
+    console.log("Updated defect report:", data);
     return data as DefectReport;
   },
 
