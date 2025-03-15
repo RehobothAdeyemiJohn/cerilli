@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
@@ -26,6 +25,30 @@ const mapDefectReport = (dbReport: any): DefectReport => {
     createdAt: dbReport.created_at,
     updatedAt: dbReport.updated_at
   };
+};
+
+// Helper function to convert camelCase to snake_case for DB
+const createDbPayload = (report: Partial<DefectReport>) => {
+  const payload: Record<string, any> = {};
+    
+  if (report.dealerId !== undefined) payload.dealer_id = report.dealerId;
+  if (report.dealerName !== undefined) payload.dealer_name = report.dealerName;
+  if (report.vehicleId !== undefined) payload.vehicle_id = report.vehicleId;
+  if (report.email !== undefined) payload.email = report.email;
+  if (report.status !== undefined) payload.status = report.status;
+  if (report.reason !== undefined) payload.reason = report.reason;
+  if (report.description !== undefined) payload.description = report.description;
+  if (report.vehicleReceiptDate !== undefined) payload.vehicle_receipt_date = report.vehicleReceiptDate;
+  if (report.repairCost !== undefined) payload.repair_cost = report.repairCost;
+  if (report.approvedRepairValue !== undefined) payload.approved_repair_value = report.approvedRepairValue;
+  if (report.sparePartsRequest !== undefined) payload.spare_parts_request = report.sparePartsRequest;
+  if (report.transportDocumentUrl !== undefined) payload.transport_document_url = report.transportDocumentUrl;
+  if (report.photoReportUrls !== undefined) payload.photo_report_urls = report.photoReportUrls;
+  if (report.repairQuoteUrl !== undefined) payload.repair_quote_url = report.repairQuoteUrl;
+  if (report.adminNotes !== undefined) payload.admin_notes = report.adminNotes;
+  if (report.paymentDate !== undefined) payload.payment_date = report.paymentDate;
+  
+  return payload;
 };
 
 export const defectReportsApi = {
@@ -129,7 +152,7 @@ export const defectReportsApi = {
 
   async update(id: string, report: Partial<DefectReport>) {
     console.log("Starting update for defect report with id:", id);
-    console.log("Update data received:", report);
+    console.log("Update data received:", JSON.stringify(report, null, 2));
     
     if (!id) {
       console.error("Missing required ID for update operation");
@@ -137,26 +160,9 @@ export const defectReportsApi = {
     }
     
     // Format all fields correctly for the database (camelCase to snake_case)
-    const payload: Record<string, any> = {};
+    const payload = createDbPayload(report);
     
-    if (report.dealerId !== undefined) payload.dealer_id = report.dealerId;
-    if (report.dealerName !== undefined) payload.dealer_name = report.dealerName;
-    if (report.vehicleId !== undefined) payload.vehicle_id = report.vehicleId;
-    if (report.email !== undefined) payload.email = report.email;
-    if (report.status !== undefined) payload.status = report.status;
-    if (report.reason !== undefined) payload.reason = report.reason;
-    if (report.description !== undefined) payload.description = report.description;
-    if (report.vehicleReceiptDate !== undefined) payload.vehicle_receipt_date = report.vehicleReceiptDate;
-    if (report.repairCost !== undefined) payload.repair_cost = report.repairCost;
-    if (report.approvedRepairValue !== undefined) payload.approved_repair_value = report.approvedRepairValue;
-    if (report.sparePartsRequest !== undefined) payload.spare_parts_request = report.sparePartsRequest;
-    if (report.transportDocumentUrl !== undefined) payload.transport_document_url = report.transportDocumentUrl;
-    if (report.photoReportUrls !== undefined) payload.photo_report_urls = report.photoReportUrls;
-    if (report.repairQuoteUrl !== undefined) payload.repair_quote_url = report.repairQuoteUrl;
-    if (report.adminNotes !== undefined) payload.admin_notes = report.adminNotes;
-    if (report.paymentDate !== undefined) payload.payment_date = report.paymentDate;
-    
-    console.log("Prepared update payload:", payload);
+    console.log("Prepared update payload:", JSON.stringify(payload, null, 2));
     
     try {
       if (Object.keys(payload).length === 0) {
@@ -180,8 +186,9 @@ export const defectReportsApi = {
         throw updateError;
       }
 
-      // After successful update, fetch the updated record
       console.log("Update operation succeeded, fetching updated record");
+      
+      // After successful update, fetch the updated record
       const { data: updatedData, error: fetchError } = await supabase
         .from('defect_reports')
         .select('*')

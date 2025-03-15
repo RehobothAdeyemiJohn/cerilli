@@ -15,7 +15,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { CalendarIcon, Loader2, X, Upload, Camera } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -121,37 +121,48 @@ const DefectFormDialog = ({
 
   useEffect(() => {
     if (defect) {
+      console.log("Loading defect data into form:", defect);
+      
+      // Process dates properly
+      const vehicleReceiptDate = defect.vehicleReceiptDate ? 
+        (typeof defect.vehicleReceiptDate === 'string' ? 
+          new Date(defect.vehicleReceiptDate) : defect.vehicleReceiptDate) : 
+        new Date();
+        
+      const paymentDate = defect.paymentDate ? 
+        (typeof defect.paymentDate === 'string' ? 
+          new Date(defect.paymentDate) : defect.paymentDate) : 
+        null;
+      
       form.reset({
         dealerId: defect.dealerId,
         dealerName: defect.dealerName,
-        vehicleId: defect.vehicleId,
+        vehicleId: defect.vehicleId || '',
         email: defect.email || '',
         status: defect.status,
         reason: defect.reason,
         description: defect.description,
-        vehicleReceiptDate: new Date(defect.vehicleReceiptDate),
+        vehicleReceiptDate: vehicleReceiptDate,
         repairCost: defect.repairCost,
         approvedRepairValue: defect.approvedRepairValue || 0,
         sparePartsRequest: defect.sparePartsRequest || '',
         adminNotes: defect.adminNotes || '',
-        paymentDate: defect.paymentDate ? new Date(defect.paymentDate) : null,
+        paymentDate: paymentDate,
       });
 
       setTransportDocUrl(defect.transportDocumentUrl || '');
       setRepairQuoteUrl(defect.repairQuoteUrl || '');
       setPhotoUrls(defect.photoReportUrls || []);
+      
+      console.log("Form reset with defect data:", {
+        dealerId: defect.dealerId,
+        dealerName: defect.dealerName,
+        status: defect.status,
+        vehicleReceiptDate: vehicleReceiptDate,
+        paymentDate: paymentDate
+      });
     }
   }, [defect, form]);
-
-  useEffect(() => {
-    const dealerId = form.watch('dealerId');
-    if (dealerId) {
-      const selectedDealer = dealers.find(d => d.id === dealerId);
-      if (selectedDealer) {
-        form.setValue('dealerName', selectedDealer.companyName);
-      }
-    }
-  }, [form.watch('dealerId'), dealers, form]);
 
   const handleTransportDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -323,8 +334,8 @@ const DefectFormDialog = ({
 
   const onSubmit = async (values: FormValues) => {
     try {
+      console.log("Form submission started with values:", values);
       setIsSubmitting(true);
-      console.log("Starting form submission with values:", values);
       
       if (!values.dealerId) {
         toast({
@@ -412,17 +423,22 @@ const DefectFormDialog = ({
         adminNotes: values.adminNotes || ''
       };
       
-      console.log("Submitting data:", submissionData);
+      console.log("Submitting data to API:", JSON.stringify(submissionData, null, 2));
       
       try {
         if (defectId) {
           console.log(`Updating defect report with ID: ${defectId}`);
           const updatedReport = await defectReportsApi.update(defectId, submissionData);
-          console.log("Updated report:", updatedReport);
+          console.log("Update API response:", updatedReport);
+          
           toast({
             title: "Difformità aggiornata",
             description: "La segnalazione di difformità è stata aggiornata con successo",
           });
+          
+          if (onSuccess) {
+            onSuccess();
+          }
         } else {
           const newReport = await defectReportsApi.create(submissionData);
           console.log("Created new report:", newReport);
@@ -430,10 +446,11 @@ const DefectFormDialog = ({
             title: "Difformità creata",
             description: "La segnalazione di difformità è stata creata con successo",
           });
+          
+          if (onSuccess) {
+            onSuccess();
+          }
         }
-        
-        onSuccess();
-        onClose();
       } catch (error: any) {
         console.error('Error submitting defect report:', error);
         

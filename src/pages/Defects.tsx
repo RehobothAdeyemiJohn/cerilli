@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
@@ -97,18 +96,13 @@ const Defects = () => {
         
         if (err.message && err.message.includes("Authentication error")) {
           errorMessage = "Errore di autenticazione. Effettua il login per continuare.";
-          toast({
-            title: "Errore di autenticazione",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Errore",
-            description: errorMessage + (err.message ? ": " + err.message : ""),
-            variant: "destructive",
-          });
         }
+        
+        toast({
+          title: "Errore",
+          description: errorMessage + (err.message ? ": " + err.message : ""),
+          variant: "destructive",
+        });
         
         throw err;
       }
@@ -119,10 +113,17 @@ const Defects = () => {
   const handleSuccess = useCallback(() => {
     console.log("Defect operation successful, refetching data...");
     setIsSubmitting(false);
-    refetch();
-    toast({
-      title: "Operazione completata",
-      description: "I dati sono stati aggiornati con successo.",
+    setFormDialogOpen(false);
+    setDetailsDialogOpen(false);
+    setDeleteDialogOpen(false);
+    
+    // Force refetch to update the UI with the latest data
+    refetch().then(() => {
+      toast({
+        title: "Operazione completata",
+        description: "I dati sono stati aggiornati con successo.",
+      });
+      console.log("Data refetched successfully");
     });
   }, [refetch, toast]);
 
