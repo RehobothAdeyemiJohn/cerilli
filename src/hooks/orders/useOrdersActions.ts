@@ -1,6 +1,8 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
+import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { OrderDetails } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -14,31 +16,31 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         console.log("Order details for delivery check:", order.details);
         
-        // Instead of checking if details are malformed, just check if ODL is generated
-        let odlGenerated = false;
-        
-        if (order.details) {
-          // Try to extract the odlGenerated flag regardless of the structure
-          const detailsObj = order.details as any; // Use any to bypass TypeScript checks
+        // Completely skip the structure check and directly query the order details from API
+        // This is more reliable than trying to interpret the potentially malformed order.details
+        try {
+          // Try to get order details directly from the API
+          const orderDetails = await orderDetailsApi.getByOrderId(orderId);
+          console.log("Retrieved order details directly from API:", orderDetails);
           
-          if (typeof detailsObj === 'object') {
-            // Case 1: direct property
-            if ('odlGenerated' in detailsObj) {
-              odlGenerated = Boolean(detailsObj.odlGenerated);
-            } 
-            // Case 2: property nested in value object
-            else if (detailsObj.value && 
-                    typeof detailsObj.value === 'object' && 
-                    'odlGenerated' in detailsObj.value) {
-              odlGenerated = Boolean(detailsObj.value.odlGenerated);
-            }
+          // If we have details and ODL is not generated, prevent delivery
+          if (orderDetails && !orderDetails.odlGenerated) {
+            console.log('Order details exist but ODL not generated');
+            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
           }
+          
+          // If no details found at all (null response), prevent delivery
+          if (!orderDetails) {
+            console.log('No order details found - ODL not generated');
+            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
+          }
+        } catch (detailsError) {
+          // If there was an error fetching details, we should prevent delivery
+          console.error("Error fetching order details:", detailsError);
+          throw new Error("Impossibile verificare lo stato dell'ODL. Aprire i dettagli dell'ordine e generare l'ODL.");
         }
         
-        if (!odlGenerated) {
-          console.log('Cannot deliver order - ODL not generated:', order.details);
-          throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
-        }
+        // If we get here, either ODL is generated or we've handled all error cases
         
         if (order.vehicle && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
