@@ -186,54 +186,6 @@ const DefectFormDialog = ({
     setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Function to check and create buckets
-  const ensureBucketsExist = async () => {
-    try {
-      setUploadStatus('Checking storage buckets...');
-      console.log('Checking if required storage buckets exist...');
-      
-      const { data: bucketList, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error('Error listing buckets:', listError);
-        return false;
-      }
-      
-      const bucketNames = bucketList?.map(b => b.name) || [];
-      console.log('Existing buckets:', bucketNames);
-      
-      const requiredBuckets = ['defect-documents', 'defect-quotes', 'defect-photos'];
-      const missingBuckets = requiredBuckets.filter(name => !bucketNames.includes(name));
-      
-      if (missingBuckets.length > 0) {
-        console.log('Creating missing buckets:', missingBuckets);
-        setUploadStatus('Creating missing storage buckets...');
-        
-        for (const bucketName of missingBuckets) {
-          const { error } = await supabase.storage.createBucket(bucketName, {
-            public: true
-          });
-          
-          if (error) {
-            console.error(`Error creating bucket ${bucketName}:`, error);
-            toast({
-              title: 'Errore',
-              description: `Impossibile creare il bucket di storage "${bucketName}": ${error.message}`,
-              variant: 'destructive',
-            });
-            return false;
-          }
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error checking/creating buckets:', error);
-      setUploadStatus('Errore nella verifica/creazione dei bucket');
-      return false;
-    }
-  };
-
   const uploadTransportDoc = async () => {
     if (!transportDoc) return '';
     setUploadingTransportDoc(true);
@@ -404,18 +356,7 @@ const DefectFormDialog = ({
       let newPhotoUrls = photoUrls;
       
       try {
-        const bucketsExist = await ensureBucketsExist();
-        if (!bucketsExist) {
-          toast({
-            title: "Errore",
-            description: "Impossibile inizializzare lo storage per i file. Contatta l'amministratore.",
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-        
-        // Upload files
+        // Upload files directly - buckets already exist with proper permissions
         if (transportDoc) {
           newTransportDocUrl = await uploadTransportDoc();
         }
