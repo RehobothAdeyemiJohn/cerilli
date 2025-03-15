@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -81,6 +82,7 @@ export type Order = {
   status: 'processing' | 'delivered' | 'cancelled';
   orderDate: string;
   deliveryDate?: string;
+  progressiveNumber?: number; // Add the progressiveNumber property
   vehicle?: Vehicle;
   dealer?: any;
   details?: OrderDetails;
