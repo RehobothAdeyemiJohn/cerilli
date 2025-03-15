@@ -102,6 +102,84 @@ export type Database = {
         }
         Relationships: []
       }
+      defect_reports: {
+        Row: {
+          admin_notes: string | null
+          case_number: number
+          created_at: string | null
+          dealer_id: string
+          dealer_name: string
+          description: string
+          email: string | null
+          id: string
+          payment_date: string | null
+          photo_report_urls: string[] | null
+          reason: string
+          repair_cost: number | null
+          repair_quote_url: string | null
+          status: string
+          transport_document_url: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+          vehicle_receipt_date: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          case_number?: number
+          created_at?: string | null
+          dealer_id: string
+          dealer_name: string
+          description: string
+          email?: string | null
+          id?: string
+          payment_date?: string | null
+          photo_report_urls?: string[] | null
+          reason: string
+          repair_cost?: number | null
+          repair_quote_url?: string | null
+          status?: string
+          transport_document_url?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          vehicle_receipt_date: string
+        }
+        Update: {
+          admin_notes?: string | null
+          case_number?: number
+          created_at?: string | null
+          dealer_id?: string
+          dealer_name?: string
+          description?: string
+          email?: string | null
+          id?: string
+          payment_date?: string | null
+          photo_report_urls?: string[] | null
+          reason?: string
+          repair_cost?: number | null
+          repair_quote_url?: string | null
+          status?: string
+          transport_document_url?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          vehicle_receipt_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "defect_reports_dealer_id_fkey"
+            columns: ["dealer_id"]
+            isOneToOne: false
+            referencedRelation: "dealers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "defect_reports_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_details: {
         Row: {
           chassis: string | null

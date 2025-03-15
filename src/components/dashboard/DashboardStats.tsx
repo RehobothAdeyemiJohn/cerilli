@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabase/client';
 import StatCard from './StatCard';
 import { useAuth } from '@/context/AuthContext';
-import { Car, Users, FileText, ShoppingCart } from 'lucide-react';
+import { Car, Users, FileText, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { defectReportsApi } from '@/api/supabase';
 
 export const DashboardStats = () => {
   const { user } = useAuth();
@@ -92,8 +93,53 @@ export const DashboardStats = () => {
     }
   });
 
+  // Query per le statistiche dei rapporti di difformità
+  const { data: defectStats, isLoading: loadingDefects } = useQuery({
+    queryKey: ['defectStats', dealerId],
+    queryFn: async () => {
+      if (isDealer && dealerId) {
+        // For dealers, we need to get their specific stats
+        let openQuery = supabase.from('defect_reports')
+          .select('*', { count: 'exact', head: true })
+          .eq('dealer_id', dealerId)
+          .eq('status', 'Aperta');
+          
+        let closedQuery = supabase.from('defect_reports')
+          .select('*', { count: 'exact', head: true })
+          .eq('dealer_id', dealerId)
+          .in('status', ['Approvata', 'Approvata Parzialmente', 'Respinta']);
+        
+        let paidQuery = supabase.from('defect_reports')
+          .select('repair_cost')
+          .eq('dealer_id', dealerId)
+          .not('payment_date', 'is', null);
+          
+        const [openResult, closedResult, paidResult] = await Promise.all([
+          openQuery,
+          closedQuery,
+          paidQuery
+        ]);
+        
+        if (openResult.error || closedResult.error || paidResult.error) {
+          throw openResult.error || closedResult.error || paidResult.error;
+        }
+        
+        const totalPaid = paidResult.data?.reduce((sum, report) => sum + (Number(report.repair_cost) || 0), 0) || 0;
+        
+        return {
+          openReports: openResult.count || 0,
+          closedReports: closedResult.count || 0,
+          totalPaid
+        };
+      } else {
+        // For admin, get all stats
+        return await defectReportsApi.getStats();
+      }
+    }
+  });
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
       <StatCard
         title="Veicoli"
         value={vehiclesCount}
@@ -125,6 +171,30 @@ export const DashboardStats = () => {
         icon={ShoppingCart}
         loading={loadingOrders}
         color="bg-pink-100 text-pink-600"
+      />
+      <StatCard
+        title="Difformità"
+        value={defectStats?.openReports || 0}
+        description="Garanzie aperte"
+        icon={AlertTriangle}
+        loading={loadingDefects}
+        color="bg-amber-100 text-amber-600"
+      />
+      <StatCard
+        title="Difformità Chiuse"
+        value={defectStats?.closedReports || 0}
+        description="Garanzie chiuse"
+        icon={AlertTriangle}
+        loading={loadingDefects}
+        color="bg-teal-100 text-teal-600"
+      />
+      <StatCard
+        title="Garanzie Pagate"
+        value={`€${(defectStats?.totalPaid || 0).toLocaleString('it-IT')}`}
+        description="Totale importi pagati"
+        icon={AlertTriangle}
+        loading={loadingDefects}
+        color="bg-indigo-100 text-indigo-600"
       />
     </div>
   );

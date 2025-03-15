@@ -201,3 +201,31 @@ export type Accessory = {
   compatibleModels: string[]; // Array of model IDs, empty means all models
   compatibleTrims: string[]; // Array of trim IDs, empty means all trims
 };
+
+export type DefectReport = {
+  id: string;
+  caseNumber: number;
+  dealerId: string;
+  dealerName: string;
+  vehicleId?: string;
+  email?: string;
+  status: 'Aperta' | 'Approvata' | 'Approvata Parzialmente' | 'Respinta';
+  reason: 'Danni da trasporto' | 'Difformità Pre-Garanzia Tecnica' | 'Carrozzeria';
+  description: string;
+  vehicleReceiptDate: string;
+  repairCost: number;
+  transportDocumentUrl?: string;
+  photoReportUrls?: string[];
+  repairQuoteUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  adminNotes?: string;
+  paymentDate?: string;
+};
+
+export type DefectReportStats = {
+  openReports: number;
+  closedReports: number;
+  totalPaid: number;
+};
+

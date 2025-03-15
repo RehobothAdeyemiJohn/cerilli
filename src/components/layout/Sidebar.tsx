@@ -12,6 +12,7 @@ import {
   Settings,
   Database,
   FileText,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     { title: 'Stock', icon: ShoppingBag, path: '/inventory', showForDealer: true },
     { title: 'Stock Dealer', icon: Store, path: '/dealer-stock', showForDealer: true, showForAdmin: true },
     { title: 'Ordini', icon: ClipboardList, path: '/orders', showForDealer: true },
+    { title: 'Difformità', icon: AlertTriangle, path: '/defects', showForDealer: true, showForAdmin: true },
     { title: 'Consegne', icon: Truck, path: '/deliveries', showForDealer: false, showForAdmin: true },
     { title: 'Dealers', icon: Users, path: '/dealers', showForAdmin: true, showForDealer: true },
   ];
