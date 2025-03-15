@@ -74,14 +74,12 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
     }
   });
 
-  // Fetch defect data if editing
   const { data: defect, isLoading } = useQuery({
     queryKey: ['defect', defectId],
     queryFn: () => defectId ? defectReportsApi.getById(defectId) : null,
     enabled: !!defectId && isOpen,
   });
 
-  // Set form values when editing an existing defect
   useEffect(() => {
     if (defect) {
       form.reset({
@@ -111,6 +109,8 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         ...values,
         dealerId: values.dealerId || user?.dealerId || '', // Ensure dealerId is always provided
         dealerName: values.dealerName || user?.dealerName || '', // Ensure dealerName is always provided
+        status: values.status, // Ensure status is always provided
+        reason: values.reason, // Ensure reason is always provided
         vehicleReceiptDate: format(values.vehicleReceiptDate, 'yyyy-MM-dd'),
         paymentDate: values.paymentDate ? format(values.paymentDate, 'yyyy-MM-dd') : undefined,
       };
