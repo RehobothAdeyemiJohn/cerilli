@@ -14,38 +14,13 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         console.log("Order details for delivery check:", order.details);
         
-        // Check if order details exist or are malformed
-        let detailsMalformed = false;
-        
-        if (!order.details) {
-          detailsMalformed = true;
-        } else if (typeof order.details === 'object') {
-          // Check if it's an empty object
-          if (Object.keys(order.details).length === 0) {
-            detailsMalformed = true;
-          }
-          // Check if it has the malformed structure we're seeing in logs
-          else if ('_type' in order.details && '_type' in order.details) {
-            const detailsAny = order.details as any;
-            if (detailsAny._type === "undefined" && detailsAny.value === "undefined") {
-              detailsMalformed = true;
-            }
-          }
-        }
-        
-        if (detailsMalformed) {
-          console.log('Order has missing or malformed details - needs ODL generation');
-          throw new Error("È necessario aprire i dettagli dell'ordine e generare l'ODL prima di poter consegnare");
-        }
-        
-        // Check if ODL has been generated before allowing delivery
+        // Instead of checking if details are malformed, just check if ODL is generated
         let odlGenerated = false;
         
         if (order.details) {
-          // Handle different structure possibilities for order.details
+          // Try to extract the odlGenerated flag regardless of the structure
           const detailsObj = order.details as any; // Use any to bypass TypeScript checks
           
-          // Try different ways to extract the odlGenerated flag
           if (typeof detailsObj === 'object') {
             // Case 1: direct property
             if ('odlGenerated' in detailsObj) {
