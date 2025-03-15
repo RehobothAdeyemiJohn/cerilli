@@ -5,7 +5,7 @@ import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard, FileCheck, Plus } from 'lucide-react';
+import { Clock, CalendarClock, Car, PaintBucket, Fuel, CreditCard } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { modelsApi } from '@/api/localStorage';
 
@@ -14,8 +14,6 @@ interface VehicleDetailsContentProps {
   hideImage?: boolean;
   onEdit?: () => void;
   onDelete?: () => Promise<void>;
-  onReserve?: () => void;
-  onCreateQuote?: () => void;
   onClose?: () => void;
   isDealerStock?: boolean;
   isVirtualStock?: boolean;
@@ -26,8 +24,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   hideImage,
   onEdit,
   onDelete,
-  onReserve,
-  onCreateQuote,
   onClose,
   isDealerStock,
   isVirtualStock
@@ -62,15 +58,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const daysInStock = !isVirtualStockVehicle ? calculateDaysInStock(vehicle.dateAdded) : null;
   const estimatedArrival = isVirtualStockVehicle ? calculateEstimatedArrival(vehicle) : null;
 
-  console.log("VehicleDetailsContent props:", { 
-    onReserve: Boolean(onReserve), 
-    onCreateQuote: Boolean(onCreateQuote), 
-    status: vehicle.status, 
-    isVirtualStock, 
-    model: vehicle.model,
-    availability: vehicle.status === 'available'
-  });
-
   return (
     <div className="space-y-6">
       {/* Header with title, badge */}
@@ -84,33 +71,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
           </div>
         </div>
       </div>
-
-      {/* ACTION BUTTONS AT THE TOP - MORE VISIBLE */}
-      {(onReserve || onCreateQuote) && (
-        <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-          {onCreateQuote && !isVirtualStockVehicle && (
-            <Button 
-              onClick={onCreateQuote}
-              className="bg-green-600 hover:bg-green-700 text-white w-full"
-              size="lg"
-            >
-              <FileCheck className="h-5 w-5 mr-2" />
-              Crea Preventivo
-            </Button>
-          )}
-          
-          {onReserve && (
-            <Button 
-              onClick={onReserve}
-              className="bg-blue-700 hover:bg-blue-800 text-white w-full"
-              size="lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Prenota
-            </Button>
-          )}
-        </div>
-      )}
 
       <div className="flex flex-col md:flex-row gap-6">
         {!hideImage && (
@@ -211,33 +171,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
             <p className="text-gray-700">{vehicle.telaio}</p>
           </CardContent>
         </Card>
-      )}
-      
-      {/* ALTERNATE BOTTOM ACTION BUTTONS - in case the top ones don't work */}
-      {(onReserve || onCreateQuote) && (
-        <div className="flex flex-col md:flex-row gap-3 mt-4">
-          {onCreateQuote && !isVirtualStockVehicle && (
-            <Button 
-              onClick={onCreateQuote}
-              className="bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200 w-full"
-              size="lg"
-            >
-              <FileCheck className="h-5 w-5 mr-2" />
-              Crea Preventivo
-            </Button>
-          )}
-          
-          {onReserve && (
-            <Button 
-              onClick={onReserve}
-              className="bg-blue-700 hover:bg-blue-800 text-white w-full"
-              size="lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Prenota
-            </Button>
-          )}
-        </div>
       )}
       
       {/* Admin action buttons */}

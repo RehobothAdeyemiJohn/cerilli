@@ -1,12 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import VehicleDetailsContent from './details/VehicleDetailsContent';
+import { Button } from '@/components/ui/button';
+import { FileText, ShoppingCart } from 'lucide-react';
 import EditVehicleForm from './EditVehicleForm';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
+
+// Import the vehicle details content component
+import VehicleDetailsContent from './details/VehicleDetailsContent';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -33,9 +37,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   isVirtualStock = false,
   shouldReserve = false
 }) => {
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showReserveForm, setShowReserveForm] = useState(false);
-  const [showVirtualReservationForm, setShowVirtualReservationForm] = useState(false);
+  // State for different dialog modes
+  const [currentView, setCurrentView] = React.useState<'details' | 'edit' | 'reserve' | 'virtualReserve'>('details');
   const { user } = useAuth();
 
   // Determine if the user is a dealer and can reserve vehicles
@@ -44,26 +47,20 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const canEdit = user?.type === 'admin';
   
   // Effect to handle the shouldReserve prop
-  useEffect(() => {
-    console.log("VehicleDetailsDialog: shouldReserve changed to", shouldReserve);
+  React.useEffect(() => {
     if (open && vehicle && shouldReserve) {
-      console.log("Auto-opening reservation form for", vehicle.id, vehicle.location);
       if (vehicle.location === 'Stock Virtuale') {
-        console.log("Opening virtual reservation form");
-        setShowVirtualReservationForm(true);
+        setCurrentView('virtualReserve');
       } else {
-        console.log("Opening standard reservation form");
-        setShowReserveForm(true);
+        setCurrentView('reserve');
       }
     }
   }, [open, vehicle, shouldReserve]);
   
   // Reset state when dialog closes
-  useEffect(() => {
+  React.useEffect(() => {
     if (!open) {
-      setShowEditForm(false);
-      setShowReserveForm(false);
-      setShowVirtualReservationForm(false);
+      setCurrentView('details');
     }
   }, [open]);
   
@@ -72,23 +69,16 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   }
   
   const handleEditClick = () => {
-    setShowEditForm(true);
-    setShowReserveForm(false);
-    setShowVirtualReservationForm(false);
+    setCurrentView('edit');
   };
   
   const handleReserveClick = () => {
     console.log("Reserve button clicked in dialog for vehicle:", vehicle.id, vehicle.location);
     if (vehicle.location === 'Stock Virtuale') {
-      console.log("Opening virtual reservation form");
-      setShowVirtualReservationForm(true);
-      setShowReserveForm(false);
+      setCurrentView('virtualReserve');
     } else {
-      console.log("Opening standard reservation form");
-      setShowReserveForm(true);
-      setShowVirtualReservationForm(false);
+      setCurrentView('reserve');
     }
-    setShowEditForm(false);
   };
   
   const handleCreateQuoteClick = () => {
@@ -115,24 +105,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const handleReservationComplete = () => {
     console.log("Reservation completed, refreshing data");
     onVehicleUpdated();
-    setShowReserveForm(false);
-    setShowVirtualReservationForm(false);
+    setCurrentView('details');
     onOpenChange(false);
   };
   
-  // Debug logs
-  console.log("VehicleDetailsDialog state:", { 
-    canReserve, 
-    canEdit, 
-    userType: user?.type, 
-    isDealer, 
-    vehicleStatus: vehicle.status,
-    onReserveSet: Boolean(onReserve),
-    onCreateQuoteSet: Boolean(onCreateQuote),
-    showReserveButton: canReserve && Boolean(onReserve)
-  });
-
-  // IMPORTANT: Determine which actions to pass to VehicleDetailsContent
+  // IMPORTANT: Determine which actions are available
   // This ensures the button visibility is determined by both user permissions and available callbacks
   const showReserveButton = Boolean(onReserve) && canReserve;
   const showCreateQuoteButton = Boolean(onCreateQuote) && canReserve && !isVirtualStock;
@@ -140,38 +117,72 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        {showEditForm ? (
+        {currentView === 'details' && (
+          <div className="space-y-4">
+            {/* PROMINENT ACTION BUTTONS AT THE TOP */}
+            {(showReserveButton || showCreateQuoteButton) && (
+              <div className="flex flex-wrap gap-3 mb-6">
+                {showCreateQuoteButton && (
+                  <Button 
+                    onClick={handleCreateQuoteClick}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    Crea Preventivo
+                  </Button>
+                )}
+                
+                {showReserveButton && (
+                  <Button 
+                    onClick={handleReserveClick}
+                    className="bg-blue-700 hover:bg-blue-800 text-white"
+                    size="lg"
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Prenota
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {/* Vehicle details content */}
+            <VehicleDetailsContent 
+              vehicle={vehicle} 
+              onEdit={canEdit ? handleEditClick : undefined}
+              onDelete={canEdit ? handleDeleteClick : undefined}
+              onClose={handleDialogClose}
+              isDealerStock={isDealerStock}
+              isVirtualStock={isVirtualStock}
+            />
+          </div>
+        )}
+
+        {currentView === 'edit' && (
           <EditVehicleForm 
             vehicle={vehicle}
             onComplete={() => {
               onVehicleUpdated();
-              setShowEditForm(false);
+              setCurrentView('details');
               onOpenChange(false);
             }}
-            onCancel={() => setShowEditForm(false)}
+            onCancel={() => setCurrentView('details')}
           />
-        ) : showReserveForm ? (
+        )}
+        
+        {currentView === 'reserve' && (
           <ReserveVehicleForm
             vehicle={vehicle}
             onReservationComplete={handleReservationComplete}
-            onCancel={() => setShowReserveForm(false)}
+            onCancel={() => setCurrentView('details')}
           />
-        ) : showVirtualReservationForm ? (
+        )}
+        
+        {currentView === 'virtualReserve' && (
           <VirtualReservationForm
             vehicle={vehicle}
             onReservationComplete={handleReservationComplete}
-            onCancel={() => setShowVirtualReservationForm(false)}
-          />
-        ) : (
-          <VehicleDetailsContent 
-            vehicle={vehicle} 
-            onEdit={canEdit ? handleEditClick : undefined}
-            onDelete={canEdit ? handleDeleteClick : undefined}
-            onReserve={showReserveButton ? handleReserveClick : undefined}
-            onCreateQuote={showCreateQuoteButton ? handleCreateQuoteClick : undefined}
-            onClose={handleDialogClose}
-            isDealerStock={isDealerStock}
-            isVirtualStock={isVirtualStock}
+            onCancel={() => setCurrentView('details')}
           />
         )}
       </DialogContent>

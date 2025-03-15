@@ -49,7 +49,7 @@ const DealerStock = () => {
       return v.reservedBy === user?.dealerName;
     }
     
-    // For admins, show all dealer stock vehicles (filtering will be handled by the filterVehicles function)
+    // For admins, show all dealer stock vehicles
     return true;
   });
 
@@ -82,14 +82,13 @@ const DealerStock = () => {
       description: `Prenotazione per ${vehicle.model}`,
     });
     
-    // We'll open the reservation form directly in the same page dialog
-    // by passing the vehicle ID via state to the VehicleList component
+    // Open the reservation form directly in the dialog
     navigate('/inventory', {
       state: {
         reserveVehicle: true, 
         vehicleId: vehicle.id,
         openDialog: true,
-        keepState: true // Prevent state from being cleared
+        keepState: true
       }
     });
   };
@@ -109,6 +108,10 @@ const DealerStock = () => {
     await refetch(); 
     return Promise.resolve(); 
   };
+  
+  // Just for debugging - remove in production
+  console.log("DealerStock rendering, onCreateQuote and onReserve are defined:", 
+    Boolean(handleCreateQuote), Boolean(handleReserveVehicle));
   
   return (
     <div className="container mx-auto py-6 px-4">
