@@ -165,12 +165,14 @@ const QuoteVehicleInfo = ({ vehicle, compatibleAccessories }: QuoteVehicleInfoPr
           <Separator className="my-4" />
           
           {/* Accessories Section */}
-          <QuoteAccessories 
-            accessories={vehicle.accessories || []} 
-            compatibleAccessories={compatibleAccessories}
-            showAllAccessories={showAllAccessories}
-            setShowAllAccessories={setShowAllAccessories}
-          />
+          {vehicle?.accessories && (
+            <QuoteAccessories 
+              accessories={vehicle.accessories} 
+              compatibleAccessories={compatibleAccessories}
+              showAllAccessories={showAllAccessories}
+              setShowAllAccessories={setShowAllAccessories}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

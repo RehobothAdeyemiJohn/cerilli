@@ -2,22 +2,26 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Accessory } from '@/types';
 import { useFormContext } from 'react-hook-form';
 
 interface QuoteAccessoriesProps {
-  compatibleAccessories: Accessory[];
-  vehicle: {
-    accessories: string[];
-  };
+  accessories: string[];
+  compatibleAccessories: string[];
+  showAllAccessories: boolean;
+  setShowAllAccessories: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ compatibleAccessories, vehicle }) => {
+const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ 
+  accessories, 
+  compatibleAccessories, 
+  showAllAccessories, 
+  setShowAllAccessories 
+}) => {
   const form = useFormContext();
 
   // Filter out accessories that are already included in the vehicle's stock configuration
   const availableAccessories = compatibleAccessories.filter(
-    accessory => !vehicle.accessories.includes(accessory.name)
+    accessory => !accessories.includes(accessory)
   );
 
   if (availableAccessories.length === 0) {
@@ -28,29 +32,26 @@ const QuoteAccessories: React.FC<QuoteAccessoriesProps> = ({ compatibleAccessori
     <div className="border-t pt-2">
       <h3 className="font-medium text-sm mb-2">Optional Disponibili</h3>
       <div className="grid grid-cols-2 gap-2">
-        {availableAccessories.map((accessory) => (
+        {availableAccessories.map((accessory, index) => (
           <FormField
-            key={accessory.id}
+            key={index}
             control={form.control}
-            name="vehicleAccessories"
+            name="selectedAccessories"
             render={({ field }) => (
               <FormItem className="flex items-start space-x-2 space-y-0">
                 <Checkbox
-                  checked={field.value?.includes(accessory.name)}
+                  checked={field.value?.includes(accessory)}
                   onCheckedChange={(checked) => {
                     const current = field.value || [];
                     const updated = checked
-                      ? [...current, accessory.name]
-                      : current.filter((name) => name !== accessory.name);
+                      ? [...current, accessory]
+                      : current.filter((name) => name !== accessory);
                     field.onChange(updated);
                   }}
                 />
                 <div className="space-y-0.5 leading-none">
                   <FormLabel className="text-xs">
-                    {accessory.name}
-                    <span className="ml-1 text-xs text-gray-500">
-                      (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
-                    </span>
+                    {accessory}
                   </FormLabel>
                 </div>
               </FormItem>

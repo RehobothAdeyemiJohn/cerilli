@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -40,7 +39,8 @@ export const useQuoteForm = (
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   const [showTradeIn, setShowTradeIn] = useState(false);
-  const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
+  const [compatibleAccessoriesData, setCompatibleAccessoriesData] = useState<Accessory[]>([]);
+  const [compatibleAccessories, setCompatibleAccessories] = useState<string[]>([]);
   const [basePrice, setBasePrice] = useState(vehicle?.price || 0);
   const [accessoryTotalPrice, setAccessoryTotalPrice] = useState(0);
   const [finalPrice, setFinalPrice] = useState(vehicle?.price || 0);
@@ -57,7 +57,13 @@ export const useQuoteForm = (
           const available = accessories.filter(
             accessory => !vehicle.accessories?.includes(accessory.name)
           );
-          setCompatibleAccessories(available);
+          setCompatibleAccessoriesData(available);
+          
+          // Extract just the names for the string[] version
+          const accessoryNames = available.map(acc => acc.name);
+          setCompatibleAccessories(accessoryNames);
+          
+          console.log("Compatible accessories fetched:", accessoryNames);
         } catch (error) {
           console.error('Error fetching compatible accessories:', error);
         }
@@ -113,16 +119,16 @@ export const useQuoteForm = (
 
   // Calculate accessory prices
   useEffect(() => {
-    if (compatibleAccessories.length && watchSelectedAccessories.length) {
+    if (compatibleAccessoriesData.length && watchSelectedAccessories.length) {
       const total = watchSelectedAccessories.reduce((sum, accessoryName) => {
-        const accessory = compatibleAccessories.find(a => a.name === accessoryName);
+        const accessory = compatibleAccessoriesData.find(a => a.name === accessoryName);
         return sum + (accessory ? (accessory.priceWithVAT || 0) : 0);
       }, 0);
       setAccessoryTotalPrice(total);
     } else {
       setAccessoryTotalPrice(0);
     }
-  }, [compatibleAccessories, watchSelectedAccessories]);
+  }, [compatibleAccessoriesData, watchSelectedAccessories]);
 
   // Calculate total discount (discount + trade-in value)
   useEffect(() => {
