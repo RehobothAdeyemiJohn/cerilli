@@ -1,19 +1,11 @@
 
 import React from 'react';
 import OrdersFilters from '@/components/orders/OrdersFilters';
-import { Dealer } from '@/types';
+import { Dealer, OrderFilters } from '@/types';
 
 interface OrdersHeaderProps {
   isAdmin: boolean;
-  filters: {
-    isLicensable: boolean | null;
-    hasProforma: boolean | null;
-    isPaid: boolean | null;
-    isInvoiced: boolean | null;
-    hasConformity: boolean | null;
-    dealerId: string | null;
-    model: string | null;
-  };
+  filters: OrderFilters;
   updateFilter: (key: string, value: boolean | null | string) => void;
   resetFilters: () => void;
   showFilters: boolean;

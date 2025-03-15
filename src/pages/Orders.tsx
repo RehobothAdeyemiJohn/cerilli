@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
@@ -24,11 +23,18 @@ import { toast } from '@/hooks/use-toast';
 import { useReactToPrint } from 'react-to-print';
 import OrderPrintTemplate from '@/components/orders/OrderPrintTemplate';
 import ContractFormDialog from '@/components/contracts/ContractFormDialog';
-import { Navigate } from 'react-router-dom';
 
 const Orders = () => {
   const { isAdmin } = useAuth();
-  const { filters, handleFilterChange, resetFilters } = useOrderFilters();
+  const { 
+    filters, 
+    handleFilterChange, 
+    resetFilters, 
+    showFilters, 
+    setShowFilters, 
+    activeFiltersCount 
+  } = useOrderFilters();
+  
   const {
     ordersData,
     ordersWithDetails,
@@ -45,6 +51,7 @@ const Orders = () => {
     refetchOrdersWithDetails,
     getOrderNumber
   } = useOrdersData(filters);
+  
   const {
     markAsDeliveredMutation,
     cancelOrderMutation,
@@ -54,6 +61,7 @@ const Orders = () => {
     handleDeleteOrder: deleteOrderAction,
     handleGenerateODL
   } = useOrdersActions(refreshAllOrderData);
+  
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
   const [selectedOrderForContract, setSelectedOrderForContract] = useState<Order | null>(null);
 
@@ -67,19 +75,15 @@ const Orders = () => {
   const handleContractFormSubmit = async (formData: any) => {
     if (selectedOrderForContract) {
       try {
-        // Importa l'API dei contratti direttamente qui per evitare dipendenze circolari
         const { dealerContractsApi } = await import('@/api/supabase/dealerContractsApi');
         
         await dealerContractsApi.createFromOrder(selectedOrderForContract.id, formData);
         
-        // Aggiorna i dati degli ordini dopo la creazione del contratto
         refreshAllOrderData();
         
-        // Chiudi il dialog
         setIsContractFormOpen(false);
         setSelectedOrderForContract(null);
         
-        // Mostra toast di successo
         toast({
           title: "Contratto creato",
           description: "Il contratto è stato creato con successo",
@@ -130,7 +134,6 @@ const Orders = () => {
   const triggerPrint = useReactToPrint({
     documentTitle: selectedOrder ? `Order-${selectedOrder.id}` : 'Order',
     onAfterPrint: () => console.log('Print completed'),
-    removeAfterPrint: true,
   });
 
   return (
@@ -141,10 +144,16 @@ const Orders = () => {
 
       <div className="container mx-auto py-6">
         <OrdersHeader 
-          searchText={filters.searchText || ''}
-          onSearch={(text) => handleFilterChange('searchText', text)}
-          onDateFilterChange={(dates) => handleFilterChange('dateRange', dates)}
-          onReset={resetFilters}
+          isAdmin={isAdmin}
+          filters={filters}
+          updateFilter={handleFilterChange}
+          resetFilters={resetFilters}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          activeFiltersCount={activeFiltersCount}
+          dealersData={[]} // Pass empty array for now
+          uniqueModels={[]} // Pass empty array for now
+          onRefresh={refreshAllOrderData}
         />
 
         <Tabs defaultValue="processing" className="mt-6">

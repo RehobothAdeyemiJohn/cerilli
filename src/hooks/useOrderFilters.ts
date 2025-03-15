@@ -10,6 +10,13 @@ export interface OrderFilters {
   models?: string[];
   dealers?: string[];
   status?: string[];
+  isLicensable: boolean | null;
+  hasProforma: boolean | null;
+  isPaid: boolean | null;
+  isInvoiced: boolean | null;
+  hasConformity: boolean | null;
+  dealerId: string | null;
+  model: string | null;
 }
 
 export const useOrderFilters = () => {
@@ -18,8 +25,17 @@ export const useOrderFilters = () => {
     dateRange: undefined,
     models: [],
     dealers: [],
-    status: []
+    status: [],
+    isLicensable: null,
+    hasProforma: null,
+    isPaid: null,
+    isInvoiced: null,
+    hasConformity: null,
+    dealerId: null,
+    model: null
   });
+
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleFilterChange = useCallback((filterName: string, value: any) => {
     setFilters(prev => ({
@@ -34,13 +50,30 @@ export const useOrderFilters = () => {
       dateRange: undefined,
       models: [],
       dealers: [],
-      status: []
+      status: [],
+      isLicensable: null,
+      hasProforma: null,
+      isPaid: null,
+      isInvoiced: null,
+      hasConformity: null,
+      dealerId: null,
+      model: null
     });
   }, []);
+
+  const activeFiltersCount = Object.values(filters).filter(value => 
+    value !== null && 
+    value !== '' && 
+    !(Array.isArray(value) && value.length === 0) && 
+    value !== undefined
+  ).length;
 
   return {
     filters,
     handleFilterChange,
-    resetFilters
+    resetFilters,
+    showFilters,
+    setShowFilters,
+    activeFiltersCount
   };
 };
