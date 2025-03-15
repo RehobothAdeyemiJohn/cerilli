@@ -109,9 +109,11 @@ const DealerStock = () => {
     return Promise.resolve(); 
   };
   
-  // Just for debugging - remove in production
-  console.log("DealerStock rendering, onCreateQuote and onReserve are defined:", 
-    Boolean(handleCreateQuote), Boolean(handleReserveVehicle));
+  // Just for debugging - log that callbacks are defined
+  console.log("DealerStock rendering, callbacks defined:", {
+    onCreateQuote: Boolean(handleCreateQuote),
+    onReserve: Boolean(handleReserveVehicle)
+  });
   
   return (
     <div className="container mx-auto py-6 px-4">

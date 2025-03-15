@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,6 @@ import { FileText, ShoppingCart } from 'lucide-react';
 import EditVehicleForm from './EditVehicleForm';
 import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
-
-// Import the vehicle details content component
 import VehicleDetailsContent from './details/VehicleDetailsContent';
 
 interface VehicleDetailsDialogProps {
@@ -89,10 +87,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
-  const handleDialogClose = () => {
-    onOpenChange(false);
-  };
-  
   const handleDeleteClick = async () => {
     try {
       await onVehicleDeleted(vehicle.id);
@@ -110,55 +104,14 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   };
   
   // IMPORTANT: Determine which actions are available
-  // This ensures the button visibility is determined by both user permissions and available callbacks
   const showReserveButton = Boolean(onReserve) && canReserve;
   const showCreateQuoteButton = Boolean(onCreateQuote) && canReserve && !isVirtualStock;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        {currentView === 'details' && (
-          <div className="space-y-4">
-            {/* PROMINENT ACTION BUTTONS AT THE TOP */}
-            {(showReserveButton || showCreateQuoteButton) && (
-              <div className="flex flex-wrap gap-3 mb-6">
-                {showCreateQuoteButton && (
-                  <Button 
-                    onClick={handleCreateQuoteClick}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    size="lg"
-                  >
-                    <FileText className="h-5 w-5 mr-2" />
-                    Crea Preventivo
-                  </Button>
-                )}
-                
-                {showReserveButton && (
-                  <Button 
-                    onClick={handleReserveClick}
-                    className="bg-blue-700 hover:bg-blue-800 text-white"
-                    size="lg"
-                  >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Prenota
-                  </Button>
-                )}
-              </div>
-            )}
-            
-            {/* Vehicle details content */}
-            <VehicleDetailsContent 
-              vehicle={vehicle} 
-              onEdit={canEdit ? handleEditClick : undefined}
-              onDelete={canEdit ? handleDeleteClick : undefined}
-              onClose={handleDialogClose}
-              isDealerStock={isDealerStock}
-              isVirtualStock={isVirtualStock}
-            />
-          </div>
-        )}
-
-        {currentView === 'edit' && (
+  
+  // Dialog content based on current view
+  const renderDialogContent = () => {
+    switch(currentView) {
+      case 'edit':
+        return (
           <EditVehicleForm 
             vehicle={vehicle}
             onComplete={() => {
@@ -168,23 +121,77 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             }}
             onCancel={() => setCurrentView('details')}
           />
-        )}
-        
-        {currentView === 'reserve' && (
+        );
+      case 'reserve':
+        return (
           <ReserveVehicleForm
             vehicle={vehicle}
             onReservationComplete={handleReservationComplete}
             onCancel={() => setCurrentView('details')}
           />
-        )}
-        
-        {currentView === 'virtualReserve' && (
+        );
+      case 'virtualReserve':
+        return (
           <VirtualReservationForm
             vehicle={vehicle}
             onReservationComplete={handleReservationComplete}
             onCancel={() => setCurrentView('details')}
           />
-        )}
+        );
+      case 'details':
+      default:
+        return (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                {vehicle.model} {vehicle.trim}
+              </DialogTitle>
+              <DialogDescription>
+                Dettagli del veicolo e azioni disponibili
+              </DialogDescription>
+            </DialogHeader>
+            
+            <VehicleDetailsContent 
+              vehicle={vehicle} 
+              onEdit={canEdit ? handleEditClick : undefined}
+              onDelete={canEdit ? handleDeleteClick : undefined}
+              onClose={() => onOpenChange(false)}
+              isDealerStock={isDealerStock}
+              isVirtualStock={isVirtualStock}
+            />
+            
+            <DialogFooter className="mt-6">
+              <div className="flex w-full gap-3 justify-between">
+                {showCreateQuoteButton && (
+                  <Button 
+                    onClick={handleCreateQuoteClick}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300"
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    Crea Preventivo
+                  </Button>
+                )}
+                
+                {showReserveButton && (
+                  <Button 
+                    onClick={handleReserveClick}
+                    className="flex-1 bg-blue-700 hover:bg-blue-800 text-white"
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Prenota
+                  </Button>
+                )}
+              </div>
+            </DialogFooter>
+          </>
+        );
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        {renderDialogContent()}
       </DialogContent>
     </Dialog>
   );
