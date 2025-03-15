@@ -74,7 +74,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
 
-  const { data: dealers = [] } = useQuery({
+  const { data: dealers = [], isLoading: loadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
   });
@@ -233,13 +233,28 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
     setUploadingPhotos(true);
     
     try {
+      const { data: bucketList } = await supabase.storage.listBuckets();
+      const defectPhotoBucket = bucketList?.find(b => b.name === 'defect-photos');
+      
+      if (!defectPhotoBucket) {
+        const { error: bucketError } = await supabase.storage.createBucket('defect-photos', {
+          public: true
+        });
+        if (bucketError) {
+          console.error('Error creating bucket:', bucketError);
+        }
+      }
+      
       const uploadPromises = photos.map(async (photo) => {
         const fileName = `${Date.now()}-${photo.name}`;
         const { data, error } = await supabase.storage
           .from('defect-photos')
           .upload(fileName, photo);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error uploading photo:', error);
+          throw error;
+        }
         
         const { data: urlData } = supabase.storage
           .from('defect-photos')
@@ -261,7 +276,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       console.error('Error uploading photos:', error);
       toast({
         title: "Errore",
-        description: "Impossibile caricare le fotografie",
+        description: "Impossibile caricare le fotografie: " + (error as Error).message,
         variant: "destructive",
       });
       return photoUrls;
@@ -275,9 +290,43 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       setIsSubmitting(true);
       console.log("Starting form submission...");
       
+      if (!values.dealerId) {
+        toast({
+          title: "Errore",
+          description: "Seleziona un dealer",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       let newTransportDocUrl = transportDocUrl;
       let newRepairQuoteUrl = repairQuoteUrl;
       let newPhotoUrls = photoUrls;
+      
+      const { data: bucketList } = await supabase.storage.listBuckets();
+      const bucketNames = bucketList?.map(b => b.name) || [];
+      
+      if (transportDoc && !bucketNames.includes('defect-documents')) {
+        const { error } = await supabase.storage.createBucket('defect-documents', {
+          public: true
+        });
+        if (error) console.error('Error creating documents bucket:', error);
+      }
+      
+      if (repairQuote && !bucketNames.includes('defect-quotes')) {
+        const { error } = await supabase.storage.createBucket('defect-quotes', {
+          public: true
+        });
+        if (error) console.error('Error creating quotes bucket:', error);
+      }
+      
+      if (photos.length > 0 && !bucketNames.includes('defect-photos')) {
+        const { error } = await supabase.storage.createBucket('defect-photos', {
+          public: true
+        });
+        if (error) console.error('Error creating photos bucket:', error);
+      }
       
       if (transportDoc) {
         newTransportDocUrl = await uploadTransportDoc();
@@ -344,7 +393,7 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
       console.error('Error submitting defect report:', error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante il salvataggio",
+        description: "Si è verificato un errore durante il salvataggio: " + (error as Error).message,
         variant: "destructive",
       });
     } finally {
@@ -415,11 +464,17 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {dealers.map((dealer) => (
-                              <SelectItem key={dealer.id} value={dealer.id}>
-                                {dealer.companyName}
-                              </SelectItem>
-                            ))}
+                            {loadingDealers ? (
+                              <SelectItem value="loading" disabled>Caricamento...</SelectItem>
+                            ) : dealers && dealers.length > 0 ? (
+                              dealers.map((dealer) => (
+                                <SelectItem key={dealer.id} value={dealer.id}>
+                                  {dealer.companyName}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-dealers" disabled>Nessun dealer disponibile</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />

@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { DefectReport, DefectReportStats } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,27 +50,31 @@ export const defectReportsApi = {
 
   async create(report: Omit<DefectReport, 'id' | 'caseNumber' | 'createdAt' | 'updatedAt'>) {
     console.log("Creating defect report with data:", report);
+    
+    // Make sure we have all required fields and they are in the correct format
+    const payload = {
+      dealer_id: report.dealerId,
+      dealer_name: report.dealerName,
+      vehicle_id: report.vehicleId || null,
+      email: report.email,
+      status: report.status || 'Aperta',
+      reason: report.reason,
+      description: report.description,
+      vehicle_receipt_date: report.vehicleReceiptDate,
+      repair_cost: report.repairCost || 0,
+      approved_repair_value: report.approvedRepairValue || 0,
+      spare_parts_request: report.sparePartsRequest || '',
+      transport_document_url: report.transportDocumentUrl || '',
+      photo_report_urls: report.photoReportUrls || [],
+      repair_quote_url: report.repairQuoteUrl || '',
+      admin_notes: report.adminNotes || ''
+    };
+    
+    console.log("Submitting payload to Supabase:", payload);
+    
     const { data, error } = await supabase
       .from('defect_reports')
-      .insert([{
-        id: uuidv4(),
-        dealer_id: report.dealerId,
-        dealer_name: report.dealerName,
-        vehicle_id: report.vehicleId,
-        email: report.email,
-        status: report.status,
-        reason: report.reason,
-        description: report.description,
-        vehicle_receipt_date: report.vehicleReceiptDate,
-        repair_cost: report.repairCost,
-        approved_repair_value: report.approvedRepairValue,
-        spare_parts_request: report.sparePartsRequest,
-        transport_document_url: report.transportDocumentUrl,
-        photo_report_urls: report.photoReportUrls,
-        repair_quote_url: report.repairQuoteUrl,
-        admin_notes: report.adminNotes,
-        payment_date: report.paymentDate
-      }])
+      .insert([payload])
       .select()
       .single();
 
@@ -85,26 +90,32 @@ export const defectReportsApi = {
 
   async update(id: string, report: Partial<DefectReport>) {
     console.log("Updating defect report with id:", id, "and data:", report);
+    
+    // Format all fields correctly for the database
+    const payload = {
+      dealer_id: report.dealerId,
+      dealer_name: report.dealerName,
+      vehicle_id: report.vehicleId || null,
+      email: report.email,
+      status: report.status,
+      reason: report.reason,
+      description: report.description,
+      vehicle_receipt_date: report.vehicleReceiptDate,
+      repair_cost: report.repairCost || 0,
+      approved_repair_value: report.approvedRepairValue || 0,
+      spare_parts_request: report.sparePartsRequest || '',
+      transport_document_url: report.transportDocumentUrl || '',
+      photo_report_urls: report.photoReportUrls || [],
+      repair_quote_url: report.repairQuoteUrl || '',
+      admin_notes: report.adminNotes || '',
+      payment_date: report.paymentDate || null
+    };
+    
+    console.log("Submitting update payload to Supabase:", payload);
+    
     const { data, error } = await supabase
       .from('defect_reports')
-      .update({
-        dealer_id: report.dealerId,
-        dealer_name: report.dealerName,
-        vehicle_id: report.vehicleId,
-        email: report.email,
-        status: report.status,
-        reason: report.reason,
-        description: report.description,
-        vehicle_receipt_date: report.vehicleReceiptDate,
-        repair_cost: report.repairCost,
-        approved_repair_value: report.approvedRepairValue,
-        spare_parts_request: report.sparePartsRequest,
-        transport_document_url: report.transportDocumentUrl,
-        photo_report_urls: report.photoReportUrls,
-        repair_quote_url: report.repairQuoteUrl,
-        admin_notes: report.adminNotes,
-        payment_date: report.paymentDate
-      })
+      .update(payload)
       .eq('id', id)
       .select()
       .single();

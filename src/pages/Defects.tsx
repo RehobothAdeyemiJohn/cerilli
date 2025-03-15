@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defectReportsApi } from '@/api/supabase';
 import { Button } from '@/components/ui/button';
@@ -90,12 +90,13 @@ const Defects = () => {
         console.error("Error fetching defect reports:", err);
         toast({
           title: "Errore",
-          description: "Si è verificato un errore durante il caricamento delle segnalazioni",
+          description: "Si è verificato un errore durante il caricamento delle segnalazioni: " + (err as Error).message,
           variant: "destructive",
         });
         return [];
       }
-    }
+    },
+    refetchOnWindowFocus: false
   });
 
   const handleFilterChange = (newFilters: {
@@ -126,10 +127,10 @@ const Defects = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = useCallback(() => {
     console.log("Defect operation successful, refetching data...");
     refetch();
-  };
+  }, [refetch]);
 
   const selectedDefect = selectedDefectId
     ? defectReports.find(d => d.id === selectedDefectId)
