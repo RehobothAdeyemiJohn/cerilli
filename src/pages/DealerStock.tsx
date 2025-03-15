@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ import VehicleList from '@/components/vehicles/VehicleList';
 import { filterVehicles } from '@/utils/vehicleFilters';
 import FilterCard from '@/components/orders/filters/FilterCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import FilterSelectItem from '@/components/orders/filters/FilterSelectItem';
 
 const DealerStock = () => {
   const { user } = useAuth();
@@ -45,6 +47,11 @@ const DealerStock = () => {
     queryFn: dealersApi.getAll,
     staleTime: 0,
   });
+  
+  // Debug the state of selectedDealer
+  useEffect(() => {
+    console.log("Selected dealer state changed:", selectedDealer);
+  }, [selectedDealer]);
   
   // Filter vehicles with location "Stock Dealer" AND filter by selected dealer if needed
   const dealerStockVehicles = vehicles.filter(v => {
@@ -106,7 +113,11 @@ const DealerStock = () => {
   // Format dealer filter options
   const dealerFilterOptions = dealers
     .filter(dealer => dealer.isActive)
-    .sort((a, b) => a.companyName.localeCompare(b.companyName));
+    .sort((a, b) => a.companyName.localeCompare(b.companyName))
+    .map(dealer => ({
+      id: dealer.id,
+      name: dealer.companyName
+    }));
   
   // For admin users, add a dealer quick filter dropdown
   const DealerFilter = () => {
@@ -114,25 +125,17 @@ const DealerStock = () => {
     
     return (
       <div className="w-64">
-        <Select
-          value={selectedDealer || "all"}
-          onValueChange={(value) => {
-            // Fix: Explicitly handle the "all" case to set null
-            setSelectedDealer(value === "all" ? null : value);
+        <FilterSelectItem
+          label="Filtra per dealer"
+          value={selectedDealer}
+          onChange={(value) => {
+            console.log("Filter value selected:", value);
+            setSelectedDealer(value);
           }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Filtra per dealer" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti i dealer</SelectItem>
-            {dealerFilterOptions.map(dealer => (
-              <SelectItem key={dealer.id} value={dealer.id}>
-                {dealer.companyName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={dealerFilterOptions}
+          placeholder="Tutti i dealer"
+          className="w-full"
+        />
       </div>
     );
   };

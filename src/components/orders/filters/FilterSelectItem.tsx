@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface FilterSelectItemProps {
   label: string;
   value: string | null;
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
   options: { id: string; name: string }[];
   placeholder: string;
   className?: string;
@@ -25,7 +25,10 @@ const FilterSelectItem = ({
       <Label className="text-sm font-medium mb-2 block text-gray-700">{label}</Label>
       <Select
         value={value || "all"}
-        onValueChange={(value) => onChange(value === "all" ? null : value)}
+        onValueChange={(selectedValue) => {
+          console.log("FilterSelectItem selected:", selectedValue);
+          onChange(selectedValue === "all" ? null : selectedValue);
+        }}
       >
         <SelectTrigger className="w-full border-gray-300 bg-white">
           <SelectValue placeholder={placeholder} />
