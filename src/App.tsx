@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
+import Layout from './components/layout/Layout';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -48,18 +49,22 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-              <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
-              <Route path="/dealers" element={<ProtectedRoute><Dealers /></ProtectedRoute>} />
-              <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
-              <Route path="/credentials" element={<ProtectedRoute><Credentials /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/dealer-stock" element={<ProtectedRoute><DealerStock /></ProtectedRoute>} />
-              <Route path="/deliveries" element={<ProtectedRoute><Deliveries /></ProtectedRoute>} />
-              <Route path="/defects" element={<ProtectedRoute><Defects /></ProtectedRoute>} />
-              <Route path="/migration" element={<ProtectedRoute><Migration /></ProtectedRoute>} />
+              {/* Protected routes with Layout */}
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/dealers" element={<Dealers />} />
+                <Route path="/contracts" element={<Contracts />} />
+                <Route path="/credentials" element={<Credentials />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/dealer-stock" element={<DealerStock />} />
+                <Route path="/deliveries" element={<Deliveries />} />
+                <Route path="/defects" element={<Defects />} />
+                <Route path="/migration" element={<Migration />} />
+              </Route>
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +28,7 @@ import {
 const AppSidebar = () => {
   const { isAdmin } = useAuth();
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
 
   return (
     <div className="h-full flex flex-col">
