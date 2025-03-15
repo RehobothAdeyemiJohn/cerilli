@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -54,10 +53,32 @@ export const useOrdersData = (filters: {
               // Case 2: details has a nested value property (using type assertion)
               else {
                 const detailsAny = details as any;
+                
+                // Check if details has a value property with content
                 if (detailsAny.value && 
                     typeof detailsAny.value === 'object' && 
                     'odlGenerated' in detailsAny.value) {
                   normalizedDetails = detailsAny.value as OrderDetails;
+                }
+                // Handle the case where value is a string (seen in logs)
+                else if (detailsAny._type && detailsAny.value !== undefined) {
+                  // This is the malformed case we're seeing in logs
+                  // Create a default OrderDetails object since the real data is corrupted
+                  console.log(`Malformed details for order ${order.id} with _type: ${detailsAny._type}`);
+                  normalizedDetails = {
+                    id: '',
+                    orderId: order.id,
+                    isLicensable: false,
+                    hasProforma: false,
+                    isPaid: false,
+                    isInvoiced: false,
+                    hasConformity: false,
+                    transportCosts: 0,
+                    restorationCosts: 0,
+                    odlGenerated: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  };
                 }
               }
             }

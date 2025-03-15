@@ -23,12 +23,20 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
           
           // Try different ways to extract the odlGenerated flag
           if (typeof detailsObj === 'object') {
+            // Case 1: direct property
             if ('odlGenerated' in detailsObj) {
               odlGenerated = Boolean(detailsObj.odlGenerated);
-            } else if (detailsObj.value && typeof detailsObj.value === 'object') {
-              if ('odlGenerated' in detailsObj.value) {
-                odlGenerated = Boolean(detailsObj.value.odlGenerated);
-              }
+            } 
+            // Case 2: property nested in value object
+            else if (detailsObj.value && 
+                    typeof detailsObj.value === 'object' && 
+                    'odlGenerated' in detailsObj.value) {
+              odlGenerated = Boolean(detailsObj.value.odlGenerated);
+            }
+            // Case 3: dealing with the malformed case (_type and value are strings)
+            else if (detailsObj._type !== undefined && detailsObj.value !== undefined) {
+              // In this case, details is corrupted - we treat as ODL not generated
+              odlGenerated = false;
             }
           }
         }
