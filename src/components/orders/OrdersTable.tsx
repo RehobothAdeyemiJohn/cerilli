@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Order } from '@/types';
 import {
@@ -69,13 +70,26 @@ const OrdersTable = ({
     }
   };
 
+  // Sort orders by progressive number if available, or by date as fallback
   const sortedOrders = [...orders].sort((a, b) => {
+    // First try to sort by progressive number
+    if (a.progressiveNumber && b.progressiveNumber) {
+      return a.progressiveNumber - b.progressiveNumber;
+    }
+    
+    // Fall back to date sorting
     const dateA = new Date(a.orderDate || 0).getTime();
     const dateB = new Date(b.orderDate || 0).getTime();
     return dateA - dateB;
   });
 
   const getOrderNumber = (order: Order): string => {
+    // Use progressive number from database if available
+    if (order.progressiveNumber) {
+      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
+    }
+    
+    // Fallback to index for backward compatibility
     const index = sortedOrders.findIndex(o => o.id === order.id);
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -202,13 +203,17 @@ export const useOrdersData = (filters: {
     refetchOrdersWithDetails();
   };
 
-  // This ensures order numbers are based on all orders collectively,
-  // so they're always progressive and never reset
-  const getOrderNumber = (order: Order, allOrders: Order[]): string => {
+  // Format the order number with padding using the progressive_number from database
+  const getOrderNumber = (order: Order): string => {
     if (!order || !order.id) return "#000";
     
-    // Sort all orders by date, regardless of current filter or status
-    const sortedOrders = [...allOrders].sort((a, b) => {
+    // Use the database progressive number if available, otherwise fallback
+    if (order.progressiveNumber) {
+      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
+    }
+    
+    // Fallback to index-based calculation for backward compatibility
+    const sortedOrders = [...ordersData].sort((a, b) => {
       const dateA = new Date(a.orderDate || 0).getTime();
       const dateB = new Date(b.orderDate || 0).getTime();
       return dateA - dateB;

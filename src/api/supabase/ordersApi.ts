@@ -1,3 +1,4 @@
+
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -36,6 +37,7 @@ export const ordersApi = {
       status: order.status,
       orderDate: order.orderdate,
       deliveryDate: order.deliverydate,
+      progressiveNumber: order.progressive_number, // Add the progressive number from the database
       // Include related data
       vehicle: order.vehicles,
       dealer: order.dealers

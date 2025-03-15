@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
@@ -46,6 +45,7 @@ const Orders = () => {
     refreshAllOrderData,
     setIsDetailsDialogOpen,
     ordersData,
+    getOrderNumber
   } = useOrdersData(filters);
 
   useEffect(() => {
@@ -86,21 +86,6 @@ const Orders = () => {
     setSelectedOrderId(null);
   };
 
-  const getOrderNumber = (order: Order) => {
-    if (!order || !order.id) return "#000";
-    
-    // Changed: Sort all orders by date, regardless of status
-    // This ensures order numbers are progressive and never reset
-    const sortedOrders = [...ordersData].sort((a, b) => {
-      const dateA = new Date(a.orderDate || 0).getTime();
-      const dateB = new Date(b.orderDate || 0).getTime();
-      return dateA - dateB;
-    });
-    
-    const index = sortedOrders.findIndex(o => o.id === order.id);
-    return `#${(index + 1).toString().padStart(3, '0')}`;
-  };
-
   const handlePrintOrder = (order: Order) => {
     setOrderToPrint(order);
     setPrintDialogOpen(true);
@@ -116,7 +101,6 @@ const Orders = () => {
 
   useEffect(() => {
     if (printDialogOpen && orderToPrint && printRef.current) {
-      // Increased delay to ensure content is fully rendered
       const timer = setTimeout(() => {
         handlePrint();
       }, 500);
