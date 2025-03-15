@@ -159,6 +159,9 @@ export const defectReportsApi = {
         return await this.getById(id);
       }
       
+      // Debug what's happening during the update
+      console.log(`Executing update query for report ${id} with payload:`, JSON.stringify(payload, null, 2));
+      
       const { data, error } = await supabase
         .from('defect_reports')
         .update(payload)
@@ -172,7 +175,12 @@ export const defectReportsApi = {
         throw error;
       }
 
-      console.log("Updated defect report:", data);
+      if (!data) {
+        console.error(`No data returned after update for report with id ${id}`);
+        throw new Error('Update operation did not return data');
+      }
+
+      console.log("Updated defect report response:", data);
       return mapDefectReport(data);
     } catch (error) {
       console.error('Error in defect report update:', error);
