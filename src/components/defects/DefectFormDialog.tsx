@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,6 +32,9 @@ type DefectFormDialogProps = {
   onClose: () => void;
   defectId?: string;
   onSuccess: () => void;
+  onError?: (error: any) => void;
+  setIsSubmitting?: React.Dispatch<React.SetStateAction<boolean>>;
+  isSubmitting?: boolean;
 };
 
 const formSchema = z.object({
@@ -55,12 +57,24 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDialogProps) => {
+const DefectFormDialog = ({ 
+  isOpen, 
+  onClose, 
+  defectId, 
+  onSuccess,
+  onError,
+  setIsSubmitting: externalSetIsSubmitting,
+  isSubmitting: externalIsSubmitting 
+}: DefectFormDialogProps) => {
   const { user } = useAuth();
   const isAdmin = user?.type === 'admin';
   const isDealer = user?.type === 'dealer';
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Use external or internal state for isSubmitting
+  const [internalIsSubmitting, setInternalIsSubmitting] = useState(false);
+  const isSubmitting = externalIsSubmitting !== undefined ? externalIsSubmitting : internalIsSubmitting;
+  const setIsSubmitting = externalSetIsSubmitting || setInternalIsSubmitting;
   
   const [transportDoc, setTransportDoc] = useState<File | null>(null);
   const [uploadingTransportDoc, setUploadingTransportDoc] = useState(false);
@@ -491,6 +505,11 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
           description: errorMessage,
           variant: "destructive",
         });
+        
+        // Call onError callback if provided
+        if (onError) {
+          onError(error);
+        }
       }
     } catch (error) {
       console.error('Unexpected error during form submission:', error);
@@ -499,6 +518,11 @@ const DefectFormDialog = ({ isOpen, onClose, defectId, onSuccess }: DefectFormDi
         description: "Si è verificato un errore imprevisto. Riprova più tardi.",
         variant: "destructive",
       });
+      
+      // Call onError callback if provided
+      if (onError) {
+        onError(error);
+      }
     } finally {
       setIsSubmitting(false);
       setUploadStatus('');
