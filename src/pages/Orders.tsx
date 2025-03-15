@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
@@ -115,6 +116,14 @@ const Orders = () => {
   const handleOpenDetailsDialog = (order: Order) => {
     setSelectedOrder(order);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleCloseDetailsDialog = () => {
+    setIsDetailsDialogOpen(false);
+    // Small delay to prevent errors when selectedOrder is set to null
+    setTimeout(() => {
+      setSelectedOrder(null);
+    }, 100);
   };
 
   const handleDeleteClick = (orderId: string) => {
@@ -273,12 +282,15 @@ const Orders = () => {
           </TabsContent>
         </Tabs>
 
-        <OrderDetailsDialog
-          open={isDetailsDialogOpen}
-          onOpenChange={setIsDetailsDialogOpen}
-          order={selectedOrder}
-          onGenerateODL={handleGenerateODL}
-        />
+        {/* Only render the dialog if there's a selected order */}
+        {selectedOrder && (
+          <OrderDetailsDialog
+            open={isDetailsDialogOpen}
+            onOpenChange={handleCloseDetailsDialog}
+            order={selectedOrder}
+            onGenerateODL={handleGenerateODL}
+          />
+        )}
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
