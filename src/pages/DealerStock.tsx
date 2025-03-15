@@ -73,6 +73,21 @@ const DealerStock = () => {
     });
   };
   
+  const handleReserveVehicle = (vehicle: Vehicle) => {
+    console.log('Reserving vehicle from DealerStock:', vehicle.id, vehicle.location);
+    navigate('/inventory', {
+      state: {
+        reserveVehicle: true,
+        vehicleId: vehicle.id
+      }
+    });
+    
+    toast({
+      title: 'Apertura form di prenotazione',
+      description: `Prenotazione per ${vehicle.model}`,
+    });
+  };
+  
   const handleViewVehicle = (vehicleId: string) => {
     navigate(`/inventory?vehicleId=${vehicleId}`);
   };
@@ -82,7 +97,10 @@ const DealerStock = () => {
   };
   
   const handleVehicleUpdated = () => refetch();
-  const handleVehicleDeleted = async () => { await refetch(); return Promise.resolve(); };
+  const handleVehicleDeleted = async (id: string) => { 
+    await refetch(); 
+    return Promise.resolve(); 
+  };
   
   return (
     <div className="container mx-auto py-6 px-4">
@@ -128,15 +146,7 @@ const DealerStock = () => {
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
                   onCreateQuote={handleCreateQuote}
-                  onReserve={(vehicle) => {
-                    // Updated to use state-based navigation for consistency
-                    navigate('/inventory', {
-                      state: {
-                        reserveVehicle: true,
-                        vehicleId: vehicle.id
-                      }
-                    });
-                  }}
+                  onReserve={handleReserveVehicle}
                   isDealerStock={true}
                   isVirtualStock={false}
                 />
@@ -174,6 +184,7 @@ const DealerStock = () => {
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
                   onCreateQuote={handleCreateQuote}
+                  onReserve={handleReserveVehicle}
                   isDealerStock={true}
                   isVirtualStock={false}
                 />

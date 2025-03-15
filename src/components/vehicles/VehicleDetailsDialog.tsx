@@ -37,7 +37,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReservationForm, setShowVirtualReservationForm] = useState(false);
   const { user } = useAuth();
-  // Fix: Change the isDealer check to include all non-admin roles
+  // Correggiamo la logica per canReserve
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   
   // Effect to handle the shouldReserve prop
@@ -89,6 +89,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   };
   
   const handleCreateQuoteClick = () => {
+    console.log("Create quote button clicked for vehicle:", vehicle.id);
     if (onCreateQuote) {
       onCreateQuote(vehicle);
       onOpenChange(false);
@@ -116,10 +117,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     onOpenChange(false);
   };
   
-  // Fix: We need to properly determine if the user can reserve vehicles
-  const canReserve = isDealer;
-  
-  // Fixed: Correct the admin check to properly check for admin type
+  // Semplifichiamo la logica per una migliore comprensione
+  // Un utente può prenotare se è un dealer e il veicolo è disponibile
+  const canReserve = isDealer && vehicle.status === 'available';
   const canEdit = user?.type === 'admin';
   
   console.log("VehicleDetailsDialog state:", { 
@@ -129,7 +129,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     isDealer, 
     vehicleStatus: vehicle.status,
     onReserve: Boolean(onReserve),
-    onCreateQuote: Boolean(onCreateQuote) 
+    onCreateQuote: Boolean(onCreateQuote),
+    isDealerStock,
+    isVirtualStock
   });
 
   return (
@@ -162,8 +164,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             vehicle={vehicle} 
             onEdit={canEdit ? handleEditClick : undefined}
             onDelete={canEdit ? handleDeleteClick : undefined}
-            onReserve={canReserve && onReserve && vehicle.status === 'available' ? handleReserveClick : undefined}
-            onCreateQuote={canReserve && onCreateQuote && vehicle.status === 'available' && !isVirtualStock ? handleCreateQuoteClick : undefined}
+            onReserve={canReserve && onReserve ? handleReserveClick : undefined}
+            onCreateQuote={canReserve && onCreateQuote && !isVirtualStock ? handleCreateQuoteClick : undefined}
             onClose={handleDialogClose}
             isDealerStock={isDealerStock}
             isVirtualStock={isVirtualStock}

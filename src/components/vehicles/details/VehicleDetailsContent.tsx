@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
@@ -62,8 +63,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const estimatedArrival = isVirtualStockVehicle ? calculateEstimatedArrival(vehicle) : null;
 
   console.log("VehicleDetailsContent props:", { 
-    onReserve, 
-    onCreateQuote, 
+    onReserve: Boolean(onReserve), 
+    onCreateQuote: Boolean(onCreateQuote), 
     status: vehicle.status, 
     isVirtualStock, 
     model: vehicle.model,
@@ -84,8 +85,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </div>
       </div>
 
-      {/* Action buttons - Always show them if the handlers are provided */}
-      <div className="flex flex-wrap gap-3 mb-6 sticky top-0 z-10 bg-white py-3 shadow-sm rounded-md">
+      {/* Action buttons - Spostati qui prima del contenuto principale ma dopo l'header */}
+      <div className="flex flex-wrap gap-3 mb-6 bg-white py-3 border rounded-md shadow-sm p-3">
         {onReserve && (
           <Button 
             onClick={onReserve}
@@ -210,9 +211,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         </Card>
       )}
       
-      {/* Main action buttons - moved to the top */}
-      
-      {/* Admin action buttons - kept at the bottom */}
+      {/* Admin action buttons */}
       {(onEdit || onDelete || onClose) && (
         <div className="flex justify-end gap-2 mt-4">
           {onEdit && (
