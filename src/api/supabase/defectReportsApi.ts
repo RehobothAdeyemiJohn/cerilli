@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DefectReport, DefectReportStats } from '@/types';
 
@@ -128,7 +127,8 @@ export const defectReportsApi = {
   },
 
   async update(id: string, report: Partial<DefectReport>) {
-    console.log("Updating defect report with id:", id, "and data:", report);
+    console.log("Starting update for defect report with id:", id);
+    console.log("Update data received:", report);
     
     // Format all fields correctly for the database (camelCase to snake_case)
     const payload: Record<string, any> = {};
@@ -150,7 +150,7 @@ export const defectReportsApi = {
     if (report.adminNotes !== undefined) payload.admin_notes = report.adminNotes;
     if (report.paymentDate !== undefined) payload.payment_date = report.paymentDate;
     
-    console.log("Submitting update payload to Supabase:", payload);
+    console.log("Prepared update payload:", payload);
     
     try {
       if (Object.keys(payload).length === 0) {
@@ -162,26 +162,38 @@ export const defectReportsApi = {
       // Debug what's happening during the update
       console.log(`Executing update query for report ${id} with payload:`, JSON.stringify(payload, null, 2));
       
-      const { data, error } = await supabase
+      // Explicitly perform the update without returning data first
+      const { error: updateError } = await supabase
         .from('defect_reports')
         .update(payload)
+        .eq('id', id);
+
+      if (updateError) {
+        console.error(`Error updating defect report with id ${id}:`, updateError);
+        console.error('Error details:', updateError.details, updateError.message, updateError.hint);
+        throw updateError;
+      }
+
+      // Then fetch the updated record separately
+      console.log("Update succeeded, fetching updated record");
+      const { data: updatedData, error: fetchError } = await supabase
+        .from('defect_reports')
+        .select('*')
         .eq('id', id)
-        .select()
         .single();
 
-      if (error) {
-        console.error(`Error updating defect report with id ${id}:`, error);
-        console.error('Error details:', error.details, error.message, error.hint);
-        throw error;
+      if (fetchError) {
+        console.error(`Error fetching updated defect report with id ${id}:`, fetchError);
+        throw fetchError;
       }
 
-      if (!data) {
-        console.error(`No data returned after update for report with id ${id}`);
-        throw new Error('Update operation did not return data');
+      if (!updatedData) {
+        console.error(`No data returned when fetching updated report with id ${id}`);
+        throw new Error('Could not retrieve updated record');
       }
 
-      console.log("Updated defect report response:", data);
-      return mapDefectReport(data);
+      console.log("Successfully retrieved updated defect report:", updatedData);
+      return mapDefectReport(updatedData);
     } catch (error) {
       console.error('Error in defect report update:', error);
       throw error;
