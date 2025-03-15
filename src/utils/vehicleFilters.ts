@@ -23,6 +23,10 @@ export const filterVehicles = (vehicles: Vehicle[], filters: Filter): Vehicle[] 
       return false;
     }
     
+    if (filters.dealers && filters.dealers.length > 0 && !filters.dealers.includes(vehicle.reservedBy)) {
+      return false;
+    }
+    
     if (filters.status.length > 0 && !filters.status.includes(vehicle.status)) {
       return false;
     }

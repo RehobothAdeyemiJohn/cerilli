@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -13,15 +14,12 @@ import { Card } from '@/components/ui/card';
 import VehicleFilters from '@/components/vehicles/VehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
 import { filterVehicles } from '@/utils/vehicleFilters';
-import FilterCard from '@/components/orders/filters/FilterCard';
-import FilterSelectItem from '@/components/orders/filters/FilterSelectItem';
 
 const DealerStock = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeFilters, setActiveFilters] = useState<Filter | null>(null);
-  const [selectedDealer, setSelectedDealer] = useState<string | null>(null);
   
   const { 
     data: vehicles = [], 
@@ -43,22 +41,16 @@ const DealerStock = () => {
     staleTime: 0,
   });
   
-  useEffect(() => {
-    console.log("Selected dealer state changed:", selectedDealer);
-  }, [selectedDealer]);
-  
   const dealerStockVehicles = vehicles.filter(v => {
     if (v.location !== 'Stock Dealer') return false;
     
-    if (user?.type === 'admin') {
-      if (selectedDealer) {
-        const dealer = dealers.find(d => d.id === selectedDealer);
-        return dealer && v.reservedBy === dealer.companyName;
-      }
-      return true;
+    // If not admin, only show vehicles for this dealer
+    if (user?.type !== 'admin') {
+      return v.reservedBy === user?.dealerName;
     }
     
-    return v.reservedBy === user?.dealerName;
+    // For admins, show all dealer stock vehicles (filtering will be handled by the filterVehicles function)
+    return true;
   });
 
   const filteredVehicles = activeFilters 
@@ -91,39 +83,10 @@ const DealerStock = () => {
   const handleVehicleUpdated = () => refetch();
   const handleVehicleDeleted = async () => { await refetch(); return Promise.resolve(); };
   
-  const dealerFilterOptions = dealers
-    .filter(dealer => dealer.isActive)
-    .sort((a, b) => a.companyName.localeCompare(b.companyName))
-    .map(dealer => ({
-      id: dealer.id,
-      name: dealer.companyName
-    }));
-  
-  const DealerFilter = () => {
-    if (!user || user.type !== 'admin' || dealers.length === 0) return null;
-    
-    return (
-      <div className="w-full mb-6">
-        <FilterSelectItem
-          label="Filtra per dealer"
-          value={selectedDealer}
-          onChange={(value) => {
-            console.log("Filter value selected:", value);
-            setSelectedDealer(value);
-          }}
-          options={dealerFilterOptions}
-          placeholder="Tutti i dealer"
-          className="w-full md:w-64"
-        />
-      </div>
-    );
-  };
-  
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-4">Stock Dealer</h1>
-        {user?.type === 'admin' && !loadingDealers && <DealerFilter />}
       </div>
       
       <div className="flex flex-col md:flex-row gap-6">
@@ -131,6 +94,8 @@ const DealerStock = () => {
           <VehicleFilters 
             inventory={dealerStockVehicles}
             onFiltersChange={handleFiltersChange}
+            dealers={dealers}
+            showDealerFilter={user?.type === 'admin'}
           />
         </div>
         

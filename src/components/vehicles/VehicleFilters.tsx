@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Accordion } from '@/components/ui/accordion';
-import { Filter, Vehicle } from '@/types';
+import { Filter, Vehicle, Dealer } from '@/types';
 import { modelsApi, trimsApi, fuelTypesApi, colorsApi } from '@/api/localStorage';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 
 // Import our filter components
 import SearchFilter from './filters/SearchFilter';
@@ -12,13 +13,23 @@ import TrimFilter from './filters/TrimFilter';
 import FuelTypeFilter from './filters/FuelTypeFilter';
 import ColorFilter from './filters/ColorFilter';
 import LocationFilter from './filters/LocationFilter';
+import DealerFilter from './filters/DealerFilter';
 
 interface VehicleFiltersProps {
   onFiltersChange?: (filters: Filter) => void;
   inventory: Vehicle[]; // Still need inventory for locations
+  dealers?: Dealer[]; // Add dealers prop
+  showDealerFilter?: boolean; // Flag to show/hide dealer filter
 }
 
-const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps) => {
+const VehicleFilters = ({ 
+  onFiltersChange, 
+  inventory = [], 
+  dealers = [],
+  showDealerFilter = false
+}: VehicleFiltersProps) => {
+  const { user } = useAuth();
+  
   // Fetch settings data using React Query
   const { data: modelSettings = [] } = useQuery({
     queryKey: ['models'],
@@ -56,6 +67,7 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedDealers, setSelectedDealers] = useState<string[]>([]);
   const [searchText, setSearchText] = useState('');
   
   // Reset filters when inventory changes
@@ -65,6 +77,7 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
     setSelectedFuelTypes([]);
     setSelectedColors([]);
     setSelectedLocations([]);
+    setSelectedDealers([]);
   }, []);
   
   // Callback to notify parent component when filters change
@@ -76,6 +89,7 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
         fuelTypes: selectedFuelTypes,
         colors: selectedColors,
         locations: selectedLocations,
+        dealers: selectedDealers,
         priceRange: [0, 1000000], // Default range (not used anymore)
         status: [],
         searchText: searchText
@@ -88,6 +102,7 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
     selectedFuelTypes,
     selectedColors,
     selectedLocations,
+    selectedDealers,
     searchText,
     onFiltersChange
   ]);
@@ -133,6 +148,14 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
     );
   };
   
+  const toggleDealer = (dealerName: string) => {
+    setSelectedDealers(prev => 
+      prev.includes(dealerName) 
+        ? prev.filter(d => d !== dealerName) 
+        : [...prev, dealerName]
+    );
+  };
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
   };
@@ -147,6 +170,7 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
     setSelectedFuelTypes([]);
     setSelectedColors([]);
     setSelectedLocations([]);
+    setSelectedDealers([]);
     setSearchText('');
   };
   
@@ -166,6 +190,14 @@ const VehicleFilters = ({ onFiltersChange, inventory = [] }: VehicleFiltersProps
           selectedModels={selectedModels}
           onToggleModel={toggleModel}
         />
+        
+        {showDealerFilter && user?.type === 'admin' && (
+          <DealerFilter 
+            dealers={dealers}
+            selectedDealers={selectedDealers}
+            onToggleDealer={toggleDealer}
+          />
+        )}
         
         <TrimFilter 
           trims={trimSettings}
