@@ -40,25 +40,22 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
         <div className="space-y-4">
           {dealers.map((dealer) => {
             const creditLimit = dealer.creditLimit || 0;
-            const esposizione = dealer.esposizione || 0;
-            
-            // Display creditLimit for both values if nuovo_plafond is not set
-            const displayPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : creditLimit;
+            const nuovoPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
             
             // Calcolo della percentuale disponibile
-            const availablePercentage = creditLimit > 0 ? Math.min(100, Math.round(((creditLimit - esposizione) / creditLimit) * 100)) : 0;
+            const availablePercentage = creditLimit > 0 ? Math.min(100, Math.round((nuovoPlafond / creditLimit) * 100)) : 0;
             
             return (
               <div key={dealer.id} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{dealer.companyName}</span>
                   <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                    {formatCurrency(displayPlafond)} / {formatCurrency(creditLimit)}
+                    {formatCurrency(nuovoPlafond)}
                   </span>
                 </div>
                 <Progress value={availablePercentage} className="h-2" />
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>Esposizione: {formatCurrency(esposizione)}</span>
+                  <span>Esposizione: {formatCurrency(dealer.esposizione || 0)}</span>
                   <span>{availablePercentage}% disponibile</span>
                 </div>
               </div>
