@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { calculateDaysInStock, formatCurrency } from '@/lib/utils';
+import { calculateDaysInStock } from '@/lib/utils';
 import { Vehicle } from '@/types';
 
 interface HighInventoryVehiclesProps {
@@ -36,7 +36,6 @@ const HighInventoryVehicles: React.FC<HighInventoryVehiclesProps> = ({ vehicles,
                   <th className={`pb-2 font-medium ${darkMode ? 'text-gray-300' : ''}`}>Modello</th>
                   <th className={`pb-2 font-medium ${darkMode ? 'text-gray-300' : ''}`}>Telaio</th>
                   <th className={`pb-2 font-medium ${darkMode ? 'text-gray-300' : ''}`}>Giorni</th>
-                  <th className={`pb-2 font-medium ${darkMode ? 'text-gray-300' : ''}`}>Prezzo</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +52,6 @@ const HighInventoryVehicles: React.FC<HighInventoryVehiclesProps> = ({ vehicles,
                         {vehicle.daysInStock} giorni
                       </span>
                     </td>
-                    <td className="py-3">{formatCurrency(vehicle.price || 0)}</td>
                   </tr>
                 ))}
               </tbody>

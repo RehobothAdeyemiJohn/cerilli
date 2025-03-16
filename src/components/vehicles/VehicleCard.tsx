@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock, Layers } from 'lucide-react';
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -178,6 +178,7 @@ const VehicleCard = ({
           )}
         </div>
         
+        {/* Admin action buttons only */}
         {!isDealer && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
             <button 
@@ -199,43 +200,7 @@ const VehicleCard = ({
           </div>
         )}
         
-        {isDealer && vehicle.status === 'available' && (
-          <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
-            {onCreateQuote && !isVirtualStock && (
-              <Button 
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onCreateQuote) {
-                    console.log("Create quote button clicked for:", vehicle.id);
-                    onCreateQuote(vehicle);
-                  }
-                }}
-                className="flex items-center gap-1"
-              >
-                <FileCheck className="h-4 w-4" />
-                <span>Preventivo</span>
-              </Button>
-            )}
-            {onReserve && (
-              <Button 
-                size="sm"
-                variant="secondary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onReserve) {
-                    console.log("Reserve button clicked for:", vehicle.id, vehicle.location);
-                    onReserve(vehicle);
-                  }
-                }}
-                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Prenota</span>
-              </Button>
-            )}
-          </div>
-        )}
+        {/* Remove action buttons for dealers as requested */}
       </div>
     </div>
   );

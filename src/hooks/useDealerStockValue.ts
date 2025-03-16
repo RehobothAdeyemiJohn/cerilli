@@ -34,9 +34,8 @@ export const useDealerStockValue = (dealerCompanyName: string = 'CMC') => {
       setDealerId(dealer.id);
       setDealerPlafond(dealer.creditLimit || 0);
       
-      // Set nuovo plafond from the dealer record directly
-      const nuovoPlafondValue = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : (dealer.creditLimit || 0) - (dealer.esposizione || 0);
-      setNuovoPlafond(nuovoPlafondValue);
+      // Set nuovo plafond directly from the dealer record - this is the important part
+      setNuovoPlafond(dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : (dealer.creditLimit || 0));
       
       // Calculate total value of vehicles in "Stock Dealer" that belong to this dealer
       const dealerVehicles = vehicles.filter(vehicle => 
