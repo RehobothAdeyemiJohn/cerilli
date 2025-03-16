@@ -39,11 +39,8 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            const creditLimit = dealer.creditLimit || 0;
+            // Showing only the nuovo_plafond from Supabase directly
             const nuovoPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
-            
-            // Calcolo della percentuale disponibile
-            const availablePercentage = creditLimit > 0 ? Math.min(100, Math.round((nuovoPlafond / creditLimit) * 100)) : 0;
             
             return (
               <div key={dealer.id} className="space-y-1">
@@ -53,10 +50,10 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
                     {formatCurrency(nuovoPlafond)}
                   </span>
                 </div>
-                <Progress value={availablePercentage} className="h-2" />
+                <Progress value={100} className="h-2" />
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>Esposizione: {formatCurrency(dealer.esposizione || 0)}</span>
-                  <span>{availablePercentage}% disponibile</span>
+                  <span>Plafond Disponibile</span>
+                  <span>{formatCurrency(nuovoPlafond)}</span>
                 </div>
               </div>
             );
