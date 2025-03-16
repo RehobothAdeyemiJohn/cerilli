@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -707,4 +708,273 @@ const Dashboard = () => {
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
                     <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Prezzo</th>
-                    <th className={`pb-2 font-medium ${useDarkMode
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dealerStats?.recentQuotes?.length > 0 ? (
+                    dealerStats.recentQuotes.map((quote) => (
+                      <tr key={quote.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                        <td className="py-3">{quote.vehicles?.model || 'N/A'}</td>
+                        <td className="py-3">{quote.customername || 'N/A'}</td>
+                        <td className="py-3">{formatCurrency(quote.totalprice || 0)}</td>
+                        <td className="py-3">
+                          {quote.createdat ? new Date(quote.createdat).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {quote.status === 'pending' ? 'In Attesa' :
+                             quote.status === 'approved' ? 'Approvato' :
+                             quote.status === 'rejected' ? 'Rifiutato' : 
+                             quote.status === 'ordered' ? 'Ordinato' : quote.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Nessun preventivo recente
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      ) : (
+        <>
+          {/* Admin Dashboard Content */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto in Stock</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.vehiclesCount || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-green-100">
+                  <Car className="h-5 w-5 text-green-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Concessionari</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.dealersCount || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-indigo-100">
+                  <Users className="h-5 w-5 text-indigo-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Giorni Medi in Giacenza</p>
+                  <h3 className="text-2xl font-bold mt-1">{adminStats?.avgDaysInStock || 0}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-yellow-100">
+                  <Clock className="h-5 w-5 text-yellow-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fatturato Totale</p>
+                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(adminStats?.totalInvoiced || 0)}</h3>
+                </div>
+                <div className="p-2 rounded-full bg-rose-100">
+                  <TrendingUp className="h-5 w-5 text-rose-600" />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Andamento Vendite</h3>
+              </div>
+              <div className="h-[300px] mt-4">
+                {adminStats?.monthlySalesData && adminStats.monthlySalesData.some(m => m.value > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={adminStats.monthlySalesData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={useDarkMode ? "#444" : "#eee"} />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `€${value / 1000}k`}
+                      />
+                      <Tooltip
+                        formatter={(value: any) => [`€${Number(value).toLocaleString()}`, 'Valore']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        name="Valore"
+                        stroke="#4ADE80"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
+              </div>
+              <div className="h-[300px] mt-4">
+                {adminStats?.salesByDealer && adminStats.salesByDealer.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={adminStats.salesByDealer}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={useDarkMode ? "#444" : "#eee"} />
+                      <XAxis
+                        type="number"
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        width={90}
+                      />
+                      <Tooltip
+                        formatter={(value) => [value, 'Quantità']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Ordini"
+                        fill="#818CF8"
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="sm:col-span-2">
+              {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
+            </div>
+            <div className="sm:col-span-1">
+              <DealerCreditList darkMode={useDarkMode} />
+            </div>
+          </div>
+
+          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Ordine</th>
+                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Consegna</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminStats?.recentOrders?.length > 0 ? (
+                    adminStats.recentOrders.map((order) => (
+                      <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                        <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
+                        <td className="py-3">{order.customername || 'N/A'}</td>
+                        <td className="py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {order.status === 'processing' ? 'In Lavorazione' :
+                             order.status === 'delivered' ? 'Consegnato' :
+                             order.status === 'cancelled' ? 'Cancellato' : order.status}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          {order.orderdate ? new Date(order.orderdate).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="py-3">
+                          {order.deliverydate ? new Date(order.deliverydate).toLocaleDateString() : '-'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Nessun ordine recente
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
