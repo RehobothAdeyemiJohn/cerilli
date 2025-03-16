@@ -340,6 +340,15 @@ const Dashboard = () => {
       return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
     }).slice(0, 5);
     
+    const currentMonth = new Date().getMonth();
+    const ordersThisMonth = orders.filter(o => {
+      const orderDate = new Date(o.orderdate);
+      return orderDate.getMonth() === currentMonth;
+    });
+    
+    const monthlyTarget = 5;
+    const monthlyProgress = Math.min(100, Math.round((ordersThisMonth.length / monthlyTarget) * 100));
+    
     return {
       inventoryByModel,
       salesByDealer,
@@ -364,7 +373,10 @@ const Dashboard = () => {
         status: v.status || 'available',
         dateAdded: v.dateadded,
         telaio: v.telaio || ''
-      } as Vehicle))
+      } as Vehicle)),
+      orders,
+      monthlyTarget,
+      monthlyProgress
     };
   }, [adminData]);
 
