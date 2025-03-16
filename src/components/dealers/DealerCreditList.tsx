@@ -39,21 +39,21 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Showing only the nuovo_plafond from Supabase directly
-            const nuovoPlafond = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
+            // Use nuovo_plafond directly from the database
+            const plafondDisponibile = dealer.nuovo_plafond !== undefined ? dealer.nuovo_plafond : 0;
             
             return (
               <div key={dealer.id} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{dealer.companyName}</span>
                   <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                    {formatCurrency(nuovoPlafond)}
+                    {formatCurrency(plafondDisponibile)}
                   </span>
                 </div>
                 <Progress value={100} className="h-2" />
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Plafond Disponibile</span>
-                  <span>{formatCurrency(nuovoPlafond)}</span>
+                  <span>{formatCurrency(plafondDisponibile)}</span>
                 </div>
               </div>
             );

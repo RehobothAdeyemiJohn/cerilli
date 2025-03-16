@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -130,7 +129,6 @@ const Dashboard = () => {
       
       console.log('Fetching admin dashboard data');
       
-      // Filter for CMC vehicles that are available or reserved only, excluding ordered ones
       let vehiclesQuery = supabase.from('vehicles')
         .select('*')
         .neq('location', 'Stock Virtuale')
@@ -167,7 +165,6 @@ const Dashboard = () => {
       const { data: quotes } = await quotesQuery;
       const { data: dealers } = await supabase.from('dealers').select('*');
       
-      // Get all CMC vehicles (available or reserved) for inventory stats
       const { data: allVehicles } = await supabase
         .from('vehicles')
         .select('*')
@@ -286,10 +283,8 @@ const Dashboard = () => {
       ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
       : 0;
     
-    // Calculate total invoiced without trade-in values
     const totalInvoiced = orders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
-      // Don't include trade-in values
       return sum + price;
     }, 0);
     
@@ -643,7 +638,14 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
+              {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
+            </div>
+            <div className="lg:col-span-1">
+              <DealerCreditList darkMode={useDarkMode} />
+            </div>
+          </div>
 
           <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
@@ -696,62 +698,9 @@ const Dashboard = () => {
               </table>
             </div>
           </Card>
-
-          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Preventivi Recenti</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Prezzo</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dealerStats?.recentQuotes?.length > 0 ? (
-                    dealerStats.recentQuotes.map((quote) => (
-                      <tr key={quote.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                        <td className="py-3">{quote.vehicles?.model || 'N/A'}</td>
-                        <td className="py-3">{quote.customername || 'N/A'}</td>
-                        <td className="py-3">{formatCurrency(quote.totalprice || 0)}</td>
-                        <td className="py-3">
-                          {quote.createdat ? new Date(quote.createdat).toLocaleDateString() : '-'}
-                        </td>
-                        <td className="py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            quote.status === 'approved' ? 'bg-green-100 text-green-800' :
-                            quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {quote.status === 'pending' ? 'In Attesa' :
-                             quote.status === 'approved' ? 'Approvato' :
-                             quote.status === 'rejected' ? 'Rifiutato' : 
-                             quote.status === 'ordered' ? 'Ordinato' : quote.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Nessun preventivo recente
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
         </>
       ) : (
         <>
-          {/* Admin Dashboard Content */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
               <div className="flex justify-between items-start">
@@ -978,3 +927,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
