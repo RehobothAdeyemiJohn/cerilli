@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +9,7 @@ import HighInventoryVehicles from '@/components/dashboard/HighInventoryVehicles'
 import DealerCreditList from '@/components/dealers/DealerCreditList';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/api/supabase/client';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 import { Vehicle } from '@/types';
@@ -703,4 +704,96 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Andamento Vendite</h3>
               </div>
-              <div className="h-[300px
+              <div className="h-[300px] mt-4">
+                {adminStats?.monthlySalesData && adminStats.monthlySalesData.some(m => m.value > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={adminStats.monthlySalesData}>
+                      <XAxis 
+                        dataKey="name" 
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke={useDarkMode ? "#888888" : "#888888"}
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(value) => [formatCurrency(value), 'Fatturato']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="value"
+                        name="Fatturato"
+                        radius={[4, 4, 0, 0]}
+                        fill="#4ADE80"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessun dato disponibile
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
+              </div>
+              <div className="h-[300px] mt-4">
+                {adminStats?.salesByDealer && adminStats.salesByDealer.some(item => Number(item.value) > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={adminStats.salesByDealer}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        nameKey="name"
+                        animationDuration={1500}
+                        label={(entry) => entry.name}
+                      >
+                        {adminStats.salesByDealer.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [value, 'Quantità']}
+                        contentStyle={{ 
+                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
+                          borderRadius: '0.5rem',
+                          color: useDarkMode ? '#fff' : 'inherit'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nessuna vendita registrata
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
