@@ -38,6 +38,8 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import DealerStockCountCard from '@/components/dashboard/DealerStockCountCard';
+import AverageStockDaysCard from '@/components/dashboard/AverageStockDaysCard';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -449,16 +451,57 @@ const Dashboard = () => {
       
       {isDealer ? (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="lg:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <DealerStockCountCard dealerName={user?.dealerName || 'CMC'} darkMode={useDarkMode} />
+            <AverageStockDaysCard dealerName={user?.dealerName || 'CMC'} darkMode={useDarkMode} />
+            <Card className={`overflow-hidden ${useDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className={useDarkMode ? 'text-white' : ''}>Auto Vendute</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <div className="bg-blue-100 p-3 rounded-full mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold">{dealerStats?.ordersCount || 0}</p>
+                    <p className="text-sm text-gray-500">Ordini</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="md:col-span-1">
               {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
             </div>
-            <div className="lg:col-span-1">
-              <DealerCreditList darkMode={useDarkMode} />
+            
+            <div className="md:col-span-1">
+              <Card className={`overflow-hidden ${useDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className={useDarkMode ? 'text-white' : ''}>Fatturato Totale</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <div className="bg-purple-100 p-3 rounded-full mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold">{formatCurrency(dealerStats?.totalInvoiced || 0)}</p>
+                      <p className="text-sm text-gray-500">Fatturato</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+          <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-medium">Obiettivo Mensile</h3>
               <div className="p-2 rounded-full bg-blue-100">
@@ -625,11 +668,11 @@ const Dashboard = () => {
         </>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="lg:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="md:col-span-1">
               {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
             </div>
-            <div className="lg:col-span-1">
+            <div className="md:col-span-1">
               <DealerCreditList darkMode={useDarkMode} />
             </div>
           </div>
@@ -660,165 +703,4 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-4">
                 <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Andamento Vendite</h3>
               </div>
-              <div className="h-[300px] mt-4">
-                {adminStats?.monthlySalesData && adminStats.monthlySalesData.some(m => m.value > 0) ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={adminStats.monthlySalesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={useDarkMode ? "#444" : "#eee"} />
-                      <XAxis 
-                        dataKey="name" 
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `€${value / 1000}k`}
-                      />
-                      <Tooltip
-                        formatter={(value: any) => [`€${Number(value).toLocaleString()}`, 'Valore']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
-                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                          borderRadius: '0.5rem',
-                          color: useDarkMode ? '#fff' : 'inherit'
-                        }}
-                      />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        name="Valore"
-                        stroke="#4ADE80"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Nessun dato disponibile
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Vendite per Concessionario</h3>
-              </div>
-              <div className="h-[300px] mt-4">
-                {adminStats?.salesByDealer && adminStats.salesByDealer.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={adminStats.salesByDealer}
-                      layout="vertical"
-                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke={useDarkMode ? "#444" : "#eee"} />
-                      <XAxis
-                        type="number"
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        dataKey="name"
-                        type="category"
-                        stroke={useDarkMode ? "#888888" : "#888888"}
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        width={90}
-                      />
-                      <Tooltip
-                        formatter={(value) => [value, 'Quantità']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
-                          border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
-                          borderRadius: '0.5rem',
-                          color: useDarkMode ? '#fff' : 'inherit'
-                        }}
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="value"
-                        name="Ordini"
-                        fill="#818CF8"
-                        radius={[0, 4, 4, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    Nessun dato disponibile
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className={`text-left border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Modello</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Cliente</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Stato</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Ordine</th>
-                    <th className={`pb-2 font-medium ${useDarkMode ? 'text-gray-300' : ''}`}>Data Consegna</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {adminStats?.recentOrders?.length > 0 ? (
-                    adminStats.recentOrders.map((order) => (
-                      <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                        <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
-                        <td className="py-3">{order.customername || 'N/A'}</td>
-                        <td className="py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {order.status === 'processing' ? 'In Lavorazione' :
-                             order.status === 'delivered' ? 'Consegnato' :
-                             order.status === 'cancelled' ? 'Cancellato' : order.status}
-                          </span>
-                        </td>
-                        <td className="py-3">
-                          {order.orderdate ? new Date(order.orderdate).toLocaleDateString() : '-'}
-                        </td>
-                        <td className="py-3">
-                          {order.deliverydate ? new Date(order.deliverydate).toLocaleDateString() : '-'}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className={`py-4 text-center ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Nessun ordine recente
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </>
-      )}
-    </div>
-  );
-};
-
-export default Dashboard;
+              <div className="h-[300px

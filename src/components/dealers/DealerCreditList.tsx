@@ -2,7 +2,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { formatCurrency } from '@/lib/utils';
 
@@ -39,22 +38,15 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Use nuovoPlafond directly from the database - this is properly mapped in the dealersApi
+            // Use nuovoPlafond directly from the dealer object
             const plafondDisponibile = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
             
             return (
-              <div key={dealer.id} className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{dealer.companyName}</span>
-                  <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                    {formatCurrency(plafondDisponibile)}
-                  </span>
-                </div>
-                <Progress value={100} className="h-2" />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Plafond Disponibile</span>
-                  <span>{formatCurrency(plafondDisponibile)}</span>
-                </div>
+              <div key={dealer.id} className="flex justify-between items-center border-b last:border-0 pb-3 last:pb-0 mb-3 last:mb-0">
+                <span className="font-medium">{dealer.companyName}</span>
+                <span className={`font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                  {formatCurrency(plafondDisponibile)}
+                </span>
               </div>
             );
           })}
