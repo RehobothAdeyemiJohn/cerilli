@@ -437,92 +437,13 @@ const Dashboard = () => {
       
       {isDealer ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto a Stock CMC</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerStats?.vehiclesCount || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-green-100">
-                  <Car className="h-5 w-5 text-green-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Giorni Medi in Giacenza</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerStats?.avgDaysInStock || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-yellow-100">
-                  <Clock className="h-5 w-5 text-yellow-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Preventivi</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerStats?.quotesCount || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-indigo-100">
-                  <FileText className="h-5 w-5 text-indigo-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Contratti</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerStats?.ordersCount || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-rose-100">
-                  <ShoppingCart className="h-5 w-5 text-rose-600" />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>% di Conversione</p>
-                  <h3 className="text-2xl font-bold mt-1">{dealerStats?.conversionRate || 0}%</h3>
-                </div>
-                <div className="p-2 rounded-full bg-purple-100">
-                  <Percent className="h-5 w-5 text-purple-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Plafond Disponibile</p>
-                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(dealerStats?.creditLimit || 0)}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-emerald-100">
-                  <CreditCard className="h-5 w-5 text-emerald-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fatturato Totale</p>
-                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(dealerStats?.totalInvoiced || 0)}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-rose-100">
-                  <TrendingUp className="h-5 w-5 text-rose-600" />
-                </div>
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="lg:col-span-1">
+              {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
+            </div>
+            <div className="lg:col-span-1">
+              <DealerCreditList darkMode={useDarkMode} />
+            </div>
           </div>
 
           <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
@@ -638,15 +559,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-2">
-              {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
-            </div>
-            <div className="lg:col-span-1">
-              <DealerCreditList darkMode={useDarkMode} />
-            </div>
-          </div>
-
           <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
@@ -701,55 +613,35 @@ const Dashboard = () => {
         </>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto in Stock</p>
-                  <h3 className="text-2xl font-bold mt-1">{adminStats?.vehiclesCount || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-green-100">
-                  <Car className="h-5 w-5 text-green-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Concessionari</p>
-                  <h3 className="text-2xl font-bold mt-1">{adminStats?.dealersCount || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-indigo-100">
-                  <Users className="h-5 w-5 text-indigo-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Giorni Medi in Giacenza</p>
-                  <h3 className="text-2xl font-bold mt-1">{adminStats?.avgDaysInStock || 0}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-yellow-100">
-                  <Clock className="h-5 w-5 text-yellow-600" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className={`text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Fatturato Totale</p>
-                  <h3 className="text-2xl font-bold mt-1">{formatCurrency(adminStats?.totalInvoiced || 0)}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-rose-100">
-                  <TrendingUp className="h-5 w-5 text-rose-600" />
-                </div>
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="lg:col-span-1">
+              {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
+            </div>
+            <div className="lg:col-span-1">
+              <DealerCreditList darkMode={useDarkMode} />
+            </div>
           </div>
+
+          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-medium">Obiettivo Mensile</h3>
+              <div className="p-2 rounded-full bg-blue-100">
+                <Target className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">
+                {adminStats?.orders?.filter(o => new Date(o.orderdate).getMonth() === new Date().getMonth()).length || 0} auto vendute
+              </span>
+              <span className={`${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Obiettivo: {adminStats?.monthlyTarget || 5} auto
+              </span>
+            </div>
+            <Progress value={adminStats?.monthlyProgress || 0} className="h-2" />
+            <div className={`mt-2 text-right text-sm ${useDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {adminStats?.monthlyProgress || 0}% raggiunto
+            </div>
+          </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card className={`p-4 overflow-hidden transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
@@ -860,16 +752,7 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="sm:col-span-2">
-              {adminStats?.vehicles && <HighInventoryVehicles vehicles={adminStats.vehicles} darkMode={useDarkMode} />}
-            </div>
-            <div className="sm:col-span-1">
-              <DealerCreditList darkMode={useDarkMode} />
-            </div>
-          </div>
-
-          <Card className={`p-4 mb-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
+          <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
             </div>
@@ -927,4 +810,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

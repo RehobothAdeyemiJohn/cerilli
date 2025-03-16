@@ -39,7 +39,7 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Use nuovoPlafond directly from the database
+            // Use nuovoPlafond directly from the database - this is properly mapped in the dealersApi
             const plafondDisponibile = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
             
             return (
