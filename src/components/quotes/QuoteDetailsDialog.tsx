@@ -20,9 +20,10 @@ interface QuoteDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: Quote['status']) => void;
+  onConvert?: () => void;
 }
 
-const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange }: QuoteDetailsDialogProps) => {
+const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange, onConvert }: QuoteDetailsDialogProps) => {
   if (!quote || !vehicle) return null;
   
   return (
@@ -47,7 +48,8 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
         
         <QuoteActionsFooter 
           quote={quote} 
-          onStatusChange={onStatusChange} 
+          onStatusChange={onStatusChange}
+          onConvert={onConvert}
         />
       </DialogContent>
     </Dialog>

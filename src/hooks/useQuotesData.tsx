@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase/quotesApi';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { dealerContractsApi } from '@/api/supabase/dealerContractsApi';
 import { useToast } from '@/hooks/use-toast';
 import { Quote } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -37,7 +38,7 @@ export const useQuotesData = () => {
     queryFn: () => quotesApi.getAll(),
   });
   
-  const { data: statusCountsData = { all: 0, pending: 0, approved: 0, rejected: 0, converted: 0 }, isLoading: isLoadingCounts } = useQuery({
+  const { data: statusCountsData = { all: 0, pending: 0, converted: 0, rejected: 0 }, isLoading: isLoadingCounts } = useQuery({
     queryKey: ['quotesCount'],
     queryFn: () => quotesApi.getCountByStatus(),
   });
@@ -190,6 +191,59 @@ export const useQuotesData = () => {
         description: "Si è verificato un errore durante l'aggiornamento dello stato.",
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleConvertToContract = async (quoteId: string, contractData: any) => {
+    try {
+      if (!selectedQuote) {
+        throw new Error("Nessun preventivo selezionato");
+      }
+
+      // First, update the quote status to converted
+      await quotesApi.update(quoteId, { status: 'converted' });
+
+      // Then, create a contract using the dealer contracts API
+      const contractDetails = {
+        contractorType: contractData.contractorType,
+        contractorData: {
+          firstName: contractData.firstName,
+          lastName: contractData.lastName,
+          companyName: contractData.companyName,
+          fiscalCode: contractData.fiscalCode,
+          birthDate: contractData.birthDate,
+          birthPlace: contractData.birthPlace,
+          birthProvince: contractData.birthProvince,
+        },
+        legalRepresentative: contractData.contractorType === 'personaGiuridica' ? {
+          firstName: contractData.legalRepFirstName,
+          lastName: contractData.legalRepLastName,
+          fiscalCode: contractData.legalRepFiscalCode
+        } : null
+      };
+
+      await dealerContractsApi.create({
+        dealerId: selectedQuote.dealerId,
+        carId: selectedQuote.vehicleId,
+        contractDate: new Date().toISOString(),
+        contractDetails,
+        status: 'attivo'
+      });
+      
+      toast({
+        title: "Contratto creato",
+        description: "Il preventivo è stato convertito in contratto con successo.",
+      });
+      
+      refetchQuotes();
+    } catch (error) {
+      console.error("Error converting quote to contract:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la conversione in contratto.",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
   
@@ -381,6 +435,7 @@ export const useQuotesData = () => {
     handleDeleteQuote,
     handlePrevPage,
     handleNextPage,
-    handleOpenCreateQuoteDialog
+    handleOpenCreateQuoteDialog,
+    handleConvertToContract
   };
 };

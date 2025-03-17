@@ -7,7 +7,7 @@ import { Quote } from '@/types';
 interface QuotesTabsProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
-  statusCounts: { all: number; pending: number; approved: number; rejected: number; converted: number };
+  statusCounts: { all: number; pending: number; converted: number; rejected: number };
   filteredQuotes: Quote[];
   getVehicleById: (id: string) => any;
   getDealerName: (id: string) => string;
@@ -51,9 +51,8 @@ const QuotesTabs: React.FC<QuotesTabsProps> = ({
     <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-6">
         <TabsTrigger value="pending">In Attesa ({statusCounts.pending})</TabsTrigger>
-        <TabsTrigger value="approved">Approvati ({statusCounts.approved})</TabsTrigger>
-        <TabsTrigger value="rejected">Rifiutati ({statusCounts.rejected})</TabsTrigger>
         <TabsTrigger value="converted">Convertiti ({statusCounts.converted})</TabsTrigger>
+        <TabsTrigger value="rejected">Rifiutati ({statusCounts.rejected})</TabsTrigger>
         <TabsTrigger value="all">Tutti ({statusCounts.all})</TabsTrigger>
       </TabsList>
       
@@ -61,15 +60,11 @@ const QuotesTabs: React.FC<QuotesTabsProps> = ({
         {renderQuoteTable()}
       </TabsContent>
       
-      <TabsContent value="approved">
+      <TabsContent value="converted">
         {renderQuoteTable()}
       </TabsContent>
       
       <TabsContent value="rejected">
-        {renderQuoteTable()}
-      </TabsContent>
-      
-      <TabsContent value="converted">
         {renderQuoteTable()}
       </TabsContent>
       

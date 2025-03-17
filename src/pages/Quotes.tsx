@@ -1,11 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import QuoteForm from '@/components/quotes/QuoteForm';
 import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
 import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
 import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
+import QuoteContractDialog from '@/components/quotes/QuoteContractDialog';
 
 // Import our components
 import QuotesHeader from '@/components/quotes/QuotesHeader';
@@ -18,13 +19,15 @@ import { useQuotesData } from '@/hooks/useQuotesData';
 type StatusCounts = {
   all: number;
   pending: number;
-  approved: number;
-  rejected: number;
   converted: number;
+  rejected: number;
 };
 
 const Quotes = () => {
   const location = useLocation();
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [isSubmittingContract, setIsSubmittingContract] = useState(false);
+  
   const {
     // States
     activeTab,
@@ -80,7 +83,8 @@ const Quotes = () => {
     handleDeleteQuote,
     handlePrevPage,
     handleNextPage,
-    handleOpenCreateQuoteDialog
+    handleOpenCreateQuoteDialog,
+    handleConvertToContract
   } = useQuotesData();
   
   // Handle navigation from other pages (e.g., vehicle inventory)
@@ -94,6 +98,23 @@ const Quotes = () => {
       }
     }
   }, [location]);
+
+  const handleOpenContractDialog = () => {
+    setContractDialogOpen(true);
+  };
+
+  const handleCreateContract = async (quoteId: string, contractData: any) => {
+    setIsSubmittingContract(true);
+    try {
+      await handleConvertToContract(quoteId, contractData);
+      setContractDialogOpen(false);
+      setViewDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating contract:", error);
+    } finally {
+      setIsSubmittingContract(false);
+    }
+  };
   
   if (isLoading) {
     return <div className="container mx-auto py-6 px-4">Caricamento in corso...</div>;
@@ -177,6 +198,7 @@ const Quotes = () => {
         open={viewDialogOpen}
         onOpenChange={setViewDialogOpen}
         onStatusChange={handleUpdateStatus}
+        onConvert={handleOpenContractDialog}
       />
       
       {/* Reject Dialog */}
@@ -193,6 +215,15 @@ const Quotes = () => {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteQuote}
         onCancel={() => setDeleteDialogOpen(false)}
+      />
+
+      {/* Contract Creation Dialog */}
+      <QuoteContractDialog
+        quote={selectedQuote}
+        open={contractDialogOpen}
+        onClose={() => setContractDialogOpen(false)}
+        onSubmit={handleCreateContract}
+        isSubmitting={isSubmittingContract}
       />
     </div>
   );
