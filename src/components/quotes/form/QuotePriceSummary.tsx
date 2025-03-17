@@ -18,7 +18,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   finalPrice,
   watchReducedVAT,
   totalDiscount,
-  roadPreparationFee = 400 // Default to €400
+  roadPreparationFee = 350 // Default to €350
 }) => {
   const form = useFormContext();
   const discount = form.watch('discount') || 0;
@@ -33,49 +33,49 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
     <div>
       <h3 className="text-md font-semibold mb-4">Prezzo Finale</h3>
       
-      {/* Price breakdown grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div>
-          <p className="text-sm">Prezzo Veicolo</p>
-          <p className="font-medium">{formatCurrency(basePrice)}</p>
+      {/* Price breakdown in a more structured format */}
+      <div className="space-y-3 mb-4">
+        <div className="flex justify-between">
+          <span className="text-sm">Prezzo Veicolo</span>
+          <span className="font-medium">{formatCurrency(basePrice)}</span>
         </div>
         
-        {accessoryTotalPrice > 0 || accessories.length > 0 && (
-          <div>
-            <p className="text-sm">Optional Aggiunti</p>
-            <p className="font-medium">+ {formatCurrency(accessoryTotalPrice)}</p>
-          </div>
-        )}
-        
-        <div>
-          <p className="text-sm">Sconto</p>
-          <p className="font-medium">- {formatCurrency(discount)}</p>
+        <div className="flex justify-between">
+          <span className="text-sm">Sconto</span>
+          <span className="font-medium text-red-600">- {formatCurrency(discount)}</span>
         </div>
         
-        <div>
-          <p className="text-sm">Premio Targa</p>
-          <p className="font-medium">- {formatCurrency(licensePlateBonus)}</p>
+        <div className="flex justify-between">
+          <span className="text-sm">Premio Targa</span>
+          <span className="font-medium text-red-600">- {formatCurrency(licensePlateBonus)}</span>
         </div>
         
-        <div>
-          <p className="text-sm">Premio Permuta</p>
-          <p className="font-medium">- {formatCurrency(tradeInBonus)}</p>
-        </div>
-        
-        <div>
-          <p className="text-sm">Kit Sicurezza</p>
-          <p className="font-medium">+ {formatCurrency(safetyKit)}</p>
-        </div>
-        
-        <div>
-          <p className="text-sm">Messa su strada</p>
-          <p className="font-medium">+ {formatCurrency(roadPreparationFee)}</p>
+        <div className="flex justify-between">
+          <span className="text-sm">Premio Permuta</span>
+          <span className="font-medium text-red-600">- {formatCurrency(tradeInBonus)}</span>
         </div>
         
         {hasTradeIn && (
-          <div>
-            <p className="text-sm">Valore Permuta</p>
-            <p className="font-medium">- {formatCurrency(tradeInValue)}</p>
+          <div className="flex justify-between">
+            <span className="text-sm">Valore Permuta</span>
+            <span className="font-medium text-red-600">- {formatCurrency(tradeInValue)}</span>
+          </div>
+        )}
+        
+        <div className="flex justify-between">
+          <span className="text-sm">Kit Sicurezza</span>
+          <span className="font-medium text-green-600">+ {formatCurrency(safetyKit)}</span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-sm">Messa su strada</span>
+          <span className="font-medium text-green-600">+ {formatCurrency(roadPreparationFee)}</span>
+        </div>
+        
+        {accessoryTotalPrice > 0 || accessories.length > 0 && (
+          <div className="flex justify-between">
+            <span className="text-sm">Optional Aggiunti</span>
+            <span className="font-medium text-green-600">+ {formatCurrency(accessoryTotalPrice)}</span>
           </div>
         )}
       </div>

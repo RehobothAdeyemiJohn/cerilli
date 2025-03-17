@@ -135,7 +135,11 @@ const QuoteForm = ({
           </div>
 
           {/* Form Actions */}
-          <QuoteFormActions onCancel={onCancel} isSubmitting={isSubmitting} />
+          <QuoteFormActions 
+            onCancel={onCancel} 
+            isSubmitting={isSubmitting} 
+            isEditing={editQuote !== null}
+          />
         </form>
       </FormProvider>
     </div>

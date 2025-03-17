@@ -16,7 +16,7 @@ export const useQuoteForm = (
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   
   // States
-  const [showTradeIn, setShowTradeIn] = useState(false);
+  const [showTradeIn, setShowTradeIn] = useState(editQuote?.hasTradeIn || false);
   
   // Fetch dealers
   const { data: dealers = [] } = useQuery({
@@ -31,7 +31,7 @@ export const useQuoteForm = (
   const basePrice = vehicle?.price || 0;
   
   // Calculate road preparation fee
-  const roadPreparationFee = 350; // Standard fee
+  const roadPreparationFee = editQuote?.roadPreparationFee || 350; // Standard fee
   
   // Set up form with default values
   const form = useForm({
@@ -60,7 +60,7 @@ export const useQuoteForm = (
     }
   });
   
-  // Initialize when vehicle changes
+  // Initialize when vehicle changes and we're not editing
   useEffect(() => {
     if (vehicle && !editQuote) {
       form.setValue('vehicleId', vehicle.id);
@@ -94,6 +94,11 @@ export const useQuoteForm = (
     totalDiscount - Number(watchTradeInValue) + Number(watchSafetyKit) + Number(watchTradeInHandlingFee);
   
   const finalPrice = calculatedPrice > 0 ? calculatedPrice : 0;
+  
+  // Update showTradeIn when hasTradeIn changes
+  useEffect(() => {
+    setShowTradeIn(watchHasTradeIn);
+  }, [watchHasTradeIn]);
   
   // Handle form submission
   const handleSubmit = (data: any) => {

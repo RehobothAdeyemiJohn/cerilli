@@ -1,39 +1,60 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { useFormContext } from 'react-hook-form';
 
 interface QuoteFormActionsProps {
   onCancel: () => void;
   isSubmitting?: boolean;
+  isEditing?: boolean;
 }
 
-const QuoteFormActions: React.FC<QuoteFormActionsProps> = ({ onCancel, isSubmitting = false }) => {
+const QuoteFormActions: React.FC<QuoteFormActionsProps> = ({ 
+  onCancel, 
+  isSubmitting = false,
+  isEditing = false 
+}) => {
+  const form = useFormContext();
+  
   return (
-    <div className="flex justify-end gap-3 pt-4 border-t">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        disabled={isSubmitting}
-        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-      >
-        Annulla
-      </Button>
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-green-600 hover:bg-green-700 text-white"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creazione...
-          </>
-        ) : (
-          'Crea Preventivo'
+    <div className="space-y-4">
+      {/* Notes field */}
+      <FormField
+        control={form.control}
+        name="notes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Note</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Inserisci eventuali note"
+                className="resize-none"
+                {...field}
+              />
+            </FormControl>
+          </FormItem>
         )}
-      </Button>
+      />
+      
+      {/* Action buttons */}
+      <div className="flex justify-end space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Annulla
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isEditing ? 'Aggiorna Preventivo' : 'Crea Preventivo'}
+        </Button>
+      </div>
     </div>
   );
 };

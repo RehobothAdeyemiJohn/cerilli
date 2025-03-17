@@ -25,13 +25,13 @@ const ManualQuoteForm = ({
       customerName: editQuote?.customerName || '',
       customerEmail: editQuote?.customerEmail || '',
       customerPhone: editQuote?.customerPhone || '',
-      model: '',
-      trim: '',
-      exteriorColor: '',
-      fuelType: '',
-      price: editQuote?.price || 0,
-      discount: editQuote?.discount || 0,
-      finalPrice: editQuote?.finalPrice || 0,
+      model: editQuote?.vehicleData?.model || '',
+      trim: editQuote?.vehicleData?.trim || '',
+      exteriorColor: editQuote?.vehicleData?.exteriorColor || '',
+      fuelType: editQuote?.vehicleData?.fuelType || '',
+      price: editQuote?.price?.toString() || '0',
+      discount: editQuote?.discount?.toString() || '0',
+      finalPrice: editQuote?.finalPrice?.toString() || '0',
       notes: editQuote?.notes || '',
       manualEntry: true
     }
@@ -46,19 +46,22 @@ const ManualQuoteForm = ({
     const price = parseFloat(watchPrice) || 0;
     const discount = parseFloat(watchDiscount) || 0;
     const finalPrice = price - discount;
-    setValue('finalPrice', finalPrice > 0 ? finalPrice : 0);
+    setValue('finalPrice', finalPrice > 0 ? finalPrice.toString() : '0');
   }, [watchPrice, watchDiscount, setValue]);
   
   // Handle form submission
   const handleFormSubmit = (data: any) => {
     const formData = {
       ...data,
+      price: parseFloat(data.price) || 0,
+      discount: parseFloat(data.discount) || 0,
+      finalPrice: parseFloat(data.finalPrice) || 0,
       vehicleData: {
         model: data.model,
         trim: data.trim,
         exteriorColor: data.exteriorColor,
         fuelType: data.fuelType,
-        price: parseFloat(data.price)
+        price: parseFloat(data.price) || 0
       }
     };
     
