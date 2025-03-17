@@ -379,6 +379,29 @@ export const useQuotesData = () => {
     }
   };
   
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleOpenCreateQuoteDialog = (vehicleId?: string) => {
+    if (vehicleId) {
+      setSelectedVehicleId(vehicleId);
+      setIsManualQuote(false);
+    } else {
+      setSelectedVehicleId(null);
+      setIsManualQuote(true);
+    }
+    setCreateDialogOpen(true);
+  };
+  
   const isLoading = isLoadingQuotes || isLoadingVehicles || isLoadingDealers || isLoadingCounts;
   
   return {

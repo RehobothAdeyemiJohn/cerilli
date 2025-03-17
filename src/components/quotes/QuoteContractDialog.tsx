@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -145,7 +144,7 @@ const QuoteContractDialog = ({
         discount: quote.discount || 0,
         finalPrice: quote.finalPrice || 0,
         hasTradeIn: quote.hasTradeIn || false,
-        tradeInMake: quote.tradeInMake || '',
+        tradeInMake: quote.tradeInBrand || '', // Use tradeInBrand instead of tradeInMake
         tradeInModel: quote.tradeInModel || '',
         tradeInYear: quote.tradeInYear || '',
         tradeInValue: quote.tradeInValue || 0

@@ -2,7 +2,7 @@
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Vehicle } from '@/types';
+import { Vehicle, Quote } from '@/types';
 import { useQuoteForm } from './form/useQuoteForm';
 import ManualQuoteForm from './form/ManualQuoteForm';
 
@@ -20,6 +20,7 @@ interface QuoteFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  editQuote?: Quote | null;
 }
 
 const QuoteForm = ({ 
@@ -27,7 +28,8 @@ const QuoteForm = ({
   isManualQuote = false, 
   onSubmit, 
   onCancel, 
-  isSubmitting = false 
+  isSubmitting = false,
+  editQuote = null
 }: QuoteFormProps) => {
   
   // If it's a manual quote, use the ManualQuoteForm component
@@ -37,6 +39,7 @@ const QuoteForm = ({
         onSubmit={onSubmit}
         onCancel={onCancel}
         isSubmitting={isSubmitting}
+        editQuote={editQuote}
       />
     );
   }
@@ -59,7 +62,7 @@ const QuoteForm = ({
     handleSubmit,
     totalDiscount,
     roadPreparationFee
-  } = useQuoteForm(vehicle, onSubmit);
+  } = useQuoteForm(vehicle, onSubmit, editQuote);
 
   // If no vehicle is provided, show a selection screen
   if (!vehicle) {

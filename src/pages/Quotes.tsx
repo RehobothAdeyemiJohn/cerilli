@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -53,6 +52,7 @@ const Quotes = () => {
     deleteDialogOpen,
     setDeleteDialogOpen,
     selectedQuote,
+    setSelectedQuote,
     selectedVehicle,
     isManualQuote,
     setIsManualQuote,
@@ -222,10 +222,10 @@ const Quotes = () => {
           
           <QuoteForm 
             vehicle={selectedVehicleId ? getVehicleById(selectedVehicleId) : undefined}
-            quote={selectedQuote}
             isManualQuote={selectedQuote?.manualEntry || false}
             onSubmit={handleSubmitEditQuote}
             onCancel={() => setEditDialogOpen(false)}
+            editQuote={selectedQuote}
           />
         </DialogContent>
       </Dialog>
