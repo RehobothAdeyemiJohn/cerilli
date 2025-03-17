@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +30,7 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
+  TooltipProps,
   ResponsiveContainer,
   Legend,
   PieChart,
@@ -41,6 +41,7 @@ import {
 } from 'recharts';
 import DealerStockCountCard from '@/components/dashboard/DealerStockCountCard';
 import AverageStockDaysCard from '@/components/dashboard/AverageStockDaysCard';
+import { DealerAnalysis } from '@/components/dashboard/Dashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -722,7 +723,9 @@ const Dashboard = () => {
                         axisLine={false}
                       />
                       <Tooltip
-                        formatter={(value) => [formatCurrency(value), 'Fatturato']}
+                        formatter={(value: any) => {
+                          return [formatCurrency(Number(value)), 'Fatturato'];
+                        }}
                         contentStyle={{ 
                           backgroundColor: useDarkMode ? '#333' : 'white', 
                           border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
