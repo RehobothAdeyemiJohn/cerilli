@@ -1,24 +1,20 @@
-
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
+import { useInventory } from '@/hooks/useInventory';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { FileText, ShoppingCart, Package } from 'lucide-react';
-import EditVehicleForm from './EditVehicleForm';
-import ReserveVehicleForm from './ReserveVehicleForm';
-import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
-import VehicleDetailsContent from './details/VehicleDetailsContent';
-import { useVehicleDetailsDialog } from './details/useVehicleDetailsDialog';
 import VehicleDialogHeader from './details/VehicleDialogHeader';
+import VehicleDialogContent from './details/VehicleDialogContent';
+import { useNavigate } from 'react-router-dom';
 
 interface VehicleDetailsDialogProps {
-  vehicle: Vehicle | null;
+  vehicle: Vehicle;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVehicleUpdated: () => void;
   onVehicleDeleted: (id: string) => Promise<void>;
-  onCreateQuote?: (vehicle: Vehicle) => void; 
+  onCreateQuote?: (vehicle: Vehicle) => void;
   onReserve?: (vehicle: Vehicle) => void;
   isDealerStock?: boolean;
   isVirtualStock?: boolean;
@@ -34,211 +30,242 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   onVehicleDeleted,
   onCreateQuote,
   onReserve,
-  isDealerStock = false,
-  isVirtualStock = false,
-  shouldReserve = false,
+  isDealerStock,
+  isVirtualStock,
+  shouldReserve,
   requestedAction
 }) => {
-  const [currentView, setCurrentView] = React.useState<'details' | 'edit' | 'reserve' | 'virtualReserve'>('details');
+  // State management
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [showReserveForm, setShowReserveForm] = useState(false);
+  const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
+  const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Hooks
   const { user } = useAuth();
-
+  const { handleVehicleDuplicate } = useInventory();
+  const navigate = useNavigate();
+  
+  // Determine user capabilities
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
-  const isAdmin = user?.type === 'admin';
-  const canEdit = isAdmin;
+  const userCanReserveVehicles = true; // Default to true for now
+  const userCanCreateQuotes = true; // Default to true for now
   
-  const { handleDuplicate } = useVehicleDetailsDialog(
-    vehicle || {} as Vehicle, 
-    onVehicleUpdated,
-    (id: string) => onVehicleDeleted(id),
-    () => onOpenChange(false),
-    requestedAction
-  );
-  
-  React.useEffect(() => {
-    if (open && vehicle && shouldReserve) {
-      if (vehicle.location === 'Stock Virtuale') {
-        setCurrentView('virtualReserve');
-      } else {
-        setCurrentView('reserve');
+  // Handle dialog opened
+  useEffect(() => {
+    if (open && vehicle) {
+      setSelectedVehicle(vehicle);
+      
+      // Auto-trigger reservation if requested
+      if (shouldReserve && vehicle.status === 'available') {
+        console.log("Auto-triggering reservation for vehicle:", vehicle.id);
+        
+        if (vehicle.location === 'Stock Virtuale') {
+          setShowVirtualReserveForm(true);
+        } else {
+          setShowReserveForm(true);
+        }
       }
-    }
-    
-    if (open && vehicle && requestedAction === 'duplicate') {
-      console.log("Attempting to duplicate vehicle from dialog:", vehicle.id);
-      handleDuplicate();
-      onOpenChange(false);
-    }
-  }, [open, vehicle, shouldReserve, requestedAction, handleDuplicate]);
-  
-  React.useEffect(() => {
-    if (!open) {
-      setCurrentView('details');
-    }
-  }, [open]);
-  
-  if (!vehicle) {
-    return null;
-  }
-  
-  const handleEditClick = () => {
-    setCurrentView('edit');
-  };
-  
-  const handleReserveClick = () => {
-    console.log("Reserve button clicked in dialog for vehicle:", vehicle.id, vehicle.location);
-    if (vehicle.location === 'Stock Virtuale') {
-      setCurrentView('virtualReserve');
+      
+      // Auto-trigger duplication if requested
+      if (requestedAction === 'duplicate' && vehicle.location === 'Stock Virtuale') {
+        handleDuplicateVehicle();
+      }
     } else {
-      setCurrentView('reserve');
+      // Reset forms when dialog is closed
+      resetForms();
     }
+  }, [open, vehicle, shouldReserve, requestedAction]);
+  
+  // Reset all form states
+  const resetForms = () => {
+    setShowEditForm(false);
+    setShowQuoteForm(false);
+    setShowReserveForm(false);
+    setShowVirtualReserveForm(false);
+    setShowCancelReservationForm(false);
   };
   
-  const handleCreateQuoteClick = () => {
-    console.log("Create quote button clicked for vehicle:", vehicle.id);
-    if (onCreateQuote && vehicle) {
-      onCreateQuote(vehicle);
-      onOpenChange(false);
-    }
+  // Vehicle management actions
+  const handleEditVehicle = () => {
+    resetForms();
+    setShowEditForm(true);
   };
   
-  const handleDeleteClick = async () => {
+  const handleDuplicateVehicle = async () => {
+    if (!selectedVehicle) return;
+    
     try {
-      await onVehicleDeleted(vehicle.id);
-      onOpenChange(false);
+      setIsSubmitting(true);
+      const duplicatedVehicle = await handleVehicleDuplicate(selectedVehicle.id);
+      
+      toast({
+        title: "Veicolo Duplicato",
+        description: `${selectedVehicle.model} è stato duplicato con successo`,
+      });
+      
+      // Close current dialog and reset
+      handleDialogClose();
+      onVehicleUpdated();
     } catch (error) {
-      console.error('Error deleting vehicle from dialog:', error);
+      console.error("Error duplicating vehicle:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la duplicazione del veicolo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
-  const handleReservationComplete = () => {
-    console.log("Reservation completed, refreshing data");
+  const handleDeleteVehicle = async () => {
+    if (!selectedVehicle) return;
+    
+    try {
+      await onVehicleDeleted(selectedVehicle.id);
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del veicolo",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Reservation actions
+  const handleReserveVehicle = () => {
+    resetForms();
+    
+    // Different reservation flow based on vehicle type
+    if (selectedVehicle?.location === 'Stock Virtuale') {
+      setShowVirtualReserveForm(true);
+    } else {
+      setShowReserveForm(true);
+    }
+  };
+  
+  const handleCancelReservation = () => {
+    resetForms();
+    setShowCancelReservationForm(true);
+  };
+  
+  const handleCancelReservationConfirm = async () => {
+    if (!selectedVehicle) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Convert back to available
+      const updatedVehicle = {
+        ...selectedVehicle,
+        status: 'available',
+        reservedBy: undefined,
+        reservedAccessories: [],
+        reservationTimestamp: undefined,
+        reservationDestination: undefined
+      };
+      
+      await useInventory().handleVehicleUpdate(updatedVehicle);
+      
+      toast({
+        title: "Prenotazione Annullata",
+        description: `La prenotazione per ${selectedVehicle.model} è stata annullata`,
+      });
+      
+      onVehicleUpdated();
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'annullamento della prenotazione",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Quote actions
+  const handleCreateQuoteClick = () => {
+    resetForms();
+    
+    if (onCreateQuote && selectedVehicle) {
+      // If we have an external handler, use it
+      onCreateQuote(selectedVehicle);
+      handleDialogClose();
+    } else {
+      // Otherwise show the inline quote form
+      setShowQuoteForm(true);
+    }
+  };
+  
+  const handleCreateOrder = () => {
+    if (!selectedVehicle) return;
+    
+    navigate('/orders/new', { 
+      state: { 
+        vehicleId: selectedVehicle.id 
+      }
+    });
+    
+    handleDialogClose();
+  };
+  
+  // Form submission handlers
+  const handleFormSubmitted = () => {
     onVehicleUpdated();
-    setCurrentView('details');
+    handleDialogClose();
+  };
+  
+  const handleDialogClose = () => {
+    resetForms();
     onOpenChange(false);
   };
-
-  const handleTransformToOrder = async () => {
-    console.log("Transform to order button clicked for vehicle:", vehicle.id);
-    
-    try {
-      const { vehiclesApi } = await import('@/api/supabase');
-      await vehiclesApi.transformToOrder(vehicle.id);
-      console.log("Vehicle successfully transformed into an order:", vehicle.id);
-      onVehicleUpdated();
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error transforming vehicle to order:", error);
-    }
-  };
-
-  const showActionButtons = vehicle.status === 'available';
-  const showTransformOrderButton = vehicle.status === 'reserved';
   
-  const renderDialogContent = () => {
-    switch(currentView) {
-      case 'edit':
-        return (
-          <EditVehicleForm 
-            vehicle={vehicle}
-            onComplete={() => {
-              onVehicleUpdated();
-              setCurrentView('details');
-              onOpenChange(false);
-            }}
-            onCancel={() => setCurrentView('details')}
-          />
-        );
-      case 'reserve':
-        return (
-          <ReserveVehicleForm
-            vehicle={vehicle}
-            onReservationComplete={handleReservationComplete}
-            onCancel={() => setCurrentView('details')}
-          />
-        );
-      case 'virtualReserve':
-        return (
-          <VirtualReservationForm
-            vehicle={vehicle}
-            onReservationComplete={handleReservationComplete}
-            onCancel={() => setCurrentView('details')}
-          />
-        );
-      case 'details':
-      default:
-        return (
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        {selectedVehicle && !showEditForm && (
           <>
             <DialogHeader>
               <VehicleDialogHeader 
-                vehicle={vehicle}
-                onEdit={canEdit ? handleEditClick : undefined}
-                onDelete={canEdit ? handleDeleteClick : undefined}
-                onDuplicate={canEdit ? handleDuplicate : undefined}
-                onCreateQuote={onCreateQuote ? () => handleCreateQuoteClick() : undefined}
-                onReserve={showActionButtons && onReserve ? handleReserveClick : undefined}
-                onCancelReservation={undefined}
-                onCreateOrder={undefined}
+                vehicle={selectedVehicle}
+                onEdit={handleEditVehicle}
+                onDelete={handleDeleteVehicle}
+                onDuplicate={selectedVehicle.location === 'Stock Virtuale' ? handleDuplicateVehicle : undefined}
+                onCreateQuote={selectedVehicle.location !== 'Stock Virtuale' ? handleCreateQuoteClick : undefined}
+                onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}
+                onCancelReservation={selectedVehicle.status === 'reserved' ? handleCancelReservation : undefined}
+                onCreateOrder={selectedVehicle.status === 'reserved' && !isVirtualStock ? handleCreateOrder : undefined}
                 isDealer={isDealer}
                 isVirtualStock={isVirtualStock}
                 isDealerStock={isDealerStock}
               />
             </DialogHeader>
             
-            <VehicleDetailsContent 
-              vehicle={vehicle} 
-              onEdit={canEdit ? handleEditClick : undefined}
-              onDelete={canEdit ? handleDeleteClick : undefined}
-              onClose={() => onOpenChange(false)}
-              isDealerStock={isDealerStock}
-              isVirtualStock={isVirtualStock}
+            <VehicleDialogContent 
+              vehicle={selectedVehicle}
+              showQuoteForm={showQuoteForm}
+              showReserveForm={showReserveForm}
+              showVirtualReserveForm={showVirtualReserveForm}
+              showCancelReservationForm={showCancelReservationForm}
+              isSubmitting={isSubmitting}
+              onCreateQuote={handleCreateQuoteClick}
+              onCancel={resetForms}
+              onSubmit={handleFormSubmitted}
+              onConfirm={handleCancelReservationConfirm}
+              userCanReserveVehicles={userCanReserveVehicles}
+              userCanCreateQuotes={userCanCreateQuotes}
             />
-            
-            <DialogFooter className="mt-4 pt-4 border-t">
-              <div className="flex w-full gap-3 justify-end">
-                {showActionButtons && (
-                  <>
-                    {onCreateQuote && !isVirtualStock && (
-                      <Button 
-                        onClick={handleCreateQuoteClick}
-                        variant="outline"
-                      >
-                        <FileText className="h-5 w-5 mr-2" />
-                        Preventivo
-                      </Button>
-                    )}
-                    
-                    {onReserve && (
-                      <Button 
-                        onClick={handleReserveClick}
-                      >
-                        <ShoppingCart className="h-5 w-5 mr-2" />
-                        Prenota
-                      </Button>
-                    )}
-                  </>
-                )}
-                
-                {showTransformOrderButton && (
-                  <Button 
-                    onClick={handleTransformToOrder}
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Package className="h-5 w-5 mr-2" />
-                    Trasforma in Ordine
-                  </Button>
-                )}
-              </div>
-            </DialogFooter>
           </>
-        );
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        {renderDialogContent()}
+        )}
       </DialogContent>
     </Dialog>
   );
