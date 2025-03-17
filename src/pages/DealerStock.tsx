@@ -177,6 +177,7 @@ const DealerStock = () => {
                   vehicles={reservedVehicles}
                   onVehicleUpdated={handleVehicleUpdated}
                   onVehicleDeleted={handleVehicleDeleted}
+                  onCreateQuote={handleCreateQuote}
                   isDealerStock={true}
                   isVirtualStock={false}
                 />

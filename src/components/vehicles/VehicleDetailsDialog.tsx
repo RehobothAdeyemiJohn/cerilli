@@ -10,6 +10,7 @@ import ReserveVehicleForm from './ReserveVehicleForm';
 import VirtualReservationForm from './virtualReservation/VirtualReservationForm';
 import VehicleDetailsContent from './details/VehicleDetailsContent';
 import { useVehicleDetailsDialog } from './details/useVehicleDetailsDialog';
+import VehicleDialogHeader from './details/VehicleDialogHeader';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -171,12 +172,18 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         return (
           <>
             <DialogHeader>
-              <DialogTitle className="text-xl">
-                {vehicle.model} {vehicle.trim}
-              </DialogTitle>
-              <DialogDescription>
-                Dettagli del veicolo e azioni disponibili
-              </DialogDescription>
+              <VehicleDialogHeader 
+                vehicle={vehicle}
+                onEdit={canEdit ? handleEditClick : undefined}
+                onDelete={canEdit ? handleDeleteClick : undefined}
+                onDuplicate={canEdit ? handleDuplicate : undefined}
+                onCreateQuote={onCreateQuote}
+                onReserve={showActionButtons && onReserve ? handleReserveClick : undefined}
+                onCancelReservation={undefined} // Not implemented here
+                onCreateOrder={undefined} // Not implemented here
+                isDealer={isDealer}
+                isVirtualStock={isVirtualStock}
+              />
             </DialogHeader>
             
             <VehicleDetailsContent 
