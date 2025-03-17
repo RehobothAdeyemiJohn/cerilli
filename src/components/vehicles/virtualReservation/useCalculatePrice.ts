@@ -27,52 +27,72 @@ export const useCalculatePrice = (
 
   useEffect(() => {
     const calculatePrice = () => {
-      if (modelObj && watchTrim && watchFuelType && watchColor && watchTransmission) {
-        // Find objects for selected options
-        const trimObj = trims.find(t => t.name === watchTrim);
-        
-        // For fuel type
-        const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        
-        // For color, handle possible format like "ColorName (Type)"
-        const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
-        const colorName = colorParts ? colorParts[1] : watchColor;
-        const colorType = colorParts ? colorParts[2] : '';
-        const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
-        
-        // For transmission
-        const transmissionObj = transmissions.find(t => t.name === watchTransmission);
+      if (!modelObj) {
+        setCalculatedPrice(0);
+        setPriceComponents({});
+        return;
+      }
 
-        // Get accessories price
-        const accessoriesPrice = watchAccessories
-          .map(name => {
-            const acc = accessories.find(a => a.name === name);
-            return acc ? acc.priceWithVAT : 0;
-          })
-          .reduce((sum, price) => sum + price, 0);
+      // Find objects for selected options
+      const trimObj = trims.find(t => t.name === watchTrim);
+      const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
+      
+      // For color, handle possible format like "ColorName (Type)"
+      const colorParts = watchColor ? watchColor.match(/^(.+?)( \(.+\))?$/) : null;
+      const colorName = colorParts ? colorParts[1] : watchColor;
+      const colorObj = colors.find(c => c.name === colorName || c.name === watchColor);
+      
+      // For transmission
+      const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-        // Calculate total price if all required objects are found
-        if (trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          const components = {
-            basePrice: modelObj.basePrice,
-            trimPrice: trimObj.basePrice,
-            fuelTypeAdjustment: fuelTypeObj.priceAdjustment,
-            colorAdjustment: colorObj.priceAdjustment,
-            transmissionAdjustment: transmissionObj.priceAdjustment,
-            accessoriesPrice
-          };
+      // Get accessories price
+      const accessoriesPrice = watchAccessories && watchAccessories.length
+        ? watchAccessories
+            .map(name => {
+              const acc = accessories.find(a => a.name === name);
+              return acc ? acc.priceWithVAT : 0;
+            })
+            .reduce((sum, price) => sum + price, 0)
+        : 0;
 
-          const totalPrice = modelObj.basePrice +
-                            trimObj.basePrice +
-                            fuelTypeObj.priceAdjustment +
-                            colorObj.priceAdjustment +
-                            transmissionObj.priceAdjustment +
-                            accessoriesPrice;
+      console.log("Selected items:", {
+        model: modelObj?.name,
+        trim: watchTrim,
+        trimObj,
+        fuelType: watchFuelType,
+        fuelTypeObj,
+        color: watchColor,
+        colorObj,
+        transmission: watchTransmission,
+        transmissionObj,
+        accessories: watchAccessories,
+        accessoriesPrice
+      });
 
-          setPriceComponents(components);
-          setCalculatedPrice(totalPrice);
-          return;
-        }
+      // Calculate total price if all required objects are found
+      if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
+        const components = {
+          basePrice: modelObj.basePrice,
+          trimPrice: trimObj.basePrice,
+          fuelTypeAdjustment: fuelTypeObj.priceAdjustment,
+          colorAdjustment: colorObj.priceAdjustment,
+          transmissionAdjustment: transmissionObj.priceAdjustment,
+          accessoriesPrice
+        };
+
+        const totalPrice = modelObj.basePrice +
+                          trimObj.basePrice +
+                          fuelTypeObj.priceAdjustment +
+                          colorObj.priceAdjustment +
+                          transmissionObj.priceAdjustment +
+                          accessoriesPrice;
+
+        console.log("Price calculation components:", components);
+        console.log("Total calculated price:", totalPrice);
+
+        setPriceComponents(components);
+        setCalculatedPrice(totalPrice);
+        return;
       }
       
       // If any required value is missing, reset price

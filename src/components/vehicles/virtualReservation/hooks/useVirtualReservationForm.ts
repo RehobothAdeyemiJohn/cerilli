@@ -23,7 +23,6 @@ export const useVirtualReservationForm = (vehicle: Vehicle) => {
     transmission: '',
     accessories: [],
     reservationDestination: 'Conto Esposizione', // Fixed by using a valid value from the enum
-    originalStock: undefined
   };
   
   // Add dealerId field only for admins

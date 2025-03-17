@@ -1,9 +1,6 @@
 
 import { z } from 'zod';
 
-// Create a strict enum for original stock options
-const originalStockEnum = z.enum(['Cina', 'Germania']);
-
 // Create a strict enum for destination options
 const destinationEnum = z.enum(['Conto Esposizione', 'Stock', 'Contratto Abbinato']);
 
@@ -21,10 +18,7 @@ export const virtualReservationSchema = z.object({
   transmission: z.string().min(1, "La trasmissione è obbligatoria"),
   
   // Optional accessories
-  accessories: z.array(z.string()).default([]),
-  
-  // Original stock - use the enum for validation
-  originalStock: originalStockEnum.optional()
+  accessories: z.array(z.string()).default([])
 });
 
 // Helper function to create a schema variant based on user role

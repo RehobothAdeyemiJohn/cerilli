@@ -4,7 +4,9 @@ import { useInventory } from '@/hooks/useInventory';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';
 
-const calculateEstimatedArrivalDays = (stockLocation: 'Cina' | 'Germania' | undefined): number => {
+const calculateEstimatedArrivalDays = (stockLocation: string | undefined): number => {
+  // For a virtual vehicle, we'll get the original stock from the vehicle, 
+  // not from the form anymore (since we removed that field)
   if (!stockLocation) return 120; // Default to longest time if unknown
   
   // Different arrival time estimates based on the original stock location
@@ -45,14 +47,15 @@ export const useVirtualReservationSubmit = (
         selectedDealerName = dealerName;
       }
       
-      // Use original stock from form data - ensure it's the correct type
-      const originalStock = data.originalStock; 
+      // Use original stock from the vehicle (not from the form)
+      const originalStock = vehicle.originalStock;
       
       // Calculate estimated arrival days based on original stock
       const estimatedArrivalDays = calculateEstimatedArrivalDays(originalStock);
       
       console.log("Submitting virtual reservation with originalStock:", originalStock);
       console.log("Estimated arrival days:", estimatedArrivalDays);
+      console.log("Calculated price:", calculatedPrice);
       
       const updatedVehicle: Vehicle = {
         ...vehicle,

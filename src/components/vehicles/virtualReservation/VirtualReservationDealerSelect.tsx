@@ -29,9 +29,19 @@ const VirtualReservationDealerSelect = ({
     }
   }, [isAdmin, user, form]);
   
-  // If not admin, don't show the selector
-  if (!isAdmin) return null;
+  // If not admin, show the dealer name but make it non-editable
+  if (!isAdmin) {
+    return (
+      <div className="mb-4">
+        <div className="font-medium text-sm mb-1">Concessionario</div>
+        <div className="bg-gray-100 border border-gray-200 p-2 rounded text-gray-800">
+          {user?.dealerName || 'Concessionario non identificato'}
+        </div>
+      </div>
+    );
+  }
   
+  // For admin, show the selector
   return (
     <FormField
       control={form.control}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Vehicle } from '@/types';
 import { Form } from '@/components/ui/form';
 import { useVirtualReservation } from './useVirtualReservation';
@@ -37,6 +37,20 @@ const ReserveVirtualVehicleForm = ({
     onCancel: handleCancel,
   } = useVirtualReservation(vehicle, onCancel, onReservationComplete);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Scroll to the form when component mounts
+  useEffect(() => {
+    if (formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+    }
+  }, []);
+
   // Show loader while data is being fetched
   if (isLoading) {
     return <VirtualReservationLoading />;
@@ -51,7 +65,7 @@ const ReserveVirtualVehicleForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <h3 className="text-lg font-medium">Configura e Prenota {vehicle.model}</h3>
         
         <VirtualReservationDealerSelect 

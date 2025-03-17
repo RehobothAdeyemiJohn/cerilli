@@ -130,29 +130,6 @@ const VirtualReservationConfigurator = ({
           )}
         />
       </div>
-      
-      {/* Stock origin selection */}
-      <FormField
-        control={form.control}
-        name="originalStock"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Origine Stock</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona origine stock" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="Germania">Germania (38-52 giorni)</SelectItem>
-                <SelectItem value="Cina">Cina (90-120 giorni)</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 };
