@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -46,7 +45,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const isAdmin = user?.type === 'admin';
   const canEdit = isAdmin;
   
-  // Initialize the useVehicleDetailsDialog hook
   const { handleDuplicate } = useVehicleDetailsDialog(
     vehicle || {} as Vehicle, 
     onVehicleUpdated,
@@ -64,11 +62,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       }
     }
     
-    // Handle duplication when the dialog opens with the requestedAction
     if (open && vehicle && requestedAction === 'duplicate') {
       console.log("Attempting to duplicate vehicle from dialog:", vehicle.id);
       handleDuplicate();
-      // Close the dialog after initiating duplication
       onOpenChange(false);
     }
   }, [open, vehicle, shouldReserve, requestedAction, handleDuplicate]);
@@ -98,7 +94,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   
   const handleCreateQuoteClick = () => {
     console.log("Create quote button clicked for vehicle:", vehicle.id);
-    if (onCreateQuote) {
+    if (onCreateQuote && vehicle) {
       onCreateQuote(vehicle);
       onOpenChange(false);
     }
@@ -177,10 +173,10 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                 onEdit={canEdit ? handleEditClick : undefined}
                 onDelete={canEdit ? handleDeleteClick : undefined}
                 onDuplicate={canEdit ? handleDuplicate : undefined}
-                onCreateQuote={onCreateQuote}
+                onCreateQuote={onCreateQuote ? () => handleCreateQuoteClick() : undefined}
                 onReserve={showActionButtons && onReserve ? handleReserveClick : undefined}
-                onCancelReservation={undefined} // Not implemented here
-                onCreateOrder={undefined} // Not implemented here
+                onCancelReservation={undefined}
+                onCreateOrder={undefined}
                 isDealer={isDealer}
                 isVirtualStock={isVirtualStock}
               />
