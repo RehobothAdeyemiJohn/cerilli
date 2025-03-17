@@ -100,6 +100,7 @@ const Quotes = () => {
   }, [location]);
 
   const handleOpenContractDialog = () => {
+    console.log("Opening contract dialog");
     setContractDialogOpen(true);
   };
 

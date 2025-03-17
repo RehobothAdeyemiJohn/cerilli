@@ -64,8 +64,7 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(quote.status)}`}>
                         {quote.status === 'pending' ? 'In attesa' : 
-                         quote.status === 'approved' ? 'Approvato' : 
-                         quote.status === 'rejected' ? 'Rifiutato' : 'Convertito'}
+                         quote.status === 'converted' ? 'Convertito' : 'Rifiutato'}
                       </span>
                     </TableCell>
                     <TableCell>{formatDate(quote.createdAt)}</TableCell>
@@ -80,10 +79,10 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
                         {quote.status === 'pending' && (
                           <>
                             <button 
-                              className="text-xs bg-green-100 hover:bg-green-200 px-2 py-1 rounded text-green-800"
-                              onClick={() => handleUpdateStatus(quote.id, 'approved')}
+                              className="text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-blue-800"
+                              onClick={() => handleUpdateStatus(quote.id, 'converted')}
                             >
-                              Approva
+                              Converti
                             </button>
                             <button 
                               className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-800"
@@ -93,21 +92,13 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
                             </button>
                           </>
                         )}
-                        {quote.status === 'approved' && (
-                          <>
-                            <button 
-                              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
-                              onClick={() => handleUpdateStatus(quote.id, 'pending')}
-                            >
-                              In Attesa
-                            </button>
-                            <button 
-                              className="text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded text-blue-800"
-                              onClick={() => handleUpdateStatus(quote.id, 'converted')}
-                            >
-                              Converti
-                            </button>
-                          </>
+                        {quote.status === 'converted' && (
+                          <button 
+                            className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                            onClick={() => handleUpdateStatus(quote.id, 'pending')}
+                          >
+                            In Attesa
+                          </button>
                         )}
                         {isAdmin && (
                           <button 

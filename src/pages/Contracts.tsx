@@ -7,6 +7,8 @@ import ContractDetailsDialog from '@/components/contracts/ContractDetailsDialog'
 import ContractFormDialog from '@/components/contracts/ContractFormDialog';
 import { useAuth } from '@/context/AuthContext';
 import { Order } from '@/types';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 const Contracts = () => {
   const { isAdmin } = useAuth();
@@ -51,6 +53,10 @@ const Contracts = () => {
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Contratti Dealer</h1>
+          <Button onClick={() => setIsFormDialogOpen(true)}>
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Crea Contratto
+          </Button>
         </div>
 
         <ContractsTable
