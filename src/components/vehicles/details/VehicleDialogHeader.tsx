@@ -16,6 +16,7 @@ interface VehicleDialogHeaderProps {
   onCreateOrder?: () => void;
   isDealer?: boolean;
   isVirtualStock?: boolean;
+  isDealerStock?: boolean;
 }
 
 const VehicleDialogHeader = ({ 
@@ -28,7 +29,8 @@ const VehicleDialogHeader = ({
   onCancelReservation,
   onCreateOrder,
   isDealer,
-  isVirtualStock
+  isVirtualStock,
+  isDealerStock
 }: VehicleDialogHeaderProps) => {
   const getDialogTitle = () => {
     if (vehicle.status === 'reserved') {
@@ -57,17 +59,21 @@ const VehicleDialogHeader = ({
     }
   };
   
+  // Determina se mostrare i pulsanti di modifica/eliminazione
+  // Non mostrare questi pulsanti se siamo nello stock dealer e l'utente è un dealer
+  const showEditButtons = !isDealerStock || !isDealer;
+  
   return (
     <>
       <DialogTitle>{getDialogTitle()}</DialogTitle>
       <DialogDescription className="flex flex-wrap gap-2 mt-2">
-        {onEdit && (
+        {onEdit && showEditButtons && (
           <Button variant="outline" size="sm" onClick={onEdit} className="h-8">
             <Edit className="h-4 w-4 mr-1" /> Modifica
           </Button>
         )}
         
-        {onDelete && (
+        {onDelete && showEditButtons && (
           <Button variant="outline" size="sm" onClick={onDelete} className="h-8 text-red-600 border-red-200 hover:bg-red-50">
             <Trash2 className="h-4 w-4 mr-1" /> Elimina
           </Button>

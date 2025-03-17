@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ interface VehicleCardProps {
   onDuplicate: (vehicle: Vehicle) => void;
   onCreateQuote?: (vehicle: Vehicle) => void;
   onReserve?: (vehicle: Vehicle) => void;
+  isDealerStock?: boolean;
 }
 
 const VehicleCard = ({ 
@@ -23,7 +23,8 @@ const VehicleCard = ({
   onDelete, 
   onDuplicate,
   onCreateQuote,
-  onReserve
+  onReserve,
+  isDealerStock = false
 }: VehicleCardProps) => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
@@ -46,9 +47,9 @@ const VehicleCard = ({
   };
 
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
-  const isDealerStock = vehicle.location === 'Stock Dealer';
+  const isDealerStockVehicle = vehicle.location === 'Stock Dealer' || isDealerStock;
 
-  const daysInStock = (!isVirtualStock && !isDealer) || (isDealerStock && isDealer) 
+  const daysInStock = (!isVirtualStock && !isDealer) || (isDealerStockVehicle && isDealer) 
     ? calculateDaysInStock(vehicle.dateAdded) 
     : null;
 
@@ -70,11 +71,13 @@ const VehicleCard = ({
   };
 
   const getFormattedLocation = () => {
-    if (isDealerStock && vehicle.reservedBy && isAdmin) {
+    if (isDealerStockVehicle && vehicle.reservedBy && isAdmin) {
       return `Stock ${vehicle.reservedBy}`;
     }
     return vehicle.location;
   };
+
+  const showAdminButtons = !isDealer || (!isDealerStockVehicle);
 
   return (
     <div 
@@ -178,8 +181,7 @@ const VehicleCard = ({
           )}
         </div>
         
-        {/* Admin action buttons only */}
-        {!isDealer && (
+        {showAdminButtons && (
           <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
             <button 
               onClick={(e) => handleActionClick(e, onEdit)}
@@ -199,8 +201,6 @@ const VehicleCard = ({
             </button>
           </div>
         )}
-        
-        {/* Remove action buttons for dealers as requested */}
       </div>
     </div>
   );

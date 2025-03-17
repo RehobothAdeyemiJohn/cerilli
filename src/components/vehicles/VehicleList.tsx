@@ -131,6 +131,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
             onDuplicate={handleDuplicateVehicle}
             onCreateQuote={onCreateQuote}
             onReserve={onReserve}
+            isDealerStock={isDealerStock}
           />
         ))}
       </div>

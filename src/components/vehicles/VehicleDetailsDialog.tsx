@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -179,6 +180,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                 onCreateOrder={undefined}
                 isDealer={isDealer}
                 isVirtualStock={isVirtualStock}
+                isDealerStock={isDealerStock}
               />
             </DialogHeader>
             
