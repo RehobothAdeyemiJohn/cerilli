@@ -42,7 +42,7 @@ const VirtualReservationConfigurator = ({
                 <SelectContent>
                   {compatibleTrims.map((trim) => (
                     <SelectItem key={trim.id} value={trim.name}>
-                      {trim.name} (+€{trim.priceWithVAT.toLocaleString('it-IT')})
+                      {trim.name} (+€{trim.basePrice.toLocaleString('it-IT')})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -68,7 +68,7 @@ const VirtualReservationConfigurator = ({
                 <SelectContent>
                   {compatibleFuelTypes.map((fuelType) => (
                     <SelectItem key={fuelType.id} value={fuelType.name}>
-                      {fuelType.name} (+€{fuelType.priceWithVAT.toLocaleString('it-IT')})
+                      {fuelType.name} (+€{fuelType.priceAdjustment.toLocaleString('it-IT')})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -94,7 +94,7 @@ const VirtualReservationConfigurator = ({
                 <SelectContent>
                   {compatibleColors.map((color) => (
                     <SelectItem key={color.id} value={color.name}>
-                      {color.name} (+€{color.priceWithVAT.toLocaleString('it-IT')})
+                      {color.name} (+€{color.priceAdjustment.toLocaleString('it-IT')})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -120,7 +120,7 @@ const VirtualReservationConfigurator = ({
                 <SelectContent>
                   {compatibleTransmissions.map((transmission) => (
                     <SelectItem key={transmission.id} value={transmission.name}>
-                      {transmission.name} (+€{transmission.priceWithVAT.toLocaleString('it-IT')})
+                      {transmission.name} (+€{transmission.priceAdjustment.toLocaleString('it-IT')})
                     </SelectItem>
                   ))}
                 </SelectContent>

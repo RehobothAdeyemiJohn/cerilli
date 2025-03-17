@@ -35,7 +35,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   shouldReserve,
   requestedAction
 }) => {
-  // State management
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -44,22 +43,18 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Hooks
   const { user } = useAuth();
   const { handleVehicleDuplicate } = useInventory();
   const navigate = useNavigate();
   
-  // Determine user capabilities
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
-  const userCanReserveVehicles = true; // Default to true for now
-  const userCanCreateQuotes = true; // Default to true for now
+  const userCanReserveVehicles = true;
+  const userCanCreateQuotes = true;
   
-  // Handle dialog opened
   useEffect(() => {
     if (open && vehicle) {
       setSelectedVehicle(vehicle);
       
-      // Auto-trigger reservation if requested
       if (shouldReserve && vehicle.status === 'available') {
         console.log("Auto-triggering reservation for vehicle:", vehicle.id);
         
@@ -70,17 +65,14 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         }
       }
       
-      // Auto-trigger duplication if requested
       if (requestedAction === 'duplicate' && vehicle.location === 'Stock Virtuale') {
         handleDuplicateVehicle();
       }
     } else {
-      // Reset forms when dialog is closed
       resetForms();
     }
   }, [open, vehicle, shouldReserve, requestedAction]);
   
-  // Reset all form states
   const resetForms = () => {
     setShowEditForm(false);
     setShowQuoteForm(false);
@@ -89,7 +81,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     setShowCancelReservationForm(false);
   };
   
-  // Vehicle management actions
   const handleEditVehicle = () => {
     resetForms();
     setShowEditForm(true);
@@ -107,7 +98,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         description: `${selectedVehicle.model} è stato duplicato con successo`,
       });
       
-      // Close current dialog and reset
       handleDialogClose();
       onVehicleUpdated();
     } catch (error) {
@@ -138,11 +128,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
-  // Reservation actions
   const handleReserveVehicle = () => {
     resetForms();
     
-    // Different reservation flow based on vehicle type
     if (selectedVehicle?.location === 'Stock Virtuale') {
       setShowVirtualReserveForm(true);
     } else {
@@ -161,10 +149,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Convert back to available
       const updatedVehicle = {
         ...selectedVehicle,
-        status: 'available',
+        status: 'available' as 'available' | 'reserved' | 'sold' | 'ordered' | 'delivered',
         reservedBy: undefined,
         reservedAccessories: [],
         reservationTimestamp: undefined,
@@ -192,16 +179,13 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
-  // Quote actions
   const handleCreateQuoteClick = () => {
     resetForms();
     
     if (onCreateQuote && selectedVehicle) {
-      // If we have an external handler, use it
       onCreateQuote(selectedVehicle);
       handleDialogClose();
     } else {
-      // Otherwise show the inline quote form
       setShowQuoteForm(true);
     }
   };
@@ -218,7 +202,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     handleDialogClose();
   };
   
-  // Form submission handlers
   const handleFormSubmitted = () => {
     onVehicleUpdated();
     handleDialogClose();
