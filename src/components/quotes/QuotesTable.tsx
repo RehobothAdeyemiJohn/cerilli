@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Quote } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface QuotesTableProps {
@@ -15,6 +15,7 @@ interface QuotesTableProps {
   handleViewQuote: (quote: Quote) => void;
   handleUpdateStatus: (id: string, status: Quote['status']) => void;
   handleDeleteClick: (quote: Quote) => void;
+  handleEditQuote?: (quote: Quote) => void;
 }
 
 const QuotesTable: React.FC<QuotesTableProps> = ({
@@ -26,7 +27,8 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
   formatDate,
   handleViewQuote,
   handleUpdateStatus,
-  handleDeleteClick
+  handleDeleteClick,
+  handleEditQuote
 }) => {
   const { user } = useAuth();
   // Check if user is admin or superAdmin
@@ -76,6 +78,15 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
                         >
                           Visualizza
                         </button>
+                        {handleEditQuote && (
+                          <button 
+                            className="text-xs bg-indigo-100 hover:bg-indigo-200 px-2 py-1 rounded text-indigo-800"
+                            onClick={() => handleEditQuote(quote)}
+                          >
+                            <Edit className="h-3 w-3 inline mr-1" />
+                            Modifica
+                          </button>
+                        )}
                         {quote.status === 'pending' && (
                           <>
                             <button 

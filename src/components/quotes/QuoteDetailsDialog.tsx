@@ -21,9 +21,18 @@ interface QuoteDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onStatusChange: (id: string, status: Quote['status']) => void;
   onConvert?: () => void;
+  onEdit?: (quote: Quote) => void;
 }
 
-const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange, onConvert }: QuoteDetailsDialogProps) => {
+const QuoteDetailsDialog = ({ 
+  quote, 
+  vehicle, 
+  open, 
+  onOpenChange, 
+  onStatusChange, 
+  onConvert,
+  onEdit
+}: QuoteDetailsDialogProps) => {
   if (!quote || !vehicle) return null;
   
   return (
@@ -50,6 +59,7 @@ const QuoteDetailsDialog = ({ quote, vehicle, open, onOpenChange, onStatusChange
           quote={quote} 
           onStatusChange={onStatusChange}
           onConvert={onConvert}
+          onEdit={onEdit ? () => onEdit(quote) : undefined}
         />
       </DialogContent>
     </Dialog>

@@ -87,10 +87,10 @@ export const useQuotesData = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   const models = Array.from(new Set(vehicles.map(vehicle => vehicle.model)))
     .map(model => ({ id: model, name: model }));
-  
+
   const filteredQuotes = quotes.filter(quote => {
     if (activeTab !== 'all' && quote.status !== activeTab) {
       return false;
@@ -131,20 +131,6 @@ export const useQuotesData = () => {
     currentPage * itemsPerPage
   );
   
-  const selectedVehicle = selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null;
-  
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-  
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-  
   const handleViewQuote = (quote: Quote) => {
     setSelectedQuote(quote);
     setViewDialogOpen(true);
@@ -153,17 +139,6 @@ export const useQuotesData = () => {
   const handleDeleteClick = (quote: Quote) => {
     setSelectedQuote(quote);
     setDeleteDialogOpen(true);
-  };
-  
-  const handleOpenCreateQuoteDialog = (vehicleId?: string) => {
-    if (vehicleId) {
-      setSelectedVehicleId(vehicleId);
-      setIsManualQuote(false);
-    } else {
-      setSelectedVehicleId(null);
-      setIsManualQuote(true);
-    }
-    setCreateDialogOpen(true);
   };
   
   const handleUpdateStatus = async (quoteId: string, newStatus: Quote['status'], rejectionReason?: string) => {
@@ -193,7 +168,28 @@ export const useQuotesData = () => {
       });
     }
   };
-  
+
+  const handleUpdateQuote = async (quoteId: string, updates: Partial<Quote>) => {
+    try {
+      await quotesApi.update(quoteId, updates);
+      
+      toast({
+        title: "Preventivo aggiornato",
+        description: "Il preventivo è stato aggiornato con successo.",
+      });
+      
+      refetchQuotes();
+    } catch (error) {
+      console.error("Error updating quote:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del preventivo.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const handleConvertToContract = async (quoteId: string, contractData: any) => {
     try {
       if (!selectedQuote) {
@@ -408,7 +404,8 @@ export const useQuotesData = () => {
     deleteDialogOpen,
     setDeleteDialogOpen,
     selectedQuote,
-    selectedVehicle,
+    setSelectedQuote,
+    selectedVehicle: selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null,
     isManualQuote,
     setIsManualQuote,
     
@@ -430,6 +427,7 @@ export const useQuotesData = () => {
     handleViewQuote,
     handleDeleteClick,
     handleUpdateStatus,
+    handleUpdateQuote,
     handleCreateQuote,
     handleRejectQuote,
     handleDeleteQuote,

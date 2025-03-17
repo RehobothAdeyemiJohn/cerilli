@@ -27,6 +27,7 @@ const Quotes = () => {
   const location = useLocation();
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [isSubmittingContract, setIsSubmittingContract] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const {
     // States
@@ -84,7 +85,8 @@ const Quotes = () => {
     handlePrevPage,
     handleNextPage,
     handleOpenCreateQuoteDialog,
-    handleConvertToContract
+    handleConvertToContract,
+    handleUpdateQuote
   } = useQuotesData();
   
   // Handle navigation from other pages (e.g., vehicle inventory)
@@ -114,6 +116,21 @@ const Quotes = () => {
       console.error("Error creating contract:", error);
     } finally {
       setIsSubmittingContract(false);
+    }
+  };
+
+  const handleEditQuote = (quote: any) => {
+    console.log("Opening edit quote dialog for quote:", quote);
+    setSelectedQuote(quote);
+    setSelectedVehicleId(quote.vehicleId);
+    setEditDialogOpen(true);
+  };
+
+  const handleSubmitEditQuote = async (data: any) => {
+    if (selectedQuote) {
+      await handleUpdateQuote(selectedQuote.id, data);
+      setEditDialogOpen(false);
+      setViewDialogOpen(false);
     }
   };
   
@@ -154,6 +171,7 @@ const Quotes = () => {
         handleViewQuote={handleViewQuote}
         handleUpdateStatus={handleUpdateStatus}
         handleDeleteClick={handleDeleteClick}
+        handleEditQuote={handleEditQuote}
       />
       
       {/* Pagination */}
@@ -191,6 +209,26 @@ const Quotes = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Quote Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="w-full max-w-[1200px] max-h-[90vh] overflow-y-auto grid grid-cols-1">
+          <DialogHeader>
+            <DialogTitle>Modifica Preventivo</DialogTitle>
+            <DialogDescription>
+              Modifica i dettagli del preventivo
+            </DialogDescription>
+          </DialogHeader>
+          
+          <QuoteForm 
+            vehicle={selectedVehicleId ? getVehicleById(selectedVehicleId) : undefined}
+            quote={selectedQuote}
+            isManualQuote={selectedQuote?.manualEntry || false}
+            onSubmit={handleSubmitEditQuote}
+            onCancel={() => setEditDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
       
       {/* Details Dialog */}
       <QuoteDetailsDialog
@@ -200,6 +238,7 @@ const Quotes = () => {
         onOpenChange={setViewDialogOpen}
         onStatusChange={handleUpdateStatus}
         onConvert={handleOpenContractDialog}
+        onEdit={handleEditQuote}
       />
       
       {/* Reject Dialog */}
@@ -221,6 +260,7 @@ const Quotes = () => {
       {/* Contract Creation Dialog */}
       <QuoteContractDialog
         quote={selectedQuote}
+        vehicle={selectedVehicle}
         open={contractDialogOpen}
         onClose={() => setContractDialogOpen(false)}
         onSubmit={handleCreateContract}

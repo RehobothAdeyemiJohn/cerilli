@@ -17,6 +17,7 @@ interface QuotesTabsProps {
   handleViewQuote: (quote: Quote) => void;
   handleUpdateStatus: (id: string, status: Quote['status']) => void;
   handleDeleteClick: (quote: Quote) => void;
+  handleEditQuote?: (quote: Quote) => void;
 }
 
 const QuotesTabs: React.FC<QuotesTabsProps> = ({
@@ -31,7 +32,8 @@ const QuotesTabs: React.FC<QuotesTabsProps> = ({
   formatDate,
   handleViewQuote,
   handleUpdateStatus,
-  handleDeleteClick
+  handleDeleteClick,
+  handleEditQuote
 }) => {
   const renderQuoteTable = () => (
     <QuotesTable
@@ -44,6 +46,7 @@ const QuotesTabs: React.FC<QuotesTabsProps> = ({
       handleViewQuote={handleViewQuote}
       handleUpdateStatus={handleUpdateStatus}
       handleDeleteClick={handleDeleteClick}
+      handleEditQuote={handleEditQuote}
     />
   );
 
