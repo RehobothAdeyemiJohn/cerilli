@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -66,6 +67,7 @@ export type Quote = {
   hasTradeIn?: boolean;
   tradeInBrand?: string;
   tradeInModel?: string;
+  tradeInPlate?: string; // Added this new field
   tradeInYear?: string;
   tradeInKm?: number;
   tradeInValue?: number;

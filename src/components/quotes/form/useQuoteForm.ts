@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -38,7 +39,7 @@ export const useQuoteForm = (
       hasTradeIn: editQuote?.hasTradeIn || false,
       tradeInBrand: editQuote?.tradeInBrand || '',
       tradeInModel: editQuote?.tradeInModel || '',
-      tradeInPlate: editQuote?.tradeInPlate || '', // Add new field
+      tradeInPlate: editQuote?.tradeInPlate || '',
       tradeInYear: editQuote?.tradeInYear || '',
       tradeInKm: editQuote?.tradeInKm || 0,
       tradeInValue: editQuote?.tradeInValue || 0,
