@@ -27,8 +27,8 @@ interface QuoteContractDialogProps {
   isSubmitting: boolean;
 }
 
-// Base schema with common fields
-const baseContractSchema = z.object({
+// Common fields schema
+const commonFieldsSchema = z.object({
   address: z.string().min(1, "L'indirizzo è obbligatorio"),
   city: z.string().min(1, 'La città è obbligatoria'),
   province: z.string().min(1, 'La provincia è obbligatoria'),
@@ -37,7 +37,7 @@ const baseContractSchema = z.object({
   email: z.string().email('Email non valida'),
 });
 
-// Define form schema for persona fisica
+// Schema for persona fisica
 const personaFisicaSchema = z.object({
   contractorType: z.literal('personaFisica'),
   firstName: z.string().min(1, 'Il nome è obbligatorio'),
@@ -46,9 +46,9 @@ const personaFisicaSchema = z.object({
   birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
   birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
   birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
-}).merge(baseContractSchema);
+}).merge(commonFieldsSchema);
 
-// Define form schema for persona giuridica
+// Schema for persona giuridica
 const personaGiuridicaSchema = z.object({
   contractorType: z.literal('personaGiuridica'),
   companyName: z.string().min(1, 'La ragione sociale è obbligatoria'),
@@ -59,10 +59,10 @@ const personaGiuridicaSchema = z.object({
   legalRepBirthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
   legalRepBirthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
   legalRepBirthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
-}).merge(baseContractSchema);
+}).merge(commonFieldsSchema);
 
-// Schema for pricing configuration
-const pricingSchema = z.object({
+// Additional schemas for prices and terms
+const priceSchema = z.object({
   hasReducedVAT: z.boolean().default(false),
   discountAmount: z.string().optional(),
   plateBonus: z.string().optional(),
@@ -78,8 +78,7 @@ const pricingSchema = z.object({
   selectedAccessories: z.array(z.string()).default([]),
 });
 
-// Schema for contract terms
-const contractTermsSchema = z.object({
+const termsSchema = z.object({
   terminiPagamento: z.string().min(1, 'I termini di pagamento sono obbligatori'),
   tempiConsegna: z.string().min(1, 'I tempi di consegna sono obbligatori'),
   garanzia: z.string().min(1, 'La garanzia è obbligatoria'),
@@ -87,13 +86,13 @@ const contractTermsSchema = z.object({
 });
 
 // Combine schemas with discriminated union
-const formSchema = z.discriminatedUnion('contractorType', [
+const contractFormSchema = z.discriminatedUnion('contractorType', [
   personaFisicaSchema,
   personaGiuridicaSchema
-]).and(pricingSchema).and(contractTermsSchema);
+]).and(priceSchema).and(termsSchema);
 
-// Infer the type from the schema
-type ContractFormValues = z.infer<typeof formSchema>;
+// Form values type
+type ContractFormValues = z.infer<typeof contractFormSchema>;
 
 const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   quote,
@@ -109,8 +108,9 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const [hasTradein, setHasTradein] = useState(false);
   const [warrantyExtension, setWarrantyExtension] = useState("24 Mesi");
 
+  // Create form with zod resolver
   const methods = useForm<ContractFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(contractFormSchema),
     defaultValues: {
       contractorType: 'personaFisica',
       hasReducedVAT: false,
@@ -118,13 +118,14 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
       roadTaxAmount: '400',
       tempiConsegna: '30',
       garanzia: '24 Mesi',
-      selectedAccessories: []
+      selectedAccessories: [],
     } as ContractFormValues
   });
 
   const { handleSubmit, setValue, watch, register, formState: { errors }, reset } = methods;
 
-  // Watch values for realtime calculation
+  // Watch necessary values
+  const watchContractorType = watch('contractorType');
   const watchReducedVAT = watch('hasReducedVAT');
   const watchTradein = watch('hasTradein');
   const watchTradeInValue = watch('tradeinValue');
@@ -135,7 +136,11 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const watchSelectedAccessories = watch('selectedAccessories');
   const watchWarranty = watch('garanzia');
 
-  // Effects to sync form state with UI state
+  // Sync form state with UI state
+  useEffect(() => {
+    setContractorType(watchContractorType);
+  }, [watchContractorType]);
+
   useEffect(() => {
     setHasReducedVAT(watchReducedVAT);
   }, [watchReducedVAT]);
@@ -148,13 +153,12 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
     setWarrantyExtension(watchWarranty);
   }, [watchWarranty]);
 
+  // Pre-fill form with quote data when available
   useEffect(() => {
     if (quote) {
-      // Pre-fill form with quote data
       setValue('discountAmount', quote.discount?.toString() || '0');
       setValue('hasReducedVAT', quote.reducedVAT || false);
       
-      // Handle customer details if available
       if (quote.customerName) {
         const nameParts = quote.customerName.split(' ');
         if (nameParts.length > 1 && contractorType === 'personaFisica') {
@@ -173,7 +177,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
         setValue('phone', quote.customerPhone);
       }
       
-      // Handle trade-in if present in quote
+      // Handle trade-in if present
       if (quote.hasTradeIn) {
         setValue('hasTradein', true);
         setHasTradein(true);
@@ -209,13 +213,13 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const onSubmitForm = (data: ContractFormValues) => {
     if (!quote) return;
     
-    // Include warranty extension cost in calculations
+    // Calculate warranty additional cost
     let warrantyAdditionalCost = 0;
     if (data.garanzia === "84 Anni (addizionale € 1.000)") {
       warrantyAdditionalCost = 1000;
     }
     
-    // Add selected accessories data if any
+    // Submit form data with accessories and warranty cost
     const formDataWithAccessories = {
       ...data,
       selectedAccessories: watchSelectedAccessories,
@@ -248,7 +252,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
     return parseFloat(value) || 0;
   };
   
-  // Calculate final price components with VAT adjustment
+  // Calculate price components with VAT adjustment
   const vatAdjustedBasePrice = getVATAdjustedPrice(basePrice);
   const vatAdjustedDiscount = getVATAdjustedPrice(parseNumeric(watchDiscount));
   const vatAdjustedPlateBonus = getVATAdjustedPrice(parseNumeric(watchPlateBonus));
@@ -445,16 +449,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {contractorType === 'personaGiuridica' && errors.companyName && (
-                                <p className="text-red-500 text-sm">{errors.companyName.message}</p>
+                              {contractorType === 'personaGiuridica' && "companyName" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).companyName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {contractorType === 'personaGiuridica' && errors.vatNumber && (
-                                <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
+                              {contractorType === 'personaGiuridica' && "vatNumber" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).vatNumber?.message}</p>
                               )}
                             </div>
                           </div>
@@ -517,48 +521,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepFirstName && (
-                                <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepFirstName" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepFirstName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepLastName && (
-                                <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepLastName" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepLastName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepFiscalCode && (
-                                <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepFiscalCode" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepFiscalCode?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthDate && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepBirthDate" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthDate?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthPlace && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepBirthPlace" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthPlace?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthProvince && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
+                              {contractorType === 'personaGiuridica' && "legalRepBirthProvince" in errors && (
+                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthProvince?.message}</p>
                               )}
                             </div>
                           </div>
@@ -882,8 +886,8 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             className="min-h-32"
                             {...register('terminiPagamento')}
                           />
-                          {errors.terminiPagamento && (
-                            <p className="text-red-500 text-sm">{errors.terminiPagamento.message}</p>
+                          {"terminiPagamento" in errors && (
+                            <p className="text-red-500 text-sm">{(errors as any).terminiPagamento?.message}</p>
                           )}
                         </div>
                         

@@ -89,7 +89,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
           <span className="font-medium text-green-600">+ {formatCurrency(vatAdjustedRoadPrep)}</span>
         </div>
         
-        {accessoryTotalPrice > 0 || accessories.length > 0 && (
+        {(accessoryTotalPrice > 0 || (accessories.length > 0)) && (
           <div className="flex justify-between">
             <span className="text-sm">Optional Aggiunti</span>
             <span className="font-medium text-green-600">+ {formatCurrency(accessoryTotalPrice)}</span>
