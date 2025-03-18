@@ -45,39 +45,36 @@ export type Quote = {
   vehicleId: string;
   dealerId: string;
   customerName: string;
-  customerEmail: string;
-  customerPhone: string;
+  customerEmail?: string;
+  customerPhone?: string;
   price: number;
   discount: number;
   finalPrice: number;
   status: 'pending' | 'approved' | 'rejected' | 'converted';
   createdAt: string;
+  notes?: string;
   rejectionReason?: string;
+  manualEntry?: boolean;
+  vehicleInfo?: {
+    model: string;
+    trim?: string;
+    imageUrl?: string;
+    location: string;
+  };
+  reducedVAT?: boolean;
+  vatRate?: number;
+  hasTradeIn?: boolean;
   tradeInBrand?: string;
   tradeInModel?: string;
   tradeInYear?: string;
   tradeInKm?: number;
   tradeInValue?: number;
-  hasTradeIn?: boolean;
-  reducedVAT?: boolean;
-  vatRate?: number;
-  accessories?: string[];
-  accessoryPrice?: number;
-  notes?: string;
-  manualEntry?: boolean;
   licensePlateBonus?: number;
   tradeInBonus?: number;
   safetyKit?: number;
   tradeInHandlingFee?: number;
   roadPreparationFee?: number;
   tradeInMake?: string;
-  vehicleData?: {
-    model: string;
-    trim: string;
-    exteriorColor: string;
-    fuelType: string;
-    price: number;
-  };
 };
 
 export type Order = {
