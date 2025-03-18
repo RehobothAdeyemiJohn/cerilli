@@ -37,31 +37,24 @@ const contractSchema = z.object({
   legalRepBirthDate: z.string().optional(),
   legalRepBirthPlace: z.string().optional(),
   legalRepBirthProvince: z.string().optional(),
-
-  discount: z.number().default(0),
-  finalPrice: z.number().default(0),
   
-  hasTradeIn: z.boolean().default(false),
-  tradeInMake: z.string().optional(),
-  tradeInModel: z.string().optional(),
-  tradeInYear: z.string().optional(),
-  tradeInValue: z.number().optional(),
+  terminiPagamento: z.string().min(1, "I termini di pagamento sono obbligatori"),
+  clausoleSpeciali: z.string().optional(),
+  tempiConsegna: z.string().min(1, "I tempi di consegna sono obbligatori"),
+  garanzia: z.string().min(1, "La garanzia è obbligatoria")
 }).refine((data) => {
-  if (data.contractorType === 'personaGiuridica') {
-    return !!data.companyName && !!data.vatNumber && 
-           !!data.legalRepFirstName && !!data.legalRepLastName && 
-           !!data.legalRepFiscalCode && !!data.legalRepBirthDate && 
-           !!data.legalRepBirthPlace && !!data.legalRepBirthProvince;
-  }
-  
   if (data.contractorType === 'personaFisica') {
     return !!data.birthDate && !!data.birthPlace && !!data.birthProvince;
   }
-  
-  return true;
+  if (data.contractorType === 'personaGiuridica') {
+    return !!data.companyName && !!data.vatNumber &&
+           !!data.legalRepFirstName && !!data.legalRepLastName &&
+           !!data.legalRepFiscalCode && !!data.legalRepBirthDate &&
+           !!data.legalRepBirthPlace && !!data.legalRepBirthProvince;
+  }
+  return false;
 }, {
-  message: "Campi obbligatori mancanti",
-  path: ["contractorType"]
+  message: "Compilare tutti i campi obbligatori per il tipo di contraente selezionato",
 });
 
 type ContractFormValues = z.infer<typeof contractSchema>;
@@ -83,7 +76,7 @@ const QuoteContractDialog = ({
   onSubmit,
   isSubmitting 
 }: QuoteContractDialogProps) => {
-  const form = useForm<ContractFormValues>({
+  const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
       contractorType: 'personaFisica',
@@ -107,13 +100,10 @@ const QuoteContractDialog = ({
       legalRepBirthDate: '',
       legalRepBirthPlace: '',
       legalRepBirthProvince: '',
-      discount: 0,
-      finalPrice: 0,
-      hasTradeIn: false,
-      tradeInMake: '',
-      tradeInModel: '',
-      tradeInYear: '',
-      tradeInValue: 0
+      terminiPagamento: '',
+      clausoleSpeciali: '',
+      tempiConsegna: '30',
+      garanzia: '24 mesi'
     }
   });
 
@@ -603,3 +593,4 @@ const QuoteContractDialog = ({
 };
 
 export default QuoteContractDialog;
+
