@@ -345,48 +345,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="firstName">Nome</Label>
                               <Input id="firstName" {...register('firstName')} />
-                              {contractorType === 'personaFisica' && errors.firstName && (
-                                <p className="text-red-500 text-sm">{errors.firstName.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.firstName && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.firstName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Cognome</Label>
                               <Input id="lastName" {...register('lastName')} />
-                              {contractorType === 'personaFisica' && errors.lastName && (
-                                <p className="text-red-500 text-sm">{errors.lastName.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.lastName && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.lastName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="fiscalCode">Codice Fiscale</Label>
                               <Input id="fiscalCode" {...register('fiscalCode')} />
-                              {contractorType === 'personaFisica' && errors.fiscalCode && (
-                                <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.fiscalCode && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.fiscalCode?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthDate">Data di Nascita</Label>
                               <Input id="birthDate" type="date" {...register('birthDate')} />
-                              {contractorType === 'personaFisica' && errors.birthDate && (
-                                <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.birthDate && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.birthDate?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthPlace">Luogo di Nascita</Label>
                               <Input id="birthPlace" {...register('birthPlace')} />
-                              {contractorType === 'personaFisica' && errors.birthPlace && (
-                                <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.birthPlace && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.birthPlace?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthProvince">Provincia di Nascita</Label>
                               <Input id="birthProvince" {...register('birthProvince')} />
-                              {contractorType === 'personaFisica' && errors.birthProvince && (
-                                <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
+                              {contractorType === 'personaFisica' && (errors as any)?.birthProvince && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.birthProvince?.message}</p>
                               )}
                             </div>
                           </div>
@@ -449,16 +449,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {contractorType === 'personaGiuridica' && "companyName" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).companyName?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.companyName && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.companyName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {contractorType === 'personaGiuridica' && "vatNumber" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).vatNumber?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.vatNumber && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.vatNumber?.message}</p>
                               )}
                             </div>
                           </div>
@@ -521,48 +521,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {contractorType === 'personaGiuridica' && "legalRepFirstName" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepFirstName?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepFirstName && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepFirstName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {contractorType === 'personaGiuridica' && "legalRepLastName" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepLastName?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepLastName && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepLastName?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {contractorType === 'personaGiuridica' && "legalRepFiscalCode" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepFiscalCode?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepFiscalCode && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepFiscalCode?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {contractorType === 'personaGiuridica' && "legalRepBirthDate" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthDate?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthDate && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthDate?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {contractorType === 'personaGiuridica' && "legalRepBirthPlace" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthPlace?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthPlace && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthPlace?.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {contractorType === 'personaGiuridica' && "legalRepBirthProvince" in errors && (
-                                <p className="text-red-500 text-sm">{(errors as any).legalRepBirthProvince?.message}</p>
+                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthProvince && (
+                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthProvince?.message}</p>
                               )}
                             </div>
                           </div>
@@ -824,18 +824,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <span className="text-red-600">- {formatCurrency(vatAdjustedPlateBonus)}</span>
                           </div>
                           
+                          <div className="flex justify-between">
+                            <span>Premio Permuta:</span>
+                            <span className="text-red-600">- {formatCurrency(vatAdjustedTradeInBonus)}</span>
+                          </div>
+                          
                           {watchTradein && (
-                            <>
-                              <div className="flex justify-between">
-                                <span>Bonus Permuta:</span>
-                                <span className="text-red-600">- {formatCurrency(vatAdjustedTradeInBonus)}</span>
-                              </div>
-                              
-                              <div className="flex justify-between">
-                                <span>Valore Permuta:</span>
-                                <span className="text-red-600">- {formatCurrency(tradeInValue)}</span>
-                              </div>
-                            </>
+                            <div className="flex justify-between">
+                              <span>Valore Permuta:</span>
+                              <span className="text-red-600">- {formatCurrency(tradeInValue)}</span>
+                            </div>
                           )}
                           
                           <div className="flex justify-between">
@@ -844,7 +842,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                           </div>
                           
                           <div className="flex justify-between">
-                            <span>Messa su Strada:</span>
+                            <span>Messa su strada:</span>
                             <span className="text-green-600">+ {formatCurrency(vatAdjustedRoadPrep)}</span>
                           </div>
                           
@@ -886,8 +884,8 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             className="min-h-32"
                             {...register('terminiPagamento')}
                           />
-                          {"terminiPagamento" in errors && (
-                            <p className="text-red-500 text-sm">{(errors as any).terminiPagamento?.message}</p>
+                          {(errors as any)?.terminiPagamento && (
+                            <p className="text-red-500 text-sm">{(errors as any)?.terminiPagamento?.message}</p>
                           )}
                         </div>
                         
