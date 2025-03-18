@@ -109,9 +109,15 @@ const Quotes = () => {
   const handleCreateContract = async (quoteId: string, contractData: any) => {
     setIsSubmittingContract(true);
     try {
-      await handleConvertToContract(quoteId, contractData);
-      setContractDialogOpen(false);
-      setViewDialogOpen(false);
+      console.log("Creating contract with data:", { quoteId, contractData });
+      const result = await handleConvertToContract(quoteId, contractData);
+      console.log("Contract creation result:", result);
+      
+      // Only close dialogs if contract creation was successful
+      if (result !== false) {
+        setContractDialogOpen(false);
+        setViewDialogOpen(false);
+      }
     } catch (error) {
       console.error("Error creating contract:", error);
     } finally {

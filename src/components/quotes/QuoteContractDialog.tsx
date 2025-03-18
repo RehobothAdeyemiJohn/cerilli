@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -100,7 +101,7 @@ const QuoteContractDialog = ({
       legalRepBirthDate: '',
       legalRepBirthPlace: '',
       legalRepBirthProvince: '',
-      terminiPagamento: '',
+      terminiPagamento: 'Bonifico Bancario',
       clausoleSpeciali: '',
       tempiConsegna: '30',
       garanzia: '24 mesi'
@@ -129,7 +130,11 @@ const QuoteContractDialog = ({
   const handleSubmit = async (data: z.infer<typeof contractSchema>) => {
     console.log('Form submitted with data:', data);
     if (quote) {
-      await onSubmit(quote.id, data);
+      try {
+        await onSubmit(quote.id, data);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      }
     }
   };
 
@@ -420,13 +425,63 @@ const QuoteContractDialog = ({
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-md space-y-4">
-                  <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
+                  <h3 className="text-md font-semibold">Condizioni di Contratto</h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-md space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="terminiPagamento"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Termini di Pagamento</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Es. Bonifico Bancario" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="tempiConsegna"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tempi di Consegna (giorni)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" min="1" placeholder="30" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="garanzia"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Garanzia</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Es. 24 mesi" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="clausoleSpeciali"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Clausole Speciali</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Eventuali clausole speciali" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </div>

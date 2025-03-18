@@ -44,6 +44,7 @@ export const useQuoteContractDialog = () => {
       });
 
       setIsOpen(false);
+      return true; // Return success status
     } catch (error) {
       console.error('Error converting quote to contract:', error);
       toast({
@@ -51,6 +52,7 @@ export const useQuoteContractDialog = () => {
         description: "Si è verificato un errore durante la conversione del preventivo",
         variant: "destructive",
       });
+      return false; // Return failure status
     } finally {
       setIsSubmitting(false);
     }
