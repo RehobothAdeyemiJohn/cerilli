@@ -94,9 +94,18 @@ const contractFormSchema = z.discriminatedUnion('contractorType', [
 // Form values type
 type ContractFormValues = z.infer<typeof contractFormSchema>;
 
-// Type guard for personaFisica form type
-const isPersonaFisica = (contractorType: string): contractorType is 'personaFisica' => {
-  return contractorType === 'personaFisica';
+// Type guards to narrow down form error types
+const isPersonaFisicaErrors = (contractorType: string, fieldName: string): boolean => {
+  return contractorType === 'personaFisica' && [
+    'firstName', 'lastName', 'fiscalCode', 'birthDate', 'birthPlace', 'birthProvince'
+  ].includes(fieldName);
+};
+
+const isPersonaGiuridicaErrors = (contractorType: string, fieldName: string): boolean => {
+  return contractorType === 'personaGiuridica' && [
+    'companyName', 'vatNumber', 'legalRepFirstName', 'legalRepLastName', 
+    'legalRepFiscalCode', 'legalRepBirthDate', 'legalRepBirthPlace', 'legalRepBirthProvince'
+  ].includes(fieldName);
 };
 
 const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
@@ -418,7 +427,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="firstName">Nome</Label>
                               <Input id="firstName" {...register('firstName')} />
-                              {isPersonaFisica(contractorType) && errors.firstName && (
+                              {contractorType === 'personaFisica' && errors.firstName && (
                                 <p className="text-red-500 text-sm">{errors.firstName.message}</p>
                               )}
                             </div>
@@ -426,7 +435,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Cognome</Label>
                               <Input id="lastName" {...register('lastName')} />
-                              {isPersonaFisica(contractorType) && errors.lastName && (
+                              {contractorType === 'personaFisica' && errors.lastName && (
                                 <p className="text-red-500 text-sm">{errors.lastName.message}</p>
                               )}
                             </div>
@@ -434,7 +443,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="fiscalCode">Codice Fiscale</Label>
                               <Input id="fiscalCode" {...register('fiscalCode')} />
-                              {isPersonaFisica(contractorType) && errors.fiscalCode && (
+                              {contractorType === 'personaFisica' && errors.fiscalCode && (
                                 <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
                               )}
                             </div>
@@ -442,7 +451,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthDate">Data di Nascita</Label>
                               <Input id="birthDate" type="date" {...register('birthDate')} />
-                              {isPersonaFisica(contractorType) && errors.birthDate && (
+                              {contractorType === 'personaFisica' && errors.birthDate && (
                                 <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
                               )}
                             </div>
@@ -450,7 +459,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthPlace">Luogo di Nascita</Label>
                               <Input id="birthPlace" {...register('birthPlace')} />
-                              {isPersonaFisica(contractorType) && errors.birthPlace && (
+                              {contractorType === 'personaFisica' && errors.birthPlace && (
                                 <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
                               )}
                             </div>
@@ -458,7 +467,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthProvince">Provincia di Nascita</Label>
                               <Input id="birthProvince" {...register('birthProvince')} />
-                              {isPersonaFisica(contractorType) && errors.birthProvince && (
+                              {contractorType === 'personaFisica' && errors.birthProvince && (
                                 <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
                               )}
                             </div>
@@ -522,7 +531,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {!isPersonaFisica(contractorType) && errors.companyName && (
+                              {contractorType === 'personaGiuridica' && errors.companyName && (
                                 <p className="text-red-500 text-sm">{errors.companyName.message}</p>
                               )}
                             </div>
@@ -530,7 +539,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {!isPersonaFisica(contractorType) && errors.vatNumber && (
+                              {contractorType === 'personaGiuridica' && errors.vatNumber && (
                                 <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
                               )}
                             </div>
@@ -594,7 +603,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepFirstName && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepFirstName && (
                                 <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
                               )}
                             </div>
@@ -602,7 +611,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepLastName && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepLastName && (
                                 <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
                               )}
                             </div>
@@ -610,7 +619,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepFiscalCode && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepFiscalCode && (
                                 <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
                               )}
                             </div>
@@ -618,7 +627,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepBirthDate && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthDate && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
                               )}
                             </div>
@@ -626,7 +635,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepBirthPlace && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthPlace && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
                               )}
                             </div>
@@ -634,7 +643,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {!isPersonaFisica(contractorType) && errors.legalRepBirthProvince && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthProvince && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
                               )}
                             </div>
