@@ -28,40 +28,39 @@ interface QuoteContractDialogProps {
 }
 
 // Define form schema with zod
-const contractorSchema = z.discriminatedUnion('contractorType', [
-  z.object({
-    contractorType: z.literal('personaFisica'),
-    firstName: z.string().min(1, 'Il nome è obbligatorio'),
-    lastName: z.string().min(1, 'Il cognome è obbligatorio'),
-    fiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
-    birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
-    birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
-    birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
-    address: z.string().min(1, "L'indirizzo è obbligatorio"),
-    city: z.string().min(1, 'La città è obbligatoria'),
-    province: z.string().min(1, 'La provincia è obbligatoria'),
-    zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
-    phone: z.string().min(1, 'Il telefono è obbligatorio'),
-    email: z.string().email('Email non valida'),
-  }),
-  z.object({
-    contractorType: z.literal('personaGiuridica'),
-    companyName: z.string().min(1, 'La ragione sociale è obbligatoria'),
-    vatNumber: z.string().min(11, 'La partita IVA deve essere di 11 caratteri').max(11),
-    address: z.string().min(1, "L'indirizzo è obbligatorio"),
-    city: z.string().min(1, 'La città è obbligatoria'),
-    province: z.string().min(1, 'La provincia è obbligatoria'),
-    zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
-    phone: z.string().min(1, 'Il telefono è obbligatorio'),
-    email: z.string().email('Email non valida'),
-    legalRepFirstName: z.string().min(1, 'Il nome del rappresentante legale è obbligatorio'),
-    legalRepLastName: z.string().min(1, 'Il cognome del rappresentante legale è obbligatorio'),
-    legalRepFiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
-    legalRepBirthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
-    legalRepBirthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
-    legalRepBirthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
-  }),
-]);
+const personaFisicaSchema = z.object({
+  contractorType: z.literal('personaFisica'),
+  firstName: z.string().min(1, 'Il nome è obbligatorio'),
+  lastName: z.string().min(1, 'Il cognome è obbligatorio'),
+  fiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
+  birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
+  birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
+  birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+  address: z.string().min(1, "L'indirizzo è obbligatorio"),
+  city: z.string().min(1, 'La città è obbligatoria'),
+  province: z.string().min(1, 'La provincia è obbligatoria'),
+  zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
+  phone: z.string().min(1, 'Il telefono è obbligatorio'),
+  email: z.string().email('Email non valida'),
+});
+
+const personaGiuridicaSchema = z.object({
+  contractorType: z.literal('personaGiuridica'),
+  companyName: z.string().min(1, 'La ragione sociale è obbligatoria'),
+  vatNumber: z.string().min(11, 'La partita IVA deve essere di 11 caratteri').max(11),
+  address: z.string().min(1, "L'indirizzo è obbligatorio"),
+  city: z.string().min(1, 'La città è obbligatoria'),
+  province: z.string().min(1, 'La provincia è obbligatoria'),
+  zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
+  phone: z.string().min(1, 'Il telefono è obbligatorio'),
+  email: z.string().email('Email non valida'),
+  legalRepFirstName: z.string().min(1, 'Il nome del rappresentante legale è obbligatorio'),
+  legalRepLastName: z.string().min(1, 'Il cognome del rappresentante legale è obbligatorio'),
+  legalRepFiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
+  legalRepBirthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
+  legalRepBirthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
+  legalRepBirthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+});
 
 // Schema for pricing configuration
 const pricingSchema = z.object({
@@ -89,10 +88,13 @@ const contractTermsSchema = z.object({
 });
 
 // Combine schemas
-const formSchema = z.intersection(
-  z.intersection(contractorSchema, pricingSchema),
-  contractTermsSchema
-);
+const formSchema = z.discriminatedUnion('contractorType', [
+  personaFisicaSchema,
+  personaGiuridicaSchema
+]).and(pricingSchema).and(contractTermsSchema);
+
+// Infer the type from the schema
+type ContractFormValues = z.infer<typeof formSchema>;
 
 const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   quote,
@@ -108,16 +110,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const [hasTradein, setHasTradein] = useState(false);
   const [warrantyExtension, setWarrantyExtension] = useState("24 Mesi");
 
-  const methods = useForm({
+  const methods = useForm<ContractFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      contractorType: 'personaFisica' as const,
+      contractorType: 'personaFisica',
       hasReducedVAT: false,
       hasTradein: false,
       roadTaxAmount: '400',
       tempiConsegna: '30',
       garanzia: '24 Mesi',
-      selectedAccessories: [] as string[]
+      selectedAccessories: []
     }
   });
 
@@ -205,7 +207,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
     }
   }, [open, reset]);
   
-  const onSubmitForm = (data: any) => {
+  const onSubmitForm = (data: ContractFormValues) => {
     if (!quote) return;
     
     // Include warranty extension cost in calculations
