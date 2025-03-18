@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -95,17 +94,35 @@ const contractFormSchema = z.discriminatedUnion('contractorType', [
 type ContractFormValues = z.infer<typeof contractFormSchema>;
 
 // Type guards to narrow down form error types
-const isPersonaFisicaErrors = (contractorType: string, fieldName: string): boolean => {
-  return contractorType === 'personaFisica' && [
-    'firstName', 'lastName', 'fiscalCode', 'birthDate', 'birthPlace', 'birthProvince'
-  ].includes(fieldName);
+const isPersonaFisica = (contractorType: string): boolean => {
+  return contractorType === 'personaFisica';
 };
 
-const isPersonaGiuridicaErrors = (contractorType: string, fieldName: string): boolean => {
-  return contractorType === 'personaGiuridica' && [
-    'companyName', 'vatNumber', 'legalRepFirstName', 'legalRepLastName', 
-    'legalRepFiscalCode', 'legalRepBirthDate', 'legalRepBirthPlace', 'legalRepBirthProvince'
-  ].includes(fieldName);
+const isPersonaGiuridica = (contractorType: string): boolean => {
+  return contractorType === 'personaGiuridica';
+};
+
+// Helper function to safely access errors based on contractor type
+const getFieldError = (errors: any, fieldName: string, contractorType: string) => {
+  // For common fields that exist in both types
+  if (['address', 'city', 'province', 'zipCode', 'phone', 'email', 'tempiConsegna', 'garanzia'].includes(fieldName)) {
+    return errors[fieldName]?.message;
+  }
+  
+  // For persona fisica specific fields
+  if (isPersonaFisica(contractorType) && 
+      ['firstName', 'lastName', 'fiscalCode', 'birthDate', 'birthPlace', 'birthProvince'].includes(fieldName)) {
+    return errors[fieldName]?.message;
+  }
+  
+  // For persona giuridica specific fields
+  if (isPersonaGiuridica(contractorType) && 
+      ['companyName', 'vatNumber', 'legalRepFirstName', 'legalRepLastName', 
+       'legalRepFiscalCode', 'legalRepBirthDate', 'legalRepBirthPlace', 'legalRepBirthProvince'].includes(fieldName)) {
+    return errors[fieldName]?.message;
+  }
+  
+  return undefined;
 };
 
 const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
@@ -427,48 +444,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="firstName">Nome</Label>
                               <Input id="firstName" {...register('firstName')} />
-                              {contractorType === 'personaFisica' && errors.firstName && (
-                                <p className="text-red-500 text-sm">{errors.firstName.message}</p>
+                              {getFieldError(errors, 'firstName', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'firstName', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Cognome</Label>
                               <Input id="lastName" {...register('lastName')} />
-                              {contractorType === 'personaFisica' && errors.lastName && (
-                                <p className="text-red-500 text-sm">{errors.lastName.message}</p>
+                              {getFieldError(errors, 'lastName', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'lastName', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="fiscalCode">Codice Fiscale</Label>
                               <Input id="fiscalCode" {...register('fiscalCode')} />
-                              {contractorType === 'personaFisica' && errors.fiscalCode && (
-                                <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
+                              {getFieldError(errors, 'fiscalCode', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'fiscalCode', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthDate">Data di Nascita</Label>
                               <Input id="birthDate" type="date" {...register('birthDate')} />
-                              {contractorType === 'personaFisica' && errors.birthDate && (
-                                <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
+                              {getFieldError(errors, 'birthDate', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'birthDate', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthPlace">Luogo di Nascita</Label>
                               <Input id="birthPlace" {...register('birthPlace')} />
-                              {contractorType === 'personaFisica' && errors.birthPlace && (
-                                <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
+                              {getFieldError(errors, 'birthPlace', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'birthPlace', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthProvince">Provincia di Nascita</Label>
                               <Input id="birthProvince" {...register('birthProvince')} />
-                              {contractorType === 'personaFisica' && errors.birthProvince && (
-                                <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
+                              {getFieldError(errors, 'birthProvince', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'birthProvince', contractorType)}</p>
                               )}
                             </div>
                           </div>
@@ -479,48 +496,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="address">Indirizzo</Label>
                               <Input id="address" {...register('address')} />
-                              {errors.address && (
-                                <p className="text-red-500 text-sm">{errors.address.message}</p>
+                              {getFieldError(errors, 'address', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'address', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="city">Città</Label>
                               <Input id="city" {...register('city')} />
-                              {errors.city && (
-                                <p className="text-red-500 text-sm">{errors.city.message}</p>
+                              {getFieldError(errors, 'city', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'city', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="province">Provincia</Label>
                               <Input id="province" {...register('province')} />
-                              {errors.province && (
-                                <p className="text-red-500 text-sm">{errors.province.message}</p>
+                              {getFieldError(errors, 'province', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'province', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="zipCode">CAP</Label>
                               <Input id="zipCode" {...register('zipCode')} />
-                              {errors.zipCode && (
-                                <p className="text-red-500 text-sm">{errors.zipCode.message}</p>
+                              {getFieldError(errors, 'zipCode', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'zipCode', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="phone">Telefono</Label>
                               <Input id="phone" {...register('phone')} />
-                              {errors.phone && (
-                                <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                              {getFieldError(errors, 'phone', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'phone', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="email">Email</Label>
                               <Input id="email" type="email" {...register('email')} />
-                              {errors.email && (
-                                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                              {getFieldError(errors, 'email', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'email', contractorType)}</p>
                               )}
                             </div>
                           </div>
@@ -531,16 +548,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {contractorType === 'personaGiuridica' && errors.companyName && (
-                                <p className="text-red-500 text-sm">{errors.companyName.message}</p>
+                              {getFieldError(errors, 'companyName', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'companyName', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {contractorType === 'personaGiuridica' && errors.vatNumber && (
-                                <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
+                              {getFieldError(errors, 'vatNumber', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'vatNumber', contractorType)}</p>
                               )}
                             </div>
                           </div>
@@ -549,48 +566,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="address">Indirizzo</Label>
                               <Input id="address" {...register('address')} />
-                              {errors.address && (
-                                <p className="text-red-500 text-sm">{errors.address.message}</p>
+                              {getFieldError(errors, 'address', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'address', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="city">Città</Label>
                               <Input id="city" {...register('city')} />
-                              {errors.city && (
-                                <p className="text-red-500 text-sm">{errors.city.message}</p>
+                              {getFieldError(errors, 'city', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'city', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="province">Provincia</Label>
                               <Input id="province" {...register('province')} />
-                              {errors.province && (
-                                <p className="text-red-500 text-sm">{errors.province.message}</p>
+                              {getFieldError(errors, 'province', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'province', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="zipCode">CAP</Label>
                               <Input id="zipCode" {...register('zipCode')} />
-                              {errors.zipCode && (
-                                <p className="text-red-500 text-sm">{errors.zipCode.message}</p>
+                              {getFieldError(errors, 'zipCode', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'zipCode', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="phone">Telefono</Label>
                               <Input id="phone" {...register('phone')} />
-                              {errors.phone && (
-                                <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                              {getFieldError(errors, 'phone', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'phone', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="email">Email</Label>
                               <Input id="email" type="email" {...register('email')} />
-                              {errors.email && (
-                                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                              {getFieldError(errors, 'email', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'email', contractorType)}</p>
                               )}
                             </div>
                           </div>
@@ -603,48 +620,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepFirstName && (
-                                <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
+                              {getFieldError(errors, 'legalRepFirstName', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepFirstName', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepLastName && (
-                                <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
+                              {getFieldError(errors, 'legalRepLastName', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepLastName', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepFiscalCode && (
-                                <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
+                              {getFieldError(errors, 'legalRepFiscalCode', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepFiscalCode', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthDate && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
+                              {getFieldError(errors, 'legalRepBirthDate', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepBirthDate', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthPlace && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
+                              {getFieldError(errors, 'legalRepBirthPlace', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepBirthPlace', contractorType)}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {contractorType === 'personaGiuridica' && errors.legalRepBirthProvince && (
-                                <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
+                              {getFieldError(errors, 'legalRepBirthProvince', contractorType) && (
+                                <p className="text-red-500 text-sm">{getFieldError(errors, 'legalRepBirthProvince', contractorType)}</p>
                               )}
                             </div>
                           </div>
@@ -769,8 +786,8 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             defaultValue="30"
                             {...register('tempiConsegna')}
                           />
-                          {errors.tempiConsegna && (
-                            <p className="text-red-500 text-sm">{errors.tempiConsegna.message}</p>
+                          {getFieldError(errors, 'tempiConsegna', contractorType) && (
+                            <p className="text-red-500 text-sm">{getFieldError(errors, 'tempiConsegna', contractorType)}</p>
                           )}
                         </div>
                         
@@ -788,8 +805,8 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                               <SelectItem value="84 Anni (addizionale € 1.000)">84 Anni (addizionale € 1.000)</SelectItem>
                             </SelectContent>
                           </Select>
-                          {errors.garanzia && (
-                            <p className="text-red-500 text-sm">{errors.garanzia.message}</p>
+                          {getFieldError(errors, 'garanzia', contractorType) && (
+                            <p className="text-red-500 text-sm">{getFieldError(errors, 'garanzia', contractorType)}</p>
                           )}
                         </div>
                         
