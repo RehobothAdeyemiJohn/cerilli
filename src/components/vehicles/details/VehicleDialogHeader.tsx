@@ -3,7 +3,7 @@ import React from 'react';
 import { Vehicle } from '@/types';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Copy, FileText, ShoppingCart, Ban, Package } from 'lucide-react';
+import { FileText, ShoppingCart, Ban, Package } from 'lucide-react';
 
 interface VehicleDialogHeaderProps {
   vehicle: Vehicle;
@@ -59,16 +59,13 @@ const VehicleDialogHeader = ({
     }
   };
   
-  // Don't show edit buttons as per request
-  const showEditButtons = false;
-  
   return (
     <>
       <DialogTitle>{getDialogTitle()}</DialogTitle>
       <DialogDescription className="flex flex-wrap gap-2 mt-2">
         {onDuplicate && (
           <Button variant="outline" size="sm" onClick={onDuplicate} className="h-8">
-            <Copy className="h-4 w-4 mr-1" /> Duplica
+            Duplica
           </Button>
         )}
         

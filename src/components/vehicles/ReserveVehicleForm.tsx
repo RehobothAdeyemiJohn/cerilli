@@ -33,14 +33,16 @@ interface ReserveVehicleFormProps {
   vehicle: Vehicle;
   onReservationComplete: () => void;
   onCancel: () => void;
+  isSubmitting: boolean;
 }
 
 const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
   vehicle,
   onReservationComplete,
-  onCancel
+  onCancel,
+  isSubmitting
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const { user } = useAuth();
   const dealerId = user?.dealerId || '';
   const dealerName = user?.dealerName || '';
@@ -94,7 +96,7 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       return;
     }
     
-    setIsSubmitting(true);
+    setIsLocalSubmitting(true);
     console.log("Form data:", data);
     console.log("Reserving vehicle:", vehicle.id);
     console.log("Dealer ID:", finalDealerId);
@@ -119,9 +121,12 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLocalSubmitting(false);
     }
   };
+  
+  // Use either the external isSubmitting prop or the local state
+  const isFormSubmitting = isSubmitting || isLocalSubmitting;
   
   return (
     <div>
@@ -186,15 +191,15 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
               type="button" 
               variant="outline" 
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={isFormSubmitting}
             >
               Annulla
             </Button>
             <Button 
               type="submit"
-              disabled={isSubmitting}
+              disabled={isFormSubmitting}
             >
-              {isSubmitting ? 'Prenotazione in corso...' : 'Prenota'}
+              {isFormSubmitting ? 'Prenotazione in corso...' : 'Prenota'}
             </Button>
           </div>
         </form>

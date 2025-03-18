@@ -16,12 +16,14 @@ interface ReserveVirtualVehicleFormProps {
   vehicle: Vehicle;
   onCancel: () => void;
   onReservationComplete: () => void;
+  isSubmitting: boolean;
 }
 
 const ReserveVirtualVehicleForm = ({ 
   vehicle, 
   onCancel, 
-  onReservationComplete 
+  onReservationComplete,
+  isSubmitting 
 }: ReserveVirtualVehicleFormProps) => {
   const {
     form,
@@ -94,7 +96,7 @@ const ReserveVirtualVehicleForm = ({
           priceComponents={priceComponents}
         />
         
-        <VirtualReservationActions onCancel={handleCancel} />
+        <VirtualReservationActions onCancel={handleCancel} isSubmitting={isSubmitting} />
       </form>
     </Form>
   );

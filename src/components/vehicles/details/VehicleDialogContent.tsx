@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Separator } from '@/components/ui/separator';
-import { Settings, Calendar, MapPin, ColorSwatch, Fuel, Truck, Key, Tag, BookUser } from 'lucide-react';
+import { Settings, Calendar, MapPin, Palette, Fuel, Truck, Key, Tag, BookUser } from 'lucide-react';
 import VehicleDetailsContent from './VehicleDetailsContent';
 import ReserveVehicleForm from '../ReserveVehicleForm';
 import ReserveVirtualVehicleForm from '../ReserveVirtualVehicleForm';
@@ -19,7 +19,7 @@ interface VehicleDialogContentProps {
   onCreateQuote: () => void;
   onCancel: () => void;
   onSubmit: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   userCanReserveVehicles: boolean;
   userCanCreateQuotes: boolean;
 }
@@ -95,7 +95,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       <ReserveVehicleForm 
         vehicle={vehicle}
         onCancel={onCancel}
-        onSubmit={onSubmit}
+        onReservationComplete={onSubmit}
         isSubmitting={isSubmitting}
       />
     );
@@ -106,7 +106,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       <ReserveVirtualVehicleForm 
         vehicle={vehicle}
         onCancel={onCancel}
-        onSubmit={onSubmit}
+        onReservationComplete={onSubmit}
         isSubmitting={isSubmitting}
       />
     );
@@ -117,7 +117,10 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       <CancelReservationForm 
         vehicle={vehicle}
         onCancel={onCancel}
-        onConfirm={onConfirm}
+        onConfirm={async () => {
+          await onConfirm();
+          return Promise.resolve();
+        }}
         isSubmitting={isSubmitting}
       />
     );
@@ -177,7 +180,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
             
             {vehicle.exteriorColor && (
               <div className="flex items-start gap-2">
-                <ColorSwatch className="h-4 w-4 text-gray-500 mt-0.5" />
+                <Palette className="h-4 w-4 text-gray-500 mt-0.5" />
                 <div>
                   <div className="text-sm font-medium">Colore Esterno</div>
                   <div className="text-sm text-gray-600">{vehicle.exteriorColor}</div>

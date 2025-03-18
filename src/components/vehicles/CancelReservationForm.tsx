@@ -28,13 +28,15 @@ const CancelReservationForm = ({
   onCancel,
   isSubmitting 
 }: CancelReservationFormProps) => {
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Call either onSubmit or onConfirm depending on which one was provided
     if (onConfirm) {
-      onConfirm();
+      return onConfirm();
     } else if (onSubmit) {
       onSubmit();
+      return Promise.resolve();
     }
+    return Promise.resolve();
   };
 
   // Simple confirmation dialog approach
@@ -54,7 +56,7 @@ const CancelReservationForm = ({
             Annulla
           </AlertDialogCancel>
           <AlertDialogAction 
-            onClick={handleConfirm}
+            onClick={() => handleConfirm()}
             disabled={isSubmitting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
