@@ -127,6 +127,7 @@ const QuoteContractDialog = ({
   const isCompany = contractorType === 'personaGiuridica';
 
   const handleSubmit = async (data: z.infer<typeof contractSchema>) => {
+    console.log('Form submitted with data:', data);
     if (quote) {
       await onSubmit(quote.id, data);
     }

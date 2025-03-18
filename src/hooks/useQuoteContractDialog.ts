@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Quote } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -10,15 +11,18 @@ export const useQuoteContractDialog = () => {
   const { toast } = useToast();
 
   const handleConvertToContract = async (quote: Quote, contractData: any) => {
+    console.log('Starting contract creation with data:', { quote, contractData });
     setIsSubmitting(true);
+    
     try {
       // Update quote status to converted
       const updatedQuote = await quotesApi.update(quote.id, { 
         status: 'converted' 
       });
+      console.log('Quote updated:', updatedQuote);
 
       // Create contract from quote data
-      await dealerContractsApi.create({
+      const contract = await dealerContractsApi.create({
         dealerId: quote.dealerId,
         carId: quote.vehicleId,
         contractDate: new Date().toISOString(),
@@ -31,6 +35,8 @@ export const useQuoteContractDialog = () => {
         },
         status: 'attivo'
       });
+      
+      console.log('Contract created:', contract);
 
       toast({
         title: "Successo",
