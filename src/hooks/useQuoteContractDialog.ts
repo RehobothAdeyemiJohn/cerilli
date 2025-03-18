@@ -22,8 +22,11 @@ export const useQuoteContractDialog = () => {
         plateBonus: contractData.plateBonus || 0,
         tradeinBonus: contractData.hasTradein ? (contractData.tradeinBonus || 0) : 0,
         safetyKitAmount: contractData.safetyKitAmount || 0,
-        roadTaxAmount: contractData.roadTaxAmount || 400, // Changed default from 350 to 400
+        roadTaxAmount: contractData.roadTaxAmount || 400, // Default is 400 euros
         hasReducedVAT: contractData.hasReducedVAT || false,
+        selectedAccessories: contractData.selectedAccessories || [],
+        warrantyExtension: contractData.garanzia,
+        warrantyAdditionalCost: contractData.garanzia === "84 Anni (addizionale € 1.000)" ? 1000 : 0
       };
       
       // Calculate VAT multiplier based on reduced VAT setting
@@ -37,6 +40,7 @@ export const useQuoteContractDialog = () => {
       const tradeinBonusWithoutVAT = priceDetails.tradeinBonus / 1.22;
       const safetyKitWithoutVAT = priceDetails.safetyKitAmount / 1.22;
       const roadTaxWithoutVAT = priceDetails.roadTaxAmount / 1.22;
+      const warrantyAdditionalCostWithoutVAT = priceDetails.warrantyAdditionalCost / 1.22;
       
       // Apply the correct VAT rate
       const baseWithVAT = baseWithoutVAT * vatMultiplier;
@@ -45,13 +49,14 @@ export const useQuoteContractDialog = () => {
       const tradeinBonusWithVAT = tradeinBonusWithoutVAT * vatMultiplier;
       const safetyKitWithVAT = safetyKitWithoutVAT * vatMultiplier;
       const roadTaxWithVAT = roadTaxWithoutVAT * vatMultiplier;
+      const warrantyAdditionalCostWithVAT = warrantyAdditionalCostWithoutVAT * vatMultiplier;
       
       // Trade-in value is not affected by VAT
       const tradeinValue = contractData.hasTradein ? (contractData.tradeinValue || 0) : 0;
       
       // Calculate final price
       const totalDiscounts = discountWithVAT + plateBonusWithVAT + tradeinBonusWithVAT + tradeinValue;
-      const totalAdditions = safetyKitWithVAT + roadTaxWithVAT;
+      const totalAdditions = safetyKitWithVAT + roadTaxWithVAT + warrantyAdditionalCostWithVAT;
       const finalPrice = baseWithVAT - totalDiscounts + totalAdditions;
       
       // Update quote status to converted
@@ -116,7 +121,8 @@ export const useQuoteContractDialog = () => {
             tempiConsegna: contractData.tempiConsegna,
             garanzia: contractData.garanzia,
             clausoleSpeciali: contractData.clausoleSpeciali || ''
-          }
+          },
+          selectedAccessories: contractData.selectedAccessories || []
         },
         status: 'attivo'
       });

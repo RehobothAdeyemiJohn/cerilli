@@ -18,7 +18,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   finalPrice,
   watchReducedVAT,
   totalDiscount,
-  roadPreparationFee = 400 // Changed from 350 to 400 euro
+  roadPreparationFee = 400 // Default value is 400 euros
 }) => {
   const form = useFormContext();
   const discount = form.watch('discount') || 0;

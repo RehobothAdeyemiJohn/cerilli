@@ -1,23 +1,98 @@
+
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Quote, Vehicle } from '@/types';
-import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
+import { useForm, FormProvider } from 'react-hook-form';
+import { Quote, Vehicle } from '@/types';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { formatCurrency } from '@/lib/utils';
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface QuoteContractDialogProps {
   quote: Quote | null;
   vehicle: Vehicle | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (quoteId: string, data: any) => void;
+  onSubmit: (quoteId: string, contractData: any) => void;
   isSubmitting: boolean;
 }
+
+// Define form schema with zod
+const contractorSchema = z.discriminatedUnion('contractorType', [
+  z.object({
+    contractorType: z.literal('personaFisica'),
+    firstName: z.string().min(1, 'Il nome è obbligatorio'),
+    lastName: z.string().min(1, 'Il cognome è obbligatorio'),
+    fiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
+    birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
+    birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
+    birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+    address: z.string().min(1, "L'indirizzo è obbligatorio"),
+    city: z.string().min(1, 'La città è obbligatoria'),
+    province: z.string().min(1, 'La provincia è obbligatoria'),
+    zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
+    phone: z.string().min(1, 'Il telefono è obbligatorio'),
+    email: z.string().email('Email non valida'),
+  }),
+  z.object({
+    contractorType: z.literal('personaGiuridica'),
+    companyName: z.string().min(1, 'La ragione sociale è obbligatoria'),
+    vatNumber: z.string().min(11, 'La partita IVA deve essere di 11 caratteri').max(11),
+    address: z.string().min(1, "L'indirizzo è obbligatorio"),
+    city: z.string().min(1, 'La città è obbligatoria'),
+    province: z.string().min(1, 'La provincia è obbligatoria'),
+    zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
+    phone: z.string().min(1, 'Il telefono è obbligatorio'),
+    email: z.string().email('Email non valida'),
+    legalRepFirstName: z.string().min(1, 'Il nome del rappresentante legale è obbligatorio'),
+    legalRepLastName: z.string().min(1, 'Il cognome del rappresentante legale è obbligatorio'),
+    legalRepFiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
+    legalRepBirthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
+    legalRepBirthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
+    legalRepBirthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+  }),
+]);
+
+// Schema for pricing configuration
+const pricingSchema = z.object({
+  hasReducedVAT: z.boolean().default(false),
+  discountAmount: z.string().optional(),
+  plateBonus: z.string().optional(),
+  hasTradein: z.boolean().default(false),
+  tradeinBrand: z.string().optional(),
+  tradeinModel: z.string().optional(),
+  tradeinYear: z.string().optional(),
+  tradeinKm: z.string().optional(),
+  tradeinValue: z.string().optional(),
+  tradeinBonus: z.string().optional(),
+  safetyKitAmount: z.string().optional(),
+  roadTaxAmount: z.string().default('400'),
+  selectedAccessories: z.array(z.string()).default([]),
+});
+
+// Schema for contract terms
+const contractTermsSchema = z.object({
+  terminiPagamento: z.string().min(1, 'I termini di pagamento sono obbligatori'),
+  tempiConsegna: z.string().min(1, 'I tempi di consegna sono obbligatori'),
+  garanzia: z.string().min(1, 'La garanzia è obbligatoria'),
+  clausoleSpeciali: z.string().optional(),
+});
+
+// Combine schemas
+const formSchema = z.intersection(
+  z.intersection(contractorSchema, pricingSchema),
+  contractTermsSchema
+);
 
 const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   quote,
@@ -27,698 +102,849 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   onSubmit,
   isSubmitting
 }) => {
-  const [contractorType, setContractorType] = useState('personaFisica');
-  const [hasReducedVAT, setHasReducedVAT] = useState(quote?.reducedVAT || false);
-  const [hasTradein, setHasTradein] = useState(quote?.hasTradeIn || false);
-  const [formData, setFormData] = useState<any>({
-    // Persona Fisica
-    firstName: '',
-    lastName: '',
-    fiscalCode: '',
-    birthDate: '',
-    birthPlace: '',
-    birthProvince: '',
-    address: '',
-    city: '',
-    province: '',
-    zipCode: '',
-    email: quote?.customerEmail || '',
-    phone: quote?.customerPhone || '',
-    
-    // Persona Giuridica
-    companyName: '',
-    vatNumber: '',
-    legalRepFirstName: '',
-    legalRepLastName: '',
-    legalRepFiscalCode: '',
-    legalRepBirthDate: '',
-    legalRepBirthPlace: '',
-    legalRepBirthProvince: '',
-    
-    // Contract payment terms
-    terminiPagamento: '',
-    tempiConsegna: '',
-    garanzia: '24 mesi',
-    clausoleSpeciali: '',
-    
-    // Price configuration
-    discountAmount: quote?.discount || 0,
-    plateBonus: quote?.licensePlateBonus || 0,
-    safetyKitAmount: quote?.safetyKit || 0,
-    roadTaxAmount: 400, // Changed from 350 to 400 euro
-    hasReducedVAT: quote?.reducedVAT || false,
-    
-    // Trade-in details
-    hasTradein: quote?.hasTradeIn || false,
-    tradeinBonus: quote?.tradeInBonus || 0,
-    tradeinBrand: quote?.tradeInBrand || '',
-    tradeinModel: quote?.tradeInModel || '',
-    tradeinYear: quote?.tradeInYear || '',
-    tradeinValue: quote?.tradeInValue || 0,
+  const [activeTab, setActiveTab] = useState('contractor');
+  const [contractorType, setContractorType] = useState<'personaFisica' | 'personaGiuridica'>('personaFisica');
+  const [hasReducedVAT, setHasReducedVAT] = useState(false);
+  const [hasTradein, setHasTradein] = useState(false);
+  const [warrantyExtension, setWarrantyExtension] = useState("24 Mesi");
+
+  const methods = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      contractorType: 'personaFisica' as const,
+      hasReducedVAT: false,
+      hasTradein: false,
+      roadTaxAmount: '400',
+      tempiConsegna: '30',
+      garanzia: '24 Mesi',
+      selectedAccessories: [] as string[]
+    }
   });
 
-  // Calculate prices with VAT
-  const calculatePriceWithVAT = (price: number, hasReducedVAT: boolean): number => {
-    // If price already includes VAT (from quote), we need to first remove the standard VAT
-    const vatRate = hasReducedVAT ? 0.04 : 0.22;
-    const priceWithoutVAT = price / 1.22; // Remove standard 22% VAT
-    return Math.round(priceWithoutVAT * (1 + vatRate)); // Apply correct VAT rate
-  };
-  
-  // Trade-in value should not be affected by VAT changes
-  const getTradeinValue = (): number => {
-    return formData.hasTradein ? (formData.tradeinValue || 0) : 0;
-  };
+  const { handleSubmit, setValue, watch, register, formState: { errors }, reset } = methods;
 
-  const calculateFinalPrice = (): number => {
-    const basePrice = vehicle?.price || 0;
-    const basePriceWithVAT = calculatePriceWithVAT(basePrice, hasReducedVAT);
-    
-    // Calculate discounts with correct VAT
-    const discountWithVAT = calculatePriceWithVAT(formData.discountAmount || 0, hasReducedVAT);
-    const plateBonusWithVAT = calculatePriceWithVAT(formData.plateBonus || 0, hasReducedVAT);
-    const tradeinBonusWithVAT = formData.hasTradein ? 
-      calculatePriceWithVAT(formData.tradeinBonus || 0, hasReducedVAT) : 0;
-    
-    // Calculate additions with correct VAT  
-    const safetyKitWithVAT = calculatePriceWithVAT(formData.safetyKitAmount || 0, hasReducedVAT);
-    const roadTaxWithVAT = calculatePriceWithVAT(formData.roadTaxAmount || 400, hasReducedVAT);
-    
-    // Trade-in value remains the same regardless of VAT
-    const tradeinValue = getTradeinValue();
-    
-    // Calculate final price
-    const totalDiscounts = discountWithVAT + plateBonusWithVAT + tradeinBonusWithVAT + tradeinValue;
-    const totalAdditions = safetyKitWithVAT + roadTaxWithVAT;
-    return basePriceWithVAT - totalDiscounts + totalAdditions;
-  };
+  // Watch values for realtime calculation
+  const watchReducedVAT = watch('hasReducedVAT');
+  const watchTradein = watch('hasTradein');
+  const watchTradeInValue = watch('tradeinValue');
+  const watchDiscount = watch('discountAmount');
+  const watchPlateBonus = watch('plateBonus');
+  const watchTradeInBonus = watch('tradeinBonus');
+  const watchSafetyKit = watch('safetyKitAmount');
+  const watchSelectedAccessories = watch('selectedAccessories');
+  const watchWarranty = watch('garanzia');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    setFormData({
-      ...formData,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value,
-    });
-  };
+  // Effects to sync form state with UI state
+  useEffect(() => {
+    setHasReducedVAT(watchReducedVAT);
+  }, [watchReducedVAT]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (quote) {
-      onSubmit(quote.id, formData);
-    }
-  };
+  useEffect(() => {
+    setHasTradein(watchTradein);
+  }, [watchTradein]);
 
-  // Update form values when quote changes
+  useEffect(() => {
+    setWarrantyExtension(watchWarranty);
+  }, [watchWarranty]);
+
   useEffect(() => {
     if (quote) {
-      setHasReducedVAT(quote.reducedVAT || false);
-      setHasTradein(quote.hasTradeIn || false);
-      setFormData(prev => ({
-        ...prev,
-        hasReducedVAT: quote.reducedVAT || false,
-        hasTradein: quote.hasTradeIn || false,
-        tradeinBrand: quote.tradeInBrand || '',
-        tradeinModel: quote.tradeInModel || '',
-        tradeinYear: quote.tradeInYear || '',
-        tradeinValue: quote.tradeInValue || 0,
-        discountAmount: quote.discount || 0,
-        plateBonus: quote.licensePlateBonus || 0,
-        tradeinBonus: quote.tradeInBonus || 0,
-        safetyKitAmount: quote.safetyKit || 0,
-        email: quote.customerEmail || '',
-        phone: quote.customerPhone || '',
-      }));
+      // Pre-fill form with quote data
+      setValue('discountAmount', quote.discount?.toString() || '0');
+      setValue('hasReducedVAT', quote.reducedVAT || false);
+      
+      // Handle customer details if available
+      if (quote.customerName) {
+        const nameParts = quote.customerName.split(' ');
+        if (nameParts.length > 1) {
+          setValue('firstName', nameParts[0]);
+          setValue('lastName', nameParts.slice(1).join(' '));
+        } else {
+          setValue('firstName', quote.customerName);
+        }
+      }
+      
+      if (quote.customerEmail) {
+        setValue('email', quote.customerEmail);
+      }
+      
+      if (quote.customerPhone) {
+        setValue('phone', quote.customerPhone);
+      }
+      
+      // Handle trade-in if present in quote
+      if (quote.hasTradeIn) {
+        setValue('hasTradein', true);
+        setHasTradein(true);
+        
+        if (quote.tradeInBrand) setValue('tradeinBrand', quote.tradeInBrand);
+        if (quote.tradeInModel) setValue('tradeinModel', quote.tradeInModel);
+        if (quote.tradeInYear) setValue('tradeinYear', quote.tradeInYear);
+        if (quote.tradeInKm) setValue('tradeinKm', quote.tradeInKm.toString());
+        if (quote.tradeInValue) setValue('tradeinValue', quote.tradeInValue.toString());
+        if (quote.tradeInBonus) setValue('tradeinBonus', quote.tradeInBonus.toString());
+      }
+      
+      // Set license plate bonus if available
+      if (quote.licensePlateBonus) {
+        setValue('plateBonus', quote.licensePlateBonus.toString());
+      }
+      
+      // Set safety kit amount if available
+      if (quote.safetyKit) {
+        setValue('safetyKitAmount', quote.safetyKit.toString());
+      }
     }
-  }, [quote]);
+  }, [quote, setValue]);
 
-  // Update form when switches change
+  // Reset form when dialog is closed
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      hasReducedVAT: hasReducedVAT,
-      hasTradein: hasTradein
-    }));
-  }, [hasReducedVAT, hasTradein]);
+    if (!open) {
+      setActiveTab('contractor');
+      reset();
+    }
+  }, [open, reset]);
   
-  if (!quote || !vehicle) {
-    return null;
+  const onSubmitForm = (data: any) => {
+    if (!quote) return;
+    
+    // Include warranty extension cost in calculations
+    let warrantyAdditionalCost = 0;
+    if (data.garanzia === "84 Anni (addizionale € 1.000)") {
+      warrantyAdditionalCost = 1000;
+    }
+    
+    // Add selected accessories data if any
+    const formDataWithAccessories = {
+      ...data,
+      selectedAccessories: watchSelectedAccessories,
+      warrantyAdditionalCost
+    };
+    
+    onSubmit(quote.id, formDataWithAccessories);
+  };
+
+  // Calculate price with VAT adjustment
+  const getVATAdjustedPrice = (price: number) => {
+    if (!watchReducedVAT) return price;
+    
+    // For reduced VAT, first remove standard VAT then apply 4% VAT
+    const priceWithoutVAT = price / 1.22;
+    return priceWithoutVAT * 1.04;
+  };
+  
+  // Available accessories
+  const availableAccessories = vehicle?.accessories || [];
+  const selectedAccessoriesInQuote = quote?.accessories || [];
+  
+  // Base price from quote
+  const basePrice = quote?.price || 0;
+  const roadPreparationFee = 400;
+  
+  // Parse numeric inputs safely
+  const parseNumeric = (value: string | undefined) => {
+    if (!value) return 0;
+    return parseFloat(value) || 0;
+  };
+  
+  // Calculate final price components with VAT adjustment
+  const vatAdjustedBasePrice = getVATAdjustedPrice(basePrice);
+  const vatAdjustedDiscount = getVATAdjustedPrice(parseNumeric(watchDiscount));
+  const vatAdjustedPlateBonus = getVATAdjustedPrice(parseNumeric(watchPlateBonus));
+  const vatAdjustedTradeInBonus = getVATAdjustedPrice(parseNumeric(watchTradeInBonus));
+  const vatAdjustedSafetyKit = getVATAdjustedPrice(parseNumeric(watchSafetyKit));
+  const vatAdjustedRoadPrep = getVATAdjustedPrice(roadPreparationFee);
+  
+  // Calculate warranty cost with correct VAT
+  let warrantyAdditionalCost = 0;
+  if (watchWarranty === "84 Anni (addizionale € 1.000)") {
+    warrantyAdditionalCost = getVATAdjustedPrice(1000);
   }
+  
+  // Trade-in value is not affected by VAT
+  const tradeInValue = watchTradein ? parseNumeric(watchTradeInValue) : 0;
+  
+  // Calculate total discounts and additions
+  const totalDiscounts = vatAdjustedDiscount + vatAdjustedPlateBonus + vatAdjustedTradeInBonus + tradeInValue;
+  const totalAdditions = vatAdjustedSafetyKit + vatAdjustedRoadPrep + warrantyAdditionalCost;
+  
+  // Calculate final price
+  const finalPrice = vatAdjustedBasePrice - totalDiscounts + totalAdditions;
+  
+  if (!quote || !vehicle) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[1200px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-xl">
-            Creazione Contratto da Preventivo
-          </DialogTitle>
+          <DialogTitle>Crea Contratto</DialogTitle>
+          <DialogDescription>
+            Inserisci i dati per convertire il preventivo in contratto
+          </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column - Contractor and Vehicle Information */}
-            <div className="space-y-6">
-              {/* Contractor Information */}
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="text-lg font-medium mb-4">Dati del Contraente</h3>
-                
-                <Tabs defaultValue="personaFisica" className="w-full" 
-                  onValueChange={(value) => setContractorType(value)}>
-                  <TabsList className="w-full grid grid-cols-2 mb-4">
-                    <TabsTrigger value="personaFisica">Persona Fisica</TabsTrigger>
-                    <TabsTrigger value="personaGiuridica">Persona Giuridica</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="personaFisica" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="firstName">Nome</Label>
-                        <Input 
-                          id="firstName" 
-                          name="firstName" 
-                          value={formData.firstName} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="lastName">Cognome</Label>
-                        <Input 
-                          id="lastName" 
-                          name="lastName" 
-                          value={formData.lastName} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="fiscalCode">Codice Fiscale</Label>
-                        <Input 
-                          id="fiscalCode" 
-                          name="fiscalCode" 
-                          value={formData.fiscalCode} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="birthDate">Data di Nascita</Label>
-                        <Input 
-                          id="birthDate" 
-                          name="birthDate" 
-                          type="date" 
-                          value={formData.birthDate} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <Label htmlFor="birthPlace">Luogo di Nascita</Label>
-                        <Input 
-                          id="birthPlace" 
-                          name="birthPlace" 
-                          value={formData.birthPlace} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="birthProvince">Provincia di Nascita</Label>
-                        <Input 
-                          id="birthProvince" 
-                          name="birthProvince" 
-                          value={formData.birthProvince} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="personaGiuridica" className="space-y-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="companyName">Ragione Sociale</Label>
-                        <Input 
-                          id="companyName" 
-                          name="companyName" 
-                          value={formData.companyName} 
-                          onChange={handleChange} 
-                          required={contractorType === 'personaGiuridica'} 
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="vatNumber">Partita IVA</Label>
-                        <Input 
-                          id="vatNumber" 
-                          name="vatNumber" 
-                          value={formData.vatNumber} 
-                          onChange={handleChange} 
-                          required={contractorType === 'personaGiuridica'} 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-4 mt-2">
-                      <h4 className="font-medium mb-2">Rappresentante Legale</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="legalRepFirstName">Nome</Label>
-                          <Input 
-                            id="legalRepFirstName" 
-                            name="legalRepFirstName" 
-                            value={formData.legalRepFirstName} 
-                            onChange={handleChange} 
-                            required={contractorType === 'personaGiuridica'} 
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="legalRepLastName">Cognome</Label>
-                          <Input 
-                            id="legalRepLastName" 
-                            name="legalRepLastName" 
-                            value={formData.legalRepLastName} 
-                            onChange={handleChange} 
-                            required={contractorType === 'personaGiuridica'} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1 mt-2">
-                        <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
-                        <Input 
-                          id="legalRepFiscalCode" 
-                          name="legalRepFiscalCode" 
-                          value={formData.legalRepFiscalCode} 
-                          onChange={handleChange} 
-                          required={contractorType === 'personaGiuridica'} 
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3 mt-2">
-                        <div className="space-y-1">
-                          <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
-                          <Input 
-                            id="legalRepBirthDate" 
-                            name="legalRepBirthDate" 
-                            type="date" 
-                            value={formData.legalRepBirthDate} 
-                            onChange={handleChange} 
-                            required={contractorType === 'personaGiuridica'} 
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
-                          <Input 
-                            id="legalRepBirthPlace" 
-                            name="legalRepBirthPlace" 
-                            value={formData.legalRepBirthPlace} 
-                            onChange={handleChange} 
-                            required={contractorType === 'personaGiuridica'} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1 mt-2">
-                        <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
-                        <Input 
-                          id="legalRepBirthProvince" 
-                          name="legalRepBirthProvince" 
-                          value={formData.legalRepBirthProvince} 
-                          onChange={handleChange} 
-                          required={contractorType === 'personaGiuridica'} 
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-                
-                {/* Common contact information */}
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-medium mb-2">Contatti e Residenza</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="space-y-1">
-                      <Label htmlFor="address">Indirizzo</Label>
-                      <Input 
-                        id="address" 
-                        name="address" 
-                        value={formData.address} 
-                        onChange={handleChange} 
-                        required 
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="city">Città</Label>
-                        <Input 
-                          id="city" 
-                          name="city" 
-                          value={formData.city} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="province">Provincia</Label>
-                        <Input 
-                          id="province" 
-                          name="province" 
-                          value={formData.province} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label htmlFor="zipCode">CAP</Label>
-                      <Input 
-                        id="zipCode" 
-                        name="zipCode" 
-                        value={formData.zipCode} 
-                        onChange={handleChange} 
-                        required 
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="phone">Telefono</Label>
-                        <Input 
-                          id="phone" 
-                          name="phone" 
-                          value={formData.phone} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="email">Email</Label>
-                        <Input 
-                          id="email" 
-                          name="email" 
-                          type="email" 
-                          value={formData.email} 
-                          onChange={handleChange} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmitForm)} className="flex-1 overflow-hidden flex flex-col">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="contractor" className="flex-1">Dati Contraente</TabsTrigger>
+                <TabsTrigger value="vehicle" className="flex-1">Dati Veicolo</TabsTrigger>
+                <TabsTrigger value="price" className="flex-1">Configurazione Prezzi</TabsTrigger>
+                <TabsTrigger value="terms" className="flex-1">Condizioni Contrattuali</TabsTrigger>
+              </TabsList>
               
-              {/* Vehicle Information */}
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="text-lg font-medium mb-4">Dati del Veicolo</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Modello</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      {vehicle.model}
+              <div className="flex-1 overflow-auto">
+                <ScrollArea className="h-[calc(100vh-18rem)]">
+                  {/* Contractor Data Tab */}
+                  <TabsContent value="contractor" className="pt-4 pb-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="personaFisica"
+                            value="personaFisica"
+                            {...register('contractorType')}
+                            checked={contractorType === 'personaFisica'}
+                            onChange={() => {
+                              setContractorType('personaFisica');
+                              setValue('contractorType', 'personaFisica');
+                            }}
+                          />
+                          <Label htmlFor="personaFisica">Persona Fisica</Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="personaGiuridica"
+                            value="personaGiuridica"
+                            {...register('contractorType')}
+                            checked={contractorType === 'personaGiuridica'}
+                            onChange={() => {
+                              setContractorType('personaGiuridica');
+                              setValue('contractorType', 'personaGiuridica');
+                            }}
+                          />
+                          <Label htmlFor="personaGiuridica">Persona Giuridica</Label>
+                        </div>
+                      </div>
+                      
+                      {contractorType === 'personaFisica' ? (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="firstName">Nome</Label>
+                              <Input id="firstName" {...register('firstName')} />
+                              {errors.firstName && (
+                                <p className="text-red-500 text-sm">{errors.firstName.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="lastName">Cognome</Label>
+                              <Input id="lastName" {...register('lastName')} />
+                              {errors.lastName && (
+                                <p className="text-red-500 text-sm">{errors.lastName.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="fiscalCode">Codice Fiscale</Label>
+                              <Input id="fiscalCode" {...register('fiscalCode')} />
+                              {errors.fiscalCode && (
+                                <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="birthDate">Data di Nascita</Label>
+                              <Input id="birthDate" type="date" {...register('birthDate')} />
+                              {errors.birthDate && (
+                                <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="birthPlace">Luogo di Nascita</Label>
+                              <Input id="birthPlace" {...register('birthPlace')} />
+                              {errors.birthPlace && (
+                                <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="birthProvince">Provincia di Nascita</Label>
+                              <Input id="birthProvince" {...register('birthProvince')} />
+                              {errors.birthProvince && (
+                                <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="address">Indirizzo</Label>
+                              <Input id="address" {...register('address')} />
+                              {errors.address && (
+                                <p className="text-red-500 text-sm">{errors.address.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="city">Città</Label>
+                              <Input id="city" {...register('city')} />
+                              {errors.city && (
+                                <p className="text-red-500 text-sm">{errors.city.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="province">Provincia</Label>
+                              <Input id="province" {...register('province')} />
+                              {errors.province && (
+                                <p className="text-red-500 text-sm">{errors.province.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="zipCode">CAP</Label>
+                              <Input id="zipCode" {...register('zipCode')} />
+                              {errors.zipCode && (
+                                <p className="text-red-500 text-sm">{errors.zipCode.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Telefono</Label>
+                              <Input id="phone" {...register('phone')} />
+                              {errors.phone && (
+                                <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email</Label>
+                              <Input id="email" type="email" {...register('email')} />
+                              {errors.email && (
+                                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="companyName">Ragione Sociale</Label>
+                              <Input id="companyName" {...register('companyName')} />
+                              {errors.companyName && (
+                                <p className="text-red-500 text-sm">{errors.companyName.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="vatNumber">Partita IVA</Label>
+                              <Input id="vatNumber" {...register('vatNumber')} />
+                              {errors.vatNumber && (
+                                <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="address">Indirizzo</Label>
+                              <Input id="address" {...register('address')} />
+                              {errors.address && (
+                                <p className="text-red-500 text-sm">{errors.address.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="city">Città</Label>
+                              <Input id="city" {...register('city')} />
+                              {errors.city && (
+                                <p className="text-red-500 text-sm">{errors.city.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="province">Provincia</Label>
+                              <Input id="province" {...register('province')} />
+                              {errors.province && (
+                                <p className="text-red-500 text-sm">{errors.province.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="zipCode">CAP</Label>
+                              <Input id="zipCode" {...register('zipCode')} />
+                              {errors.zipCode && (
+                                <p className="text-red-500 text-sm">{errors.zipCode.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Telefono</Label>
+                              <Input id="phone" {...register('phone')} />
+                              {errors.phone && (
+                                <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email</Label>
+                              <Input id="email" type="email" {...register('email')} />
+                              {errors.email && (
+                                <p className="text-red-500 text-sm">{errors.email.message}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <Separator className="my-4" />
+                          
+                          <h3 className="text-sm font-medium">Dati Rappresentante Legale</h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepFirstName">Nome</Label>
+                              <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
+                              {errors.legalRepFirstName && (
+                                <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepLastName">Cognome</Label>
+                              <Input id="legalRepLastName" {...register('legalRepLastName')} />
+                              {errors.legalRepLastName && (
+                                <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
+                              <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
+                              {errors.legalRepFiscalCode && (
+                                <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
+                              <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
+                              {errors.legalRepBirthDate && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
+                              <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
+                              {errors.legalRepBirthPlace && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
+                              <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
+                              {errors.legalRepBirthProvince && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Allestimento</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      {vehicle.trim}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <div className="space-y-1">
-                    <Label>Alimentazione</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      {vehicle.fuelType}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Colore</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      {vehicle.exteriorColor}
-                    </div>
-                  </div>
-                </div>
-                
-                {vehicle.transmission && (
-                  <div className="mt-3">
-                    <div className="space-y-1">
-                      <Label>Cambio</Label>
-                      <div className="bg-white p-2 border rounded-md">
-                        {vehicle.transmission}
+                  </TabsContent>
+                  
+                  {/* Vehicle Data Tab */}
+                  <TabsContent value="vehicle" className="pt-4 pb-6">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium">Dati del Veicolo</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Modello</Label>
+                          <Input value={vehicle.model} readOnly className="bg-gray-50" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Allestimento</Label>
+                          <Input value={vehicle.trim || ''} readOnly className="bg-gray-50" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Alimentazione</Label>
+                          <Input value={vehicle.fuelType || ''} readOnly className="bg-gray-50" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Colore</Label>
+                          <Input value={vehicle.exteriorColor || ''} readOnly className="bg-gray-50" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Cambio</Label>
+                          <Input value={vehicle.transmission || ''} readOnly className="bg-gray-50" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Telaio</Label>
+                          <Input value={vehicle.telaio || ''} readOnly className="bg-gray-50" />
+                        </div>
+                      </div>
+                      
+                      <Separator className="my-2" />
+                      
+                      {/* Accessories Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-md font-medium">Optional e Accessori</h3>
+                        
+                        {/* Show included accessories */}
+                        {vehicle.accessories && vehicle.accessories.length > 0 ? (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Accessori di Serie:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {vehicle.accessories.map((accessory, idx) => (
+                                <div key={idx} className="flex items-center">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                  <span className="text-sm">{accessory}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">Nessun accessorio di serie installato.</p>
+                        )}
+                        
+                        {/* Optional accessories selector */}
+                        {availableAccessories.length > 0 && (
+                          <div className="space-y-2 pt-2">
+                            <h4 className="text-sm font-medium">Seleziona Accessori Aggiuntivi:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-3 bg-gray-50">
+                              {availableAccessories.map((accessory, idx) => (
+                                <FormField
+                                  key={idx}
+                                  control={methods.control}
+                                  name="selectedAccessories"
+                                  render={({ field }) => (
+                                    <FormItem className="flex space-x-3 space-y-0 items-center">
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(accessory)}
+                                          onCheckedChange={(checked) => {
+                                            const currentAccessories = [...field.value || []];
+                                            if (checked) {
+                                              setValue('selectedAccessories', [...currentAccessories, accessory]);
+                                            } else {
+                                              setValue('selectedAccessories', 
+                                                currentAccessories.filter(item => item !== accessory)
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="text-sm font-normal cursor-pointer">
+                                        {accessory}
+                                      </FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                {vehicle.accessories && vehicle.accessories.length > 0 && (
-                  <div className="mt-3">
-                    <Label>Accessori</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      <ul className="list-disc pl-5 text-sm">
-                        {vehicle.accessories.map((acc, idx) => (
-                          <li key={idx}>{acc}</li>
-                        ))}
-                      </ul>
+                  </TabsContent>
+                  
+                  {/* Price Configuration Tab */}
+                  <TabsContent value="price" className="pt-4 pb-6">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium">Configurazione Prezzi</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="hasReducedVAT"
+                              checked={watchReducedVAT}
+                              onCheckedChange={(checked) => {
+                                setValue('hasReducedVAT', checked);
+                              }}
+                            />
+                            <Label htmlFor="hasReducedVAT">IVA Agevolata 4%</Label>
+                          </div>
+                          <span className="text-sm text-gray-500">
+                            {watchReducedVAT ? 'IVA al 4%' : 'IVA standard al 22%'}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="discountAmount">Sconto</Label>
+                            <Input
+                              id="discountAmount"
+                              type="number"
+                              min="0"
+                              {...register('discountAmount')}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="plateBonus">Bonus Targa</Label>
+                            <Input
+                              id="plateBonus"
+                              type="number"
+                              min="0"
+                              {...register('plateBonus')}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="safetyKitAmount">Kit Sicurezza</Label>
+                            <Input
+                              id="safetyKitAmount"
+                              type="number"
+                              min="0"
+                              {...register('safetyKitAmount')}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="roadTaxAmount">Messa su Strada</Label>
+                            <Input
+                              id="roadTaxAmount"
+                              type="number"
+                              min="0"
+                              value="400"
+                              readOnly
+                              className="bg-gray-50"
+                              {...register('roadTaxAmount')}
+                            />
+                          </div>
+                        </div>
+                        
+                        <Separator className="my-2" />
+                        
+                        {/* Trade-in Section */}
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="hasTradein"
+                              checked={watchTradein}
+                              onCheckedChange={(checked) => {
+                                setValue('hasTradein', checked);
+                                if (!checked) {
+                                  setValue('tradeinValue', '0');
+                                  setValue('tradeinBonus', '0');
+                                }
+                              }}
+                            />
+                            <Label htmlFor="hasTradein">Permuta</Label>
+                          </div>
+                          
+                          {watchTradein && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2 border-gray-200">
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinBrand">Marca</Label>
+                                <Input id="tradeinBrand" {...register('tradeinBrand')} />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinModel">Modello</Label>
+                                <Input id="tradeinModel" {...register('tradeinModel')} />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinYear">Anno</Label>
+                                <Input id="tradeinYear" {...register('tradeinYear')} />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinKm">Chilometraggio</Label>
+                                <Input id="tradeinKm" type="number" min="0" {...register('tradeinKm')} />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinValue">Valore Permuta</Label>
+                                <Input
+                                  id="tradeinValue"
+                                  type="number"
+                                  min="0"
+                                  {...register('tradeinValue')}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="tradeinBonus">Bonus Permuta</Label>
+                                <Input
+                                  id="tradeinBonus"
+                                  type="number"
+                                  min="0"
+                                  {...register('tradeinBonus')}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Separator className="my-2" />
+                        
+                        {/* Price Summary */}
+                        <div className="space-y-3 p-4 bg-gray-50 rounded-md">
+                          <h4 className="font-medium">Riepilogo Prezzi</h4>
+                          
+                          <div className="flex justify-between">
+                            <span>Prezzo Veicolo:</span>
+                            <span className="font-medium">{formatCurrency(vatAdjustedBasePrice)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span>Sconto:</span>
+                            <span className="text-red-600">- {formatCurrency(vatAdjustedDiscount)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span>Bonus Targa:</span>
+                            <span className="text-red-600">- {formatCurrency(vatAdjustedPlateBonus)}</span>
+                          </div>
+                          
+                          {watchTradein && (
+                            <>
+                              <div className="flex justify-between">
+                                <span>Bonus Permuta:</span>
+                                <span className="text-red-600">- {formatCurrency(vatAdjustedTradeInBonus)}</span>
+                              </div>
+                              
+                              <div className="flex justify-between">
+                                <span>Valore Permuta:</span>
+                                <span className="text-red-600">- {formatCurrency(tradeInValue)}</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          <div className="flex justify-between">
+                            <span>Kit Sicurezza:</span>
+                            <span className="text-green-600">+ {formatCurrency(vatAdjustedSafetyKit)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span>Messa su Strada:</span>
+                            <span className="text-green-600">+ {formatCurrency(vatAdjustedRoadPrep)}</span>
+                          </div>
+                          
+                          {warrantyAdditionalCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>Estensione Garanzia (84 mesi):</span>
+                              <span className="text-green-600">+ {formatCurrency(warrantyAdditionalCost)}</span>
+                            </div>
+                          )}
+                          
+                          <Separator className="my-2" />
+                          
+                          <div className="flex justify-between font-bold">
+                            <span>Prezzo Finale:</span>
+                            <span className="text-primary">{formatCurrency(finalPrice)}</span>
+                          </div>
+                          
+                          {watchReducedVAT && (
+                            <div className="text-sm text-gray-500 text-right">
+                              IVA agevolata 4% inclusa
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                <div className="mt-3">
-                  <div className="space-y-1">
-                    <Label>Telaio</Label>
-                    <div className="bg-white p-2 border rounded-md">
-                      {vehicle.telaio}
+                  </TabsContent>
+                  
+                  {/* Contract Terms Tab */}
+                  <TabsContent value="terms" className="pt-4 pb-6">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium">Condizioni Contrattuali</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="terminiPagamento">Termini di Pagamento</Label>
+                          <Textarea
+                            id="terminiPagamento"
+                            placeholder="Specificare i termini di pagamento"
+                            className="min-h-32"
+                            {...register('terminiPagamento')}
+                          />
+                          {errors.terminiPagamento && (
+                            <p className="text-red-500 text-sm">{errors.terminiPagamento.message}</p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="tempiConsegna">Tempi di Consegna (giorni)</Label>
+                          <Input
+                            id="tempiConsegna"
+                            type="number"
+                            min="1"
+                            defaultValue="30"
+                            {...register('tempiConsegna')}
+                          />
+                          {errors.tempiConsegna && (
+                            <p className="text-red-500 text-sm">{errors.tempiConsegna.message}</p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="garanzia">Garanzia</Label>
+                          <Select
+                            defaultValue="24 Mesi"
+                            onValueChange={(value) => setValue('garanzia', value)}
+                          >
+                            <SelectTrigger id="garanzia">
+                              <SelectValue placeholder="Seleziona la garanzia" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="24 Mesi">24 Mesi</SelectItem>
+                              <SelectItem value="84 Anni (addizionale € 1.000)">84 Anni (addizionale € 1.000)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {errors.garanzia && (
+                            <p className="text-red-500 text-sm">{errors.garanzia.message}</p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="clausoleSpeciali">Clausole Speciali</Label>
+                          <Textarea
+                            id="clausoleSpeciali"
+                            placeholder="Inserire eventuali clausole speciali"
+                            className="min-h-32"
+                            {...register('clausoleSpeciali')}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </TabsContent>
+                </ScrollArea>
               </div>
-            </div>
+            </Tabs>
             
-            {/* Right Column - Price and Contract Details */}
-            <div className="space-y-6">
-              {/* Price Configuration */}
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="text-lg font-medium mb-4">Configurazione Prezzo</h3>
-                
-                {/* IVA agevolata Switch */}
-                <div className="flex items-center justify-between mb-4 p-3 border rounded-md">
-                  <div>
-                    <span className="font-medium">IVA agevolata 4%</span>
-                    <p className="text-xs text-green-600">Legge 104 art.3 com.3</p>
-                  </div>
-                  <Switch 
-                    checked={hasReducedVAT} 
-                    onCheckedChange={(checked) => setHasReducedVAT(checked)}
-                  />
-                </div>
-                
-                {/* Permuta Switch */}
-                <div className="flex items-center justify-between mb-4 p-3 border rounded-md">
-                  <span className="font-medium">Permuta</span>
-                  <Switch 
-                    checked={hasTradein}
-                    onCheckedChange={(checked) => setHasTradein(checked)}
-                  />
-                </div>
-                
-                {/* Price Components */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="discountAmount">Sconto (€)</Label>
-                    <Input 
-                      id="discountAmount" 
-                      name="discountAmount" 
-                      type="number" 
-                      value={formData.discountAmount} 
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="plateBonus">Premio Targa (€)</Label>
-                    <Input 
-                      id="plateBonus" 
-                      name="plateBonus" 
-                      type="number" 
-                      value={formData.plateBonus} 
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="safetyKitAmount">Kit Sicurezza (€)</Label>
-                    <Input 
-                      id="safetyKitAmount" 
-                      name="safetyKitAmount" 
-                      type="number" 
-                      value={formData.safetyKitAmount} 
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="roadTaxAmount">Messa su Strada (€)</Label>
-                    <Input 
-                      id="roadTaxAmount" 
-                      name="roadTaxAmount" 
-                      type="number" 
-                      value={formData.roadTaxAmount} 
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-                
-                {/* Show trade-in section only if trade-in is enabled */}
-                {hasTradein && (
-                  <div className="mt-4 p-3 border rounded-md bg-blue-50">
-                    <h4 className="font-medium mb-2">Dati Permuta</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="tradeinBrand">Marca</Label>
-                        <Input 
-                          id="tradeinBrand" 
-                          name="tradeinBrand" 
-                          value={formData.tradeinBrand} 
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="tradeinModel">Modello</Label>
-                        <Input 
-                          id="tradeinModel" 
-                          name="tradeinModel" 
-                          value={formData.tradeinModel} 
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="tradeinYear">Anno</Label>
-                        <Input 
-                          id="tradeinYear" 
-                          name="tradeinYear" 
-                          value={formData.tradeinYear} 
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="tradeinBonus">Premio Permuta (€)</Label>
-                        <Input 
-                          id="tradeinBonus" 
-                          name="tradeinBonus" 
-                          type="number" 
-                          value={formData.tradeinBonus} 
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="tradeinValue">Valore Permuta (€)</Label>
-                        <Input 
-                          id="tradeinValue" 
-                          name="tradeinValue" 
-                          type="number" 
-                          value={formData.tradeinValue} 
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Final Price Summary */}
-                <div className="mt-6 p-4 bg-blue-900 text-white rounded-md">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Prezzo Finale</span>
-                    <span className="text-xl font-bold">
-                      {formatCurrency(calculateFinalPrice())}
-                    </span>
-                  </div>
-                  {hasReducedVAT && (
-                    <p className="text-xs mt-1 text-blue-200">IVA agevolata 4% inclusa</p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Contract Terms */}
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="text-lg font-medium mb-4">Condizioni Contrattuali</h3>
-                
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="terminiPagamento">Termini di Pagamento</Label>
-                    <Input 
-                      id="terminiPagamento" 
-                      name="terminiPagamento" 
-                      value={formData.terminiPagamento} 
-                      onChange={handleChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="tempiConsegna">Tempi di Consegna</Label>
-                    <Input 
-                      id="tempiConsegna" 
-                      name="tempiConsegna" 
-                      value={formData.tempiConsegna} 
-                      onChange={handleChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="garanzia">Garanzia</Label>
-                    <Input 
-                      id="garanzia" 
-                      name="garanzia" 
-                      value={formData.garanzia} 
-                      onChange={handleChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="clausoleSpeciali">Clausole Speciali</Label>
-                    <Textarea 
-                      id="clausoleSpeciali" 
-                      name="clausoleSpeciali" 
-                      value={formData.clausoleSpeciali} 
-                      onChange={handleChange} 
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Annulla
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creazione in corso...' : 'Crea Contratto'}
-            </Button>
-          </div>
-        </form>
+            <DialogFooter className="pt-4 border-t">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Annulla
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creazione...' : 'Crea Contratto'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );
