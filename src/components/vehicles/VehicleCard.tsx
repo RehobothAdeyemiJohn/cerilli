@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +78,8 @@ const VehicleCard = ({
     return vehicle.location;
   };
 
-  const showAdminButtons = !isDealer || (!isDealerStockVehicle);
+  // Don't show admin buttons on vehicle cards - removed per request 
+  const showAdminButtons = false;
 
   return (
     <div 
@@ -148,7 +150,7 @@ const VehicleCard = ({
               <span>{vehicle.transmission}</span>
             </div>
           )}
-          {vehicle.reservedBy && vehicle.status === 'reserved' && !isAdmin && (
+          {vehicle.reservedBy && vehicle.status === 'reserved' && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Prenotato da:</span>
               <span className="font-medium">{vehicle.reservedBy}</span>
@@ -180,27 +182,6 @@ const VehicleCard = ({
             <div className="font-bold text-primary">{formatCurrency(vehicle.price)}</div>
           )}
         </div>
-        
-        {showAdminButtons && (
-          <div className="mt-3 pt-2 border-t flex justify-end space-x-2">
-            <button 
-              onClick={(e) => handleActionClick(e, onEdit)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-              aria-label="Modifica veicolo"
-              type="button"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button 
-              onClick={(e) => handleActionClick(e, onDelete)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-              aria-label="Elimina veicolo"
-              type="button"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -202,6 +201,21 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       // Find dealer ID by dealerName
       let dealerId = '00000000-0000-0000-0000-000000000000';
       
+      if (selectedVehicle.reservedBy) {
+        try {
+          const { dealersApi } = await import('@/api/localStorage/dealersApi');
+          const dealers = await dealersApi.getAll();
+          const dealer = dealers.find(d => d.companyName === selectedVehicle.reservedBy);
+          if (dealer) {
+            dealerId = dealer.id;
+          }
+        } catch (err) {
+          console.error("Error finding dealer by name:", err);
+        }
+      }
+      
+      console.log("Creating order with dealerId:", dealerId);
+      
       // Create the order directly
       const newOrder = await ordersApi.create({
         vehicleId: selectedVehicle.id,
@@ -210,6 +224,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         status: 'processing',
         orderDate: new Date().toISOString()
       });
+      
+      console.log("Order created successfully:", newOrder);
       
       // Update vehicle status to ordered
       await vehiclesApi.update(selectedVehicle.id, {
