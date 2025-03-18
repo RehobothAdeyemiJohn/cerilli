@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -11,29 +10,20 @@ export const useQuoteForm = (
   onSubmit?: (data: any) => void,
   editQuote?: Quote | null
 ) => {
-  // Get user info from auth context
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
   
-  // States
   const [showTradeIn, setShowTradeIn] = useState(editQuote?.hasTradeIn || false);
   
-  // Fetch dealers
   const { data: dealers = [] } = useQuery({
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
   });
 
-  // Get compatible accessories from the vehicle
   const compatibleAccessories = vehicle?.accessories || [];
-  
-  // Calculate base price from vehicle
   const basePrice = vehicle?.price || 0;
+  const roadPreparationFee = editQuote?.roadPreparationFee || 350;
   
-  // Calculate road preparation fee
-  const roadPreparationFee = editQuote?.roadPreparationFee || 350; // Standard fee
-  
-  // Set up form with default values
   const form = useForm({
     defaultValues: {
       vehicleId: vehicle?.id || '',
@@ -59,8 +49,7 @@ export const useQuoteForm = (
       notes: editQuote?.notes || '',
     }
   });
-  
-  // Initialize when vehicle changes and we're not editing
+
   useEffect(() => {
     if (vehicle && !editQuote) {
       form.setValue('vehicleId', vehicle.id);
@@ -69,7 +58,6 @@ export const useQuoteForm = (
     }
   }, [vehicle, form, roadPreparationFee, editQuote]);
 
-  // Watch form values for calculations
   const watchAccessories = form.watch('accessories');
   const watchDiscount = form.watch('discount');
   const watchReducedVAT = form.watch('reducedVAT');
@@ -81,38 +69,30 @@ export const useQuoteForm = (
   const watchTradeInHandlingFee = form.watch('tradeInHandlingFee') || 0;
   const watchRoadPreparationFee = form.watch('roadPreparationFee');
   
-  // Calculate total discount
   const totalDiscount = Number(watchDiscount) +
     Number(watchLicensePlateBonus) +
     Number(watchTradeInBonus);
   
-  // Calculate accessory price
-  const accessoryTotalPrice = 0; // You can implement dynamic calculation here
+  const accessoryTotalPrice = 0;
   
-  // Calculate final price
   const calculatedPrice = basePrice + accessoryTotalPrice + Number(watchRoadPreparationFee) - 
     totalDiscount - Number(watchTradeInValue) + Number(watchSafetyKit) + Number(watchTradeInHandlingFee);
   
   const finalPrice = calculatedPrice > 0 ? calculatedPrice : 0;
   
-  // Update showTradeIn when hasTradeIn changes
   useEffect(() => {
     setShowTradeIn(watchHasTradeIn);
   }, [watchHasTradeIn]);
   
-  // Handle form submission
   const handleSubmit = (data: any) => {
-    // Add calculated values to form data
     const formData = {
       ...data,
       price: basePrice,
       accessoryPrice: accessoryTotalPrice,
       finalPrice,
-      // For editing, preserve the original ID
       ...(editQuote && { id: editQuote.id })
     };
     
-    // Submit the form data
     if (onSubmit) {
       onSubmit(formData);
     }

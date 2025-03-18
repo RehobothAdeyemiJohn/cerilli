@@ -1,7 +1,8 @@
-
 import { useState } from 'react';
 import { Quote } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { quotesApi } from '@/api/supabase/quotesApi';
+import { dealerContractsApi } from '@/api/supabase/dealerContractsApi';
 
 export const useQuoteContractDialog = () => {
   const [isOpen, setIsOpen] = useState(false);

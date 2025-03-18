@@ -75,6 +75,15 @@ export type Quote = {
   tradeInHandlingFee?: number;
   roadPreparationFee?: number;
   tradeInMake?: string;
+  accessories?: string[];
+  accessoryPrice?: number;
+  vehicleData?: {
+    model: string;
+    trim?: string;
+    exteriorColor?: string;
+    fuelType?: string;
+    price?: number;
+  };
 };
 
 export type Order = {
