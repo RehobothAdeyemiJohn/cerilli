@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -6,7 +7,9 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
-import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { ordersApi } from '@/api/localStorage/ordersApi';
+import { vehiclesApi } from '@/api/localStorage/vehiclesApi';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -45,7 +48,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   
   const { user } = useAuth();
   const { handleVehicleDuplicate } = useInventory();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const userCanReserveVehicles = true;
@@ -190,16 +193,50 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
-  const handleCreateOrder = () => {
+  const handleCreateOrder = async () => {
     if (!selectedVehicle) return;
     
-    navigate('/orders/new', { 
-      state: { 
-        vehicleId: selectedVehicle.id 
-      }
-    });
-    
-    handleDialogClose();
+    try {
+      setIsSubmitting(true);
+      
+      // Find dealer ID by dealerName
+      let dealerId = '00000000-0000-0000-0000-000000000000';
+      
+      // Create the order directly
+      const newOrder = await ordersApi.create({
+        vehicleId: selectedVehicle.id,
+        dealerId: dealerId,
+        customerName: selectedVehicle.reservedBy || 'Cliente sconosciuto',
+        status: 'processing',
+        orderDate: new Date().toISOString()
+      });
+      
+      // Update vehicle status to ordered
+      await vehiclesApi.update(selectedVehicle.id, {
+        status: 'ordered'
+      });
+      
+      // Refresh data
+      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      
+      toast({
+        title: "Ordine Creato",
+        description: `L'ordine per ${selectedVehicle.model} è stato creato con successo`,
+      });
+      
+      handleDialogClose();
+      onVehicleUpdated();
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la creazione dell'ordine",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleFormSubmitted = () => {
