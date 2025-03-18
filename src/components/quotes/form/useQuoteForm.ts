@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -22,7 +23,7 @@ export const useQuoteForm = (
 
   const compatibleAccessories = vehicle?.accessories || [];
   const basePrice = vehicle?.price || 0;
-  const roadPreparationFee = editQuote?.roadPreparationFee || 350;
+  const roadPreparationFee = editQuote?.roadPreparationFee || 400; // Changed from 350 to 400
   
   const form = useForm({
     defaultValues: {
@@ -75,8 +76,28 @@ export const useQuoteForm = (
   
   const accessoryTotalPrice = 0;
   
-  const calculatedPrice = basePrice + accessoryTotalPrice + Number(watchRoadPreparationFee) - 
-    totalDiscount - Number(watchTradeInValue) + Number(watchSafetyKit) + Number(watchTradeInHandlingFee);
+  // Calculate price based on VAT setting
+  const getVATAdjustedPrice = (price: number) => {
+    if (!watchReducedVAT) return price; // No change for standard VAT
+    
+    // For reduced VAT, first remove standard VAT then apply 4% VAT
+    const priceWithoutVAT = price / 1.22;
+    return priceWithoutVAT * 1.04;
+  };
+  
+  // Apply VAT adjustment to all components except trade-in value
+  const vatAdjustedBasePrice = getVATAdjustedPrice(basePrice);
+  const vatAdjustedDiscount = getVATAdjustedPrice(Number(watchDiscount));
+  const vatAdjustedPlateBonus = getVATAdjustedPrice(Number(watchLicensePlateBonus));
+  const vatAdjustedTradeInBonus = getVATAdjustedPrice(Number(watchTradeInBonus));
+  const vatAdjustedSafetyKit = getVATAdjustedPrice(Number(watchSafetyKit));
+  const vatAdjustedHandlingFee = getVATAdjustedPrice(Number(watchTradeInHandlingFee));
+  const vatAdjustedRoadPrep = getVATAdjustedPrice(Number(watchRoadPreparationFee));
+  
+  // Calculate final price with VAT adjustments
+  const calculatedPrice = vatAdjustedBasePrice + accessoryTotalPrice + vatAdjustedRoadPrep - 
+    (vatAdjustedDiscount + vatAdjustedPlateBonus + vatAdjustedTradeInBonus) - 
+    Number(watchTradeInValue) + vatAdjustedSafetyKit + vatAdjustedHandlingFee;
   
   const finalPrice = calculatedPrice > 0 ? calculatedPrice : 0;
   
@@ -114,6 +135,7 @@ export const useQuoteForm = (
     watchTradeInValue,
     handleSubmit,
     totalDiscount,
-    roadPreparationFee
+    roadPreparationFee,
+    watchReducedVAT
   };
 };

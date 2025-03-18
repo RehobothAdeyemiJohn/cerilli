@@ -18,7 +18,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   finalPrice,
   watchReducedVAT,
   totalDiscount,
-  roadPreparationFee = 350 // Default to €350
+  roadPreparationFee = 400 // Changed from 350 to 400 euro
 }) => {
   const form = useFormContext();
   const discount = form.watch('discount') || 0;
@@ -29,6 +29,23 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
   const tradeInValue = form.watch('tradeInValue') || 0;
   const accessories = form.watch('accessories') || [];
   
+  // Function to adjust prices based on VAT setting
+  const getVATAdjustedPrice = (price: number) => {
+    if (!watchReducedVAT) return price; // No change for standard VAT
+    
+    // For reduced VAT, first remove standard VAT then apply 4% VAT
+    const priceWithoutVAT = price / 1.22;
+    return priceWithoutVAT * 1.04;
+  };
+  
+  // Apply VAT adjustment to display values (except trade-in value)
+  const vatAdjustedBasePrice = getVATAdjustedPrice(basePrice);
+  const vatAdjustedDiscount = getVATAdjustedPrice(discount);
+  const vatAdjustedPlateBonus = getVATAdjustedPrice(licensePlateBonus);
+  const vatAdjustedTradeInBonus = getVATAdjustedPrice(tradeInBonus);
+  const vatAdjustedSafetyKit = getVATAdjustedPrice(safetyKit);
+  const vatAdjustedRoadPrep = getVATAdjustedPrice(roadPreparationFee);
+  
   return (
     <div>
       <h3 className="text-md font-semibold mb-4">Prezzo Finale</h3>
@@ -37,22 +54,22 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
       <div className="space-y-3 mb-4">
         <div className="flex justify-between">
           <span className="text-sm">Prezzo Veicolo</span>
-          <span className="font-medium">{formatCurrency(basePrice)}</span>
+          <span className="font-medium">{formatCurrency(vatAdjustedBasePrice)}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-sm">Sconto</span>
-          <span className="font-medium text-red-600">- {formatCurrency(discount)}</span>
+          <span className="font-medium text-red-600">- {formatCurrency(vatAdjustedDiscount)}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-sm">Premio Targa</span>
-          <span className="font-medium text-red-600">- {formatCurrency(licensePlateBonus)}</span>
+          <span className="font-medium text-red-600">- {formatCurrency(vatAdjustedPlateBonus)}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-sm">Premio Permuta</span>
-          <span className="font-medium text-red-600">- {formatCurrency(tradeInBonus)}</span>
+          <span className="font-medium text-red-600">- {formatCurrency(vatAdjustedTradeInBonus)}</span>
         </div>
         
         {hasTradeIn && (
@@ -64,12 +81,12 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
         
         <div className="flex justify-between">
           <span className="text-sm">Kit Sicurezza</span>
-          <span className="font-medium text-green-600">+ {formatCurrency(safetyKit)}</span>
+          <span className="font-medium text-green-600">+ {formatCurrency(vatAdjustedSafetyKit)}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-sm">Messa su strada</span>
-          <span className="font-medium text-green-600">+ {formatCurrency(roadPreparationFee)}</span>
+          <span className="font-medium text-green-600">+ {formatCurrency(vatAdjustedRoadPrep)}</span>
         </div>
         
         {accessoryTotalPrice > 0 || accessories.length > 0 && (

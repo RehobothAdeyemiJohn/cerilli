@@ -22,14 +22,37 @@ export const useQuoteContractDialog = () => {
         plateBonus: contractData.plateBonus || 0,
         tradeinBonus: contractData.hasTradein ? (contractData.tradeinBonus || 0) : 0,
         safetyKitAmount: contractData.safetyKitAmount || 0,
-        roadTaxAmount: contractData.roadTaxAmount || 350,
+        roadTaxAmount: contractData.roadTaxAmount || 400, // Changed default from 350 to 400
         hasReducedVAT: contractData.hasReducedVAT || false,
       };
       
+      // Calculate VAT multiplier based on reduced VAT setting
+      const vatMultiplier = priceDetails.hasReducedVAT ? 1.04 : 1.22;
+      
+      // Calculate final price with appropriate VAT
+      // First convert to price without VAT, then apply the correct VAT rate
+      const baseWithoutVAT = priceDetails.basePrice / 1.22;
+      const discountWithoutVAT = priceDetails.discount / 1.22;
+      const plateBonusWithoutVAT = priceDetails.plateBonus / 1.22;
+      const tradeinBonusWithoutVAT = priceDetails.tradeinBonus / 1.22;
+      const safetyKitWithoutVAT = priceDetails.safetyKitAmount / 1.22;
+      const roadTaxWithoutVAT = priceDetails.roadTaxAmount / 1.22;
+      
+      // Apply the correct VAT rate
+      const baseWithVAT = baseWithoutVAT * vatMultiplier;
+      const discountWithVAT = discountWithoutVAT * vatMultiplier;
+      const plateBonusWithVAT = plateBonusWithoutVAT * vatMultiplier;
+      const tradeinBonusWithVAT = tradeinBonusWithoutVAT * vatMultiplier;
+      const safetyKitWithVAT = safetyKitWithoutVAT * vatMultiplier;
+      const roadTaxWithVAT = roadTaxWithoutVAT * vatMultiplier;
+      
+      // Trade-in value is not affected by VAT
+      const tradeinValue = contractData.hasTradein ? (contractData.tradeinValue || 0) : 0;
+      
       // Calculate final price
-      const totalDiscounts = priceDetails.discount + priceDetails.plateBonus + priceDetails.tradeinBonus;
-      const totalAdditions = priceDetails.safetyKitAmount + priceDetails.roadTaxAmount;
-      const finalPrice = priceDetails.basePrice - totalDiscounts + totalAdditions;
+      const totalDiscounts = discountWithVAT + plateBonusWithVAT + tradeinBonusWithVAT + tradeinValue;
+      const totalAdditions = safetyKitWithVAT + roadTaxWithVAT;
+      const finalPrice = baseWithVAT - totalDiscounts + totalAdditions;
       
       // Update quote status to converted
       const updatedQuote = await quotesApi.update(quote.id, { 
