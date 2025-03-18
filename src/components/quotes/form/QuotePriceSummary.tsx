@@ -99,7 +99,7 @@ const QuotePriceSummary: React.FC<QuotePriceSummaryProps> = ({
       
       {/* Final price - with blue background */}
       <div className="bg-blue-900 py-3 px-4 rounded">
-        <p className="text-sm text-white font-semibold text-center">Prezzo Finale - Chiavi in mano</p>
+        <p className="text-sm text-white font-semibold text-center">Prezzo Finale chiavi in mano (iva inclusa) a saldo</p>
         <p className="font-bold text-xl text-white text-center">
           {formatCurrency(finalPrice)}
         </p>

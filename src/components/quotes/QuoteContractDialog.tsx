@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -75,11 +74,11 @@ const priceSchema = z.object({
   tradeinBonus: z.string().optional(),
   safetyKitAmount: z.string().optional(),
   roadTaxAmount: z.string().default('400'),
+  depositoAmount: z.string().optional(),
   selectedAccessories: z.array(z.string()).default([]),
 });
 
 const termsSchema = z.object({
-  terminiPagamento: z.string().min(1, 'I termini di pagamento sono obbligatori'),
   tempiConsegna: z.string().min(1, 'I tempi di consegna sono obbligatori'),
   garanzia: z.string().min(1, 'La garanzia è obbligatoria'),
   clausoleSpeciali: z.string().optional(),
@@ -107,6 +106,25 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const [hasReducedVAT, setHasReducedVAT] = useState(false);
   const [hasTradein, setHasTradein] = useState(false);
   const [warrantyExtension, setWarrantyExtension] = useState("24 Mesi");
+  
+  // Tab order reflecting the new desired flow
+  const tabOrder = ['contractor', 'vehicle', 'terms', 'price'];
+  
+  // Function to navigate to next tab
+  const goToNextTab = () => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex < tabOrder.length - 1) {
+      setActiveTab(tabOrder[currentIndex + 1]);
+    }
+  };
+  
+  // Function to navigate to previous tab
+  const goToPrevTab = () => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabOrder[currentIndex - 1]);
+    }
+  };
 
   // Create form with zod resolver
   const methods = useForm<ContractFormValues>({
@@ -122,7 +140,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
     } as ContractFormValues
   });
 
-  const { handleSubmit, setValue, watch, register, formState: { errors }, reset } = methods;
+  const { handleSubmit, setValue, watch, register, formState: { errors }, reset, trigger } = methods;
 
   // Watch necessary values
   const watchContractorType = watch('contractorType');
@@ -133,6 +151,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const watchPlateBonus = watch('plateBonus');
   const watchTradeInBonus = watch('tradeinBonus');
   const watchSafetyKit = watch('safetyKitAmount');
+  const watchDepositoAmount = watch('depositoAmount');
   const watchSelectedAccessories = watch('selectedAccessories');
   const watchWarranty = watch('garanzia');
 
@@ -228,10 +247,57 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
     
     onSubmit(quote.id, formDataWithAccessories);
   };
+  
+  // Handle navigation button click - validate current tab before proceeding
+  const handleNavigationClick = async () => {
+    const isLastTab = activeTab === tabOrder[tabOrder.length - 1];
+    
+    if (isLastTab) {
+      // If we're on the last tab, submit the form
+      handleSubmit(onSubmitForm)();
+    } else {
+      // Otherwise, validate the current tab and move to the next if valid
+      let fieldsToValidate: string[] = [];
+      
+      // Determine which fields to validate based on the current tab
+      switch (activeTab) {
+        case 'contractor':
+          // Common fields
+          fieldsToValidate = ['address', 'city', 'province', 'zipCode', 'phone', 'email'];
+          
+          // Type-specific fields
+          if (contractorType === 'personaFisica') {
+            fieldsToValidate.push('firstName', 'lastName', 'fiscalCode', 'birthDate', 'birthPlace', 'birthProvince');
+          } else {
+            fieldsToValidate.push('companyName', 'vatNumber', 'legalRepFirstName', 'legalRepLastName', 
+              'legalRepFiscalCode', 'legalRepBirthDate', 'legalRepBirthPlace', 'legalRepBirthProvince');
+          }
+          break;
+        
+        case 'vehicle':
+          // No required fields on the vehicle tab
+          break;
+        
+        case 'terms':
+          fieldsToValidate = ['tempiConsegna', 'garanzia'];
+          break;
+          
+        default:
+          break;
+      }
+      
+      // Trigger validation for the specified fields
+      const isValid = await trigger(fieldsToValidate as any);
+      
+      if (isValid) {
+        goToNextTab();
+      }
+    }
+  };
 
   // Calculate price with VAT adjustment
   const getVATAdjustedPrice = (price: number) => {
-    if (!watchReducedVAT) return price;
+    if (!watchReducedVAT) return price; // No change for standard VAT
     
     // For reduced VAT, first remove standard VAT then apply 4% VAT
     const priceWithoutVAT = price / 1.22;
@@ -259,6 +325,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const vatAdjustedTradeInBonus = getVATAdjustedPrice(parseNumeric(watchTradeInBonus));
   const vatAdjustedSafetyKit = getVATAdjustedPrice(parseNumeric(watchSafetyKit));
   const vatAdjustedRoadPrep = getVATAdjustedPrice(roadPreparationFee);
+  const depositoAmount = parseNumeric(watchDepositoAmount);
   
   // Calculate warranty cost with correct VAT
   let warrantyAdditionalCost = 0;
@@ -270,7 +337,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
   const tradeInValue = watchTradein ? parseNumeric(watchTradeInValue) : 0;
   
   // Calculate total discounts and additions
-  const totalDiscounts = vatAdjustedDiscount + vatAdjustedPlateBonus + vatAdjustedTradeInBonus + tradeInValue;
+  const totalDiscounts = vatAdjustedDiscount + vatAdjustedPlateBonus + vatAdjustedTradeInBonus + tradeInValue + depositoAmount;
   const totalAdditions = vatAdjustedSafetyKit + vatAdjustedRoadPrep + warrantyAdditionalCost;
   
   // Calculate final price
@@ -298,8 +365,8 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
               <TabsList className="w-full">
                 <TabsTrigger value="contractor" className="flex-1">Dati Contraente</TabsTrigger>
                 <TabsTrigger value="vehicle" className="flex-1">Dati Veicolo</TabsTrigger>
-                <TabsTrigger value="price" className="flex-1">Configurazione Prezzi</TabsTrigger>
                 <TabsTrigger value="terms" className="flex-1">Condizioni Contrattuali</TabsTrigger>
+                <TabsTrigger value="price" className="flex-1">Configurazione Prezzi</TabsTrigger>
               </TabsList>
               
               <div className="flex-1 overflow-auto">
@@ -345,48 +412,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="firstName">Nome</Label>
                               <Input id="firstName" {...register('firstName')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.firstName && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.firstName?.message}</p>
+                              {contractorType === 'personaFisica' && errors.firstName && (
+                                <p className="text-red-500 text-sm">{errors.firstName.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Cognome</Label>
                               <Input id="lastName" {...register('lastName')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.lastName && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.lastName?.message}</p>
+                              {contractorType === 'personaFisica' && errors.lastName && (
+                                <p className="text-red-500 text-sm">{errors.lastName.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="fiscalCode">Codice Fiscale</Label>
                               <Input id="fiscalCode" {...register('fiscalCode')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.fiscalCode && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.fiscalCode?.message}</p>
+                              {contractorType === 'personaFisica' && errors.fiscalCode && (
+                                <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthDate">Data di Nascita</Label>
                               <Input id="birthDate" type="date" {...register('birthDate')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.birthDate && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.birthDate?.message}</p>
+                              {contractorType === 'personaFisica' && errors.birthDate && (
+                                <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthPlace">Luogo di Nascita</Label>
                               <Input id="birthPlace" {...register('birthPlace')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.birthPlace && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.birthPlace?.message}</p>
+                              {contractorType === 'personaFisica' && errors.birthPlace && (
+                                <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="birthProvince">Provincia di Nascita</Label>
                               <Input id="birthProvince" {...register('birthProvince')} />
-                              {contractorType === 'personaFisica' && (errors as any)?.birthProvince && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.birthProvince?.message}</p>
+                              {contractorType === 'personaFisica' && errors.birthProvince && (
+                                <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
                               )}
                             </div>
                           </div>
@@ -449,16 +516,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.companyName && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.companyName?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.companyName && (
+                                <p className="text-red-500 text-sm">{errors.companyName.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.vatNumber && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.vatNumber?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.vatNumber && (
+                                <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
                               )}
                             </div>
                           </div>
@@ -521,48 +588,48 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepFirstName && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepFirstName?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepFirstName && (
+                                <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepLastName && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepLastName?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepLastName && (
+                                <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepFiscalCode && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepFiscalCode?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepFiscalCode && (
+                                <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthDate && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthDate?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthDate && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthPlace && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthPlace?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthPlace && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
                               )}
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {contractorType === 'personaGiuridica' && (errors as any)?.legalRepBirthProvince && (
-                                <p className="text-red-500 text-sm">{(errors as any)?.legalRepBirthProvince?.message}</p>
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthProvince && (
+                                <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
                               )}
                             </div>
                           </div>
@@ -672,6 +739,58 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                     </div>
                   </TabsContent>
                   
+                  {/* Contract Terms Tab */}
+                  <TabsContent value="terms" className="pt-4 pb-6">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-medium">Condizioni Contrattuali</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="tempiConsegna">Tempi di Consegna (giorni)</Label>
+                          <Input
+                            id="tempiConsegna"
+                            type="number"
+                            min="1"
+                            defaultValue="30"
+                            {...register('tempiConsegna')}
+                          />
+                          {errors.tempiConsegna && (
+                            <p className="text-red-500 text-sm">{errors.tempiConsegna.message}</p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="garanzia">Garanzia</Label>
+                          <Select
+                            defaultValue="24 Mesi"
+                            onValueChange={(value) => setValue('garanzia', value)}
+                          >
+                            <SelectTrigger id="garanzia">
+                              <SelectValue placeholder="Seleziona la garanzia" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="24 Mesi">24 Mesi</SelectItem>
+                              <SelectItem value="84 Anni (addizionale € 1.000)">84 Anni (addizionale € 1.000)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {errors.garanzia && (
+                            <p className="text-red-500 text-sm">{errors.garanzia.message}</p>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="clausoleSpeciali">Clausole Speciali</Label>
+                          <Textarea
+                            id="clausoleSpeciali"
+                            placeholder="Inserire eventuali clausole speciali"
+                            className="min-h-32"
+                            {...register('clausoleSpeciali')}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
                   {/* Price Configuration Tab */}
                   <TabsContent value="price" className="pt-4 pb-6">
                     <div className="space-y-6">
@@ -735,6 +854,16 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                               readOnly
                               className="bg-gray-50"
                               {...register('roadTaxAmount')}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="depositoAmount">Deposito Cauzionale</Label>
+                            <Input
+                              id="depositoAmount"
+                              type="number"
+                              min="0"
+                              {...register('depositoAmount')}
                             />
                           </div>
                         </div>
@@ -836,6 +965,13 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             </div>
                           )}
                           
+                          {depositoAmount > 0 && (
+                            <div className="flex justify-between">
+                              <span>Deposito Cauzionale:</span>
+                              <span className="text-red-600">- {formatCurrency(depositoAmount)}</span>
+                            </div>
+                          )}
+                          
                           <div className="flex justify-between">
                             <span>Kit Sicurezza:</span>
                             <span className="text-green-600">+ {formatCurrency(vatAdjustedSafetyKit)}</span>
@@ -856,7 +992,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                           <Separator className="my-2" />
                           
                           <div className="flex justify-between font-bold">
-                            <span>Prezzo Finale:</span>
+                            <span>Prezzo Finale chiavi in mano (iva inclusa) a saldo:</span>
                             <span className="text-primary">{formatCurrency(finalPrice)}</span>
                           </div>
                           
@@ -869,81 +1005,25 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                       </div>
                     </div>
                   </TabsContent>
-                  
-                  {/* Contract Terms Tab */}
-                  <TabsContent value="terms" className="pt-4 pb-6">
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-medium">Condizioni Contrattuali</h3>
-                      
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="terminiPagamento">Termini di Pagamento</Label>
-                          <Textarea
-                            id="terminiPagamento"
-                            placeholder="Specificare i termini di pagamento"
-                            className="min-h-32"
-                            {...register('terminiPagamento')}
-                          />
-                          {(errors as any)?.terminiPagamento && (
-                            <p className="text-red-500 text-sm">{(errors as any)?.terminiPagamento?.message}</p>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="tempiConsegna">Tempi di Consegna (giorni)</Label>
-                          <Input
-                            id="tempiConsegna"
-                            type="number"
-                            min="1"
-                            defaultValue="30"
-                            {...register('tempiConsegna')}
-                          />
-                          {errors.tempiConsegna && (
-                            <p className="text-red-500 text-sm">{errors.tempiConsegna.message}</p>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="garanzia">Garanzia</Label>
-                          <Select
-                            defaultValue="24 Mesi"
-                            onValueChange={(value) => setValue('garanzia', value)}
-                          >
-                            <SelectTrigger id="garanzia">
-                              <SelectValue placeholder="Seleziona la garanzia" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="24 Mesi">24 Mesi</SelectItem>
-                              <SelectItem value="84 Anni (addizionale € 1.000)">84 Anni (addizionale € 1.000)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {errors.garanzia && (
-                            <p className="text-red-500 text-sm">{errors.garanzia.message}</p>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="clausoleSpeciali">Clausole Speciali</Label>
-                          <Textarea
-                            id="clausoleSpeciali"
-                            placeholder="Inserire eventuali clausole speciali"
-                            className="min-h-32"
-                            {...register('clausoleSpeciali')}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
                 </ScrollArea>
               </div>
             </Tabs>
             
             <DialogFooter className="pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Annulla
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Creazione...' : 'Crea Contratto'}
+              {activeTab !== tabOrder[0] && (
+                <Button type="button" variant="outline" onClick={goToPrevTab}>
+                  Indietro
+                </Button>
+              )}
+              
+              <Button 
+                type="button" 
+                onClick={handleNavigationClick} 
+                disabled={isSubmitting}
+              >
+                {activeTab === tabOrder[tabOrder.length - 1] 
+                  ? (isSubmitting ? 'Creazione...' : 'Crea Contratto') 
+                  : 'Avanti'}
               </Button>
             </DialogFooter>
           </form>
