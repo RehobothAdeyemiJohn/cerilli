@@ -118,23 +118,15 @@ const QuoteContractDialog = ({
         firstName,
         lastName,
         email: quote.customerEmail || '',
-        phone: quote.customerPhone || '',
-        discount: quote.discount || 0,
-        finalPrice: quote.finalPrice || 0,
-        hasTradeIn: quote.hasTradeIn || false,
-        tradeInMake: quote.tradeInBrand || '',
-        tradeInModel: quote.tradeInModel || '',
-        tradeInYear: quote.tradeInYear || '',
-        tradeInValue: quote.tradeInValue || 0
+        phone: quote.customerPhone || ''
       });
     }
   }, [quote, open, form]);
 
   const contractorType = form.watch('contractorType');
   const isCompany = contractorType === 'personaGiuridica';
-  const hasTradeIn = form.watch('hasTradeIn');
 
-  const handleSubmit = async (data: ContractFormValues) => {
+  const handleSubmit = async (data: z.infer<typeof contractSchema>) => {
     if (quote) {
       await onSubmit(quote.id, data);
     }
@@ -430,142 +422,10 @@ const QuoteContractDialog = ({
                   <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="discount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Sconto</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field}
-                              onChange={(e) => {
-                                const value = Number(e.target.value) || 0;
-                                field.onChange(value);
-                                const basePrice = vehicle?.price || 0;
-                                form.setValue('finalPrice', basePrice - value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="finalPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Prezzo Finale</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field}
-                              value={field.value}
-                              readOnly
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-md space-y-4">
-                  <div className="flex items-center">
-                    <FormField
-                      control={form.control}
-                      name="hasTradeIn"
-                      render={({ field }) => (
-                        <FormItem className="flex gap-2 items-center space-y-0">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={(e) => field.onChange(e.target.checked)}
-                              className="checkbox"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-medium">Permuta</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  {hasTradeIn && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="tradeInMake"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Marca</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Marca veicolo permuta" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="tradeInModel"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Modello</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Modello veicolo permuta" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="tradeInYear"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Anno</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Anno veicolo permuta" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="tradeInValue"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Valore Permuta</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const value = Number(e.target.value) || 0;
-                                    field.onChange(value);
-                                  }}
-                                  placeholder="Valore permuta" 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -593,4 +453,3 @@ const QuoteContractDialog = ({
 };
 
 export default QuoteContractDialog;
-
