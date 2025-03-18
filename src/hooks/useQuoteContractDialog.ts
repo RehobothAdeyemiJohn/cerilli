@@ -15,11 +15,68 @@ export const useQuoteContractDialog = () => {
     setIsSubmitting(true);
     
     try {
+      // Extract price information from form data
+      const priceDetails = {
+        basePrice: quote.price || 0,
+        discount: contractData.discountAmount || 0,
+        plateBonus: contractData.plateBonus || 0,
+        tradeinBonus: contractData.hasTradein ? (contractData.tradeinBonus || 0) : 0,
+        safetyKitAmount: contractData.safetyKitAmount || 0,
+        roadTaxAmount: contractData.roadTaxAmount || 350,
+        hasReducedVAT: contractData.hasReducedVAT || false,
+      };
+      
+      // Calculate final price
+      const totalDiscounts = priceDetails.discount + priceDetails.plateBonus + priceDetails.tradeinBonus;
+      const totalAdditions = priceDetails.safetyKitAmount + priceDetails.roadTaxAmount;
+      const finalPrice = priceDetails.basePrice - totalDiscounts + totalAdditions;
+      
       // Update quote status to converted
       const updatedQuote = await quotesApi.update(quote.id, { 
         status: 'converted' 
       });
       console.log('Quote updated:', updatedQuote);
+
+      // Prepare contractor data based on type
+      let contractorData: any = {};
+      
+      if (contractData.contractorType === 'personaFisica') {
+        contractorData = {
+          type: 'personaFisica',
+          firstName: contractData.firstName,
+          lastName: contractData.lastName,
+          fiscalCode: contractData.fiscalCode,
+          birthDate: contractData.birthDate,
+          birthPlace: contractData.birthPlace,
+          birthProvince: contractData.birthProvince,
+          address: contractData.address,
+          city: contractData.city,
+          province: contractData.province,
+          zipCode: contractData.zipCode,
+          phone: contractData.phone,
+          email: contractData.email
+        };
+      } else {
+        contractorData = {
+          type: 'personaGiuridica',
+          companyName: contractData.companyName,
+          vatNumber: contractData.vatNumber,
+          address: contractData.address,
+          city: contractData.city,
+          province: contractData.province,
+          zipCode: contractData.zipCode,
+          phone: contractData.phone,
+          email: contractData.email,
+          legalRepresentative: {
+            firstName: contractData.legalRepFirstName,
+            lastName: contractData.legalRepLastName,
+            fiscalCode: contractData.legalRepFiscalCode,
+            birthDate: contractData.legalRepBirthDate,
+            birthPlace: contractData.legalRepBirthPlace,
+            birthProvince: contractData.legalRepBirthProvince
+          }
+        };
+      }
 
       // Create contract from quote data
       const contract = await dealerContractsApi.create({
@@ -27,11 +84,16 @@ export const useQuoteContractDialog = () => {
         carId: quote.vehicleId,
         contractDate: new Date().toISOString(),
         contractDetails: {
-          ...contractData,
           quoteId: quote.id,
-          price: quote.price,
-          discount: quote.discount,
-          finalPrice: quote.finalPrice
+          contractor: contractorData,
+          priceDetails: priceDetails,
+          finalPrice: finalPrice,
+          contractTerms: {
+            terminiPagamento: contractData.terminiPagamento,
+            tempiConsegna: contractData.tempiConsegna,
+            garanzia: contractData.garanzia,
+            clausoleSpeciali: contractData.clausoleSpeciali || ''
+          }
         },
         status: 'attivo'
       });
@@ -44,7 +106,7 @@ export const useQuoteContractDialog = () => {
       });
 
       setIsOpen(false);
-      return true; // Return success status
+      return true;
     } catch (error) {
       console.error('Error converting quote to contract:', error);
       toast({
@@ -52,7 +114,7 @@ export const useQuoteContractDialog = () => {
         description: "Si è verificato un errore durante la conversione del preventivo",
         variant: "destructive",
       });
-      return false; // Return failure status
+      return false;
     } finally {
       setIsSubmitting(false);
     }
