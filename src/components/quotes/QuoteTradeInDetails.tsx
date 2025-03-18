@@ -11,7 +11,7 @@ const QuoteTradeInDetails = ({ quote }: QuoteTradeInDetailsProps) => {
   return (
     <div className="border p-2 rounded-md">
       <h3 className="font-medium mb-1 text-xs">Dettagli Permuta</h3>
-      <div className="grid grid-cols-5 gap-2 mb-2">
+      <div className="grid grid-cols-6 gap-2 mb-2">
         <div>
           <p className="text-xs text-gray-500">Marca</p>
           <p className="font-medium">{quote.tradeInBrand || 'N/D'}</p>
@@ -19,6 +19,10 @@ const QuoteTradeInDetails = ({ quote }: QuoteTradeInDetailsProps) => {
         <div>
           <p className="text-xs text-gray-500">Modello</p>
           <p className="font-medium">{quote.tradeInModel || 'N/D'}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Targa</p>
+          <p className="font-medium">{quote.tradeInPlate || 'N/D'}</p>
         </div>
         <div>
           <p className="text-xs text-gray-500">Anno</p>

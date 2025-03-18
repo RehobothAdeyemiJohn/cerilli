@@ -3,6 +3,7 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useFormContext } from 'react-hook-form';
+import { Grid } from '@/components/ui/grid';
 
 interface QuoteTradeInProps {
   showTradeIn: boolean;
@@ -29,7 +30,8 @@ const QuoteTradeIn: React.FC<QuoteTradeInProps> = ({ showTradeIn, setShowTradeIn
   return (
     <div className="border border-blue-200 rounded-md p-4 mb-4 bg-blue-50">
       <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        {/* First row: Brand, Model, Plate in the same row */}
+        <div className="grid grid-cols-3 gap-3">
           <FormField
             control={form.control}
             name="tradeInBrand"
@@ -56,7 +58,22 @@ const QuoteTradeIn: React.FC<QuoteTradeInProps> = ({ showTradeIn, setShowTradeIn
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="tradeInPlate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Targa</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
+        
+        {/* Second row: Year and KM */}
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -89,6 +106,8 @@ const QuoteTradeIn: React.FC<QuoteTradeInProps> = ({ showTradeIn, setShowTradeIn
             )}
           />
         </div>
+        
+        {/* Third row: Trade-in Value and Handling Fee */}
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}

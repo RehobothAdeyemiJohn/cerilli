@@ -46,6 +46,7 @@ const priceSchema = z.object({
   hasTradein: z.boolean().default(false),
   tradeinBrand: z.string().optional(),
   tradeinModel: z.string().optional(),
+  tradeinPlate: z.string().optional(), // Added new field for plate
   tradeinYear: z.string().optional(),
   tradeinKm: z.string().optional(),
   tradeinValue: z.string().optional(),
