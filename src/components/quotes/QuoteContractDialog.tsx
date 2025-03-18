@@ -27,15 +27,8 @@ interface QuoteContractDialogProps {
   isSubmitting: boolean;
 }
 
-// Define form schema with zod
-const personaFisicaSchema = z.object({
-  contractorType: z.literal('personaFisica'),
-  firstName: z.string().min(1, 'Il nome è obbligatorio'),
-  lastName: z.string().min(1, 'Il cognome è obbligatorio'),
-  fiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
-  birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
-  birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
-  birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+// Base schema with common fields
+const baseContractSchema = z.object({
   address: z.string().min(1, "L'indirizzo è obbligatorio"),
   city: z.string().min(1, 'La città è obbligatoria'),
   province: z.string().min(1, 'La provincia è obbligatoria'),
@@ -44,23 +37,29 @@ const personaFisicaSchema = z.object({
   email: z.string().email('Email non valida'),
 });
 
+// Define form schema for persona fisica
+const personaFisicaSchema = z.object({
+  contractorType: z.literal('personaFisica'),
+  firstName: z.string().min(1, 'Il nome è obbligatorio'),
+  lastName: z.string().min(1, 'Il cognome è obbligatorio'),
+  fiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
+  birthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
+  birthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
+  birthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
+}).merge(baseContractSchema);
+
+// Define form schema for persona giuridica
 const personaGiuridicaSchema = z.object({
   contractorType: z.literal('personaGiuridica'),
   companyName: z.string().min(1, 'La ragione sociale è obbligatoria'),
   vatNumber: z.string().min(11, 'La partita IVA deve essere di 11 caratteri').max(11),
-  address: z.string().min(1, "L'indirizzo è obbligatorio"),
-  city: z.string().min(1, 'La città è obbligatoria'),
-  province: z.string().min(1, 'La provincia è obbligatoria'),
-  zipCode: z.string().min(1, 'Il CAP è obbligatorio'),
-  phone: z.string().min(1, 'Il telefono è obbligatorio'),
-  email: z.string().email('Email non valida'),
   legalRepFirstName: z.string().min(1, 'Il nome del rappresentante legale è obbligatorio'),
   legalRepLastName: z.string().min(1, 'Il cognome del rappresentante legale è obbligatorio'),
   legalRepFiscalCode: z.string().min(16, 'Il codice fiscale deve essere di 16 caratteri').max(16),
   legalRepBirthDate: z.string().min(1, 'La data di nascita è obbligatoria'),
   legalRepBirthPlace: z.string().min(1, 'Il luogo di nascita è obbligatorio'),
   legalRepBirthProvince: z.string().min(1, 'La provincia di nascita è obbligatoria'),
-});
+}).merge(baseContractSchema);
 
 // Schema for pricing configuration
 const pricingSchema = z.object({
@@ -87,7 +86,7 @@ const contractTermsSchema = z.object({
   clausoleSpeciali: z.string().optional(),
 });
 
-// Combine schemas
+// Combine schemas with discriminated union
 const formSchema = z.discriminatedUnion('contractorType', [
   personaFisicaSchema,
   personaGiuridicaSchema
@@ -120,7 +119,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
       tempiConsegna: '30',
       garanzia: '24 Mesi',
       selectedAccessories: []
-    }
+    } as ContractFormValues
   });
 
   const { handleSubmit, setValue, watch, register, formState: { errors }, reset } = methods;
@@ -158,10 +157,10 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
       // Handle customer details if available
       if (quote.customerName) {
         const nameParts = quote.customerName.split(' ');
-        if (nameParts.length > 1) {
+        if (nameParts.length > 1 && contractorType === 'personaFisica') {
           setValue('firstName', nameParts[0]);
           setValue('lastName', nameParts.slice(1).join(' '));
-        } else {
+        } else if (contractorType === 'personaFisica') {
           setValue('firstName', quote.customerName);
         }
       }
@@ -197,7 +196,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
         setValue('safetyKitAmount', quote.safetyKit.toString());
       }
     }
-  }, [quote, setValue]);
+  }, [quote, setValue, contractorType]);
 
   // Reset form when dialog is closed
   useEffect(() => {
@@ -342,7 +341,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="firstName">Nome</Label>
                               <Input id="firstName" {...register('firstName')} />
-                              {errors.firstName && (
+                              {contractorType === 'personaFisica' && errors.firstName && (
                                 <p className="text-red-500 text-sm">{errors.firstName.message}</p>
                               )}
                             </div>
@@ -350,7 +349,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="lastName">Cognome</Label>
                               <Input id="lastName" {...register('lastName')} />
-                              {errors.lastName && (
+                              {contractorType === 'personaFisica' && errors.lastName && (
                                 <p className="text-red-500 text-sm">{errors.lastName.message}</p>
                               )}
                             </div>
@@ -358,7 +357,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="fiscalCode">Codice Fiscale</Label>
                               <Input id="fiscalCode" {...register('fiscalCode')} />
-                              {errors.fiscalCode && (
+                              {contractorType === 'personaFisica' && errors.fiscalCode && (
                                 <p className="text-red-500 text-sm">{errors.fiscalCode.message}</p>
                               )}
                             </div>
@@ -366,7 +365,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthDate">Data di Nascita</Label>
                               <Input id="birthDate" type="date" {...register('birthDate')} />
-                              {errors.birthDate && (
+                              {contractorType === 'personaFisica' && errors.birthDate && (
                                 <p className="text-red-500 text-sm">{errors.birthDate.message}</p>
                               )}
                             </div>
@@ -374,7 +373,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthPlace">Luogo di Nascita</Label>
                               <Input id="birthPlace" {...register('birthPlace')} />
-                              {errors.birthPlace && (
+                              {contractorType === 'personaFisica' && errors.birthPlace && (
                                 <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
                               )}
                             </div>
@@ -382,7 +381,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="birthProvince">Provincia di Nascita</Label>
                               <Input id="birthProvince" {...register('birthProvince')} />
-                              {errors.birthProvince && (
+                              {contractorType === 'personaFisica' && errors.birthProvince && (
                                 <p className="text-red-500 text-sm">{errors.birthProvince.message}</p>
                               )}
                             </div>
@@ -446,7 +445,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="companyName">Ragione Sociale</Label>
                               <Input id="companyName" {...register('companyName')} />
-                              {errors.companyName && (
+                              {contractorType === 'personaGiuridica' && errors.companyName && (
                                 <p className="text-red-500 text-sm">{errors.companyName.message}</p>
                               )}
                             </div>
@@ -454,7 +453,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="vatNumber">Partita IVA</Label>
                               <Input id="vatNumber" {...register('vatNumber')} />
-                              {errors.vatNumber && (
+                              {contractorType === 'personaGiuridica' && errors.vatNumber && (
                                 <p className="text-red-500 text-sm">{errors.vatNumber.message}</p>
                               )}
                             </div>
@@ -518,7 +517,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFirstName">Nome</Label>
                               <Input id="legalRepFirstName" {...register('legalRepFirstName')} />
-                              {errors.legalRepFirstName && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepFirstName && (
                                 <p className="text-red-500 text-sm">{errors.legalRepFirstName.message}</p>
                               )}
                             </div>
@@ -526,7 +525,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepLastName">Cognome</Label>
                               <Input id="legalRepLastName" {...register('legalRepLastName')} />
-                              {errors.legalRepLastName && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepLastName && (
                                 <p className="text-red-500 text-sm">{errors.legalRepLastName.message}</p>
                               )}
                             </div>
@@ -534,7 +533,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepFiscalCode">Codice Fiscale</Label>
                               <Input id="legalRepFiscalCode" {...register('legalRepFiscalCode')} />
-                              {errors.legalRepFiscalCode && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepFiscalCode && (
                                 <p className="text-red-500 text-sm">{errors.legalRepFiscalCode.message}</p>
                               )}
                             </div>
@@ -542,7 +541,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthDate">Data di Nascita</Label>
                               <Input id="legalRepBirthDate" type="date" {...register('legalRepBirthDate')} />
-                              {errors.legalRepBirthDate && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthDate && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthDate.message}</p>
                               )}
                             </div>
@@ -550,7 +549,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthPlace">Luogo di Nascita</Label>
                               <Input id="legalRepBirthPlace" {...register('legalRepBirthPlace')} />
-                              {errors.legalRepBirthPlace && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthPlace && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthPlace.message}</p>
                               )}
                             </div>
@@ -558,7 +557,7 @@ const QuoteContractDialog: React.FC<QuoteContractDialogProps> = ({
                             <div className="space-y-2">
                               <Label htmlFor="legalRepBirthProvince">Provincia di Nascita</Label>
                               <Input id="legalRepBirthProvince" {...register('legalRepBirthProvince')} />
-                              {errors.legalRepBirthProvince && (
+                              {contractorType === 'personaGiuridica' && errors.legalRepBirthProvince && (
                                 <p className="text-red-500 text-sm">{errors.legalRepBirthProvince.message}</p>
                               )}
                             </div>
