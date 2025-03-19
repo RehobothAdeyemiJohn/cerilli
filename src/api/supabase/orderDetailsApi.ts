@@ -4,6 +4,54 @@ import { v4 as uuidv4 } from 'uuid';
 import { OrderDetails } from '@/types';
 
 export const orderDetailsApi = {
+  getAll: async (): Promise<OrderDetails[]> => {
+    console.log("Fetching all order details from Supabase");
+    
+    try {
+      const { data, error } = await supabase
+        .from('order_details')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching all order details:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log("No order details found in database");
+        return [];
+      }
+      
+      // Map data to OrderDetails objects
+      const orderDetails = data.map(item => ({
+        id: item.id,
+        orderId: item.order_id,
+        previousChassis: item.previous_chassis,
+        chassis: item.chassis,
+        isLicensable: item.is_licensable === true,
+        hasProforma: item.has_proforma === true,
+        isPaid: item.is_paid === true,
+        paymentDate: item.payment_date,
+        isInvoiced: item.is_invoiced === true,
+        invoiceNumber: item.invoice_number,
+        invoiceDate: item.invoice_date,
+        hasConformity: item.has_conformity === true,
+        fundingType: item.funding_type,
+        transportCosts: item.transport_costs,
+        restorationCosts: item.restoration_costs,
+        odlGenerated: item.odl_generated === true,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      } as OrderDetails));
+      
+      console.log(`Retrieved ${orderDetails.length} order details:`, orderDetails);
+      return orderDetails;
+    } catch (error) {
+      console.error('Unexpected error fetching all order details:', error);
+      throw error;
+    }
+  },
+  
   getByOrderId: async (orderId: string): Promise<OrderDetails | null> => {
     console.log("Fetching order details for order ID:", orderId);
     

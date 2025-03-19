@@ -18,7 +18,7 @@ export const useOrdersData = (filters: {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const location = useLocation();
 
-  // Fetch base orders data with more frequent updates
+  // Fetch base orders data with frequent updates
   const {
     data: ordersData = [],
     isLoading: isLoadingOrders,
@@ -28,7 +28,7 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 500, // Refetch every 0.5 seconds
+    refetchInterval: 300, // Refetch every 0.3 seconds
     refetchOnWindowFocus: true,
     retry: 5, // Retry 5 times before failing
   });
@@ -56,130 +56,106 @@ export const useOrdersData = (filters: {
     };
   };
 
-  // Fetch order details for each order
-  const fetchOrderDetails = async (orders: Order[]) => {
-    console.log(`Fetching details for ${orders.length} orders`);
-    
-    const ordersWithDetailsFull = await Promise.all(
-      orders.map(async (order) => {
-        try {
-          const details = await orderDetailsApi.getByOrderId(order.id);
-          console.log(`Details for order ${order.id}:`, details);
-          
-          // Check for valid details structure or create default if malformed
-          if (details) {
-            // Create a normalized details object
-            let normalizedDetails: OrderDetails | null = null;
-            
-            if (typeof details === 'object') {
-              // Check if it's the malformed structure with _type and value properties
-              const detailsAny = details as any;
-              if (detailsAny._type === "undefined" && detailsAny.value === "undefined") {
-                console.log(`Found malformed details for order ${order.id} with _type and value both "undefined"`);
-                normalizedDetails = createDefaultOrderDetails(order.id);
-              } 
-              // Case 1: details is already a valid OrderDetails object
-              else if ('odlGenerated' in details) {
-                normalizedDetails = details as OrderDetails;
-              }
-              // Case 2: details has a nested value property
-              else if (detailsAny.value && 
-                      typeof detailsAny.value === 'object' && 
-                      'odlGenerated' in detailsAny.value) {
-                normalizedDetails = detailsAny.value as OrderDetails;
-              }
-              // Any other unhandled format
-              else {
-                console.log(`Unrecognized details format for order ${order.id}:`, details);
-                normalizedDetails = createDefaultOrderDetails(order.id);
-              }
-            }
-            
-            return {
-              ...order,
-              details: normalizedDetails
-            };
-          } else {
-            console.log(`Missing details for order ${order.id}`);
-            return {
-              ...order,
-              details: null
-            };
-          }
-        } catch (error) {
-          console.error(`Error fetching details for order ${order.id}:`, error);
-          return {
-            ...order,
-            details: null
-          };
-        }
-      })
-    );
-    
-    return ordersWithDetailsFull;
+  // Fetch order details directly from the orderDetailsApi
+  const fetchOrderDetails = async () => {
+    console.log("Fetching all order details directly from orderDetailsApi");
+    try {
+      const allOrderDetails = await orderDetailsApi.getAll();
+      console.log("All order details retrieved:", allOrderDetails);
+      return allOrderDetails;
+    } catch (error) {
+      console.error("Error fetching all order details:", error);
+      return [];
+    }
   };
 
+  // First query: Get all order details directly
   const { 
-    data: ordersWithDetails = [], 
-    isLoading: isLoadingDetails,
-    error: detailsError,
-    refetch: refetchOrdersWithDetails 
+    data: allOrderDetails = [],
+    isLoading: isLoadingAllDetails,
+    error: allDetailsError,
+    refetch: refetchAllOrderDetails
   } = useQuery({
-    queryKey: ['ordersWithDetails'],
-    queryFn: () => fetchOrderDetails(ordersData),
-    enabled: ordersData.length > 0,
+    queryKey: ['allOrderDetails'],
+    queryFn: fetchOrderDetails,
     staleTime: 0,
-    refetchInterval: 500, // Refetch every 0.5 seconds
+    refetchInterval: 300, // Refetch every 0.3 seconds
   });
+
+  // Function to combine orders with their details
+  const combineOrdersWithDetails = (orders: Order[], details: OrderDetails[]) => {
+    console.log(`Combining ${orders.length} orders with ${details.length} details`);
+    
+    return orders.map(order => {
+      // Find matching details for this order
+      const orderDetail = details.find(detail => detail.orderId === order.id);
+      
+      if (orderDetail) {
+        console.log(`Found details for order ${order.id}:`, orderDetail);
+        return {
+          ...order,
+          details: orderDetail
+        };
+      } else {
+        console.log(`No details found for order ${order.id}, creating default`);
+        return {
+          ...order,
+          details: null
+        };
+      }
+    });
+  };
+
+  // Combine orders with details
+  const ordersWithDetails = combineOrdersWithDetails(ordersData, allOrderDetails);
 
   // Effect to refresh data when dialog closes
   useEffect(() => {
     if (!isDetailsDialogOpen) {
       console.log('OrderDetailsDialog closed, refreshing orders data');
       refetchOrders();
-      if (ordersData.length > 0) {
-        refetchOrdersWithDetails();
-      }
+      refetchAllOrderDetails();
     }
-  }, [isDetailsDialogOpen, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
+  }, [isDetailsDialogOpen, refetchOrders, refetchAllOrderDetails]);
 
   // Effect to refresh data when we navigate to the orders page
   useEffect(() => {
     if (location.pathname === '/orders') {
       console.log('Orders page navigated to, refreshing orders data');
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
+      queryClient.invalidateQueries({ queryKey: ['allOrderDetails'] });
       
       // Force immediate refetch
       refetchOrders();
-      if (ordersData.length > 0) {
-        refetchOrdersWithDetails();
-      }
+      refetchAllOrderDetails();
     }
-  }, [location.pathname, queryClient, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
+  }, [location.pathname, queryClient, refetchOrders, refetchAllOrderDetails]);
 
   // Add an additional effect to periodically refresh data on the orders page with higher frequency
   useEffect(() => {
     if (location.pathname === '/orders') {
       const intervalId = setInterval(() => {
-        console.log('Periodic refresh of orders data');
+        console.log('Periodic refresh of orders and details data');
         queryClient.invalidateQueries({ queryKey: ['orders'] });
+        queryClient.invalidateQueries({ queryKey: ['allOrderDetails'] });
         refetchOrders();
+        refetchAllOrderDetails();
       }, 250); // Refresh every 0.25 seconds
       
       return () => clearInterval(intervalId);
     }
-  }, [location.pathname, queryClient, refetchOrders]);
+  }, [location.pathname, queryClient, refetchOrders, refetchAllOrderDetails]);
 
   // Function to invalidate and refresh all order-related data
   const refreshAllOrderData = () => {
     console.log("Manual refresh of all order data requested");
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['allOrderDetails'] });
     queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
     queryClient.invalidateQueries({ queryKey: ['dealers'] });
     refetchOrders();
-    refetchOrdersWithDetails();
+    refetchAllOrderDetails();
   };
 
   // Filter orders based on specified criteria
@@ -255,13 +231,13 @@ export const useOrdersData = (filters: {
     deliveredOrders,
     cancelledOrders,
     allOrders,
-    isLoading: isLoadingOrders || isLoadingDetails,
-    error: ordersError || detailsError,
+    isLoading: isLoadingOrders || isLoadingAllDetails,
+    error: ordersError || allDetailsError,
     refreshAllOrderData,
     isDetailsDialogOpen,
     setIsDetailsDialogOpen,
     refetchOrders,
-    refetchOrdersWithDetails,
+    refetchAllOrderDetails,
     getOrderNumber
   };
 };
