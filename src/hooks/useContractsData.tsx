@@ -1,89 +1,81 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { dealerContractsApi } from '@/api/supabase/dealerContractsApi';
 import { DealerContract, Order } from '@/types';
+import { dealerContractsApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export const useContractsData = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.type === 'admin';
   const queryClient = useQueryClient();
   const [selectedContract, setSelectedContract] = useState<DealerContract | null>(null);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contractToDelete, setContractToDelete] = useState<string | null>(null);
-  
-  // Fetch contracts data
-  const {
-    data: contracts = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['dealerContracts'],
-    queryFn: dealerContractsApi.getAll,
-    staleTime: 0,
+
+  // Fetch contracts
+  const { data: contracts = [], isLoading, error } = useQuery({
+    queryKey: ['contracts'],
+    queryFn: dealerContractsApi.getAll
   });
 
-  // Create contract from order
+  // Create contract mutation
   const createContractMutation = useMutation({
-    mutationFn: async ({ orderId, contractDetails }: { orderId: string, contractDetails: any }) => {
-      return dealerContractsApi.createFromOrder(orderId, contractDetails);
+    mutationFn: (order: Order) => {
+      return dealerContractsApi.createFromOrder(order);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dealerContracts'] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast({
-        title: "Contratto creato",
-        description: "Il contratto è stato creato con successo",
+        title: 'Contract Created',
+        description: 'Contract has been created successfully.',
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error creating contract:', error);
       toast({
-        title: "Errore",
-        description: error.message || "Si è verificato un errore durante la creazione del contratto",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to create contract.',
+        variant: 'destructive',
       });
     }
   });
 
-  // Delete contract
+  // Delete contract mutation
   const deleteContractMutation = useMutation({
-    mutationFn: (contractId: string) => dealerContractsApi.delete(contractId),
+    mutationFn: (contractId: string) => {
+      return dealerContractsApi.delete(contractId);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dealerContracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast({
-        title: "Contratto eliminato",
-        description: "Il contratto è stato eliminato con successo",
+        title: 'Contract Deleted',
+        description: 'Contract has been deleted successfully.',
       });
+      setDeleteDialogOpen(false);
       setContractToDelete(null);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error deleting contract:', error);
       toast({
-        title: "Errore",
-        description: error.message || "Si è verificato un errore durante l'eliminazione del contratto",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to delete contract.',
+        variant: 'destructive',
       });
     }
   });
 
   const handleViewDetails = (contract: DealerContract) => {
     setSelectedContract(contract);
-    setIsDetailsDialogOpen(true);
-  };
-
-  const handleCreateContract = (order: Order, contractDetails: any) => {
-    createContractMutation.mutate({ 
-      orderId: order.id, 
-      contractDetails 
-    });
   };
 
   const handleDeleteContract = (contractId: string) => {
     setContractToDelete(contractId);
+    setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteContract = () => {
+  const handleDeleteConfirm = () => {
     if (contractToDelete) {
       deleteContractMutation.mutate(contractToDelete);
     }
@@ -92,16 +84,17 @@ export const useContractsData = () => {
   return {
     contracts,
     isLoading,
-    error,
-    refetch,
+    error: error as Error,
     selectedContract,
-    isDetailsDialogOpen,
-    setIsDetailsDialogOpen,
+    setSelectedContract,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
     handleViewDetails,
-    handleCreateContract,
     handleDeleteContract,
-    confirmDeleteContract,
-    isCreatingContract: createContractMutation.isPending,
-    isDeletingContract: deleteContractMutation.isPending
+    handleDeleteConfirm,
+    createContract: createContractMutation.mutate,
+    isContractSubmitting: createContractMutation.isPending,
+    deleteContractPending: deleteContractMutation.isPending,
+    isAdmin
   };
 };

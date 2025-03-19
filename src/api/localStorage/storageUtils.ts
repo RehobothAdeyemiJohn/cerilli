@@ -1,4 +1,3 @@
-
 export const initLocalStorage = () => {
   if (typeof localStorage === 'undefined') {
     return;
@@ -61,4 +60,9 @@ export const setStorageItem = <T>(key: string, data: T): void => {
   } catch (error) {
     console.error(`Error storing item in localStorage (${key}):`, error);
   }
+};
+
+export const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 15) + 
+         Math.random().toString(36).substring(2, 15);
 };

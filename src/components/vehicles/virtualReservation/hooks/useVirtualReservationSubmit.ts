@@ -1,32 +1,21 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UseFormReturn } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { ordersApi, vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Vehicle, Order } from '@/types';
 import { VirtualReservationFormValues } from '../schema';
 
-interface UseVirtualReservationSubmitProps {
-  form: UseFormReturn<VirtualReservationFormValues>;
-  vehicle: Vehicle;
-  calculatedPrice: number;
-  onClose: () => void;
-  dealers: { id: string; companyName: string }[];
-  accessoriesTotal: number;
-  selectedAccessories: string[];
-}
-
-export const useVirtualReservationSubmit = ({
-  form,
-  vehicle,
-  calculatedPrice,
-  onClose,
-  dealers,
-  accessoriesTotal,
-  selectedAccessories
-}: UseVirtualReservationSubmitProps) => {
+export const useVirtualReservationSubmit = (
+  vehicle: Vehicle,
+  isAdmin: boolean,
+  dealerId: string,
+  dealerName: string,
+  onClose: () => void,
+  calculatedPrice: number,
+  dealers: { id: string; companyName: string; nuovoPlafond?: number }[]
+) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -84,15 +73,15 @@ export const useVirtualReservationSubmit = ({
         ...vehicle,
         status: 'reserved',
         reservedBy: values.dealerId,
-        reservedAccessories: selectedAccessories,
-        reservationDestination: values.destination || undefined,
+        reservedAccessories: values.accessories || [],
+        reservationDestination: values.reservationDestination,
         reservationTimestamp: new Date().toISOString(),
         virtualConfig: {
           trim: values.trim || '',
           fuelType: values.fuelType || '',
           exteriorColor: values.exteriorColor || '',
           transmission: values.transmission || '',
-          accessories: selectedAccessories,
+          accessories: values.accessories || [],
           price: calculatedPrice
         }
       };
@@ -104,8 +93,8 @@ export const useVirtualReservationSubmit = ({
       const orderData = {
         vehicleId: vehicle.id,
         dealerId: values.dealerId,
-        customerName: values.customer || 'Cliente da confermare',
-        status: 'processing' as 'processing' | 'delivered' | 'cancelled', // Fixed typecasting
+        customerName: 'Cliente da confermare',
+        status: 'processing' as const, // Fixed typecasting
         orderDate: new Date().toISOString(),
         price: calculatedPrice,
         dealerName: dealer.companyName,
@@ -135,7 +124,7 @@ export const useVirtualReservationSubmit = ({
   };
   
   return {
-    handleSubmit: form.handleSubmit(handleSubmit),
+    handleSubmit,
     isSubmitting: isSubmitting || createOrderMutation.isPending || updateVehicleMutation.isPending
   };
 };

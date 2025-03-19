@@ -7,6 +7,7 @@ import { adminUsersApi } from './adminUsersApi';
 import { defectReportsApi } from './defectReportsApi';
 import { dealerContractsApi } from './dealerContractsApi';
 import { settingsApi } from './settingsApi';
+import { accessoriesApi } from './accessoriesApi';
 
 export {
   vehiclesApi,
@@ -16,5 +17,6 @@ export {
   adminUsersApi,
   defectReportsApi,
   dealerContractsApi,
-  settingsApi
+  settingsApi,
+  accessoriesApi
 };

@@ -1,30 +1,30 @@
 
 import React from 'react';
 import { useComprehensiveQuotesData } from '@/hooks/useComprehensiveQuotesData';
-import QuotesHeader from '@/components/quotes/QuotesHeader';
+import { QuotesHeaderAdapter } from '@/components/quotes/QuotesHeaderAdapter';
 import QuotesFilters from '@/components/quotes/QuotesFilters';
-import QuotesTabs from '@/components/quotes/QuotesTabs';
-import QuotesPagination from '@/components/quotes/QuotesPagination';
-import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
-import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
-import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
-import QuoteForm from '@/components/quotes/QuoteForm';
-import QuoteContractDialog from '@/components/quotes/QuoteContractDialog';
-import { useAuth } from '@/context/AuthContext';
-import { Helmet } from 'react-helmet';
-import { Quote } from '@/types';
+import QuotesTable from '@/components/quotes/QuotesTable';
+import { QuotesPaginationAdapter } from '@/components/quotes/QuotesPaginationAdapter';
+import { 
+  QuoteDetailsDialogAdapter, 
+  QuoteRejectDialogAdapter, 
+  QuoteDeleteDialogAdapter, 
+  QuoteFormAdapter, 
+  QuoteContractDialogAdapter 
+} from '@/components/quotes/QuotesDialogAdapters';
 
 const Quotes = () => {
-  // Use our comprehensive quotes data hook
   const quotesData = useComprehensiveQuotesData();
   
-  // Destructure all the properties and methods we need
   const {
-    quotes,
-    isLoading,
-    error,
+    // Pagination
+    currentPage,
+    totalPages,
+    paginatedQuotes,
+    itemsPerPage,
+    setItemsPerPage,
     
-    // UI state
+    // Filters
     activeTab,
     setActiveTab,
     filterDealer,
@@ -33,37 +33,29 @@ const Quotes = () => {
     setFilterModel,
     searchQuery,
     setSearchQuery,
-    currentPage,
-    setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
+    
+    // Reference data
+    dealers,
+    statusCounts,
+    
+    // Selected and state
+    selectedQuote,
     selectedVehicleId,
-    setSelectedVehicleId,
-    createDialogOpen,
-    setCreateDialogOpen,
+    isManualQuote,
+    
+    // Dialog controls
     viewDialogOpen,
     setViewDialogOpen,
     rejectDialogOpen,
     setRejectDialogOpen,
     deleteDialogOpen,
     setDeleteDialogOpen,
-    
-    // Derived data
-    selectedVehicle,
-    isManualQuote,
-    setIsManualQuote,
-    
-    // Computed values
-    filteredQuotes,
-    vehicles,
-    dealers,
-    models,
-    statusCounts,
-    totalPages,
-    paginatedQuotes,
+    createDialogOpen,
+    setCreateDialogOpen,
+    contractDialogOpen,
+    setContractDialogOpen,
     
     // Helper functions
-    getVehicleById,
     getDealerName,
     getShortId,
     formatDate,
@@ -80,127 +72,111 @@ const Quotes = () => {
     handleNextPage,
     handleOpenCreateQuoteDialog,
     handleConvertToContract,
-    handleUpdateQuote,
     
-    // Other
-    selectedQuote,
-    isDeleteDialogOpen,
-    isContractDialogOpen,
-    setIsContractDialogOpen,
+    // Mutation states
+    isDeletePending,
     isContractSubmitting,
-    handleCloseContractDialog,
-    handleCreateContract
+    
+    // User info
+    isAdmin
   } = quotesData;
   
-  // Get user role for permission checks
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
+  if (quotesData.isLoading) {
+    return <div>Loading quotes...</div>;
+  }
   
-  // Handle custom quote click
-  const handleAddCustomQuoteClick = () => {
-    handleOpenCreateQuoteDialog('', true);
-  };
-  
-  // Modified delete handler for the QuotesTable component
-  const handleQuoteDelete = (quote: Quote) => {
-    handleDeleteClick(quote);
-  };
+  if (quotesData.error) {
+    return <div>Error: {quotesData.error.message}</div>;
+  }
   
   return (
-    <>
-      <Helmet>
-        <title>Preventivi - Cirelli Motor Company</title>
-      </Helmet>
+    <div className="container mx-auto p-4 bg-white rounded-lg">
+      <QuotesHeaderAdapter onAddCustomQuote={handleOpenCreateQuoteDialog} />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Header with title and actions */}
-        <QuotesHeader 
-          onAddCustomQuote={handleAddCustomQuoteClick}
-        />
-        
-        {/* Filters section */}
+      <div className="mb-6">
         <QuotesFilters 
-          dealers={dealers}
-          models={models}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
           filterDealer={filterDealer}
           setFilterDealer={setFilterDealer}
           filterModel={filterModel}
           setFilterModel={setFilterModel}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-        />
-        
-        {/* Tabs and table */}
-        <QuotesTabs 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          dealers={dealers}
+          models={quotesData.models}
           statusCounts={statusCounts}
-          filteredQuotes={paginatedQuotes}
-          getVehicleById={getVehicleById}
+        />
+      </div>
+      
+      <div className="overflow-x-auto">
+        <QuotesTable 
+          quotes={paginatedQuotes}
+          onViewQuote={handleViewQuote}
+          onDeleteQuote={handleDeleteClick}
+          onUpdateStatus={handleUpdateStatus}
+          onConvertToContract={handleConvertToContract}
           getDealerName={getDealerName}
           getShortId={getShortId}
-          getStatusBadgeClass={getStatusBadgeClass}
           formatDate={formatDate}
-          handleViewQuote={handleViewQuote}
-          handleUpdateStatus={handleUpdateStatus}
-          handleDeleteClick={handleQuoteDelete}
+          getStatusBadgeClass={getStatusBadgeClass}
+          isAdmin={isAdmin}
         />
-        
-        {/* Pagination */}
-        {filteredQuotes.length > itemsPerPage && (
-          <QuotesPagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={handlePrevPage}
-            onNextPage={handleNextPage}
-            itemsPerPage={itemsPerPage}
-            setItemsPerPage={setItemsPerPage}
-          />
-        )}
-        
-        {/* View quote dialog */}
-        <QuoteDetailsDialog 
+      </div>
+      
+      <div className="mt-4">
+        <QuotesPaginationAdapter
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPrevPage={handlePrevPage}
+          onNextPage={handleNextPage}
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
+        />
+      </div>
+      
+      {/* Dialog components */}
+      {selectedQuote && (
+        <QuoteDetailsDialogAdapter
           isOpen={viewDialogOpen}
           onClose={() => setViewDialogOpen(false)}
           quote={selectedQuote}
           onUpdateStatus={handleUpdateStatus}
           onConvertToContract={handleConvertToContract}
         />
-        
-        {/* Reject quote dialog */}
-        <QuoteRejectDialog 
-          isOpen={rejectDialogOpen}
-          onClose={() => setRejectDialogOpen(false)}
-          onConfirm={handleRejectQuote}
-        />
-        
-        {/* Delete quote dialog */}
-        <QuoteDeleteDialog 
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-          onConfirm={handleDeleteQuote}
-          isPending={isLoading}
-        />
-        
-        {/* Create quote dialog */}
-        <QuoteForm 
-          isOpen={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          vehicleId={selectedVehicleId}
-          isManualQuote={isManualQuote}
-          onCreateQuote={handleCreateQuote}
-        />
-        
-        {/* Contract creation dialog */}
-        <QuoteContractDialog 
-          isOpen={isContractDialogOpen}
-          onClose={handleCloseContractDialog}
+      )}
+      
+      <QuoteRejectDialogAdapter
+        isOpen={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        onConfirm={handleRejectQuote}
+      />
+      
+      <QuoteDeleteDialogAdapter
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteQuote}
+        isPending={isDeletePending}
+      />
+      
+      <QuoteFormAdapter
+        isOpen={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        vehicleId={selectedVehicleId}
+        isManualQuote={isManualQuote}
+        onCreateQuote={handleCreateQuote}
+      />
+      
+      {selectedQuote && (
+        <QuoteContractDialogAdapter
+          isOpen={contractDialogOpen}
+          onClose={() => setContractDialogOpen(false)}
           quote={selectedQuote}
-          onCreateContract={handleCreateContract}
+          onCreateContract={() => handleConvertToContract(selectedQuote)}
           isSubmitting={isContractSubmitting}
         />
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
