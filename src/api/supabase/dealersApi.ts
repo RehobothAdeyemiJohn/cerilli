@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -30,7 +29,8 @@ export const dealersApi = {
       createdAt: dealer.created_at,
       isActive: dealer.isactive,
       logo: dealer.logo,
-      creditLimit: dealer.credit_limit
+      creditLimit: dealer.credit_limit,
+      nuovoPlafond: dealer.nuovo_plafond
     })) as Dealer[];
     
     // Fetch all orders for each dealer (especially important for delivered ones)
@@ -90,7 +90,8 @@ export const dealersApi = {
       createdAt: data.created_at,
       isActive: data.isactive,
       logo: data.logo,
-      creditLimit: data.credit_limit
+      creditLimit: data.credit_limit,
+      nuovoPlafond: data.nuovo_plafond
     } as Dealer;
     
     // Fetch all orders for this dealer to calculate plafond correctly
