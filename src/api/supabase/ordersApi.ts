@@ -92,6 +92,38 @@ const mapOrderDbToFrontend = (order: any): Order => {
   };
 };
 
+// Helper function to map frontend order to database format
+const mapOrderFrontendToDb = (order: Partial<Order>) => {
+  return {
+    vehicle_id: order.vehicleId,
+    dealer_id: order.dealerId,
+    customer_name: order.customerName,
+    status: order.status,
+    order_date: order.orderDate,
+    delivery_date: order.deliveryDate,
+    price: order.price, 
+    dealer_name: order.dealerName,
+    model_name: order.modelName,
+    plafond_dealer: order.plafondDealer,
+    
+    // Map camelCase fields to snake_case database columns
+    is_licensable: order.isLicensable,
+    has_proforma: order.hasProforma,
+    is_paid: order.isPaid,
+    payment_date: order.paymentDate,
+    is_invoiced: order.isInvoiced,
+    invoice_number: order.invoiceNumber,
+    invoice_date: order.invoiceDate,
+    has_conformity: order.hasConformity,
+    previous_chassis: order.previousChassis,
+    chassis: order.chassis,
+    transport_costs: order.transportCosts,
+    restoration_costs: order.restorationCosts,
+    funding_type: order.fundingType,
+    odl_generated: order.odlGenerated
+  };
+};
+
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
@@ -189,35 +221,35 @@ export const ordersApi = {
       }
     }
     
-    // Map frontend field names to database column names
-    const newOrder = {
-      vehicle_id: order.vehicleId,
-      dealer_id: order.dealerId,
-      customer_name: order.customerName,
-      status: order.status,
-      order_date: order.orderDate || new Date().toISOString(),
-      delivery_date: order.deliveryDate,
-      price: order.price || 0,
-      dealer_name: dealerName || order.dealerName || order.customerName,
-      model_name: modelName || order.modelName,
-      plafond_dealer: dealerPlafond,
-      
-      // Campi di order_details con valori predefiniti
-      is_licensable: false,
-      has_proforma: false,
-      is_paid: false,
-      is_invoiced: false,
-      has_conformity: false,
-      odl_generated: false,
-      transport_costs: 0,
-      restoration_costs: 0
+    // Prepare order data with default values for required fields
+    const orderData = {
+      ...order,
+      dealerName: dealerName || order.dealerName || order.customerName,
+      modelName: modelName || order.modelName,
+      plafondDealer: dealerPlafond
     };
     
-    console.log("Formatted order for Supabase insert:", newOrder);
+    // Map frontend field names to database column names
+    const dbOrder = mapOrderFrontendToDb({
+      ...orderData,
+      // Set default values for non-nullable fields
+      orderDate: orderData.orderDate || new Date().toISOString(),
+      // Default values for boolean fields
+      isLicensable: false,
+      hasProforma: false,
+      isPaid: false,
+      isInvoiced: false,
+      hasConformity: false,
+      odlGenerated: false,
+      transportCosts: 0,
+      restorationCosts: 0
+    });
+    
+    console.log("Formatted order for Supabase insert:", dbOrder);
     
     const { data, error } = await supabase
       .from('orders')
-      .insert(newOrder)
+      .insert(dbOrder)
       .select()
       .single();
     
@@ -234,34 +266,7 @@ export const ordersApi = {
     console.log("Updating order in Supabase:", id, updates);
     
     // Map frontend field names to database column names
-    const dbUpdates: any = {
-      vehicle_id: updates.vehicleId,
-      dealer_id: updates.dealerId,
-      customer_name: updates.customerName,
-      status: updates.status,
-      order_date: updates.orderDate,
-      delivery_date: updates.deliveryDate,
-      price: updates.price,
-      dealer_name: updates.dealerName,
-      model_name: updates.modelName,
-      plafond_dealer: updates.plafondDealer,
-      
-      // Campi precedentemente in order_details
-      is_licensable: updates.isLicensable,
-      has_proforma: updates.hasProforma,
-      is_paid: updates.isPaid,
-      payment_date: updates.paymentDate,
-      is_invoiced: updates.isInvoiced,
-      invoice_number: updates.invoiceNumber,
-      invoice_date: updates.invoiceDate,
-      has_conformity: updates.hasConformity,
-      previous_chassis: updates.previousChassis,
-      chassis: updates.chassis,
-      transport_costs: updates.transportCosts,
-      restoration_costs: updates.restorationCosts,
-      funding_type: updates.fundingType,
-      odl_generated: updates.odlGenerated
-    };
+    const dbUpdates = mapOrderFrontendToDb(updates);
     
     // Remove undefined fields
     Object.keys(dbUpdates).forEach(key => {
