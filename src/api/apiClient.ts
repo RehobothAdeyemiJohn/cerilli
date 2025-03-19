@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Vehicle, Quote, Order } from '@/types';
 import { vehiclesApi as localVehiclesApi, quotesApi as localQuotesApi } from './localStorage';
@@ -68,7 +69,7 @@ export const quotesApi = isLovableProduction ? localQuotesApi : {
   }
 };
 
-// API for orders - always use Supabase implementation
+// API for orders - ALWAYS use Supabase implementation regardless of environment
 export const ordersApi = supabaseOrdersApi;
 
 export default apiClient;

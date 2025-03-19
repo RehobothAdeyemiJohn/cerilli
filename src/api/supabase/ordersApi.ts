@@ -68,113 +68,141 @@ const mapOrderDbToFrontend = (order: any): Order => {
     price: order.price,
     contractId: order.contract_id,
     // Include related data
-    vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : undefined,
-    dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : undefined
+    vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
+    dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : null
   };
 };
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    console.log("Fetching all orders from Supabase - Direct API call");
-    
-    // Get current user from localStorage since we can't use hooks in a regular function
-    const userJson = localStorage.getItem('currentUser');
-    const currentUser = userJson ? JSON.parse(userJson) : null;
+    console.log("Fetching all orders from Supabase");
     
     try {
-      console.log("Making direct call to Supabase to fetch orders");
-      
-      let query = supabase
+      // First try with the full join query
+      const { data, error } = await supabase
         .from('orders')
         .select('*, vehicles(*), dealers(*)');
       
-      // If user is a dealer, only show their orders
-      if (currentUser?.type === 'dealer') {
-        console.log("Filtering orders for dealer:", currentUser.dealerId);
-        query = query.eq('dealerid', currentUser.dealerId);
-      }
-      
-      console.log("Executing orders query directly to database...");
-      const { data, error } = await query;
-      
       if (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error with joined query:', error);
         throw error;
       }
 
-      console.log("Orders raw data from direct query:", data);
+      console.log("Raw orders data from database:", data);
       
       if (!data || data.length === 0) {
-        console.log("No orders found in database - trying with RPC function");
+        console.log("No orders found with joined query. Trying raw orders query.");
         
-        // Try to use the RPC function as a backup method
-        try {
-          const { data: tables } = await supabase.rpc('list_tables');
-          console.log("Available tables from RPC:", tables);
+        // Try to fetch just the orders without joins
+        const { data: rawOrdersData, error: rawError } = await supabase
+          .from('orders')
+          .select('*');
           
-          // Try to directly fetch orders without joins
-          const { data: rawOrders, error: rawError } = await supabase
-            .from('orders')
-            .select('*');
-            
-          if (rawError) {
-            console.error("Error with fallback query:", rawError);
-            return [];
-          }
-          
-          console.log("Raw orders (without joins):", rawOrders);
-          
-          if (rawOrders && rawOrders.length > 0) {
-            // We found orders but need to fetch related data
-            const ordersWithRelations = await Promise.all(
-              rawOrders.map(async (order) => {
-                // Fetch vehicle
-                const { data: vehicle } = await supabase
-                  .from('vehicles')
-                  .select('*')
-                  .eq('id', order.vehicleid)
-                  .single();
-                  
-                // Fetch dealer
-                const { data: dealer } = await supabase
-                  .from('dealers')
-                  .select('*')
-                  .eq('id', order.dealerid)
-                  .single();
-                  
-                return {
-                  ...order,
-                  vehicles: vehicle,
-                  dealers: dealer
-                };
-              })
-            );
-            
-            console.log("Orders with manually fetched relations:", ordersWithRelations);
-            
-            // Map the orders to frontend format
-            const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
-            console.log("Formatted orders from manual relations:", formattedOrders);
-            return formattedOrders;
-          }
-          
-          return [];
-        } catch (fallbackError) {
-          console.error("Fallback query failed:", fallbackError);
+        if (rawError) {
+          console.error('Error with raw orders query:', rawError);
+          throw rawError;
+        }
+        
+        console.log("Raw orders without joins:", rawOrdersData);
+        
+        if (!rawOrdersData || rawOrdersData.length === 0) {
+          console.log("No orders found at all. Returning empty array.");
           return [];
         }
+        
+        // We found some orders, but need to manually fetch the related data
+        const ordersWithRelations = await Promise.all(
+          rawOrdersData.map(async (order) => {
+            let vehicleData = null;
+            let dealerData = null;
+            
+            // Try to fetch the vehicle
+            if (order.vehicleid) {
+              const { data: vehicle } = await supabase
+                .from('vehicles')
+                .select('*')
+                .eq('id', order.vehicleid)
+                .maybeSingle();
+              
+              vehicleData = vehicle;
+            }
+            
+            // Try to fetch the dealer
+            if (order.dealerid) {
+              const { data: dealer } = await supabase
+                .from('dealers')
+                .select('*')
+                .eq('id', order.dealerid)
+                .maybeSingle();
+              
+              dealerData = dealer;
+            }
+            
+            // Return the order with manually fetched relations
+            return {
+              ...order,
+              vehicles: vehicleData,
+              dealers: dealerData
+            };
+          })
+        );
+        
+        console.log("Orders with manually fetched relations:", ordersWithRelations);
+        
+        // Map to frontend format
+        const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
+        return formattedOrders;
       }
 
-      console.log("Raw orders data from database:", data);
-
-      // Map database response to frontend types
+      // Map the orders from the joined query
       const formattedOrders = data.map(mapOrderDbToFrontend);
-
-      console.log("Orders fetched successfully:", formattedOrders);
+      console.log("Formatted orders:", formattedOrders);
       return formattedOrders;
     } catch (error) {
       console.error('Unexpected error fetching orders:', error);
-      throw error;
+      
+      // Last resort fallback - try a simple RPC call to list orders
+      try {
+        console.log("Trying fallback RPC call to list orders");
+        const { data: tables } = await supabase.rpc('list_tables');
+        console.log("Available tables:", tables);
+        
+        // Check if orders table is available
+        const hasOrdersTable = tables.some((t: any) => t.table_name === 'orders');
+        
+        if (hasOrdersTable) {
+          console.log("Orders table found, trying direct query without joins");
+          
+          // Try a direct query without any joins as a last resort
+          const { data: basicOrders } = await supabase
+            .from('orders')
+            .select('id, vehicleid, dealerid, customername, status, orderdate, deliverydate, progressive_number, price, contract_id');
+          
+          console.log("Basic orders query result:", basicOrders);
+          
+          if (basicOrders && basicOrders.length > 0) {
+            // Return a simplified version of the orders without relations
+            return basicOrders.map((order: any) => ({
+              id: order.id,
+              vehicleId: order.vehicleid,
+              dealerId: order.dealerid,
+              customerName: order.customername,
+              status: order.status || 'processing',
+              orderDate: order.orderdate,
+              deliveryDate: order.deliverydate,
+              progressiveNumber: order.progressive_number,
+              price: order.price,
+              contractId: order.contract_id
+            }));
+          }
+        }
+        
+        console.log("Could not fetch orders through any method. Returning empty array.");
+        return [];
+      } catch (fallbackError) {
+        console.error("Fallback query also failed:", fallbackError);
+        return [];
+      }
     }
   },
 

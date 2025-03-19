@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ordersApi } from '@/api/supabase/ordersApi';
+import { ordersApi } from '@/api/apiClient';
 import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { Order, OrderDetails } from '@/types';
 import { useLocation } from 'react-router-dom';
