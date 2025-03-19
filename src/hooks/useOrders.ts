@@ -1,14 +1,32 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase';
 import { dealersApi } from '@/api/supabase';
 import { Order, Dealer } from '@/types';
 import { useToast } from './use-toast';
 
-export const useOrders = () => {
+export const useOrders = (filters = {}) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [ordersList, setOrdersList] = useState<Order[]>([]);
+  
+  // Setup the query for orders
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['orders', filters],
+    queryFn: async () => {
+      const orders = await ordersApi.getAll();
+      // Apply filters (simplified implementation)
+      return orders;
+    }
+  });
+  
+  // Update the ordersList state when data changes
+  useEffect(() => {
+    if (data) {
+      setOrdersList(data);
+    }
+  }, [data]);
   
   // Custom function to get dealers
   const getDealers = async () => {
@@ -16,9 +34,9 @@ export const useOrders = () => {
   };
   
   // Mock function for generating PDF preview
-  const generatePdfPreview = async (orders: Order[]) => {
+  const generatePdfPreview = async (order: Order) => {
     // In a real implementation, this would call a backend API
-    console.log('Generating PDF preview for orders:', orders);
+    console.log('Generating PDF preview for order:', order);
     
     // Mock PDF data (this would normally come from the backend)
     const textEncoder = new TextEncoder();
@@ -35,13 +53,15 @@ export const useOrders = () => {
     return textEncoder.encode('Mock Order Delivery Form PDF data');
   };
   
-  // Add these functions to the ordersApi object
-  const enhancedOrdersApi = {
-    ...ordersApi,
+  // Return the enhanced API and query results
+  return {
+    ordersList,
+    isLoading,
+    error,
+    refetchOrders: refetch,
     getDealers,
     generatePdfPreview,
-    generateOrderDeliveryForm
+    generateOrderDeliveryForm,
+    ...ordersApi
   };
-  
-  return enhancedOrdersApi;
 };

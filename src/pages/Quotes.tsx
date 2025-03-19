@@ -184,9 +184,9 @@ const Quotes = () => {
       
       <div className="mt-6">
         <QuotesFilters 
-          status={activeTab}
+          activeStatus={activeTab}
           onStatusChange={setActiveTab}
-          dealerId={filterDealer}
+          selectedDealer={filterDealer}
           onDealerChange={setFilterDealer}
           searchText={searchText}
           onSearchChange={setSearchText}
@@ -198,13 +198,13 @@ const Quotes = () => {
         />
         
         <QuotesTable 
-          data={quotes}
-          loading={isLoading}
-          onView={handleViewQuote}
-          onDelete={handlePrepareDelete}
-          onStatusChange={handleUpdateStatus}
-          onReject={handlePrepareReject}
-          onContract={handlePrepareContract}
+          quotes={quotes}
+          isLoading={isLoading}
+          onViewQuote={handleViewQuote}
+          onDeleteQuote={handlePrepareDelete}
+          onUpdateStatus={handleUpdateStatus}
+          onRejectQuote={handlePrepareReject}
+          onConvertToContract={handlePrepareContract}
           date={filterDate}
           dealer={filterDealer}
           isAdmin={isAdmin}

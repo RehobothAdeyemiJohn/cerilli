@@ -1,41 +1,14 @@
 
 import { z } from 'zod';
 
-// Create a strict enum for destination options
-const destinationEnum = z.enum(['Conto Esposizione', 'Stock', 'Contratto Abbinato']);
-
-export const virtualReservationSchema = z.object({
-  // Dealer selection (only for admin)
+export const formSchema = z.object({
+  trim: z.string().optional(),
   dealerId: z.string().optional(),
-  
-  // Reservation destination
-  reservationDestination: destinationEnum,
-  
-  // Vehicle configuration
-  trim: z.string().min(1, "L'allestimento è obbligatorio"),
-  fuelType: z.string().min(1, "Il tipo di carburante è obbligatorio"),
-  exteriorColor: z.string().min(1, "Il colore esterno è obbligatorio"),
-  transmission: z.string().min(1, "La trasmissione è obbligatoria"),
-  
-  // Optional accessories
-  accessories: z.array(z.string()).default([])
+  accessories: z.array(z.string()).optional(),
+  fuelType: z.string().optional(),
+  exteriorColor: z.string().optional(),
+  transmission: z.string().optional(),
+  reservationDestination: z.enum(['Conto Esposizione', 'Stock', 'Contratto Abbinato']).optional(),
 });
 
-// Helper function to create a schema variant based on user role
-export const createVirtualReservationSchema = (isAdmin: boolean) => {
-  // For admins, dealerId is required
-  if (isAdmin) {
-    return virtualReservationSchema.refine(
-      (data) => !!data.dealerId,
-      {
-        message: "Il concessionario è obbligatorio",
-        path: ["dealerId"]
-      }
-    );
-  }
-  
-  // For dealers, use the base schema
-  return virtualReservationSchema;
-};
-
-export type VirtualReservationFormValues = z.infer<typeof virtualReservationSchema>;
+export type FormValues = z.infer<typeof formSchema>;

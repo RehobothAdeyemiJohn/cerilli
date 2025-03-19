@@ -11,7 +11,7 @@ export const QuotesHeaderAdapter: React.FC<QuotesHeaderAdapterProps> = ({
 }) => {
   return (
     <QuotesHeader
-      handleOpenCreateQuoteDialog={onAddCustomQuote}
+      onAddCustomQuote={onAddCustomQuote}
     />
   );
 };

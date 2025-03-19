@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useOrders } from '@/hooks/useOrders';
@@ -97,7 +98,11 @@ const Orders = () => {
     ordersList,
     isLoading,
     error,
-    refetchOrders
+    refetchOrders,
+    getDealers,
+    generatePdfPreview,
+    generateOrderDeliveryForm,
+    delete: deleteOrder
   } = useOrders({
     searchText,
     dateRange,
@@ -134,15 +139,15 @@ const Orders = () => {
   useEffect(() => {
     const fetchDealers = async () => {
       try {
-        const dealers = await ordersApi.getDealers();
-        setDealers(dealers);
+        const dealersList = await getDealers();
+        setDealers(dealersList);
       } catch (error) {
         console.error('Error fetching dealers:', error);
       }
     };
 
     fetchDealers();
-  }, []);
+  }, [getDealers]);
 
   // Handle select all checkbox
   const handleSelectAll = () => {
@@ -169,7 +174,7 @@ const Orders = () => {
   const handleDeleteOrder = async () => {
     if (selectedOrder) {
       try {
-        await ordersApi.delete(selectedOrder.id);
+        await deleteOrder(selectedOrder.id);
         refetchOrders();
         setIsDeleteAlertOpen(false);
         toast({
@@ -190,11 +195,8 @@ const Orders = () => {
   // Handle PDF preview
   const handlePdfPreview = async (order: Order) => {
     try {
-      const response = await ordersApi.generatePdfPreview(order);
-      // Convert Blob to Uint8Array
-      const arrayBuffer = await response.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      setPdfData(uint8Array);
+      const response = await generatePdfPreview(order);
+      setPdfData(response);
       setPdfPreviewOpen(true);
     } catch (error) {
       console.error('Error generating PDF preview:', error);
@@ -209,14 +211,8 @@ const Orders = () => {
   // Handle ODL generation
   const handleGenerateODL = async (orderId: string) => {
     try {
-      const order = ordersList.find(o => o.id === orderId);
-      if (!order) return;
-      
-      const response = await ordersApi.generateOrderDeliveryForm(order);
-      // Convert Blob to Uint8Array
-      const arrayBuffer = await response.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      setPdfData(uint8Array);
+      const response = await generateOrderDeliveryForm(orderId);
+      setPdfData(response);
       setPdfPreviewOpen(true);
       
       // Update order to mark ODL as generated
@@ -449,7 +445,7 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setInvoiced(value === "true" ? true : value === "false" ? false : null)}>
+        <Select onValueChange={(value) => setIsInvoiced(value === "true" ? true : value === "false" ? false : null)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Fatturato" />
           </SelectTrigger>
@@ -569,8 +565,8 @@ const Orders = () => {
       {/* PDF preview dialog */}
       {pdfData && (
         <PdfPreviewDialog
-          open={pdfPreviewOpen}
-          onOpenChange={setPdfPreviewOpen}
+          isOpen={pdfPreviewOpen}
+          onClose={() => setPdfPreviewOpen(false)}
           pdfData={pdfData}
         />
       )}

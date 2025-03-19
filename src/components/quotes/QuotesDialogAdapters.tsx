@@ -95,8 +95,6 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
 }) => {
   return (
     <QuoteForm
-      isOpen={open}
-      onClose={() => onOpenChange(false)}
       vehicleId={vehicleId}
       isManualQuote={isManualQuote}
       onCreateQuote={onCreateQuote}
@@ -122,7 +120,6 @@ export const QuoteContractDialogAdapter: React.FC<QuoteContractDialogAdapterProp
   return (
     <QuoteContractDialog
       open={open}
-      isOpen={open} // Provide both props to ensure compatibility
       onClose={() => onOpenChange(false)}
       quote={quote}
       onCreateContract={onCreateContract}

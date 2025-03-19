@@ -1,5 +1,5 @@
 
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import QuotesPagination from './QuotesPagination';
 
 interface QuotesPaginationAdapterProps {
@@ -8,7 +8,7 @@ interface QuotesPaginationAdapterProps {
   onPrevPage: () => void;
   onNextPage: () => void;
   itemsPerPage: number;
-  setItemsPerPage: Dispatch<SetStateAction<number>>;
+  setItemsPerPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export const QuotesPaginationAdapter: React.FC<QuotesPaginationAdapterProps> = ({
@@ -23,8 +23,8 @@ export const QuotesPaginationAdapter: React.FC<QuotesPaginationAdapterProps> = (
     <QuotesPagination
       currentPage={currentPage}
       totalPages={totalPages}
-      handlePrevPage={onPrevPage}
-      handleNextPage={onNextPage}
+      onPrevPage={onPrevPage}
+      onNextPage={onNextPage}
       itemsPerPage={itemsPerPage}
       setItemsPerPage={setItemsPerPage}
     />

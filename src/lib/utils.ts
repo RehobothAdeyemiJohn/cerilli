@@ -1,111 +1,101 @@
 
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { format, differenceInDays } from 'date-fns';
-import { Vehicle } from '@/types';
+import { ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+import { formatDistanceToNow, format, addDays, formatDistance, isValid, isAfter, parseISO, addWeeks } from "date-fns";
+import { it } from "date-fns/locale";
+import { extractDateFromVehicle } from "@/utils/fixes";
 
+// Combine class names with Tailwind
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
-export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
+// Format currency values
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('it-IT', {
     style: 'currency',
     currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
   }).format(amount);
 }
 
-export function formatDate(date: string | Date): string {
-  if (!date) return '-';
+// Format dates in a standard way
+export function formatDate(date: Date | string): string {
+  if (!date) return 'Data non disponibile';
   
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return format(dateObj, 'dd/MM/yyyy');
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return '-';
-  }
+  const d = typeof date === 'string' ? new Date(date) : date;
+  
+  if (!isValid(d)) return 'Data non valida';
+  
+  return format(d, 'dd/MM/yyyy', { locale: it });
 }
 
-export function calculateDaysInStock(dateAdded: string | Date | Vehicle): number {
+// Calculate days in stock
+export function calculateDaysInStock(dateAdded: string | Date | any): number {
   if (!dateAdded) return 0;
   
-  try {
-    let startDate: Date;
-    
-    if (typeof dateAdded === 'object' && 'dateAdded' in dateAdded) {
-      // It's a Vehicle object
-      startDate = new Date(dateAdded.dateAdded);
-    } else if (typeof dateAdded === 'string') {
-      startDate = new Date(dateAdded);
-    } else {
-      startDate = dateAdded as Date;
-    }
-    
-    const today = new Date();
-    return differenceInDays(today, startDate);
-  } catch (error) {
-    console.error('Error calculating days in stock:', error);
-    return 0;
-  }
+  // Extract date from Vehicle object if needed
+  const parsedDate = extractDateFromVehicle(dateAdded);
+  if (!parsedDate) return 0;
+  
+  const date = typeof parsedDate === 'string' ? new Date(parsedDate) : parsedDate;
+  
+  if (!isValid(date)) return 0;
+  
+  const today = new Date();
+  const diffTime = Math.abs(today.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
 }
 
-export function calculateEstimatedArrival(estimatedArrival: string | Date | null | Vehicle): { formattedRange: string; daysUntilArrival?: number } {
-  if (!estimatedArrival) return { formattedRange: 'Non disponibile' };
-  
-  try {
-    let arrivalDate: Date;
-    let daysEstimate: number | undefined;
-    
-    if (typeof estimatedArrival === 'object' && 'estimatedArrivalDays' in estimatedArrival) {
-      // It's a Vehicle object
-      daysEstimate = estimatedArrival.estimatedArrivalDays;
-      
-      if (!daysEstimate) {
-        return { formattedRange: 'Non disponibile' };
-      }
-      
-      const today = new Date();
-      arrivalDate = new Date(today);
-      arrivalDate.setDate(today.getDate() + daysEstimate);
-    } else if (typeof estimatedArrival === 'string') {
-      arrivalDate = new Date(estimatedArrival);
-    } else {
-      arrivalDate = estimatedArrival as Date;
-    }
-    
-    // If the date is invalid, return a fallback message
-    if (arrivalDate && isNaN(arrivalDate.getTime())) {
-      return { formattedRange: 'Non disponibile' };
-    }
-    
-    const today = new Date();
-    const daysUntilArrival = daysEstimate || differenceInDays(arrivalDate, today);
-    
-    if (daysUntilArrival < 0) {
-      return { formattedRange: 'In ritardo', daysUntilArrival };
-    } else if (daysUntilArrival === 0) {
-      return { formattedRange: 'Oggi', daysUntilArrival };
-    } else if (daysUntilArrival === 1) {
-      return { formattedRange: 'Domani', daysUntilArrival };
-    } else if (daysUntilArrival <= 7) {
-      return { formattedRange: `${daysUntilArrival} giorni`, daysUntilArrival };
-    } else {
-      const formatted = formatDate(arrivalDate);
-      return { formattedRange: formatted, daysUntilArrival };
-    }
-  } catch (error) {
-    console.error('Error calculating estimated arrival:', error);
-    return { formattedRange: 'Non disponibile' };
+// Calculate estimated arrival with proper formatting
+export function calculateEstimatedArrival(estimatedArrival: string | Date | null | any): { 
+  formattedRange: string;
+  daysUntilArrival?: number; 
+} {
+  if (!estimatedArrival) {
+    return {
+      formattedRange: 'Non disponibile'
+    };
   }
+  
+  // Extract date from Vehicle object if needed
+  const parsedDate = extractDateFromVehicle(estimatedArrival);
+  if (!parsedDate) {
+    return {
+      formattedRange: 'Non disponibile'
+    };
+  }
+  
+  const date = typeof parsedDate === 'string' ? new Date(parsedDate) : parsedDate;
+  
+  if (!isValid(date)) {
+    return {
+      formattedRange: 'Data non valida'
+    };
+  }
+  
+  const today = new Date();
+  
+  // If the estimated arrival date is in the past
+  if (date < today) {
+    return {
+      formattedRange: 'In ritardo',
+      daysUntilArrival: -calculateDaysInStock(date)
+    };
+  }
+  
+  // Calculate days until arrival
+  const diffTime = Math.abs(date.getTime() - today.getTime());
+  const daysUntilArrival = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Create a range with the estimated date and a week after
+  const rangeEnd = addWeeks(date, 1);
+  const formattedDate = format(date, 'dd/MM/yyyy', { locale: it });
+  const formattedRangeEnd = format(rangeEnd, 'dd/MM/yyyy', { locale: it });
+  
+  return {
+    formattedRange: `${formattedDate} - ${formattedRangeEnd}`,
+    daysUntilArrival
+  };
 }

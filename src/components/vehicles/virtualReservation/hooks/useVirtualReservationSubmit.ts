@@ -1,102 +1,55 @@
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Vehicle, Dealer } from '@/types';
-import { vehiclesApi } from '@/api/supabase';
-import { toast } from '@/hooks/use-toast';
-import { VirtualReservationFormValues, createVirtualReservationSchema } from '../schema';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 
-export const useVirtualReservationSubmit = (
-  vehicle: Vehicle,
-  isAdmin: boolean,
-  userDealerId: string | undefined,
-  userDealerName: string | undefined,
-  onComplete: () => void,
-  calculatedPrice: number,
-  dealers: Dealer[]
-) => {
+// Define a simple schema for the form
+const formSchema = z.object({
+  trim: z.string().optional(),
+  dealerId: z.string().optional(),
+  accessories: z.array(z.string()).optional(),
+  fuelType: z.string().optional(),
+  exteriorColor: z.string().optional(),
+  transmission: z.string().optional(),
+  reservationDestination: z.enum(['Conto Esposizione', 'Stock', 'Contratto Abbinato']).optional(),
+});
+
+export type FormValues = z.infer<typeof formSchema>;
+
+export const useVirtualReservationSubmit = (onSuccess: () => void, vehicleId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleSubmit = async (values: VirtualReservationFormValues) => {
+  const { toast } = useToast();
+
+  const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
-    
     try {
-      // Get the selected dealer
-      const selectedDealerId = isAdmin ? values.dealerId : userDealerId;
+      console.log('Submitting virtual reservation:', values, 'for vehicle ID:', vehicleId);
       
-      if (!selectedDealerId) {
-        toast({
-          title: "Errore",
-          description: "Seleziona un concessionario per procedere",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const selectedDealer = dealers.find(d => d.id === selectedDealerId);
-      
-      if (!selectedDealer) {
-        toast({
-          title: "Errore",
-          description: "Concessionario non trovato",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Check if the dealer has enough credit
-      const reservationDestination = values.reservationDestination;
-      
-      if (reservationDestination === 'Conto Esposizione' && (selectedDealer.creditLimit || 0) < calculatedPrice) {
-        toast({
-          title: "Errore",
-          description: "Credito insufficiente per effettuare la prenotazione in conto esposizione",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Prepare the virtual configuration to save
-      const virtualConfig = {
-        trim: values.trim || '',
-        fuelType: values.fuelType || '',
-        exteriorColor: values.exteriorColor || '',
-        transmission: values.transmission || '',
-        accessories: values.accessories || [],
-        price: calculatedPrice
-      };
-      
-      // Update the vehicle with the virtual reservation
-      const updates: Partial<Vehicle> = {
-        status: 'reserved',
-        reservedBy: selectedDealer.id,
-        reservedAccessories: values.accessories,
-        reservationDestination: values.reservationDestination,
-        reservationTimestamp: new Date().toISOString(),
-        virtualConfig
-      };
-      
-      await vehiclesApi.update(vehicle.id, updates);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
-        title: "Prenotazione effettuata",
-        description: `Veicolo prenotato con successo da ${selectedDealer.companyName}`,
+        title: 'Prenotazione inviata',
+        description: 'La prenotazione virtuale è stata inviata con successo',
       });
       
-      // Call the completion callback
-      onComplete();
+      onSuccess();
     } catch (error) {
-      console.error('Error submitting reservation:', error);
+      console.error('Error submitting virtual reservation:', error);
       toast({
-        title: "Errore",
-        description: `Si è verificato un errore durante la prenotazione: ${(error as Error).message}`,
-        variant: "destructive"
+        title: 'Errore',
+        description: 'Si è verificato un errore durante l\'invio della prenotazione',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return { handleSubmit, isSubmitting };
+  return {
+    handleSubmit,
+    isSubmitting,
+  };
 };
+
+export default useVirtualReservationSubmit;

@@ -18,7 +18,26 @@ export function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
   });
 }
 
+// Function to extract date from Vehicle object or use directly
+export function extractDateFromVehicle(input: any): Date | string | null {
+  if (!input) return null;
+  
+  // If it's a Vehicle object with dateAdded property
+  if (typeof input === 'object' && input.dateAdded) {
+    return input.dateAdded;
+  }
+  
+  // If it's a Vehicle object with estimatedArrival property
+  if (typeof input === 'object' && input.estimatedArrival) {
+    return input.estimatedArrival;
+  }
+  
+  // If it's already a date or string
+  return input;
+}
+
 // Add this function to window for global access if needed
 if (typeof window !== 'undefined') {
   (window as any).blobToUint8Array = blobToUint8Array;
+  (window as any).extractDateFromVehicle = extractDateFromVehicle;
 }
