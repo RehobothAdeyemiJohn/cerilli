@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 
-// Using the same credentials as in src/integrations/supabase/client.ts to ensure consistency
+// Using explicit URL and key to ensure connection
 const supabaseUrl = "https://idtyeemidnwidsizzwao.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkdHllZW1pZG53aWRzaXp6d2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3MTE1MTAsImV4cCI6MjA1NzI4NzUxMH0.D3CExwfUNhBRXDEWjL6FINV445qP7-z5Xs5EHSvYpec";
 

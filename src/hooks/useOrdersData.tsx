@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
@@ -29,9 +28,9 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 1000, // Refetch every 1 second
+    refetchInterval: 500, // Refetch every 0.5 seconds
     refetchOnWindowFocus: true,
-    retry: 3, // Retry 3 times before failing
+    retry: 5, // Retry 5 times before failing
   });
 
   useEffect(() => {
@@ -130,7 +129,7 @@ export const useOrdersData = (filters: {
     queryFn: () => fetchOrderDetails(ordersData),
     enabled: ordersData.length > 0,
     staleTime: 0,
-    refetchInterval: 1000, // Refetch every 1 second
+    refetchInterval: 500, // Refetch every 0.5 seconds
   });
 
   // Effect to refresh data when dialog closes
@@ -166,7 +165,7 @@ export const useOrdersData = (filters: {
         console.log('Periodic refresh of orders data');
         queryClient.invalidateQueries({ queryKey: ['orders'] });
         refetchOrders();
-      }, 500); // Refresh every 0.5 second
+      }, 250); // Refresh every 0.25 seconds
       
       return () => clearInterval(intervalId);
     }
@@ -181,26 +180,6 @@ export const useOrdersData = (filters: {
     queryClient.invalidateQueries({ queryKey: ['dealers'] });
     refetchOrders();
     refetchOrdersWithDetails();
-  };
-
-  // Format the order number with padding using the progressive_number from database
-  const getOrderNumber = (order: Order): string => {
-    if (!order || !order.id) return "#000";
-    
-    // Use the database progressive number if available, otherwise fallback
-    if (order.progressiveNumber) {
-      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
-    }
-    
-    // Fallback to index-based calculation for backward compatibility
-    const sortedOrders = [...ordersData].sort((a, b) => {
-      const dateA = new Date(a.orderDate || 0).getTime();
-      const dateB = new Date(b.orderDate || 0).getTime();
-      return dateA - dateB;
-    });
-    
-    const index = sortedOrders.findIndex(o => o.id === order.id);
-    return `#${(index + 1).toString().padStart(3, '0')}`;
   };
 
   // Filter orders based on specified criteria
@@ -248,6 +227,26 @@ export const useOrdersData = (filters: {
   const deliveredOrders = filterOrders(ordersWithDetails, 'delivered');
   const cancelledOrders = filterOrders(ordersWithDetails, 'cancelled');
   const allOrders = filterOrders(ordersWithDetails);
+
+  // Format the order number with padding using the progressive_number from database
+  const getOrderNumber = (order: Order): string => {
+    if (!order || !order.id) return "#000";
+    
+    // Use the database progressive number if available, otherwise fallback
+    if (order.progressiveNumber) {
+      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
+    }
+    
+    // Fallback to index-based calculation for backward compatibility
+    const sortedOrders = [...ordersData].sort((a, b) => {
+      const dateA = new Date(a.orderDate || 0).getTime();
+      const dateB = new Date(b.orderDate || 0).getTime();
+      return dateA - dateB;
+    });
+    
+    const index = sortedOrders.findIndex(o => o.id === order.id);
+    return `#${(index + 1).toString().padStart(3, '0')}`;
+  };
 
   return {
     ordersData,

@@ -55,7 +55,6 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 
 // Helper function to map database order to frontend type
 const mapOrderDbToFrontend = (order: any): Order => {
-  console.log("Mapping order to frontend:", order);
   return {
     id: order.id,
     vehicleId: order.vehicleid,
@@ -76,53 +75,21 @@ const mapOrderDbToFrontend = (order: any): Order => {
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
-
-    // Let's verify if the orders table exists and what columns it has
-    try {
-      console.log("Checking database tables...");
-      const { data: tables, error: tablesError } = await supabase.rpc('list_tables');
-      
-      if (tablesError) {
-        console.error('Error listing tables:', tablesError);
-      } else {
-        console.log("Available tables:", tables);
-        
-        // If we have orders table, let's check its columns
-        if (tables && tables.some((t: any) => t.table_name === 'orders')) {
-          console.log("Orders table exists, checking its columns...");
-          
-          // Get information about the orders table columns
-          const { data: columns, error: columnsError } = await supabase.from('information_schema.columns')
-            .select('column_name, data_type')
-            .eq('table_name', 'orders');
-          
-          if (columnsError) {
-            console.error('Error fetching columns:', columnsError);
-          } else {
-            console.log("Orders table columns:", columns);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Error checking database structure:", e);
-    }
     
-    // First try: Fetch orders directly
+    // First approach: most straightforward direct query with minimal logging
     try {
-      console.log("Attempting to fetch orders with simple query...");
+      console.log("Attempting simple orders query...");
       const { data, error } = await supabase
         .from('orders')
         .select('*');
       
       if (error) {
-        console.error('Error with simple query:', error);
+        console.error('Error with simple orders query:', error);
       } else {
-        console.log("Simple query result:", data);
+        console.log(`Found ${data?.length || 0} orders with simple query`);
         
         if (data && data.length > 0) {
-          // We have orders! Now try to fetch related data separately
-          console.log(`Found ${data.length} orders. Fetching related data...`);
-          
+          // If we have orders but without relation data, fetch relations manually
           const ordersWithRelations = await Promise.all(
             data.map(async (order) => {
               let vehicleData = null;
@@ -130,24 +97,32 @@ export const ordersApi = {
               
               // Try to fetch the vehicle
               if (order.vehicleid) {
-                const { data: vehicle } = await supabase
-                  .from('vehicles')
-                  .select('*')
-                  .eq('id', order.vehicleid)
-                  .maybeSingle();
-                
-                vehicleData = vehicle;
+                try {
+                  const { data: vehicle } = await supabase
+                    .from('vehicles')
+                    .select('*')
+                    .eq('id', order.vehicleid)
+                    .maybeSingle();
+                  
+                  vehicleData = vehicle;
+                } catch (e) {
+                  console.error(`Error fetching vehicle for order ${order.id}:`, e);
+                }
               }
               
               // Try to fetch the dealer
               if (order.dealerid) {
-                const { data: dealer } = await supabase
-                  .from('dealers')
-                  .select('*')
-                  .eq('id', order.dealerid)
-                  .maybeSingle();
-                
-                dealerData = dealer;
+                try {
+                  const { data: dealer } = await supabase
+                    .from('dealers')
+                    .select('*')
+                    .eq('id', order.dealerid)
+                    .maybeSingle();
+                  
+                  dealerData = dealer;
+                } catch (e) {
+                  console.error(`Error fetching dealer for order ${order.id}:`, e);
+                }
               }
               
               // Return the order with manually fetched relations
@@ -159,63 +134,145 @@ export const ordersApi = {
             })
           );
           
-          console.log("Orders with manually fetched relations:", ordersWithRelations);
+          console.log("Successfully built orders with relations manually");
           
           // Map to frontend format
           const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
-          console.log("Formatted orders:", formattedOrders);
+          console.log("Returning formatted orders:", formattedOrders);
           return formattedOrders;
         }
       }
     } catch (e) {
-      console.error("Error with simple fetch approach:", e);
+      console.error("Error with direct query approach:", e);
     }
     
-    // Second try: Fetch with join
+    // Second approach: Try with explicit join
     try {
-      console.log("Attempting to fetch orders with join query...");
+      console.log("Attempting orders query with explicit joins...");
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          vehicles:vehicleid (*),
+          dealers:dealerid (*)
+        `);
+      
+      if (error) {
+        console.error('Error with joined query:', error);
+      } else {
+        console.log(`Found ${data?.length || 0} orders with join query`);
+        
+        if (data && data.length > 0) {
+          // Map the orders from the joined query
+          const formattedOrders = data.map(mapOrderDbToFrontend);
+          console.log("Returning formatted orders from join:", formattedOrders);
+          return formattedOrders;
+        }
+      }
+    } catch (e) {
+      console.error("Error with join query approach:", e);
+    }
+    
+    // Third approach: Alternative join syntax
+    try {
+      console.log("Attempting alternative join syntax...");
       const { data, error } = await supabase
         .from('orders')
         .select('*, vehicles(*), dealers(*)');
       
       if (error) {
-        console.error('Error with joined query:', error);
+        console.error('Error with alternative join syntax:', error);
       } else {
-        console.log("Joined query result:", data);
+        console.log(`Found ${data?.length || 0} orders with alternative join`);
         
         if (data && data.length > 0) {
-          // Map the orders from the joined query
           const formattedOrders = data.map(mapOrderDbToFrontend);
-          console.log("Formatted orders from join:", formattedOrders);
+          console.log("Returning formatted orders from alternative join:", formattedOrders);
           return formattedOrders;
         }
       }
     } catch (e) {
-      console.error("Error with join fetch approach:", e);
+      console.error("Error with alternative join approach:", e);
     }
-    
-    // Final attempt: Use RPC function
+
+    // Last resort: Check if there's any data in the table with minimal fields
     try {
-      console.log("Attempting to use RPC function as last resort...");
+      console.log("Last attempt: checking orders table with minimal fields...");
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, customername')
+        .limit(10);
       
-      // Try to call a custom function to get orders if it exists
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_all_orders');
-      
-      if (rpcError) {
-        console.error('RPC function error or not available:', rpcError);
-      } else if (rpcData && rpcData.length > 0) {
-        console.log("RPC function result:", rpcData);
+      if (error) {
+        console.error('Error with minimal fields query:', error);
+      } else {
+        console.log(`Found ${data?.length || 0} orders with minimal fields query:`, data);
         
-        // Map the orders 
-        const formattedOrders = rpcData.map(mapOrderDbToFrontend);
-        console.log("Formatted orders from RPC:", formattedOrders);
-        return formattedOrders;
+        if (data && data.length > 0) {
+          console.log("Orders exist but couldn't be properly fetched with relations");
+          
+          // Try to fetch full data for each order individually
+          const ordersWithData = await Promise.all(
+            data.map(async (orderMinimal) => {
+              try {
+                const { data: fullOrder } = await supabase
+                  .from('orders')
+                  .select('*')
+                  .eq('id', orderMinimal.id)
+                  .maybeSingle();
+                
+                if (!fullOrder) return null;
+                
+                let vehicleData = null;
+                let dealerData = null;
+                
+                // Try to fetch the vehicle
+                if (fullOrder.vehicleid) {
+                  const { data: vehicle } = await supabase
+                    .from('vehicles')
+                    .select('*')
+                    .eq('id', fullOrder.vehicleid)
+                    .maybeSingle();
+                  
+                  vehicleData = vehicle;
+                }
+                
+                // Try to fetch the dealer
+                if (fullOrder.dealerid) {
+                  const { data: dealer } = await supabase
+                    .from('dealers')
+                    .select('*')
+                    .eq('id', fullOrder.dealerid)
+                    .maybeSingle();
+                  
+                  dealerData = dealer;
+                }
+                
+                return {
+                  ...fullOrder,
+                  vehicles: vehicleData,
+                  dealers: dealerData
+                };
+              } catch (e) {
+                console.error(`Error fetching full data for order ${orderMinimal.id}:`, e);
+                return null;
+              }
+            })
+          );
+          
+          // Filter out any null results and map to frontend format
+          const validOrders = ordersWithData.filter(order => order !== null);
+          const formattedOrders = validOrders.map(order => mapOrderDbToFrontend(order!));
+          
+          console.log("Returning formatted orders from individual fetches:", formattedOrders);
+          return formattedOrders;
+        }
       }
     } catch (e) {
-      console.error("Error with RPC approach:", e);
+      console.error("Error with minimal fields approach:", e);
     }
     
-    console.log("Could not fetch orders through any method. Returning empty array.");
+    console.log("No orders could be fetched through any method. Returning empty array.");
     return [];
   },
 
