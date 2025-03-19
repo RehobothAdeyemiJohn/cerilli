@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Order, OrderDetails } from '@/types';
 import { formatDate } from '@/lib/utils';
 import OrderDetailsForm from './OrderDetailsForm';
-import { formatPlafond } from '@/hooks/orders/useOrdersModels';
+import { formatPlafond } from '@/utils/dealerUtils';
 
 interface OrderDetailsDialogProps {
   open: boolean;
