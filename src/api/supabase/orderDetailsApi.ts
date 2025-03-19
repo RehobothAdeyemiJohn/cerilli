@@ -1,6 +1,5 @@
 
 import { supabase } from './client';
-import { v4 as uuidv4 } from 'uuid';
 import { OrderDetails } from '@/types';
 
 export const orderDetailsApi = {
@@ -21,6 +20,8 @@ export const orderDetailsApi = {
         console.log("No order details found in database");
         return [];
       }
+      
+      console.log("Raw order details data:", data);
       
       // Map data to OrderDetails objects
       const orderDetails = data.map(item => ({

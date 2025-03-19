@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
@@ -28,33 +29,14 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 300, // Refetch every 0.3 seconds
+    refetchInterval: 500, // Refetch every 0.5 seconds
     refetchOnWindowFocus: true,
     retry: 5, // Retry 5 times before failing
   });
 
   useEffect(() => {
-    console.log("Orders data changed:", ordersData);
+    console.log("Orders data fetched:", ordersData);
   }, [ordersData]);
-
-  // Create a default OrderDetails object
-  const createDefaultOrderDetails = (orderId: string): OrderDetails => {
-    console.log(`Creating default OrderDetails for order ${orderId} due to missing or malformed data`);
-    return {
-      id: '',
-      orderId: orderId,
-      isLicensable: false,
-      hasProforma: false,
-      isPaid: false,
-      isInvoiced: false,
-      hasConformity: false,
-      transportCosts: 0,
-      restorationCosts: 0,
-      odlGenerated: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  };
 
   // Fetch order details directly from the orderDetailsApi
   const fetchOrderDetails = async () => {
@@ -79,13 +61,18 @@ export const useOrdersData = (filters: {
     queryKey: ['allOrderDetails'],
     queryFn: fetchOrderDetails,
     staleTime: 0,
-    refetchInterval: 300, // Refetch every 0.3 seconds
+    refetchInterval: 500, // Refetch every 0.5 seconds
   });
+
+  useEffect(() => {
+    console.log("All order details data fetched:", allOrderDetails);
+  }, [allOrderDetails]);
 
   // Function to combine orders with their details
   const combineOrdersWithDetails = (orders: Order[], details: OrderDetails[]) => {
     console.log(`Combining ${orders.length} orders with ${details.length} details`);
     
+    // Match orders with their details
     return orders.map(order => {
       // Find matching details for this order
       const orderDetail = details.find(detail => detail.orderId === order.id);
@@ -140,7 +127,7 @@ export const useOrdersData = (filters: {
         queryClient.invalidateQueries({ queryKey: ['allOrderDetails'] });
         refetchOrders();
         refetchAllOrderDetails();
-      }, 250); // Refresh every 0.25 seconds
+      }, 2000); // Refresh every 2 seconds
       
       return () => clearInterval(intervalId);
     }
