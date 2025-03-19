@@ -63,7 +63,9 @@ export const useVirtualReservationSubmit = (
         trim: values.trim,
         fuelType: values.fuelType,
         exteriorColor: values.exteriorColor,
-        transmission: values.transmission
+        transmission: values.transmission,
+        accessories: values.accessories || [],
+        price: calculatedPrice || 0
       };
       
       // Call the API to reserve the vehicle
