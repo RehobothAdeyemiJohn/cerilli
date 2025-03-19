@@ -128,12 +128,9 @@ const Quotes = () => {
   };
 
   // Prepare deletion
-  const handlePrepareDelete = (id: string) => {
-    const quote = quotes.find(q => q.id === id);
-    if (quote) {
-      setSelectedQuote(quote);
-      setIsDeleteDialogOpen(true);
-    }
+  const handlePrepareDelete = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setIsDeleteDialogOpen(true);
   };
 
   // Handle quote deletion
@@ -206,7 +203,7 @@ const Quotes = () => {
           formatDate={(date) => new Date(date).toLocaleDateString()} // Providing required props
           handleViewQuote={handleViewQuote}
           handleUpdateStatus={handleUpdateStatus}
-          handleDeleteClick={handlePrepareDelete}
+          handleDeleteClick={handlePrepareDelete} // Fixed: Now passing a function that accepts a Quote
         />
         
         {!isLoading && quotes.length > 0 && (

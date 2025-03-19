@@ -56,8 +56,8 @@ export const useVirtualReservationSubmit = (
           fuelType: values.fuelType || '',
           exteriorColor: values.exteriorColor || '',
           transmission: values.transmission || '',
-          accessories: values.accessories || [],  // Add the missing accessories property
-          price: calculatedPrice || 0,           // Add the missing price property
+          accessories: values.accessories || [],
+          price: calculatedPrice || 0,
           finalPrice: calculatedPrice || 0,
           dealerName: selectedDealerName
         }
@@ -69,7 +69,7 @@ export const useVirtualReservationSubmit = (
         reservedBy: reservationDealerId,
         reservedAccessories: values.accessories || [],
         virtualConfig: reservationData.virtualConfig,
-        updatedAt: new Date().toISOString()
+        // Remove the updatedAt property as it's not in the Vehicle type
       });
 
       // Invalidate queries to refresh data
