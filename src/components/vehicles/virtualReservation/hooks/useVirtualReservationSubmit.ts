@@ -91,7 +91,8 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // Create order directly using snake_case column names matching the database
+      // Create order directly using exact column names as in the database
+      console.log("Attempting to insert with column names exactly matching database");
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
