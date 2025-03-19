@@ -69,7 +69,6 @@ export const useVirtualReservationSubmit = (
         reservedBy: reservationDealerId,
         reservedAccessories: values.accessories || [],
         virtualConfig: reservationData.virtualConfig,
-        // Remove the updatedAt property as it's not in the Vehicle type
       });
 
       // Invalidate queries to refresh data
