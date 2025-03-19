@@ -240,10 +240,14 @@ export type Database = {
           },
         ]
       }
-      order_details: {
+      orders: {
         Row: {
           chassis: string | null
           created_at: string | null
+          customer_name: string
+          dealer_id: string | null
+          dealer_name: string | null
+          delivery_date: string | null
           funding_type: string | null
           has_conformity: boolean | null
           has_proforma: boolean | null
@@ -253,147 +257,91 @@ export type Database = {
           is_invoiced: boolean | null
           is_licensable: boolean | null
           is_paid: boolean | null
-          odl_generated: boolean | null
-          order_id: string | null
-          payment_date: string | null
-          previous_chassis: string | null
-          restoration_costs: number | null
-          transport_costs: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          chassis?: string | null
-          created_at?: string | null
-          funding_type?: string | null
-          has_conformity?: boolean | null
-          has_proforma?: boolean | null
-          id?: string
-          invoice_date?: string | null
-          invoice_number?: string | null
-          is_invoiced?: boolean | null
-          is_licensable?: boolean | null
-          is_paid?: boolean | null
-          odl_generated?: boolean | null
-          order_id?: string | null
-          payment_date?: string | null
-          previous_chassis?: string | null
-          restoration_costs?: number | null
-          transport_costs?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          chassis?: string | null
-          created_at?: string | null
-          funding_type?: string | null
-          has_conformity?: boolean | null
-          has_proforma?: boolean | null
-          id?: string
-          invoice_date?: string | null
-          invoice_number?: string | null
-          is_invoiced?: boolean | null
-          is_licensable?: boolean | null
-          is_paid?: boolean | null
-          odl_generated?: boolean | null
-          order_id?: string | null
-          payment_date?: string | null
-          previous_chassis?: string | null
-          restoration_costs?: number | null
-          transport_costs?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_details_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          contract_id: string | null
-          customername: string
-          dealer_name: string | null
-          dealerid: string
-          deliverydate: string | null
-          id: string
           model_name: string | null
-          notes: string | null
-          order_number: string | null
-          orderdate: string | null
+          odl_generated: boolean | null
+          order_date: string | null
+          payment_date: string | null
           plafond_dealer: number | null
+          previous_chassis: string | null
           price: number | null
           progressive_number: number
-          quoteid: string | null
+          restoration_costs: number | null
           status: string | null
+          transport_costs: number | null
           updated_at: string | null
-          vehicleid: string
+          vehicle_id: string | null
         }
         Insert: {
-          contract_id?: string | null
-          customername: string
+          chassis?: string | null
+          created_at?: string | null
+          customer_name: string
+          dealer_id?: string | null
           dealer_name?: string | null
-          dealerid: string
-          deliverydate?: string | null
+          delivery_date?: string | null
+          funding_type?: string | null
+          has_conformity?: boolean | null
+          has_proforma?: boolean | null
           id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          is_invoiced?: boolean | null
+          is_licensable?: boolean | null
+          is_paid?: boolean | null
           model_name?: string | null
-          notes?: string | null
-          order_number?: string | null
-          orderdate?: string | null
+          odl_generated?: boolean | null
+          order_date?: string | null
+          payment_date?: string | null
           plafond_dealer?: number | null
+          previous_chassis?: string | null
           price?: number | null
           progressive_number?: number
-          quoteid?: string | null
+          restoration_costs?: number | null
           status?: string | null
+          transport_costs?: number | null
           updated_at?: string | null
-          vehicleid: string
+          vehicle_id?: string | null
         }
         Update: {
-          contract_id?: string | null
-          customername?: string
+          chassis?: string | null
+          created_at?: string | null
+          customer_name?: string
+          dealer_id?: string | null
           dealer_name?: string | null
-          dealerid?: string
-          deliverydate?: string | null
+          delivery_date?: string | null
+          funding_type?: string | null
+          has_conformity?: boolean | null
+          has_proforma?: boolean | null
           id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          is_invoiced?: boolean | null
+          is_licensable?: boolean | null
+          is_paid?: boolean | null
           model_name?: string | null
-          notes?: string | null
-          order_number?: string | null
-          orderdate?: string | null
+          odl_generated?: boolean | null
+          order_date?: string | null
+          payment_date?: string | null
           plafond_dealer?: number | null
+          previous_chassis?: string | null
           price?: number | null
           progressive_number?: number
-          quoteid?: string | null
+          restoration_costs?: number | null
           status?: string | null
+          transport_costs?: number | null
           updated_at?: string | null
-          vehicleid?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "orders_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "dealer_contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_dealerid_fkey"
-            columns: ["dealerid"]
+            foreignKeyName: "orders_dealer_id_fkey"
+            columns: ["dealer_id"]
             isOneToOne: false
             referencedRelation: "dealers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "orders_quoteid_fkey"
-            columns: ["quoteid"]
-            isOneToOne: false
-            referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_vehicleid_fkey"
-            columns: ["vehicleid"]
+            foreignKeyName: "orders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]

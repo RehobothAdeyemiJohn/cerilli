@@ -1,191 +1,260 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
   DialogDescription,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Order, OrderDetails } from '@/types';
-import { formatDate } from '@/lib/utils';
-import OrderDetailsForm from './OrderDetailsForm';
-import { formatPlafond } from '@/utils/dealerUtils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Order } from '@/types';
+import { ordersApi } from '@/api/apiClient';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface OrderDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: Order;
-  onGenerateODL: (details: OrderDetails) => void;
+  onGenerateODL?: (orderId: string) => void;
 }
 
-const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
-  open,
-  onOpenChange,
+const OrderDetailsDialog = ({ 
+  open, 
+  onOpenChange, 
   order,
-  onGenerateODL,
-}) => {
-  // Log dei dati per debug
-  console.log('Ordine completo in OrderDetailsDialog:', order);
-  console.log('Dealer in OrderDetailsDialog:', order.dealer);
-  console.log('Dealer plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
-  console.log('Order details:', order.details);
-  console.log('Vehicle in order:', order.vehicle);
+  onGenerateODL 
+}: OrderDetailsDialogProps) => {
+  const queryClient = useQueryClient();
   
-  // Ottieni il numero ordine formattato
-  const orderNumber = order.progressiveNumber 
-    ? `#${order.progressiveNumber.toString().padStart(3, '0')}` 
-    : (order.orderNumber || 'N/A');
+  const [localOrder, setLocalOrder] = React.useState<Order>(order);
   
-  // Verifica se ci sono dettagli del veicolo da mostrare
-  const hasVehicleDetails = order?.vehicle !== null;
-  const hasAccessories = order?.vehicle?.accessories && order.vehicle.accessories.length > 0;
-  const hasReservedAccessories = order?.vehicle?.reservedAccessories && order.vehicle.reservedAccessories.length > 0;
+  // Reset local state when order changes
+  React.useEffect(() => {
+    setLocalOrder(order);
+  }, [order]);
   
-  // Dettagli del veicolo
-  const renderVehicleDetails = () => {
-    if (!hasVehicleDetails) return (
-      <div className="mt-4">
-        <h3 className="text-sm font-medium">Dettagli Veicolo</h3>
-        <p className="text-sm text-muted-foreground">Nessun dettaglio disponibile per questo veicolo</p>
-      </div>
-    );
-    
-    return (
-      <div className="mt-4">
-        <h3 className="text-sm font-medium">Dettagli Veicolo</h3>
-        <div className="grid grid-cols-2 gap-4 mt-2">
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Modello:</p>
-            <p className="text-sm">{order.vehicle?.model || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Trim:</p>
-            <p className="text-sm">{order.vehicle?.trim || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Alimentazione:</p>
-            <p className="text-sm">{order.vehicle?.fuelType || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Colore Esterno:</p>
-            <p className="text-sm">{order.vehicle?.exteriorColor || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Trasmissione:</p>
-            <p className="text-sm">{order.vehicle?.transmission || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Telaio:</p>
-            <p className="text-sm">{order.vehicle?.telaio || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Posizione:</p>
-            <p className="text-sm">{order.vehicle?.location || 'Non specificato'}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Prezzo:</p>
-            <p className="text-sm">€{order.vehicle?.price?.toLocaleString() || 'Non specificato'}</p>
-          </div>
-        </div>
-        
-        {/* Accessori standard */}
-        {hasAccessories && (
-          <div className="mt-4">
-            <p className="text-sm font-medium">Accessori:</p>
-            <ul className="list-disc pl-5 mt-1">
-              {order.vehicle?.accessories.map((acc, idx) => (
-                <li key={idx} className="text-sm">{acc}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {/* Accessori alla prenotazione */}
-        {hasReservedAccessories && (
-          <div className="mt-4">
-            <p className="text-sm font-medium">Accessori Prenotati:</p>
-            <ul className="list-disc pl-5 mt-1">
-              {order.vehicle?.reservedAccessories.map((acc, idx) => (
-                <li key={idx} className="text-sm">{acc}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {/* Configurazione virtuale se presente */}
-        {order.vehicle?.virtualConfig && (
-          <div className="mt-4">
-            <p className="text-sm font-medium">Configurazione Virtuale:</p>
-            <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
-              {JSON.stringify(order.vehicle.virtualConfig, null, 2)}
-            </pre>
-          </div>
-        )}
-      </div>
-    );
+  const updateOrderMutation = useMutation({
+    mutationFn: (updatedOrder: Partial<Order>) => {
+      return ordersApi.update(order.id, updatedOrder);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast({
+        title: "Dettagli ordine aggiornati",
+        description: "I dettagli dell'ordine sono stati aggiornati con successo",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating order details:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento dei dettagli dell'ordine",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleCheckboxChange = (field: keyof Order) => {
+    setLocalOrder({
+      ...localOrder,
+      [field]: !localOrder[field]
+    });
   };
-
+  
+  const handleInputChange = (field: keyof Order, value: string) => {
+    setLocalOrder({
+      ...localOrder,
+      [field]: value
+    });
+  };
+  
+  const handleSave = () => {
+    updateOrderMutation.mutate(localOrder);
+  };
+  
+  const handleGenerateODL = () => {
+    if (onGenerateODL) {
+      onGenerateODL(order.id);
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Dettagli Ordine {orderNumber}</DialogTitle>
+          <DialogTitle>Dettagli Ordine #{order.progressiveNumber?.toString().padStart(3, '0')}</DialogTitle>
           <DialogDescription>
-            Gestisci i dettagli amministrativi dell'ordine
+            Veicolo: {order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Non disponibile')}
           </DialogDescription>
         </DialogHeader>
-
-        {/* Dettagli Dealer */}
-        <div className="mt-4">
-          <h3 className="text-sm font-medium">Dettagli Dealer</h3>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Nome Dealer:</p>
-              <p className="text-sm">
-                {order.dealer?.companyName || order.customerName || order.dealerName || 'Non specificato'}
-              </p>
+        
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="col-span-2">
+            <p className="text-sm font-medium">Informazioni di base</p>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="dealer">Concessionario</Label>
+            <p className="text-sm">{order.dealerName || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="orderDate">Data Ordine</Label>
+            <p className="text-sm">{formatDate(new Date(order.orderDate))}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="status">Stato</Label>
+            <p className="text-sm capitalize">{
+              order.status === 'processing' ? 'In Lavorazione' :
+              order.status === 'delivered' ? 'Consegnato' : 'Cancellato'
+            }</p>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="price">Prezzo</Label>
+            <p className="text-sm">{formatCurrency(order.price || 0)}</p>
+          </div>
+          
+          <div className="col-span-2 border-t mt-2 pt-2">
+            <p className="text-sm font-medium">Dettagli Ordine</p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is-licensable" 
+                checked={localOrder.isLicensable}
+                onCheckedChange={() => handleCheckboxChange('isLicensable')}
+              />
+              <Label htmlFor="is-licensable">Targabile</Label>
             </div>
             
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Email:</p>
-              <p className="text-sm">{order.dealer?.email || 'Non specificato'}</p>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="has-proforma" 
+                checked={localOrder.hasProforma}
+                onCheckedChange={() => handleCheckboxChange('hasProforma')}
+              />
+              <Label htmlFor="has-proforma">Proforma</Label>
             </div>
             
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Indirizzo:</p>
-              <p className="text-sm">{order.dealer?.address || 'Non specificato'}</p>
-            </div>
-            
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Città:</p>
-              <p className="text-sm">{order.dealer?.city || 'Non specificato'}</p>
-            </div>
-            
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Plafond Disponibile:</p>
-              <p className="text-sm">
-                {order.dealer?.nuovo_plafond !== undefined 
-                  ? `${order.dealer.nuovo_plafond.toLocaleString()} €` 
-                  : formatPlafond(order.dealer)}
-              </p>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is-paid" 
+                checked={localOrder.isPaid}
+                onCheckedChange={() => handleCheckboxChange('isPaid')}
+              />
+              <Label htmlFor="is-paid">Pagato</Label>
             </div>
           </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is-invoiced" 
+                checked={localOrder.isInvoiced}
+                onCheckedChange={() => handleCheckboxChange('isInvoiced')}
+              />
+              <Label htmlFor="is-invoiced">Fatturato</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="has-conformity" 
+                checked={localOrder.hasConformity}
+                onCheckedChange={() => handleCheckboxChange('hasConformity')}
+              />
+              <Label htmlFor="has-conformity">Conformità</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="odl-generated" 
+                checked={localOrder.odlGenerated}
+                disabled={true}
+              />
+              <Label htmlFor="odl-generated">ODL Generato</Label>
+            </div>
+          </div>
+          
+          <div className="col-span-2 space-y-2">
+            <Label htmlFor="invoice-number">Numero Fattura</Label>
+            <Input 
+              id="invoice-number" 
+              value={localOrder.invoiceNumber || ''} 
+              onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="chassis">Telaio</Label>
+            <Input 
+              id="chassis" 
+              value={localOrder.chassis || ''} 
+              onChange={(e) => handleInputChange('chassis', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="prev-chassis">Telaio Precedente</Label>
+            <Input 
+              id="prev-chassis" 
+              value={localOrder.previousChassis || ''} 
+              onChange={(e) => handleInputChange('previousChassis', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="transport-costs">Costi di Trasporto (€)</Label>
+            <Input 
+              id="transport-costs" 
+              type="number" 
+              value={localOrder.transportCosts} 
+              onChange={(e) => handleInputChange('transportCosts', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="restoration-costs">Costi di Ripristino (€)</Label>
+            <Input 
+              id="restoration-costs" 
+              type="number" 
+              value={localOrder.restorationCosts} 
+              onChange={(e) => handleInputChange('restorationCosts', e.target.value)}
+            />
+          </div>
         </div>
-
-        {/* Dettagli Veicolo */}
-        {renderVehicleDetails()}
         
-        {/* Dettagli Ordine */}
-        <OrderDetailsForm orderId={order.id} onGenerateODL={onGenerateODL} />
+        <DialogFooter className="flex justify-between">
+          <div>
+            {!localOrder.odlGenerated && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleGenerateODL}
+                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+              >
+                Genera ODL
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annulla
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={updateOrderMutation.isPending}>
+              {updateOrderMutation.isPending ? 'Salvataggio...' : 'Salva Modifiche'}
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

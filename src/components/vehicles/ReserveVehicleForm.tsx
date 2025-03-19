@@ -1,47 +1,39 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Vehicle } from '@/types';
+import * as z from 'zod';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { vehiclesApi } from '@/api/supabase';
 import { useQuery } from '@tanstack/react-query';
-import { dealersApi } from '@/api/supabase/dealersApi';
-import { ordersApi } from '@/api/apiClient'; 
-import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
+import { dealersApi, vehiclesApi } from '@/api/supabase';
+import { ordersApi } from '@/api/apiClient';
+import { toast } from '@/hooks/use-toast';
+import { Vehicle } from '@/types';
 
-const reserveSchema = z.object({
+const formSchema = z.object({
   dealerId: z.string().optional(),
-  destinazione: z.string().min(1, {
-    message: "È necessario specificare una destinazione per la prenotazione.",
-  })
+  destinazione: z.string().optional(),
 });
 
-type ReserveFormValues = z.infer<typeof reserveSchema>;
+type ReserveFormValues = z.infer<typeof formSchema>;
 
-interface ReserveVehicleFormProps {
-  vehicle: Vehicle;
-  onReservationComplete: () => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
-
-const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
-  vehicle,
+const ReserveVehicleForm = ({ 
+  vehicle, 
+  onCancel, 
   onReservationComplete,
-  onCancel,
-  isSubmitting
+  isSubmitting: externalIsSubmitting = false
+}: { 
+  vehicle: Vehicle; 
+  onCancel: () => void; 
+  onReservationComplete: () => void;
+  isSubmitting?: boolean;
 }) => {
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const { user } = useAuth();
@@ -58,10 +50,10 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
   const form = useForm<ReserveFormValues>({
-    resolver: zodResolver(reserveSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      dealerId: isAdmin ? '' : dealerId,
-      destinazione: '',
+      dealerId: '',
+      destinazione: 'Stock Dealer',
     },
   });
   
@@ -99,6 +91,7 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     }
     
     setIsLocalSubmitting(true);
+    
     console.log("Form data:", data);
     console.log("Reserving vehicle:", vehicle.id);
     console.log("Dealer ID:", finalDealerId);
@@ -124,23 +117,6 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
         
         console.log("Order created successfully:", orderResponse);
         orderId = orderResponse.id;
-        
-        if (orderId) {
-          console.log("Creating order details for the order:", orderId);
-          const orderDetailsResponse = await orderDetailsApi.create({
-            orderId: orderId,
-            isLicensable: false,
-            hasProforma: false,
-            isPaid: false,
-            isInvoiced: false,
-            hasConformity: false,
-            odlGenerated: false,
-            transportCosts: 0,
-            restorationCosts: 0
-          });
-          
-          console.log("Order details created successfully:", orderDetailsResponse);
-        }
       } catch (orderError) {
         console.error("Error creating order or order details:", orderError);
         toast({
@@ -152,16 +128,15 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       
       toast({
         title: "Veicolo Prenotato",
-        description: `${vehicle.model} ${vehicle.trim || ''} è stato prenotato con successo.`,
+        description: `${vehicle.model} è stato prenotato con successo.`,
       });
       
-      console.log("Vehicle reserved successfully");
       onReservationComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error reserving vehicle:", error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante la prenotazione del veicolo.",
+        description: error?.message || "Si è verificato un errore durante la prenotazione del veicolo.",
         variant: "destructive",
       });
     } finally {
@@ -169,14 +144,14 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     }
   };
   
-  const isFormSubmitting = isSubmitting || isLocalSubmitting;
+  const isFormSubmitting = externalIsSubmitting || isLocalSubmitting;
   
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Prenota Veicolo</h2>
-      <p className="mb-4">
-        Stai prenotando: <strong>{vehicle.model} {vehicle.trim}</strong>
-      </p>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-xl">Prenota {vehicle.model}</CardTitle>
+        <CardDescription>Inserisci i dettagli della prenotazione</CardDescription>
+      </CardHeader>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -185,20 +160,29 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
               control={form.control}
               name="dealerId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Concessionario</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormItem className="p-4 pb-0">
+                  <FormLabel>Seleziona Concessionario</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    disabled={loadingDealers || isFormSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona concessionario" />
+                        <SelectValue placeholder="Seleziona un concessionario" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {activeDealers.map(dealer => (
-                        <SelectItem key={dealer.id} value={dealer.id}>{dealer.companyName}</SelectItem>
+                      {activeDealers.map((dealer) => (
+                        <SelectItem key={dealer.id} value={dealer.id}>
+                          {dealer.companyName}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    Scegli il concessionario che effettuerà la prenotazione
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -209,26 +193,32 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
             control={form.control}
             name="destinazione"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="p-4 pb-0">
                 <FormLabel>Destinazione</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                  disabled={isFormSubmitting}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Seleziona destinazione" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Conto Esposizione">Conto Esposizione</SelectItem>
-                    <SelectItem value="Stock">Stock</SelectItem>
-                    <SelectItem value="Contratto Abbinato">Contratto Abbinato</SelectItem>
+                    <SelectItem value="Stock Dealer">Stock Dealer</SelectItem>
+                    <SelectItem value="Vendita">Vendita</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormDescription>
+                  Indica la destinazione del veicolo
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          <div className="flex justify-end space-x-2 pt-4">
+          <CardFooter className="flex justify-between pt-4">
             <Button 
               type="button" 
               variant="outline" 
@@ -238,15 +228,15 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
               Annulla
             </Button>
             <Button 
-              type="submit"
+              type="submit" 
               disabled={isFormSubmitting}
             >
               {isFormSubmitting ? 'Prenotazione in corso...' : 'Prenota'}
             </Button>
-          </div>
+          </CardFooter>
         </form>
       </Form>
-    </div>
+    </Card>
   );
 };
 

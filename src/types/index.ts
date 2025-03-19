@@ -87,32 +87,20 @@ export type Quote = {
   };
 };
 
-export type Order = {
+export interface Order {
   id: string;
   vehicleId: string;
   dealerId: string;
-  quoteId?: string;
   customerName: string;
   status: 'processing' | 'delivered' | 'cancelled';
   orderDate: string;
   deliveryDate?: string;
   progressiveNumber?: number;
   price?: number;
-  contractId?: string;
   dealerName?: string;
   modelName?: string;
-  orderNumber?: string;
   plafondDealer?: number;
-  vehicle?: Vehicle;
-  dealer?: any;
-  details?: OrderDetails;
-};
-
-export type OrderDetails = {
-  id: string;
-  orderId: string;
-  previousChassis?: string;
-  chassis?: string;
+  
   isLicensable: boolean;
   hasProforma: boolean;
   isPaid: boolean;
@@ -121,27 +109,16 @@ export type OrderDetails = {
   invoiceNumber?: string;
   invoiceDate?: string;
   hasConformity: boolean;
-  fundingType?: 'Factor' | 'Captive' | 'Acquisto Diretto';
+  previousChassis?: string;
+  chassis?: string;
   transportCosts: number;
   restorationCosts: number;
+  fundingType?: string;
   odlGenerated: boolean;
-  createdAt: string;
-  updatedAt: string;
-  notes?: string;
-};
-
-export type DealerContract = {
-  id: string;
-  dealerId: string;
-  carId: string;
-  contractDate: string;
-  contractDetails?: any;
-  status: 'attivo' | 'completato';
-  createdAt: string;
-  updatedAt: string;
-  dealer?: Dealer;
-  vehicle?: Vehicle;
-};
+  
+  vehicle?: Vehicle | null;
+  dealer?: Dealer | null;
+}
 
 export type Filter = {
   models: string[];

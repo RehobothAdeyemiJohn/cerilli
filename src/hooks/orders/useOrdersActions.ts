@@ -1,9 +1,8 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersApi } from '@/api/supabase/ordersApi';
+import { ordersApi } from '@/api/apiClient';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
-import { OrderDetails } from '@/types';
+import { Order } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
 export const useOrdersActions = (refreshAllOrderData: () => void) => {
@@ -14,38 +13,16 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       try {
         const order = await ordersApi.getById(orderId);
         
-        console.log("Order details for delivery check:", order.details);
+        console.log("Order details for delivery check:", order);
         
-        // Directly query the order details from API to ensure we have accurate data
-        try {
-          // Get order details directly from the API
-          const orderDetails = await orderDetailsApi.getByOrderId(orderId);
-          console.log("Retrieved order details directly from API:", orderDetails);
-          
-          // If we have orderDetails and odlGenerated is false, prevent delivery
-          if (orderDetails && orderDetails.odlGenerated === false) {
-            console.log('Order details exist but ODL not generated');
-            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
-          }
-          
-          // If no details found at all (null response), prevent delivery
-          if (!orderDetails) {
-            console.log('No order details found - ODL not generated');
-            throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine. Aprire i dettagli dell'ordine e generare l'ODL.");
-          }
-          
-          // Additional logging to help debug
-          console.log("ODL generation status:", orderDetails.odlGenerated);
-          
-        } catch (detailsError) {
-          // If there was an error fetching details, we should prevent delivery
-          console.error("Error fetching order details:", detailsError);
-          throw new Error("Impossibile verificare lo stato dell'ODL. Aprire i dettagli dell'ordine e generare l'ODL.");
+        // Verificare se l'ODL è stato generato prima di consegnare
+        if (!order.odlGenerated) {
+          console.log('ODL not generated');
+          throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
         }
         
-        // If we get here, the order can be delivered
-        
-        if (order.vehicle && order.dealerId) {
+        // Aggiornare lo stato del veicolo se esiste
+        if (order.vehicleId && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
             status: 'delivered',
             location: 'Stock Dealer'
@@ -67,7 +44,6 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       
       refreshAllOrderData();
       toast({
@@ -133,16 +109,31 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
     }
   });
 
-  const handleGenerateODL = (details: OrderDetails) => {
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-    refreshAllOrderData();
-  };
+  const generateODLMutation = useMutation({
+    mutationFn: (orderId: string) => ordersApi.generateODL(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      refreshAllOrderData();
+      toast({
+        title: "ODL generato",
+        description: "L'ODL è stato generato con successo per questo ordine",
+      });
+    },
+    onError: (error) => {
+      console.error('Error generating ODL:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la generazione dell'ODL",
+        variant: "destructive"
+      });
+    }
+  });
 
   return {
     markAsDeliveredMutation,
     cancelOrderMutation,
     deleteOrderMutation,
+    generateODLMutation,
     handleMarkAsDelivered: (orderId: string) => markAsDeliveredMutation.mutate(orderId),
     handleCancelOrder: (orderId: string) => cancelOrderMutation.mutate(orderId),
     handleDeleteOrder: (orderId: string | null) => {
@@ -150,6 +141,6 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         deleteOrderMutation.mutate(orderId);
       }
     },
-    handleGenerateODL
+    handleGenerateODL: (orderId: string) => generateODLMutation.mutate(orderId)
   };
 };

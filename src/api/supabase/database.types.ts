@@ -175,39 +175,93 @@ export interface Database {
       orders: {
         Row: {
           id: string
-          vehicleId: string
-          dealerId: string
-          quoteId: string | null
-          customerName: string
-          status: string
-          orderDate: string
-          deliveryDate: string | null
-          created_at: string
-          updated_at: string
+          progressive_number: number
+          vehicle_id: string | null
+          dealer_id: string | null
+          dealer_name: string | null
+          customer_name: string
+          model_name: string | null
+          status: string | null
+          order_date: string | null
+          delivery_date: string | null
+          price: number | null
+          plafond_dealer: number | null
+          is_licensable: boolean | null
+          has_proforma: boolean | null
+          is_paid: boolean | null
+          payment_date: string | null
+          is_invoiced: boolean | null
+          invoice_number: string | null
+          invoice_date: string | null
+          has_conformity: boolean | null
+          previous_chassis: string | null
+          chassis: string | null
+          transport_costs: number | null
+          restoration_costs: number | null
+          funding_type: string | null
+          odl_generated: boolean | null
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
           id?: string
-          vehicleId: string
-          dealerId: string
-          quoteId?: string | null
-          customerName: string
-          status?: string
-          orderDate?: string
-          deliveryDate?: string | null
-          created_at?: string
-          updated_at?: string
+          progressive_number?: number
+          vehicle_id?: string | null
+          dealer_id?: string | null
+          dealer_name?: string | null
+          customer_name: string
+          model_name?: string | null
+          status?: string | null
+          order_date?: string | null
+          delivery_date?: string | null
+          price?: number | null
+          plafond_dealer?: number | null
+          is_licensable?: boolean | null
+          has_proforma?: boolean | null
+          is_paid?: boolean | null
+          payment_date?: string | null
+          is_invoiced?: boolean | null
+          invoice_number?: string | null
+          invoice_date?: string | null
+          has_conformity?: boolean | null
+          previous_chassis?: string | null
+          chassis?: string | null
+          transport_costs?: number | null
+          restoration_costs?: number | null
+          funding_type?: string | null
+          odl_generated?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id?: string
-          vehicleId?: string
-          dealerId?: string
-          quoteId?: string | null
-          customerName?: string
-          status?: string
-          orderDate?: string
-          deliveryDate?: string | null
-          created_at?: string
-          updated_at?: string
+          progressive_number?: number
+          vehicle_id?: string | null
+          dealer_id?: string | null
+          dealer_name?: string | null
+          customer_name?: string
+          model_name?: string | null
+          status?: string | null
+          order_date?: string | null
+          delivery_date?: string | null
+          price?: number | null
+          plafond_dealer?: number | null
+          is_licensable?: boolean | null
+          has_proforma?: boolean | null
+          is_paid?: boolean | null
+          payment_date?: string | null
+          is_invoiced?: boolean | null
+          invoice_number?: string | null
+          invoice_date?: string | null
+          has_conformity?: boolean | null
+          previous_chassis?: string | null
+          chassis?: string | null
+          transport_costs?: number | null
+          restoration_costs?: number | null
+          funding_type?: string | null
+          odl_generated?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
       }
     }

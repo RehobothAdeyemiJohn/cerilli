@@ -4,8 +4,6 @@ import { toast } from '@/hooks/use-toast';
 import { Vehicle } from '@/types';
 import { vehiclesApi } from '@/api/supabase';
 import { ordersApi } from '@/api/apiClient';
-import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
-import { ZodFormattedError } from 'zod';
 import { VirtualReservationFormValues } from '../schema';
 
 export const useVirtualReservationSubmit = (
@@ -99,34 +97,14 @@ export const useVirtualReservationSubmit = (
           status: 'processing',
           orderDate: new Date().toISOString(),
           price: calculatedPrice || 0,
-          // New fields
           dealerName: finalDealerName,
           modelName: vehicle.model,
           plafondDealer: dealerPlafond
         });
         
         console.log("Order created successfully:", orderResponse);
-        orderId = orderResponse.id;
-        
-        // Ora creaiamo anche il relativo record in order_details
-        if (orderId) {
-          console.log("Creating order details for the order:", orderId);
-          const orderDetailsResponse = await orderDetailsApi.create({
-            orderId: orderId,
-            isLicensable: false,
-            hasProforma: false,
-            isPaid: false,
-            isInvoiced: false,
-            hasConformity: false,
-            odlGenerated: false,
-            transportCosts: 0,  // Aggiungiamo i campi mancanti
-            restorationCosts: 0  // Aggiungiamo i campi mancanti
-          });
-          
-          console.log("Order details created successfully:", orderDetailsResponse);
-        }
       } catch (orderError) {
-        console.error("Error creating order or order details:", orderError);
+        console.error("Error creating order:", orderError);
         // Continue even if order creation fails, as the vehicle is already reserved
         toast({
           title: "Attenzione",

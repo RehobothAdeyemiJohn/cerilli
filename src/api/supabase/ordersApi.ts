@@ -1,3 +1,4 @@
+
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -57,19 +58,35 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 const mapOrderDbToFrontend = (order: any): Order => {
   return {
     id: order.id,
-    vehicleId: order.vehicleid,
-    dealerId: order.dealerid,
-    customerName: order.customername,
-    status: order.status,
-    orderDate: order.orderdate,
-    deliveryDate: order.deliverydate,
+    vehicleId: order.vehicle_id || '',
+    dealerId: order.dealer_id || '',
+    customerName: order.customer_name,
+    status: order.status as 'processing' | 'delivered' | 'cancelled',
+    orderDate: order.order_date,
+    deliveryDate: order.delivery_date,
     progressiveNumber: order.progressive_number,
     price: order.price,
-    contractId: order.contract_id,
     dealerName: order.dealer_name,
     modelName: order.model_name,
-    orderNumber: order.order_number,
     plafondDealer: order.plafond_dealer,
+    
+    // Campi precedentemente in order_details
+    isLicensable: order.is_licensable === true,
+    hasProforma: order.has_proforma === true,
+    isPaid: order.is_paid === true,
+    paymentDate: order.payment_date,
+    isInvoiced: order.is_invoiced === true,
+    invoiceNumber: order.invoice_number,
+    invoiceDate: order.invoice_date,
+    hasConformity: order.has_conformity === true,
+    previousChassis: order.previous_chassis,
+    chassis: order.chassis,
+    transportCosts: order.transport_costs || 0,
+    restorationCosts: order.restoration_costs || 0,
+    fundingType: order.funding_type,
+    odlGenerated: order.odl_generated === true,
+    
+    // Relazioni (aggiunta se presenti nei dati)
     vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
     dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : null
   };
@@ -79,223 +96,58 @@ export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
     
-    // First approach: most straightforward direct query with minimal logging
     try {
-      console.log("Attempting simple orders query...");
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*');
-      
-      if (error) {
-        console.error('Error with simple orders query:', error);
-      } else {
-        console.log(`Found ${data?.length || 0} orders with simple query`);
-        
-        if (data && data.length > 0) {
-          // If we have orders but without relation data, fetch relations manually
-          const ordersWithRelations = await Promise.all(
-            data.map(async (order) => {
-              let vehicleData = null;
-              let dealerData = null;
-              
-              // Try to fetch the vehicle
-              if (order.vehicleid) {
-                try {
-                  const { data: vehicle } = await supabase
-                    .from('vehicles')
-                    .select('*')
-                    .eq('id', order.vehicleid)
-                    .maybeSingle();
-                  
-                  vehicleData = vehicle;
-                } catch (e) {
-                  console.error(`Error fetching vehicle for order ${order.id}:`, e);
-                }
-              }
-              
-              // Try to fetch the dealer
-              if (order.dealerid) {
-                try {
-                  const { data: dealer } = await supabase
-                    .from('dealers')
-                    .select('*')
-                    .eq('id', order.dealerid)
-                    .maybeSingle();
-                  
-                  dealerData = dealer;
-                } catch (e) {
-                  console.error(`Error fetching dealer for order ${order.id}:`, e);
-                }
-              }
-              
-              // Return the order with manually fetched relations
-              return {
-                ...order,
-                vehicles: vehicleData,
-                dealers: dealerData
-              };
-            })
-          );
-          
-          console.log("Successfully built orders with relations manually");
-          
-          // Map to frontend format
-          const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
-          console.log("Returning formatted orders:", formattedOrders);
-          return formattedOrders;
-        }
-      }
-    } catch (e) {
-      console.error("Error with direct query approach:", e);
-    }
-    
-    // Second approach: Try with explicit join
-    try {
-      console.log("Attempting orders query with explicit joins...");
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          vehicles:vehicleid (*),
-          dealers:dealerid (*)
+          vehicles:vehicle_id (*),
+          dealers:dealer_id (*)
         `);
       
       if (error) {
-        console.error('Error with joined query:', error);
-      } else {
-        console.log(`Found ${data?.length || 0} orders with join query`);
-        
-        if (data && data.length > 0) {
-          // Map the orders from the joined query
-          const formattedOrders = data.map(mapOrderDbToFrontend);
-          console.log("Returning formatted orders from join:", formattedOrders);
-          return formattedOrders;
-        }
+        console.error('Error fetching orders:', error);
+        return [];
       }
-    } catch (e) {
-      console.error("Error with join query approach:", e);
-    }
-    
-    // Third approach: Alternative join syntax
-    try {
-      console.log("Attempting alternative join syntax...");
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, vehicles(*), dealers(*)');
       
-      if (error) {
-        console.error('Error with alternative join syntax:', error);
-      } else {
-        console.log(`Found ${data?.length || 0} orders with alternative join`);
-        
-        if (data && data.length > 0) {
-          const formattedOrders = data.map(mapOrderDbToFrontend);
-          console.log("Returning formatted orders from alternative join:", formattedOrders);
-          return formattedOrders;
-        }
+      if (!data || data.length === 0) {
+        console.log("No orders found in database");
+        return [];
       }
-    } catch (e) {
-      console.error("Error with alternative join approach:", e);
-    }
-
-    // Last resort: Check if there's any data in the table with minimal fields
-    try {
-      console.log("Last attempt: checking orders table with minimal fields...");
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, customername')
-        .limit(10);
       
-      if (error) {
-        console.error('Error with minimal fields query:', error);
-      } else {
-        console.log(`Found ${data?.length || 0} orders with minimal fields query:`, data);
-        
-        if (data && data.length > 0) {
-          console.log("Orders exist but couldn't be properly fetched with relations");
-          
-          // Try to fetch full data for each order individually
-          const ordersWithData = await Promise.all(
-            data.map(async (orderMinimal) => {
-              try {
-                const { data: fullOrder } = await supabase
-                  .from('orders')
-                  .select('*')
-                  .eq('id', orderMinimal.id)
-                  .maybeSingle();
-                
-                if (!fullOrder) return null;
-                
-                let vehicleData = null;
-                let dealerData = null;
-                
-                // Try to fetch the vehicle
-                if (fullOrder.vehicleid) {
-                  const { data: vehicle } = await supabase
-                    .from('vehicles')
-                    .select('*')
-                    .eq('id', fullOrder.vehicleid)
-                    .maybeSingle();
-                  
-                  vehicleData = vehicle;
-                }
-                
-                // Try to fetch the dealer
-                if (fullOrder.dealerid) {
-                  const { data: dealer } = await supabase
-                    .from('dealers')
-                    .select('*')
-                    .eq('id', fullOrder.dealerid)
-                    .maybeSingle();
-                  
-                  dealerData = dealer;
-                }
-                
-                return {
-                  ...fullOrder,
-                  vehicles: vehicleData,
-                  dealers: dealerData
-                };
-              } catch (e) {
-                console.error(`Error fetching full data for order ${orderMinimal.id}:`, e);
-                return null;
-              }
-            })
-          );
-          
-          // Filter out any null results and map to frontend format
-          const validOrders = ordersWithData.filter(order => order !== null);
-          const formattedOrders = validOrders.map(order => mapOrderDbToFrontend(order!));
-          
-          console.log("Returning formatted orders from individual fetches:", formattedOrders);
-          return formattedOrders;
-        }
-      }
-    } catch (e) {
-      console.error("Error with minimal fields approach:", e);
+      console.log(`Retrieved ${data.length} orders from database`);
+      
+      // Map each database record to our frontend Order type
+      const orders = data.map(order => mapOrderDbToFrontend(order));
+      return orders;
+    } catch (error) {
+      console.error('Unexpected error fetching orders:', error);
+      return [];
     }
-    
-    console.log("No orders could be fetched through any method. Returning empty array.");
-    return [];
   },
-
+  
   getById: async (id: string): Promise<Order> => {
     console.log("Fetching order by ID:", id);
+    
     const { data, error } = await supabase
       .from('orders')
-      .select('*, vehicles(*), dealers(*)')
+      .select(`
+        *,
+        vehicles:vehicle_id (*),
+        dealers:dealer_id (*)
+      `)
       .eq('id', id)
       .maybeSingle();
-
+    
     if (error || !data) {
       console.error('Error fetching order:', error);
       throw error || new Error('Order not found');
     }
-
+    
     return mapOrderDbToFrontend(data);
   },
-
-  create: async (order: Omit<Order, 'id'>): Promise<Order> => {
+  
+  create: async (order: Omit<Order, 'id' | 'isLicensable' | 'hasProforma' | 'isPaid' | 'isInvoiced' | 'hasConformity' | 'odlGenerated' | 'transportCosts' | 'restorationCosts'>): Promise<Order> => {
     console.log("Creating new order in Supabase:", order);
     
     // Get dealer info to store plafond_dealer at order creation time
@@ -339,114 +191,82 @@ export const ordersApi = {
     
     // Map frontend field names to database column names
     const newOrder = {
-      vehicleid: order.vehicleId,
-      dealerid: order.dealerId,
-      customername: order.customerName,
+      vehicle_id: order.vehicleId,
+      dealer_id: order.dealerId,
+      customer_name: order.customerName,
       status: order.status,
-      orderdate: order.orderDate || new Date().toISOString(),
-      deliverydate: order.deliveryDate,
+      order_date: order.orderDate || new Date().toISOString(),
+      delivery_date: order.deliveryDate,
       price: order.price || 0,
-      contract_id: order.contractId,
       dealer_name: dealerName || order.dealerName || order.customerName,
       model_name: modelName || order.modelName,
-      order_number: order.orderNumber,
-      plafond_dealer: dealerPlafond
+      plafond_dealer: dealerPlafond,
+      
+      // Campi di order_details con valori predefiniti
+      is_licensable: false,
+      has_proforma: false,
+      is_paid: false,
+      is_invoiced: false,
+      has_conformity: false,
+      odl_generated: false,
+      transport_costs: 0,
+      restoration_costs: 0
     };
     
     console.log("Formatted order for Supabase insert:", newOrder);
     
-    try {
-      // First try to use the RPC function which has security definer
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
-        'insert_order',
-        {
-          p_vehicleid: order.vehicleId,
-          p_dealerid: order.dealerId,
-          p_customername: order.customerName,
-          p_status: order.status || 'processing'
-        }
-      );
-      
-      if (rpcError) {
-        console.error('Error creating order via RPC:', rpcError);
-        // Fall back to direct insert
-        const { data, error } = await supabase
-          .from('orders')
-          .insert(newOrder)
-          .select('*, vehicles(*), dealers(*)')
-          .single();
-
-        if (error) {
-          console.error('Error creating order via direct insert:', error);
-          throw error;
-        }
-        
-        console.log("Order created successfully via direct insert:", data);
-        return mapOrderDbToFrontend(data);
-      }
-      
-      console.log("Order created successfully via RPC with ID:", rpcData);
-      
-      // Since RPC doesn't support the new columns, update the order with the additional data
-      if (rpcData) {
-        const { error: updateError } = await supabase
-          .from('orders')
-          .update({
-            dealer_name: newOrder.dealer_name,
-            model_name: newOrder.model_name,
-            order_number: newOrder.order_number,
-            plafond_dealer: newOrder.plafond_dealer
-          })
-          .eq('id', rpcData);
-          
-        if (updateError) {
-          console.error('Error updating order with additional fields:', updateError);
-        }
-      }
-      
-      // Fetch the created order since RPC just returns the ID
-      const { data: orderData, error: fetchError } = await supabase
-        .from('orders')
-        .select('*, vehicles(*), dealers(*)')
-        .eq('id', rpcData)
-        .single();
-      
-      if (fetchError) {
-        console.error('Error fetching created order:', fetchError);
-        throw fetchError;
-      }
-      
-      console.log("Fetched created order:", orderData);
-      return mapOrderDbToFrontend(orderData);
-    } catch (error) {
-      console.error('Unexpected error creating order:', error);
+    const { data, error } = await supabase
+      .from('orders')
+      .insert(newOrder)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating order:', error);
       throw error;
     }
+    
+    console.log("Order created successfully:", data);
+    return mapOrderDbToFrontend(data);
   },
-
+  
   update: async (id: string, updates: Partial<Order>): Promise<Order> => {
     console.log("Updating order in Supabase:", id, updates);
     
     // Map frontend field names to database column names
-    const dbUpdates = {
-      vehicleid: updates.vehicleId,
-      dealerid: updates.dealerId,
-      customername: updates.customerName,
+    const dbUpdates: any = {
+      vehicle_id: updates.vehicleId,
+      dealer_id: updates.dealerId,
+      customer_name: updates.customerName,
       status: updates.status,
-      orderdate: updates.orderDate,
-      deliverydate: updates.deliveryDate,
+      order_date: updates.orderDate,
+      delivery_date: updates.deliveryDate,
       price: updates.price,
-      contract_id: updates.contractId,
       dealer_name: updates.dealerName,
       model_name: updates.modelName,
-      order_number: updates.orderNumber,
-      plafond_dealer: updates.plafondDealer
+      plafond_dealer: updates.plafondDealer,
+      
+      // Campi precedentemente in order_details
+      is_licensable: updates.isLicensable,
+      has_proforma: updates.hasProforma,
+      is_paid: updates.isPaid,
+      payment_date: updates.paymentDate,
+      is_invoiced: updates.isInvoiced,
+      invoice_number: updates.invoiceNumber,
+      invoice_date: updates.invoiceDate,
+      has_conformity: updates.hasConformity,
+      previous_chassis: updates.previousChassis,
+      chassis: updates.chassis,
+      transport_costs: updates.transportCosts,
+      restoration_costs: updates.restorationCosts,
+      funding_type: updates.fundingType,
+      odl_generated: updates.odlGenerated
     };
     
     // Remove undefined fields
     Object.keys(dbUpdates).forEach(key => {
-      if (dbUpdates[key as keyof typeof dbUpdates] === undefined) {
-        delete dbUpdates[key as keyof typeof dbUpdates];
+      if (dbUpdates[key] === undefined) {
+        delete dbUpdates[key];
       }
     });
     
@@ -454,24 +274,45 @@ export const ordersApi = {
       .from('orders')
       .update(dbUpdates)
       .eq('id', id)
-      .select('*, vehicles(*), dealers(*)')
-      .maybeSingle();
-
-    if (error || !data) {
+      .select()
+      .single();
+    
+    if (error) {
       console.error('Error updating order:', error);
-      throw error || new Error('Order not found');
+      throw error;
     }
     
+    console.log("Order updated successfully:", data);
     return mapOrderDbToFrontend(data);
   },
-
+  
+  generateODL: async (id: string): Promise<Order> => {
+    console.log("Generating ODL for order:", id);
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ odl_generated: true })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error generating ODL for order:', error);
+      throw error;
+    }
+    
+    console.log("ODL generated successfully for order:", data);
+    return mapOrderDbToFrontend(data);
+  },
+  
   delete: async (id: string): Promise<void> => {
-    console.log("Deleting order from Supabase:", id);
+    console.log("Deleting order:", id);
+    
     const { error } = await supabase
       .from('orders')
       .delete()
       .eq('id', id);
-
+    
     if (error) {
       console.error('Error deleting order:', error);
       throw error;

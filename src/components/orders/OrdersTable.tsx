@@ -23,7 +23,6 @@ interface OrdersTableProps {
   onMarkAsDelivered: (orderId: string) => void;
   onCancelOrder: (orderId: string) => void;
   onDeleteClick: (orderId: string) => void;
-  onDeleteConfirm: () => void;
   onPrintOrder: (order: Order) => void;
   onCreateContract?: (order: Order) => void;
   tabName: string;
@@ -46,9 +45,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   onMarkAsDelivered,
   onCancelOrder,
   onDeleteClick,
-  onDeleteConfirm,
   onPrintOrder,
-  onCreateContract,
   tabName,
   processingOrders,
   deliveredOrders,
@@ -125,8 +122,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
             variant="outline"
             size="sm"
             onClick={() => onMarkAsDelivered(order.id)}
-            disabled={markAsDeliveredPending}
+            disabled={markAsDeliveredPending || !order.odlGenerated}
             className="h-8 bg-green-100 hover:bg-green-200 text-green-800"
+            title={!order.odlGenerated ? "Genera prima l'ODL" : "Marca come consegnato"}
           >
             <Check className="h-4 w-4 mr-1" />
             Consegna
@@ -219,10 +217,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 
                 const orderNumber = getOrderNumber(order);
                 
-                const canDeliverOrder = order.status === 'processing' && (order.details?.odlGenerated === true);
-                
-                const hasContract = !!order.contractId;
-                
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.progressiveNumber?.toString().padStart(3, '0') || '???'}</TableCell>
@@ -230,13 +224,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                     <TableCell>{vehicleInfo}</TableCell>
                     <TableCell>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          order.status === 'processing'
-                            ? 'bg-blue-100 text-blue-800'
-                            : order.status === 'delivered'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(order.status)}`}
                       >
                         {order.status === 'processing'
                           ? 'In Lavorazione'
@@ -247,11 +235,11 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                     </TableCell>
                     <TableCell>{order.orderDate ? formatDate(new Date(order.orderDate)) : '-'}</TableCell>
                     <TableCell>{order.deliveryDate ? formatDate(new Date(order.deliveryDate)) : '-'}</TableCell>
-                    <TableCell className="text-center">{renderCheckIcon(order.details?.isLicensable)}</TableCell>
-                    <TableCell className="text-center">{renderCheckIcon(order.details?.hasProforma)}</TableCell>
-                    <TableCell className="text-center">{renderCheckIcon(order.details?.isPaid)}</TableCell>
-                    <TableCell className="text-center">{renderCheckIcon(order.details?.isInvoiced)}</TableCell>
-                    <TableCell className="text-center">{renderCheckIcon(order.details?.hasConformity)}</TableCell>
+                    <TableCell className="text-center">{renderCheckIcon(order.isLicensable)}</TableCell>
+                    <TableCell className="text-center">{renderCheckIcon(order.hasProforma)}</TableCell>
+                    <TableCell className="text-center">{renderCheckIcon(order.isPaid)}</TableCell>
+                    <TableCell className="text-center">{renderCheckIcon(order.isInvoiced)}</TableCell>
+                    <TableCell className="text-center">{renderCheckIcon(order.hasConformity)}</TableCell>
                     <TableCell>{renderPlafondColumn(order)}</TableCell>
                     <TableCell>{renderOrderActions(order)}</TableCell>
                   </TableRow>

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +9,7 @@ import OrdersHeader from '@/components/orders/OrdersHeader';
 import OrdersTable from '@/components/orders/OrdersTable';
 import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Order, OrderDetails } from '@/types';
+import { Order } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +37,6 @@ const Orders = () => {
   
   const {
     ordersData,
-    ordersWithDetails,
     processingOrders,
     deliveredOrders,
     cancelledOrders,
@@ -47,7 +47,6 @@ const Orders = () => {
     isDetailsDialogOpen,
     setIsDetailsDialogOpen,
     refetchOrders,
-    refetchAllOrderDetails,
     getOrderNumber
   } = useOrdersData(filters);
   
@@ -60,13 +59,6 @@ const Orders = () => {
     handleDeleteOrder: deleteOrderAction,
     handleGenerateODL
   } = useOrdersActions(refreshAllOrderData);
-  
-  const [isContractFormOpen, setIsContractFormOpen] = useState(false);
-  const [selectedOrderForContract, setSelectedOrderForContract] = useState<Order | null>(null);
-
-  const handleCreateContract = (order: Order) => {
-    console.log("Funzionalità rimossa: trasforma in contratto");
-  };
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -163,7 +155,6 @@ const Orders = () => {
               onDeleteClick={handleDeleteClick}
               onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract} 
               tabName="processing"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -188,7 +179,6 @@ const Orders = () => {
               onDeleteClick={handleDeleteClick}
               onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract}
               tabName="delivered"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -213,7 +203,6 @@ const Orders = () => {
               onDeleteClick={handleDeleteClick}
               onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract}
               tabName="cancelled"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
@@ -238,7 +227,6 @@ const Orders = () => {
               onDeleteClick={handleDeleteClick}
               onDeleteConfirm={confirmDeleteOrder}
               onPrintOrder={handlePrint}
-              onCreateContract={handleCreateContract}
               tabName="all"
               processingOrders={processingOrders}
               deliveredOrders={deliveredOrders}
