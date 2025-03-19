@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -27,8 +28,8 @@ export const useOrdersData = (filters: {
   } = useQuery({
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
-    staleTime: 0,
-    refetchInterval: 5000,
+    staleTime: 0, // Always consider data stale to force refresh
+    refetchInterval: 3000, // Refetch every 3 seconds
     refetchOnWindowFocus: true,
   });
 
@@ -124,6 +125,7 @@ export const useOrdersData = (filters: {
     queryFn: () => fetchOrderDetails(ordersData),
     enabled: ordersData.length > 0,
     staleTime: 0,
+    refetchInterval: 3000, // Refetch every 3 seconds
   });
 
   // Effect to refresh data when dialog closes

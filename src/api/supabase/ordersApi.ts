@@ -80,34 +80,41 @@ export const ordersApi = {
     const userJson = localStorage.getItem('currentUser');
     const currentUser = userJson ? JSON.parse(userJson) : null;
     
-    let query = supabase
-      .from('orders')
-      .select('*, vehicles(*), dealers(*)')
-      .order('orderdate', { ascending: false });
-    
-    // If user is a dealer, only show their orders
-    if (currentUser?.type === 'dealer') {
-      console.log("Filtering orders for dealer:", currentUser.dealerId);
-      query = query.eq('dealerid', currentUser.dealerId);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching orders:', error);
+    try {
+      let query = supabase
+        .from('orders')
+        .select('*, vehicles(*), dealers(*)')
+        .order('orderdate', { ascending: false });
+      
+      // If user is a dealer, only show their orders
+      if (currentUser?.type === 'dealer') {
+        console.log("Filtering orders for dealer:", currentUser.dealerId);
+        query = query.eq('dealerid', currentUser.dealerId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.log("No orders found in database");
+        return [];
+      }
+
+      console.log("Raw orders data from database:", data);
+
+      // Map database response to frontend types
+      const formattedOrders = data.map(mapOrderDbToFrontend);
+
+      console.log("Orders fetched successfully:", formattedOrders);
+      return formattedOrders;
+    } catch (error) {
+      console.error('Unexpected error fetching orders:', error);
       throw error;
     }
-
-    if (!data || data.length === 0) {
-      console.log("No orders found in database");
-      return [];
-    }
-
-    // Map database response to frontend types
-    const formattedOrders = data.map(mapOrderDbToFrontend);
-
-    console.log("Orders fetched successfully:", formattedOrders);
-    return formattedOrders;
   },
 
   getById: async (id: string): Promise<Order> => {
@@ -187,6 +194,7 @@ export const ordersApi = {
         throw fetchError;
       }
       
+      console.log("Fetched created order:", orderData);
       return mapOrderDbToFrontend(orderData);
     } catch (error) {
       console.error('Unexpected error creating order:', error);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -210,6 +209,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             .maybeSingle();
           
           if (error) {
+            console.error("Error finding dealer by name:", error);
             throw error;
           }
           
@@ -218,15 +218,14 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             console.log("Found dealer ID:", dealerId);
           } else {
             console.log("Dealer not found for name:", selectedVehicle.reservedBy);
+            throw new Error(`Concessionario "${selectedVehicle.reservedBy}" non trovato nel database`);
           }
         } catch (err) {
           console.error("Error finding dealer by name:", err);
-          // Continue with null dealerId
+          throw new Error(`Errore durante la ricerca del concessionario: ${(err as Error).message}`);
         }
-      }
-      
-      if (!dealerId) {
-        throw new Error("Non è stato possibile trovare il concessionario per creare l'ordine");
+      } else {
+        throw new Error("Questo veicolo non ha un concessionario assegnato per la prenotazione");
       }
       
       console.log("Creating order with dealerId:", dealerId);
@@ -266,10 +265,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       // Refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
       
       toast({
         title: "Ordine Creato",
-        description: `L'ordine per ${selectedVehicle.model} è stato creato con successo`,
+        description: `L'ordine per ${selectedVehicle.model} è stato creato con successo. Vai alla sezione Ordini per visualizzarlo.`,
       });
       
       handleDialogClose();
