@@ -38,8 +38,9 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Use nuovoPlafond directly from the dealer object
-            const plafondDisponibile = dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : 0;
+            // Access using the original field name from Supabase
+            const plafondDisponibile = dealer.nuovo_plafond !== undefined ? dealer.nuovo_plafond : 0;
+            console.log(`Rendering plafond for ${dealer.companyName}:`, dealer.nuovo_plafond);
             
             return (
               <div key={dealer.id} className="flex justify-between items-center border-b last:border-0 pb-3 last:pb-0 mb-3 last:mb-0">

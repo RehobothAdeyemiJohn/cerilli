@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -174,13 +173,13 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   const renderPlafondColumn = (order: Order) => {
     if (!order.dealer) return <span className="text-gray-400">-</span>;
     
-    // Add log to see the dealer data that's being passed
+    const plafondValue = order.dealer.nuovo_plafond !== undefined ? order.dealer.nuovo_plafond : order.dealer.creditLimit;
     console.log(`Rendering plafond for dealer ${order.dealer.companyName}:`, {
-      nuovoPlafond: order.dealer.nuovoPlafond,
+      nuovo_plafond: order.dealer.nuovo_plafond,
       creditLimit: order.dealer.creditLimit
     });
     
-    return formatPlafond(order.dealer);
+    return plafondValue !== undefined ? `${plafondValue.toLocaleString()} €` : '0 €';
   };
 
   return (

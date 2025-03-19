@@ -173,12 +173,13 @@ export interface Dealer {
   email: string;
   password: string;
   contactName: string;
-  createdAt?: string;
+  createdAt: string;
   isActive: boolean;
   logo?: string;
   creditLimit?: number;
-  esposizione?: number;
   nuovoPlafond?: number;
+  nuovo_plafond?: number;
+  esposizione?: number;
   orders?: Order[];
 }
 

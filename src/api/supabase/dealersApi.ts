@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,37 +16,32 @@ export const dealersApi = {
       throw error;
     }
     
-    // Log the raw data to check the nuovo_plafond field
+    // Direct access to original data structure
     console.log('Raw dealers data from Supabase:', data);
     
-    // Check if nuovo_plafond exists in the raw data
-    data.forEach(dealer => {
-      console.log(`Dealer ${dealer.companyname} nuovo_plafond:`, dealer.nuovo_plafond);
+    const formattedDealers = data.map(dealer => {
+      // Keep the original field name from Supabase
+      const dealerObj = {
+        id: dealer.id,
+        companyName: dealer.companyname,
+        address: dealer.address,
+        city: dealer.city,
+        province: dealer.province,
+        zipCode: dealer.zipcode,
+        email: dealer.email,
+        password: dealer.password,
+        contactName: dealer.contactname,
+        createdAt: dealer.created_at,
+        isActive: dealer.isactive,
+        logo: dealer.logo,
+        creditLimit: dealer.credit_limit,
+        // Keep the original field name from Supabase
+        nuovo_plafond: dealer.nuovo_plafond
+      } as Dealer;
+      
+      console.log(`Formatted dealer ${dealer.companyname}, nuovo_plafond:`, dealer.nuovo_plafond);
+      return dealerObj;
     });
-    
-    const formattedDealers = data.map(dealer => ({
-      id: dealer.id,
-      companyName: dealer.companyname,
-      address: dealer.address,
-      city: dealer.city,
-      province: dealer.province,
-      zipCode: dealer.zipcode,
-      email: dealer.email,
-      password: dealer.password,
-      contactName: dealer.contactname,
-      createdAt: dealer.created_at,
-      isActive: dealer.isactive,
-      logo: dealer.logo,
-      creditLimit: dealer.credit_limit,
-      nuovoPlafond: dealer.nuovo_plafond // Direct access to the nuovo_plafond field
-    })) as Dealer[];
-    
-    console.log('Formatted dealers with nuovo_plafond:', formattedDealers.map(d => ({
-      id: d.id,
-      companyName: d.companyName,
-      nuovoPlafond: d.nuovoPlafond,
-      creditLimit: d.creditLimit
-    })));
     
     // Fetch all orders for each dealer (especially important for delivered ones)
     for (const dealer of formattedDealers) {
@@ -110,15 +104,9 @@ export const dealersApi = {
       isActive: data.isactive,
       logo: data.logo,
       creditLimit: data.credit_limit,
-      nuovoPlafond: data.nuovo_plafond // Direct access to the nuovo_plafond field
+      // Keep the original field name from Supabase
+      nuovo_plafond: data.nuovo_plafond
     } as Dealer;
-    
-    console.log('Formatted dealer with nuovo_plafond:', {
-      id: formattedDealer.id,
-      companyName: formattedDealer.companyName,
-      nuovoPlafond: formattedDealer.nuovoPlafond,
-      creditLimit: formattedDealer.creditLimit
-    });
     
     // Fetch all orders for this dealer to calculate plafond correctly
     try {

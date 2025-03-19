@@ -27,7 +27,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
 }) => {
   // Log the dealer object to check its structure
   console.log('Dealer object in OrderDetailsDialog:', order.dealer);
-  console.log('Dealer nuovoPlafond in OrderDetailsDialog:', order.dealer?.nuovoPlafond);
+  console.log('Dealer nuovo_plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
   
   // Verifica se ci sono dettagli del veicolo da mostrare
   const hasVehicleDetails = order?.vehicle !== null;
@@ -163,7 +163,11 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
             
             <div className="space-y-1">
               <p className="text-sm font-medium">Plafond Disponibile:</p>
-              <p className="text-sm">{formatPlafond(order.dealer)}</p>
+              <p className="text-sm">
+                {order.dealer?.nuovo_plafond !== undefined 
+                  ? `${order.dealer.nuovo_plafond.toLocaleString()} €` 
+                  : formatPlafond(order.dealer)}
+              </p>
             </div>
           </div>
         </div>
