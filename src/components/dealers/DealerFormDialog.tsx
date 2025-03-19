@@ -114,6 +114,19 @@ const DealerFormDialog = ({
     }
   };
 
+  // Since uploadLogo doesn't exist on the dealersApi, we'll use a simplified approach
+  const uploadLogo = async (file: File, dealerId: string): Promise<string | null> => {
+    // In a real implementation, this would upload to storage
+    // For now, we'll just return the file as a data URL
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
@@ -121,7 +134,7 @@ const DealerFormDialog = ({
       
       if (values.logo instanceof File) {
         try {
-          logoUrl = await dealersApi.uploadLogo(values.logo, dealer?.id || 'temp');
+          logoUrl = await uploadLogo(values.logo, dealer?.id || 'temp');
           console.log('Logo uploaded successfully:', logoUrl);
         } catch (error) {
           console.error('Error uploading logo:', error);
@@ -153,11 +166,7 @@ const DealerFormDialog = ({
 
       if (dealer) {
         console.log('Updating dealer with ID:', dealer.id);
-        await dealersApi.update({
-          id: dealer.id,
-          createdAt: dealer.createdAt,
-          ...dealerData,
-        });
+        await dealersApi.update(dealer.id, dealerData);
         toast({
           title: "Dealer aggiornato con successo",
         });

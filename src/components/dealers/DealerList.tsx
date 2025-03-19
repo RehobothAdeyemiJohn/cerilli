@@ -38,7 +38,10 @@ const DealerList: React.FC<DealerListProps> = ({ dealerId }) => {
   });
   
   const updateMutation = useMutation({
-    mutationFn: (dealer: Dealer) => dealersApi.update(dealer),
+    mutationFn: (dealer: Dealer) => {
+      const { id, ...updates } = dealer;
+      return dealersApi.update(id, updates);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       toast({

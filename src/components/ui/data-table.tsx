@@ -123,20 +123,25 @@ export function DataTable({
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious 
+              <Button 
+                variant="outline"
+                size="sm"
                 onClick={() => table.previousPage()} 
                 disabled={!table.getCanPreviousPage()}
-              />
+              >
+                <PaginationPrevious className="h-4 w-4" />
+              </Button>
             </PaginationItem>
             
             {Array.from({ length: table.getPageCount() }, (_, i) => (
               <PaginationItem key={i}>
-                <PaginationLink 
-                  isActive={table.getState().pagination.pageIndex === i}
+                <Button
+                  variant={table.getState().pagination.pageIndex === i ? "default" : "outline"}
+                  size="sm"
                   onClick={() => table.setPageIndex(i)}
                 >
                   {i + 1}
-                </PaginationLink>
+                </Button>
               </PaginationItem>
             )).slice(
               Math.max(0, table.getState().pagination.pageIndex - 1),
@@ -144,10 +149,14 @@ export function DataTable({
             )}
             
             <PaginationItem>
-              <PaginationNext 
+              <Button 
+                variant="outline"
+                size="sm"
                 onClick={() => table.nextPage()} 
                 disabled={!table.getCanNextPage()}
-              />
+              >
+                <PaginationNext className="h-4 w-4" />
+              </Button>
             </PaginationItem>
           </PaginationContent>
         </Pagination>
