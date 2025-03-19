@@ -1,272 +1,295 @@
+import { Dealer, Order } from '@/types';
 import { supabase } from './client';
-import { Dealer } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+
+// Helper function to map database dealer to frontend type
+const mapDealerDbToFrontend = (dealer: any) => {
+  if (!dealer) return null;
+  return {
+    id: dealer.id,
+    companyName: dealer.companyname,
+    address: dealer.address,
+    city: dealer.city,
+    province: dealer.province,
+    zipCode: dealer.zipcode,
+    email: dealer.email,
+    password: dealer.password,
+    contactName: dealer.contactname,
+    createdAt: dealer.created_at,
+    isActive: dealer.isactive,
+    logo: dealer.logo,
+    creditLimit: dealer.credit_limit,
+    esposizione: dealer.esposizione,
+    nuovoPlafond: dealer.nuovo_plafond
+  };
+};
+
+// Helper function to map DB order to frontend Order type
+const mapOrderToFrontend = (order: any): Order => {
+  return {
+    id: order.id,
+    vehicleId: order.vehicleId || order.vehicle_id,
+    dealerId: order.dealerId || order.dealer_id,
+    customerName: order.customerName || order.customer_name,
+    status: order.status,
+    orderDate: order.orderDate || order.order_date,
+    deliveryDate: order.deliveryDate || order.delivery_date,
+    progressiveNumber: order.progressive_number,
+    price: order.price,
+    dealerName: order.dealerName || order.dealer_name,
+    modelName: order.modelName || order.model_name,
+    plafondDealer: order.plafondDealer || order.plafond_dealer,
+    
+    // Required properties with default values
+    isLicensable: order.isLicensable || order.is_licensable || false,
+    hasProforma: order.hasProforma || order.has_proforma || false,
+    isPaid: order.isPaid || order.is_paid || false,
+    isInvoiced: order.isInvoiced || order.is_invoiced || false,
+    hasConformity: order.hasConformity || order.has_conformity || false,
+    odlGenerated: order.odlGenerated || order.odl_generated || false,
+    transportCosts: order.transportCosts || order.transport_costs || 0,
+    restorationCosts: order.restorationCosts || order.restoration_costs || 0,
+    
+    // Optional properties
+    paymentDate: order.paymentDate || order.payment_date,
+    invoiceNumber: order.invoiceNumber || order.invoice_number,
+    invoiceDate: order.invoiceDate || order.invoice_date,
+    previousChassis: order.previousChassis || order.previous_chassis,
+    chassis: order.chassis,
+    fundingType: order.fundingType || order.funding_type,
+    notes: order.notes,
+    
+    // Relations
+    vehicle: order.vehicle,
+    dealer: order.dealer
+  };
+};
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
     console.log("Fetching all dealers from Supabase");
     
-    const { data, error } = await supabase
-      .from('dealers')
-      .select('*')
-      .order('companyname', { ascending: true });
-    
-    if (error) {
-      console.error('Errore nel recupero dei dealer:', error);
-      throw error;
-    }
-    
-    // Direct access to original data structure
-    console.log('Raw dealers data from Supabase:', data);
-    
-    const formattedDealers = data.map(dealer => {
-      // Keep the original field name from Supabase
-      const dealerObj = {
-        id: dealer.id,
-        companyName: dealer.companyname,
-        address: dealer.address,
-        city: dealer.city,
-        province: dealer.province,
-        zipCode: dealer.zipcode,
-        email: dealer.email,
-        password: dealer.password,
-        contactName: dealer.contactname,
-        createdAt: dealer.created_at,
-        isActive: dealer.isactive,
-        logo: dealer.logo,
-        creditLimit: dealer.credit_limit,
-        // Keep the original field name from Supabase
-        nuovo_plafond: dealer.nuovo_plafond
-      } as Dealer;
+    try {
+      const { data, error } = await supabase
+        .from('dealers')
+        .select('*');
       
-      console.log(`Formatted dealer ${dealer.companyname}, nuovo_plafond:`, dealer.nuovo_plafond);
-      return dealerObj;
-    });
-    
-    // Fetch all orders for each dealer (especially important for delivered ones)
-    for (const dealer of formattedDealers) {
-      try {
-        console.log(`Fetching orders for dealer ${dealer.id} (${dealer.companyName})`);
-        const { data: ordersData, error: ordersError } = await supabase
-          .from('orders')
-          .select('*, vehicles(*)')
-          .eq('dealerid', dealer.id);
-          
-        if (!ordersError && ordersData) {
-          dealer.orders = ordersData.map(order => ({
-            id: order.id,
-            vehicleId: order.vehicleid,
-            dealerId: order.dealerid,
-            customerName: order.customername,
-            status: order.status,
-            orderDate: order.orderdate,
-            deliveryDate: order.deliverydate,
-            vehicle: order.vehicles
-          }));
-          
-          console.log(`Found ${dealer.orders.length} orders for dealer ${dealer.companyName}`);
-          console.log(`Delivered orders: ${dealer.orders.filter(o => o.status === 'delivered').length}`);
-        }
-      } catch (err) {
-        console.error(`Error fetching orders for dealer ${dealer.id}:`, err);
+      if (error) {
+        console.error('Error fetching dealers:', error);
+        return [];
       }
+      
+      if (!data || data.length === 0) {
+        console.log("No dealers found in database");
+        return [];
+      }
+      
+      console.log(`Retrieved ${data.length} dealers from database`);
+      
+      // Map each database record to our frontend Dealer type
+      const dealers = data.map(dealer => mapDealerDbToFrontend(dealer));
+      return dealers;
+    } catch (error) {
+      console.error('Unexpected error fetching dealers:', error);
+      return [];
     }
-    
-    return formattedDealers;
   },
   
-  getById: async (id: string): Promise<Dealer> => {
-    const { data, error } = await supabase
-      .from('dealers')
-      .select('*')
-      .eq('id', id)
-      .single();
+  getById: async (id: string): Promise<Dealer | null> => {
+    console.log("Fetching dealer by ID:", id);
     
-    if (error) {
-      console.error('Errore nel recupero del dealer:', error);
-      throw error;
-    }
-    
-    console.log('Raw dealer data by ID from Supabase:', data);
-    console.log('Specific dealer nuovo_plafond field:', data.nuovo_plafond);
-    
-    const formattedDealer = {
-      id: data.id,
-      companyName: data.companyname,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      zipCode: data.zipcode,
-      email: data.email,
-      password: data.password,
-      contactName: data.contactname,
-      createdAt: data.created_at,
-      isActive: data.isactive,
-      logo: data.logo,
-      creditLimit: data.credit_limit,
-      // Keep the original field name from Supabase
-      nuovo_plafond: data.nuovo_plafond
-    } as Dealer;
-    
-    // Fetch all orders for this dealer to calculate plafond correctly
     try {
-      console.log(`Fetching orders for dealer ${id} (${formattedDealer.companyName})`);
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*, vehicles(*)')
-        .eq('dealerid', id);
-        
-      if (!ordersError && ordersData) {
-        formattedDealer.orders = ordersData.map(order => ({
-          id: order.id,
-          vehicleId: order.vehicleid,
-          dealerId: order.dealerid,
-          customerName: order.customername,
-          status: order.status,
-          orderDate: order.orderdate,
-          deliveryDate: order.deliverydate,
-          vehicle: order.vehicles
-        }));
-        
-        console.log(`Found ${formattedDealer.orders.length} orders for dealer ${formattedDealer.companyName}`);
-        console.log(`Delivered orders: ${formattedDealer.orders.filter(o => o.status === 'delivered').length}`);
+      const { data, error } = await supabase
+        .from('dealers')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching dealer:', error);
+        return null;
       }
-    } catch (err) {
-      console.error(`Error fetching orders for dealer ${id}:`, err);
-    }
-    
-    return formattedDealer;
-  },
-
-  uploadLogo: async (file: File, dealerId: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${dealerId}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    console.log('Uploading logo:', filePath);
-
-    try {
-      const { error: uploadError, data } = await supabase.storage
-        .from('dealer_logos')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('Errore nel caricamento del logo:', uploadError);
-        throw uploadError;
+      
+      if (!data) {
+        console.log("Dealer not found in database");
+        return null;
       }
-
-      console.log('Upload successful, getting public URL');
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('dealer_logos')
-        .getPublicUrl(filePath);
-
-      console.log('Public URL:', publicUrl);
-      return publicUrl;
+      
+      console.log("Dealer found:", data);
+      return mapDealerDbToFrontend(data);
     } catch (error) {
-      console.error('Error in uploadLogo function:', error);
-      throw error;
+      console.error('Unexpected error fetching dealer:', error);
+      return null;
     }
   },
-
-  create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer> => {
-    const newId = uuidv4();
+  
+  getOrdersByDealer: async (dealerId: string): Promise<Order[]> => {
+    console.log("Fetching orders for dealer:", dealerId);
     
-    console.log('Creating dealer with data:', dealer);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          vehicles:vehicle_id (*)
+        `)
+        .eq('dealer_id', dealerId);
+      
+      if (error) {
+        console.error('Error fetching dealer orders:', error);
+        return [];
+      }
+      
+      console.log(`Found ${data.length} orders for dealer ${dealerId}`);
+      
+      // Map the database records to our frontend Order type
+      const orders = data.map(order => mapOrderToFrontend(order));
+      
+      return orders;
+    } catch (error) {
+      console.error('Unexpected error fetching dealer orders:', error);
+      return [];
+    }
+  },
+  
+  getDealerWithOrders: async (dealerId: string): Promise<Dealer | null> => {
+    console.log("Fetching dealer with orders:", dealerId);
+    
+    try {
+      // First get the dealer
+      const { data: dealer, error: dealerError } = await supabase
+        .from('dealers')
+        .select('*')
+        .eq('id', dealerId)
+        .maybeSingle();
+      
+      if (dealerError || !dealer) {
+        console.error('Error fetching dealer:', dealerError);
+        return null;
+      }
+      
+      // Then get the dealer's orders
+      const { data: orderData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          vehicles:vehicle_id (*)
+        `)
+        .eq('dealer_id', dealerId);
+      
+      if (ordersError) {
+        console.error('Error fetching dealer orders:', ordersError);
+        return mapDealerDbToFrontend(dealer);
+      }
+      
+      console.log(`Found ${orderData.length} orders for dealer ${dealerId}`);
+      
+      // Map the database records to our frontend Order type
+      const orders = orderData.map(order => mapOrderToFrontend(order));
+      
+      // Add orders to dealer object
+      const dealerWithOrders = {
+        ...mapDealerDbToFrontend(dealer),
+        orders
+      };
+      
+      return dealerWithOrders;
+    } catch (error) {
+      console.error('Unexpected error fetching dealer with orders:', error);
+      return null;
+    }
+  },
+  
+  update: async (id: string, updates: Partial<Dealer>): Promise<Dealer | null> => {
+    console.log("Updating dealer in Supabase:", id, updates);
+    
+    // Map frontend field names to database column names
+    const dbUpdates: any = {
+      companyname: updates.companyName,
+      address: updates.address,
+      city: updates.city,
+      province: updates.province,
+      zipcode: updates.zipCode,
+      email: updates.email,
+      password: updates.password,
+      contactname: updates.contactName,
+      isactive: updates.isActive,
+      logo: updates.logo,
+      credit_limit: updates.creditLimit,
+      nuovo_plafond: updates.nuovoPlafond,
+      esposizione: updates.esposizione
+    };
+    
+    // Remove undefined fields
+    Object.keys(dbUpdates).forEach(key => {
+      if (dbUpdates[key] === undefined) {
+        delete dbUpdates[key];
+      }
+    });
     
     const { data, error } = await supabase
       .from('dealers')
-      .insert({
-        id: newId,
-        companyname: dealer.companyName,
-        address: dealer.address,
-        city: dealer.city,
-        province: dealer.province,
-        zipcode: dealer.zipCode,
-        email: dealer.email,
-        password: dealer.password,
-        contactname: dealer.contactName,
-        isactive: dealer.isActive,
-        logo: dealer.logo,
-        credit_limit: dealer.creditLimit || 0
-      })
+      .update(dbUpdates)
+      .eq('id', id)
       .select()
       .single();
     
     if (error) {
-      console.error('Errore nella creazione del dealer:', error);
+      console.error('Error updating dealer:', error);
       throw error;
     }
     
-    const formattedDealer = {
-      id: data.id,
-      companyName: data.companyname,
-      address: data.address,
-      city: data.city,
-      province: data.province,
-      zipCode: data.zipcode,
-      email: data.email,
-      password: data.password,
-      contactName: data.contactname,
-      createdAt: data.created_at,
-      isActive: data.isactive,
-      logo: data.logo,
-      creditLimit: data.credit_limit,
-      orders: []
-    } as Dealer;
-    
-    return formattedDealer;
+    console.log("Dealer updated successfully:", data);
+    return mapDealerDbToFrontend(data);
   },
   
-  update: async (dealer: Dealer): Promise<void> => {
-    console.log('Updating dealer with data:', dealer);
+  create: async (dealer: Omit<Dealer, 'id' | 'createdAt'>): Promise<Dealer | null> => {
+    console.log("Creating new dealer in Supabase:", dealer);
     
-    const { error } = await supabase
+    // Map frontend field names to database column names
+    const newDealer = {
+      companyname: dealer.companyName,
+      address: dealer.address,
+      city: dealer.city,
+      province: dealer.province,
+      zipcode: dealer.zipCode,
+      email: dealer.email,
+      password: dealer.password,
+      contactname: dealer.contactName,
+      isactive: dealer.isActive,
+      logo: dealer.logo,
+      credit_limit: dealer.creditLimit,
+      nuovo_plafond: dealer.nuovoPlafond,
+      esposizione: dealer.esposizione
+    };
+    
+    const { data, error } = await supabase
       .from('dealers')
-      .update({
-        companyname: dealer.companyName,
-        address: dealer.address,
-        city: dealer.city,
-        province: dealer.province,
-        zipcode: dealer.zipCode,
-        email: dealer.email,
-        password: dealer.password,
-        contactname: dealer.contactName,
-        isactive: dealer.isActive,
-        logo: dealer.logo,
-        credit_limit: dealer.creditLimit || 0
-      })
-      .eq('id', dealer.id);
+      .insert(newDealer)
+      .select()
+      .single();
     
     if (error) {
-      console.error('Errore nell\'aggiornamento del dealer:', error);
+      console.error('Error creating dealer:', error);
       throw error;
     }
     
-    console.log('Dealer updated successfully');
+    console.log("Dealer created successfully:", data);
+    return mapDealerDbToFrontend(data);
   },
   
   delete: async (id: string): Promise<void> => {
+    console.log("Deleting dealer:", id);
+    
     const { error } = await supabase
       .from('dealers')
       .delete()
       .eq('id', id);
     
     if (error) {
-      console.error('Errore nell\'eliminazione del dealer:', error);
+      console.error('Error deleting dealer:', error);
       throw error;
     }
-  },
-
-  toggleStatus: async (id: string, isActive: boolean): Promise<void> => {
-    const { error } = await supabase
-      .from('dealers')
-      .update({ isactive: isActive })
-      .eq('id', id);
     
-    if (error) {
-      console.error('Errore nel cambiamento di stato del dealer:', error);
-      throw error;
-    }
+    console.log("Dealer deleted successfully");
   }
 };

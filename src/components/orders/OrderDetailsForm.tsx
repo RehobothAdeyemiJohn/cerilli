@@ -1,269 +1,307 @@
-
 import React from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Order } from '@/types';
-import { toast } from '@/hooks/use-toast';
-import { ordersApi } from '@/api/apiClient';
-import { formatCurrency } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
-// Create a schema for the form
-const orderDetailsSchema = z.object({
-  isLicensable: z.boolean().default(false),
-  hasProforma: z.boolean().default(false),
-  isPaid: z.boolean().default(false),
+const formSchema = z.object({
+  vehicleId: z.string().optional(),
+  dealerId: z.string().optional(),
+  customerName: z.string().optional(),
+  status: z.enum(['processing', 'delivered', 'cancelled']).optional(),
+  orderDate: z.date().optional(),
+  deliveryDate: z.date().optional(),
+  progressiveNumber: z.number().optional(),
+  price: z.number().optional(),
+  dealerName: z.string().optional(),
+  modelName: z.string().optional(),
+  plafondDealer: z.number().optional(),
+  isLicensable: z.boolean().optional(),
+  hasProforma: z.boolean().optional(),
+  isPaid: z.boolean().optional(),
   paymentDate: z.date().optional(),
-  isInvoiced: z.boolean().default(false),
+  isInvoiced: z.boolean().optional(),
   invoiceNumber: z.string().optional(),
   invoiceDate: z.date().optional(),
-  hasConformity: z.boolean().default(false),
-  fundingType: z.string().optional(),
+  hasConformity: z.boolean().optional(),
+  previousChassis: z.string().optional(),
   chassis: z.string().optional(),
-  transportCosts: z.number().default(0),
-  restorationCosts: z.number().default(0),
+  transportCosts: z.number().optional(),
+  restorationCosts: z.number().optional(),
+  fundingType: z.string().optional(),
+  odlGenerated: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
-type OrderDetailsFormValues = z.infer<typeof orderDetailsSchema>;
+type OrderDetailsFormValues = z.infer<typeof formSchema>;
 
 interface OrderDetailsFormProps {
   order: Order;
-  onSaved: () => void;
-  onCancel: () => void;
+  onSubmit: (values: OrderDetailsFormValues) => Promise<void>;
+  isLoading: boolean;
 }
 
-const OrderDetailsForm: React.FC<OrderDetailsFormProps> = ({ order, onSaved, onCancel }) => {
-  // Initialize the form with default values from the order details
+const OrderDetailsForm = ({ order, onSubmit, isLoading }: OrderDetailsFormProps) => {
   const form = useForm<OrderDetailsFormValues>({
-    resolver: zodResolver(orderDetailsSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      isLicensable: order.isLicensable || false,
-      hasProforma: order.hasProforma || false,
-      isPaid: order.isPaid || false,
+      vehicleId: order.vehicleId,
+      dealerId: order.dealerId,
+      customerName: order.customerName,
+      status: order.status,
+      orderDate: order.orderDate ? new Date(order.orderDate) : undefined,
+      deliveryDate: order.deliveryDate ? new Date(order.deliveryDate) : undefined,
+      progressiveNumber: order.progressiveNumber,
+      price: order.price,
+      dealerName: order.dealerName,
+      modelName: order.modelName,
+      plafondDealer: order.plafondDealer,
+      isLicensable: order.isLicensable,
+      hasProforma: order.hasProforma,
+      isPaid: order.isPaid,
       paymentDate: order.paymentDate ? new Date(order.paymentDate) : undefined,
-      isInvoiced: order.isInvoiced || false,
-      invoiceNumber: order.invoiceNumber || '',
+      isInvoiced: order.isInvoiced,
+      invoiceNumber: order.invoiceNumber,
       invoiceDate: order.invoiceDate ? new Date(order.invoiceDate) : undefined,
-      hasConformity: order.hasConformity || false,
-      fundingType: order.fundingType || '',
-      chassis: order.chassis || '',
-      transportCosts: order.transportCosts || 0,
-      restorationCosts: order.restorationCosts || 0,
-      notes: order.notes || '',
+      hasConformity: order.hasConformity,
+      previousChassis: order.previousChassis,
+      chassis: order.chassis,
+      transportCosts: order.transportCosts,
+      restorationCosts: order.restorationCosts,
+      fundingType: order.fundingType,
+      odlGenerated: order.odlGenerated,
+      notes: order.notes,
     },
   });
 
-  const watchIsPaid = form.watch('isPaid');
-  const watchIsInvoiced = form.watch('isInvoiced');
-
-  const onSubmit = async (data: OrderDetailsFormValues) => {
-    try {
-      console.log("Updating order details:", data);
-      
-      // Format dates to ISO strings
-      const updatedData = {
-        ...data,
-        paymentDate: data.paymentDate ? data.paymentDate.toISOString() : undefined,
-        invoiceDate: data.invoiceDate ? data.invoiceDate.toISOString() : undefined,
-      };
-      
-      await ordersApi.update(order.id, updatedData);
-      
-      console.log("Order details updated successfully");
-      toast({
-        title: "Dettagli aggiornati",
-        description: "I dettagli dell'ordine sono stati aggiornati con successo.",
-      });
-      
-      onSaved();
-    } catch (error) {
-      console.error("Error updating order details:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'aggiornamento dei dettagli dell'ordine.",
-        variant: "destructive",
-      });
-    }
-  };
-  
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-50 p-4 rounded-md border">
-            <h3 className="text-md font-semibold mb-3">Informazioni Ordine</h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p>Numero Ordine:</p>
-                <p className="font-medium">{order.progressiveNumber ? `#${order.progressiveNumber.toString().padStart(3, '0')}` : order.id.substring(0, 6)}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p>Cliente:</p>
-                <p className="font-medium">{order.customerName}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p>Modello:</p>
-                <p className="font-medium">{order.modelName || (order.vehicle ? order.vehicle.model : '-')}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p>Data Ordine:</p>
-                <p className="font-medium">{new Date(order.orderDate).toLocaleDateString()}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p>Prezzo:</p>
-                <p className="font-medium">{formatCurrency(order.price || 0)}</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Right column: Flags and statuses */}
-          <div className="space-y-3">
-            <FormField
-              control={form.control}
-              name="isLicensable"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between p-3 border rounded-md">
-                  <FormLabel className="cursor-pointer">Targabile</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="hasProforma"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between p-3 border rounded-md">
-                  <FormLabel className="cursor-pointer">Proforma Presente</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="isPaid"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between p-3 border rounded-md">
-                  <FormLabel className="cursor-pointer">Pagato</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="isInvoiced"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between p-3 border rounded-md">
-                  <FormLabel className="cursor-pointer">Fatturato</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="hasConformity"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between p-3 border rounded-md">
-                  <FormLabel className="cursor-pointer">Prova di Conformità</FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        
-        {/* Additional fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Payment details */}
-          {watchIsPaid && (
-            <FormField
-              control={form.control}
-              name="paymentDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data di Pagamento</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Dettagli Ordine</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="customerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Cliente</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome del cliente" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stato</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PP")
-                          ) : (
-                            <span>Seleziona una data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona uno stato" />
+                        </SelectTrigger>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          
-          {/* Invoice details */}
-          {watchIsInvoiced && (
-            <>
+                      <SelectContent>
+                        <SelectItem value="processing">In elaborazione</SelectItem>
+                        <SelectItem value="delivered">Consegnato</SelectItem>
+                        <SelectItem value="cancelled">Cancellato</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="orderDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data Ordine</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Scegli una data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={isLoading}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="deliveryDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data Consegna</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Scegli una data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={isLoading}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="progressiveNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Numero Progressivo</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Numero progressivo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prezzo</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Prezzo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dealerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Concessionario</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome del concessionario" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="modelName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Modello</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome del modello" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="plafondDealer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plafond Concessionario</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Plafond del concessionario" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fundingType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo di Finanziamento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Tipo di finanziamento" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="invoiceNumber"
@@ -271,17 +309,13 @@ const OrderDetailsForm: React.FC<OrderDetailsFormProps> = ({ order, onSaved, onC
                   <FormItem>
                     <FormLabel>Numero Fattura</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Es. 2023/0123"
-                        {...field}
-                        disabled={!watchIsInvoiced}
-                      />
+                      <Input placeholder="Numero Fattura" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="invoiceDate"
@@ -294,14 +328,14 @@ const OrderDetailsForm: React.FC<OrderDetailsFormProps> = ({ order, onSaved, onC
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
+                              "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PP")
+                              format(field.value, "PPP")
                             ) : (
-                              <span>Seleziona una data</span>
+                              <span>Scegli una data</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -312,7 +346,7 @@ const OrderDetailsForm: React.FC<OrderDetailsFormProps> = ({ order, onSaved, onC
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          disabled={isLoading}
                           initialFocus
                         />
                       </PopoverContent>
@@ -321,131 +355,271 @@ const OrderDetailsForm: React.FC<OrderDetailsFormProps> = ({ order, onSaved, onC
                   </FormItem>
                 )}
               />
-            </>
-          )}
-          
-          {/* Chassis */}
-          <FormField
-            control={form.control}
-            name="chassis"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telaio (se diverso)</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Numero telaio"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Inserire solo se diverso dal telaio originale
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Funding Type */}
-          <FormField
-            control={form.control}
-            name="fundingType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Modalità Finanziamento</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="isLicensable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Licenziabile</FormLabel>
+                      <FormDescription>
+                        Indica se è licenziabile
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hasProforma"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Ha Proforma</FormLabel>
+                      <FormDescription>
+                        Indica se ha proforma
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isPaid"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Pagato</FormLabel>
+                      <FormDescription>
+                        Indica se è stato pagato
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="isInvoiced"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Fatturato</FormLabel>
+                      <FormDescription>
+                        Indica se è stato fatturato
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="hasConformity"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Ha Conformità</FormLabel>
+                      <FormDescription>
+                        Indica se ha conformità
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="odlGenerated"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">ODL Generato</FormLabel>
+                      <FormDescription>
+                        Indica se l'ODL è stato generato
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="previousChassis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telaio Precedente</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Telaio precedente" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="chassis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telaio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Telaio" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="transportCosts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Costi di Trasporto</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Costi di trasporto" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="restorationCosts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Costi di Ripristino</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Costi di ripristino" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="paymentDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Data Pagamento</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Scegli una data</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={isLoading}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Note</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona modalità" />
-                    </SelectTrigger>
+                    <Textarea
+                      placeholder="Note sull'ordine"
+                      className="resize-none"
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="">Nessun finanziamento</SelectItem>
-                    <SelectItem value="Contanti">Contanti</SelectItem>
-                    <SelectItem value="Bonifico">Bonifico</SelectItem>
-                    <SelectItem value="Finanziamento">Finanziamento</SelectItem>
-                    <SelectItem value="Leasing">Leasing</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        {/* Costs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="transportCosts"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Costi di Trasporto (€)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="restorationCosts"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Costi di Ripristino (€)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        {/* Notes */}
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Note</FormLabel>
-              <FormControl>
-                <textarea
-                  className="w-full p-2 border rounded-md"
-                  rows={3}
-                  placeholder="Note aggiuntive..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel}
-          >
-            Annulla
-          </Button>
-          <Button type="submit">Salva Modifiche</Button>
-        </div>
-      </form>
-    </Form>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <CardFooter className="flex justify-end">
+              <Button type="submit" disabled={isLoading}>
+                Salva Modifiche
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,462 +1,147 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { quotesApi } from '@/api/supabase/quotesApi';
-import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { dealersApi } from '@/api/supabase/dealersApi';
-import { dealerContractsApi } from '@/api/supabase/dealerContractsApi';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { quotesApi, dealerContractsApi } from '@/api/supabase';
 import { Quote } from '@/types';
-import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 export const useQuotesData = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const isDealerUser = user?.type === 'dealer' || user?.type === 'vendor';
-  const dealerId = user?.dealerId;
-
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [filterDealer, setFilterDealer] = useState<string>('all');
-  const [filterModel, setFilterModel] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  
-  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState<boolean>(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteQuoteId, setDeleteQuoteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const [isManualQuote, setIsManualQuote] = useState<boolean>(false);
+  const [isContractSubmitting, setIsContractSubmitting] = useState(false);
   
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, filterDealer, filterModel, searchQuery, itemsPerPage]);
+  const queryClient = useQueryClient();
   
-  const { data: quotes = [], isLoading: isLoadingQuotes, refetch: refetchQuotes } = useQuery({
+  const { 
+    data: quotes, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery({
     queryKey: ['quotes'],
-    queryFn: () => quotesApi.getAll(),
+    queryFn: quotesApi.getAll,
   });
   
-  const { data: statusCountsData = { all: 0, pending: 0, converted: 0, rejected: 0 }, isLoading: isLoadingCounts } = useQuery({
-    queryKey: ['quotesCount'],
-    queryFn: () => quotesApi.getCountByStatus(),
-  });
-  
-  const { data: vehicles = [], isLoading: isLoadingVehicles } = useQuery({
-    queryKey: ['vehicles'],
-    queryFn: () => vehiclesApi.getAll(),
-  });
-  
-  const { data: dealers = [], isLoading: isLoadingDealers } = useQuery({
-    queryKey: ['dealers'],
-    queryFn: () => dealersApi.getAll(),
-  });
-
-  const getVehicleById = (id: string) => {
-    console.log("Searching for vehicle with ID:", id);
-    const vehicle = vehicles.find(vehicle => vehicle.id === id);
-    console.log("Found vehicle:", vehicle);
-    return vehicle;
-  };
-  
-  const getDealerName = (id: string) => {
-    const dealer = dealers.find(dealer => dealer.id === id);
-    return dealer ? dealer.companyName : 'N/A';
-  };
-  
-  const getShortId = (id: string) => {
-    return id.substring(0, 8);
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-  
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'converted': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const models = Array.from(new Set(vehicles.map(vehicle => vehicle.model)))
-    .map(model => ({ id: model, name: model }));
-
-  const filteredQuotes = quotes.filter(quote => {
-    if (activeTab !== 'all' && quote.status !== activeTab) {
-      return false;
-    }
-    
-    if (filterDealer !== 'all' && quote.dealerId !== filterDealer) {
-      return false;
-    }
-    
-    if (isDealerUser && dealerId && quote.dealerId !== dealerId) {
-      return false;
-    }
-    
-    if (filterModel !== 'all') {
-      const vehicle = getVehicleById(quote.vehicleId);
-      if (!vehicle || vehicle.model !== filterModel) {
-        return false;
-      }
-    }
-    
-    if (searchQuery) {
-      const vehicle = getVehicleById(quote.vehicleId);
-      const lowerSearch = searchQuery.toLowerCase();
-      const matchesCustomer = quote.customerName?.toLowerCase().includes(lowerSearch);
-      const matchesVehicle = vehicle?.model?.toLowerCase().includes(lowerSearch);
-      
-      if (!matchesCustomer && !matchesVehicle) {
-        return false;
-      }
-    }
-    
-    return true;
-  });
-  
-  const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / itemsPerPage));
-  const paginatedQuotes = filteredQuotes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  
-  const handleViewQuote = (quote: Quote) => {
-    setSelectedQuote(quote);
-    setViewDialogOpen(true);
-  };
-  
-  const handleDeleteClick = (quote: Quote) => {
-    setSelectedQuote(quote);
-    setDeleteDialogOpen(true);
-  };
-  
-  const handleUpdateStatus = async (quoteId: string, newStatus: Quote['status'], rejectionReason?: string) => {
-    try {
-      const updates: Partial<Quote> = { status: newStatus };
-      
-      if (rejectionReason) {
-        updates.rejectionReason = rejectionReason;
-      }
-      
-      await quotesApi.update(quoteId, updates);
-      
-      toast({
-        title: "Stato aggiornato",
-        description: "Lo stato del preventivo è stato aggiornato con successo.",
-      });
-      
-      refetchQuotes();
-      setViewDialogOpen(false);
-      setRejectDialogOpen(false);
-    } catch (error) {
-      console.error("Error updating quote status:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'aggiornamento dello stato.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleUpdateQuote = async (quoteId: string, updates: Partial<Quote>) => {
-    try {
-      await quotesApi.update(quoteId, updates);
-      
-      toast({
-        title: "Preventivo aggiornato",
-        description: "Il preventivo è stato aggiornato con successo.",
-      });
-      
-      refetchQuotes();
-    } catch (error) {
-      console.error("Error updating quote:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'aggiornamento del preventivo.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const handleConvertToContract = async (quoteId: string, contractData: any) => {
-    try {
-      if (!selectedQuote) {
-        throw new Error("Nessun preventivo selezionato");
-      }
-
-      // First, update the quote status to converted
-      await quotesApi.update(quoteId, { status: 'converted' });
-
-      // Then, create a contract using the dealer contracts API
-      const contractDetails = {
-        contractorType: contractData.contractorType,
-        contractorData: {
-          firstName: contractData.firstName,
-          lastName: contractData.lastName,
-          companyName: contractData.companyName,
-          fiscalCode: contractData.fiscalCode,
-          birthDate: contractData.birthDate,
-          birthPlace: contractData.birthPlace,
-          birthProvince: contractData.birthProvince,
-        },
-        legalRepresentative: contractData.contractorType === 'personaGiuridica' ? {
-          firstName: contractData.legalRepFirstName,
-          lastName: contractData.legalRepLastName,
-          fiscalCode: contractData.legalRepFiscalCode
-        } : null
-      };
-
-      await dealerContractsApi.create({
-        dealerId: selectedQuote.dealerId,
-        carId: selectedQuote.vehicleId,
-        contractDate: new Date().toISOString(),
-        contractDetails,
-        status: 'attivo'
-      });
-      
-      toast({
-        title: "Contratto creato",
-        description: "Il preventivo è stato convertito in contratto con successo.",
-      });
-      
-      refetchQuotes();
-    } catch (error) {
-      console.error("Error converting quote to contract:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la conversione in contratto.",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  const handleCreateQuote = async (data: any) => {
-    try {
-      // Make sure we have a dealer ID
-      if (!data.dealerId && dealers.length > 0) {
-        data.dealerId = dealers[0].id;
-      }
-      
-      console.log("Creazione preventivo con dealerId:", data.dealerId);
-      
-      // For manual quotes, check if we need to create a temporary vehicle first
-      if (data.manualEntry && data.vehicleData) {
-        console.log("Creating manual quote with vehicleData:", data.vehicleData);
-        
-        try {
-          // First, create a temporary vehicle record
-          const vehicleData = {
-            model: data.model || data.vehicleData.model,
-            trim: data.trim || data.vehicleData.trim,
-            fuelType: data.fuelType || data.vehicleData.fuelType,
-            exteriorColor: data.exteriorColor || data.vehicleData.exteriorColor,
-            price: data.price || data.vehicleData.price,
-            location: "Preventivo Manuale", // Default location for manual quotes
-            status: "available" as const,
-            dateAdded: new Date().toISOString(),
-            telaio: "MANUALE" + Math.floor(Math.random() * 10000), // Generate a random telaio number
-            accessories: [] as string[]
-          };
-          
-          console.log("Creating temporary vehicle:", vehicleData);
-          
-          // Create the vehicle first
-          const newVehicle = await vehiclesApi.create(vehicleData);
-          console.log("Temporary vehicle created:", newVehicle);
-          
-          // Now create the quote with the new vehicle ID
-          const quoteData: Omit<Quote, 'id'> = {
-            vehicleId: newVehicle.id,
-            dealerId: data.dealerId,
-            customerName: data.customerName,
-            customerEmail: data.customerEmail || '',
-            customerPhone: data.customerPhone || '',
-            price: data.price || 0,
-            discount: data.discount || 0,
-            finalPrice: data.finalPrice || 0,
-            createdAt: new Date().toISOString(),
-            status: 'pending' as Quote['status'],
-            notes: data.notes || '',
-            manualEntry: true
-          };
-          
-          await quotesApi.create(quoteData);
-          
-          toast({
-            title: "Preventivo creato",
-            description: "Il preventivo manuale è stato creato con successo.",
-          });
-          
-          refetchQuotes();
-          setCreateDialogOpen(false);
-          setIsManualQuote(false);
-          
-        } catch (error) {
-          console.error("Error creating manual quote:", error);
-          toast({
-            title: "Errore",
-            description: "Si è verificato un errore durante la creazione del preventivo manuale.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        // Regular quote with an existing vehicle
-        const quoteData: Omit<Quote, 'id'> = {
-          vehicleId: data.vehicleId,
-          dealerId: data.dealerId,
-          customerName: data.customerName,
-          customerEmail: data.customerEmail || '',
-          customerPhone: data.customerPhone || '',
-          price: data.price || 0,
-          discount: data.discount || 0,
-          finalPrice: data.finalPrice || 0,
-          createdAt: new Date().toISOString(),
-          status: 'pending' as Quote['status'],
-          notes: data.notes || '',
-          manualEntry: Boolean(data.manualEntry)
-        };
-        
-        await quotesApi.create(quoteData);
-        
-        toast({
-          title: "Preventivo creato",
-          description: "Il preventivo è stato creato con successo.",
-        });
-        
-        refetchQuotes();
-        setCreateDialogOpen(false);
-        setIsManualQuote(false);
-      }
-    } catch (error) {
-      console.error("Error creating quote:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la creazione del preventivo.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleRejectQuote = async (reason: string) => {
-    if (!selectedQuote) return;
-    
-    await handleUpdateStatus(selectedQuote.id, 'rejected', reason);
-  };
-  
-  const handleDeleteQuote = async () => {
-    if (!selectedQuote) return;
-    
-    try {
-      await quotesApi.delete(selectedQuote.id);
-      
+  const { mutate: deleteQuote } = useMutation({
+    mutationFn: async (id: string) => {
+      setIsDeleting(true);
+      return quotesApi.delete(id);
+    },
+    onSuccess: () => {
       toast({
         title: "Preventivo eliminato",
-        description: "Il preventivo è stato eliminato con successo.",
+        description: "Il preventivo è stato eliminato con successo",
       });
-      
-      refetchQuotes();
-      setDeleteDialogOpen(false);
-    } catch (error) {
+      setIsDeleteDialogOpen(false);
+      setDeleteQuoteId(null);
+      setIsDeleting(false);
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+    },
+    onError: (error) => {
       console.error("Error deleting quote:", error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante l'eliminazione del preventivo.",
-        variant: "destructive",
+        description: "Si è verificato un errore durante l'eliminazione del preventivo",
+        variant: "destructive"
       });
+      setIsDeleting(false);
+    }
+  });
+  
+  const handleDeleteButtonClick = (id: string) => {
+    setDeleteQuoteId(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteQuoteConfirm = () => {
+    if (deleteQuoteId) {
+      deleteQuote(deleteQuoteId);
     }
   };
   
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handleOpenCreateQuoteDialog = (vehicleId?: string) => {
-    if (vehicleId) {
-      setSelectedVehicleId(vehicleId);
-      setIsManualQuote(false);
-    } else {
-      setSelectedVehicleId(null);
-      setIsManualQuote(true);
-    }
-    setCreateDialogOpen(true);
+  const handleOpenContractDialog = (quote: Quote) => {
+    setSelectedQuote(quote);
+    setIsContractDialogOpen(true);
   };
   
-  const isLoading = isLoadingQuotes || isLoadingVehicles || isLoadingDealers || isLoadingCounts;
+  const handleCloseContractDialog = () => {
+    setIsContractDialogOpen(false);
+    setSelectedQuote(null);
+  };
+
+  // Fix the property names in the contract creation
+  const handleCreateContract = async () => {
+    if (!selectedQuote) return;
+    
+    try {
+      setIsContractSubmitting(true);
+      
+      const contractData = {
+        dealer_id: selectedQuote.dealerId,
+        car_id: selectedQuote.vehicleId,
+        contract_date: new Date().toISOString(),
+        status: 'attivo',
+        contract_details: {
+          quoteId: selectedQuote.id,
+          customerName: selectedQuote.customerName,
+          finalPrice: selectedQuote.finalPrice,
+          createdAt: selectedQuote.createdAt
+        }
+      };
+      
+      const result = await dealerContractsApi.create(contractData);
+      
+      if (result) {
+        toast({
+          title: "Contratto creato",
+          description: "Il contratto è stato creato con successo"
+        });
+        
+        // Update the quote status to reflect the contract creation
+        await quotesApi.update(selectedQuote.id, {
+          status: 'converted'
+        });
+        
+        // Refresh quotes data
+        await queryClient.invalidateQueries({ queryKey: ['quotes'] });
+        
+        // Close the dialog
+        setIsContractDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating contract:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la creazione del contratto",
+        variant: "destructive"
+      });
+    } finally {
+      setIsContractSubmitting(false);
+    }
+  };
   
   return {
-    activeTab,
-    setActiveTab,
-    filterDealer,
-    setFilterDealer,
-    filterModel,
-    setFilterModel,
-    searchQuery,
-    setSearchQuery,
-    currentPage,
-    itemsPerPage,
-    setItemsPerPage,
-    selectedVehicleId,
-    setSelectedVehicleId,
-    createDialogOpen,
-    setCreateDialogOpen,
-    viewDialogOpen,
-    setViewDialogOpen,
-    rejectDialogOpen,
-    setRejectDialogOpen,
-    deleteDialogOpen,
-    setDeleteDialogOpen,
+    quotes,
+    isLoading,
+    error,
+    refetch,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    deleteQuoteId,
+    setDeleteQuoteId,
+    isDeleting,
+    setIsDeleting,
+    handleDeleteButtonClick,
+    handleDeleteQuoteConfirm,
+    isContractDialogOpen,
+    setIsContractDialogOpen,
     selectedQuote,
     setSelectedQuote,
-    selectedVehicle: selectedQuote ? getVehicleById(selectedQuote.vehicleId) : null,
-    isManualQuote,
-    setIsManualQuote,
-    
-    filteredQuotes: paginatedQuotes,
-    vehicles,
-    dealers,
-    models,
-    statusCounts: statusCountsData,
-    totalPages,
-    
-    isLoading,
-    
-    getVehicleById,
-    getDealerName,
-    getShortId,
-    formatDate,
-    getStatusBadgeClass,
-    
-    handleViewQuote,
-    handleDeleteClick,
-    handleUpdateStatus,
-    handleUpdateQuote,
-    handleCreateQuote,
-    handleRejectQuote,
-    handleDeleteQuote,
-    handlePrevPage,
-    handleNextPage,
-    handleOpenCreateQuoteDialog,
-    handleConvertToContract
+    handleOpenContractDialog,
+    handleCloseContractDialog,
+    handleCreateContract,
+    isContractSubmitting
   };
 };

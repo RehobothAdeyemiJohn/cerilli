@@ -178,12 +178,79 @@ export const quotes: Quote[] = [
   },
 ];
 
+export const mockOrders: Order[] = [
+  {
+    id: '1',
+    vehicleId: '4',
+    dealerId: '2',
+    customerName: 'Giovanni Neri',
+    status: 'delivered',
+    orderDate: '2024-01-20',
+    deliveryDate: '2024-02-10',
+    dealerName: 'Auto Galleria Rossi',
+    modelName: 'Cirelli Spyder',
+    price: 78000,
+    
+    // Required properties for Order type
+    isLicensable: false,
+    hasProforma: true,
+    isPaid: true,
+    isInvoiced: true,
+    hasConformity: true,
+    odlGenerated: true,
+    transportCosts: 0,
+    restorationCosts: 0
+  },
+  {
+    id: '2',
+    vehicleId: '5',
+    dealerId: '3',
+    customerName: 'Antonio Russo',
+    status: 'delivered',
+    orderDate: '2023-11-10',
+    deliveryDate: '2023-12-01',
+    dealerName: 'MotorValle Bianchi',
+    modelName: 'Cirelli 500',
+    price: 24000,
+    
+    // Required properties for Order type
+    isLicensable: false,
+    hasProforma: true,
+    isPaid: true,
+    isInvoiced: true,
+    hasConformity: true,
+    odlGenerated: true,
+    transportCosts: 0,
+    restorationCosts: 0
+  },
+  {
+    id: '3',
+    vehicleId: '2',
+    dealerId: '2',
+    customerName: 'Elena Conti',
+    status: 'processing',
+    orderDate: '2024-03-01',
+    dealerName: 'Auto Galleria Rossi',
+    modelName: 'Cirelli SUV',
+    price: 42000,
+    
+    // Required properties for Order type
+    isLicensable: false,
+    hasProforma: false,
+    isPaid: false,
+    isInvoiced: false,
+    hasConformity: false,
+    odlGenerated: false,
+    transportCosts: 0,
+    restorationCosts: 0
+  }
+];
+
 export const orders: Order[] = [
   {
     id: '1',
     vehicleId: '4',
     dealerId: '2',
-    quoteId: '3',
     customerName: 'Giovanni Neri',
     status: 'delivered',
     orderDate: '2024-01-20',
@@ -402,7 +469,3 @@ export const getCurrentUser = (): User => {
   // In a real app, this would be fetched from auth context
   return users[0]; // Default to admin for demo
 };
-
-
-
-
