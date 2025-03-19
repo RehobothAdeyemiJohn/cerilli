@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { vehiclesApi } from '@/api/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { ordersApi } from '@/api/apiClient'; 
 
 const reserveSchema = z.object({
   dealerId: z.string().optional(),
@@ -105,6 +106,27 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     try {
       // Call the Supabase API directly to reserve the vehicle
       await vehiclesApi.reserve(vehicle.id, finalDealerId, finalDealerName, [], undefined, data.destinazione);
+      
+      // Create an order for the reservation
+      try {
+        console.log("Creating order for the reserved vehicle");
+        await ordersApi.create({
+          vehicleId: vehicle.id,
+          dealerId: finalDealerId,
+          customerName: finalDealerName,
+          status: 'processing',
+          orderDate: new Date().toISOString()
+        });
+        console.log("Order created successfully");
+      } catch (orderError) {
+        console.error("Error creating order:", orderError);
+        // Continue even if order creation fails, as the vehicle is already reserved
+        toast({
+          title: "Attenzione",
+          description: "Veicolo prenotato ma si è verificato un problema nella creazione dell'ordine.",
+          variant: "destructive",
+        });
+      }
       
       toast({
         title: "Veicolo Prenotato",

@@ -1,23 +1,11 @@
 
-import { Vehicle } from '@/types';
-import { useInventory } from '@/hooks/useInventory';
+import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { Vehicle } from '@/types';
+import { vehiclesApi } from '@/api/supabase';
+import { ordersApi } from '@/api/apiClient';
+import { ZodFormattedError } from 'zod';
 import { VirtualReservationFormValues } from '../schema';
-
-const calculateEstimatedArrivalDays = (stockLocation: string | undefined): number => {
-  // For a virtual vehicle, we'll get the original stock from the vehicle, 
-  // not from the form anymore (since we removed that field)
-  if (!stockLocation) return 120; // Default to longest time if unknown
-  
-  // Different arrival time estimates based on the original stock location
-  if (stockLocation === 'Germania') {
-    // Germany stock: 38-52 days
-    return Math.floor(Math.random() * (52 - 38 + 1)) + 38;
-  } else {
-    // China stock (default): 90-120 days
-    return Math.floor(Math.random() * (120 - 90 + 1)) + 90;
-  }
-};
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
@@ -26,72 +14,108 @@ export const useVirtualReservationSubmit = (
   dealerName: string,
   onReservationComplete: () => void,
   calculatedPrice: number,
-  filteredDealers: any[]
+  filteredDealers: any[] = []
 ) => {
-  const { handleVehicleUpdate } = useInventory();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = async (data: VirtualReservationFormValues) => {
+  const onSubmit = async (values: VirtualReservationFormValues) => {
+    // For admin, use selected dealer. For dealer, use their own ID
+    const finalDealerId = isAdmin ? values.dealerId : dealerId;
+    
+    // If dealer ID is missing, show error
+    if (!finalDealerId) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un concessionario prima di procedere.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // For admin, get dealer name from selected dealer
+    let finalDealerName = dealerName;
+    if (isAdmin && values.dealerId) {
+      const selectedDealer = filteredDealers.find(d => d.id === values.dealerId);
+      finalDealerName = selectedDealer ? selectedDealer.companyName : '';
+    }
+    
+    if (!finalDealerName) {
+      toast({
+        title: "Errore",
+        description: "Dati del dealer mancanti. Impossibile procedere con la prenotazione.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    console.log("Form data:", values);
+    console.log("Reserving virtual vehicle:", vehicle.id);
+    console.log("Dealer ID:", finalDealerId);
+    console.log("Dealer Name:", finalDealerName);
+    console.log("Calculated price:", calculatedPrice);
+    
     try {
-      // Determine dealer ID and name based on user role
-      let selectedDealerId = '';
-      let selectedDealerName = '';
-      
-      if (isAdmin) {
-        // For admin, use selected dealer from dropdown
-        selectedDealerId = (data as any).dealerId;
-        const selectedDealer = filteredDealers.find(dealer => dealer.id === selectedDealerId);
-        selectedDealerName = selectedDealer ? selectedDealer.companyName : 'Unknown';
-      } else {
-        // For dealer, use authenticated user's dealer info
-        selectedDealerId = dealerId;
-        selectedDealerName = dealerName;
-      }
-      
-      // Use original stock from the vehicle (not from the form)
-      const originalStock = vehicle.originalStock;
-      
-      // Calculate estimated arrival days based on original stock
-      const estimatedArrivalDays = calculateEstimatedArrivalDays(originalStock);
-      
-      console.log("Submitting virtual reservation with originalStock:", originalStock);
-      console.log("Estimated arrival days:", estimatedArrivalDays);
-      console.log("Calculated price:", calculatedPrice);
-      
-      const updatedVehicle: Vehicle = {
-        ...vehicle,
-        status: 'reserved',
-        reservedBy: selectedDealerName,
-        reservationDestination: data.reservationDestination,
-        reservationTimestamp: new Date().toISOString(),
-        originalStock: originalStock,
-        estimatedArrivalDays: estimatedArrivalDays,
-        virtualConfig: {
-          trim: data.trim,
-          fuelType: data.fuelType,
-          exteriorColor: data.exteriorColor,
-          transmission: data.transmission,
-          accessories: data.accessories,
-          price: calculatedPrice
-        }
+      // Prepare virtual config
+      const virtualConfig = {
+        model: vehicle.model,
+        trim: values.trim,
+        fuelType: values.fuelType,
+        exteriorColor: values.exteriorColor,
+        transmission: values.transmission
       };
       
-      await handleVehicleUpdate(updatedVehicle);
+      // Call the API to reserve the vehicle
+      await vehiclesApi.reserve(
+        vehicle.id,
+        finalDealerId,
+        finalDealerName,
+        values.accessories || [],
+        virtualConfig,
+        values.reservationDestination
+      );
+      
+      // Create an order for the reserved virtual vehicle
+      try {
+        console.log("Creating order for the reserved virtual vehicle");
+        await ordersApi.create({
+          vehicleId: vehicle.id,
+          dealerId: finalDealerId,
+          customerName: finalDealerName,
+          status: 'processing',
+          orderDate: new Date().toISOString(),
+          price: calculatedPrice || 0
+        });
+        console.log("Order created successfully");
+      } catch (orderError) {
+        console.error("Error creating order:", orderError);
+        // Continue even if order creation fails, as the vehicle is already reserved
+        toast({
+          title: "Attenzione",
+          description: "Veicolo prenotato ma si è verificato un problema nella creazione dell'ordine.",
+          variant: "destructive",
+        });
+      }
       
       toast({
         title: "Veicolo Virtuale Prenotato",
-        description: `${vehicle.model} configurato è stato prenotato per ${selectedDealerName}`,
+        description: `${vehicle.model} ${values.trim || ''} è stato prenotato con successo.`,
       });
       
+      console.log("Virtual vehicle reserved successfully");
       onReservationComplete();
     } catch (error) {
-      console.error('Error reserving virtual vehicle:', error);
+      console.error("Error reserving virtual vehicle:", error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante la prenotazione del veicolo virtuale",
+        description: "Si è verificato un errore durante la prenotazione del veicolo virtuale.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  return { onSubmit };
+  
+  return { onSubmit, isSubmitting };
 };
