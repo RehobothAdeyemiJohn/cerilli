@@ -91,30 +91,34 @@ export const useVirtualReservationSubmit = (
         }
       }
       
+      // Debug the structure before insert
+      const orderRecord = {
+        vehicle_id: vehicle.id,
+        dealer_id: reservationDealerId,
+        customer_name: selectedDealerName,
+        status: 'processing',
+        order_date: new Date().toISOString(),
+        dealer_name: selectedDealerName,
+        model_name: vehicle.model,
+        price: calculatedPrice || 0,
+        plafond_dealer: dealerPlafond,
+        // Set default values for boolean fields
+        is_licensable: false,
+        has_proforma: false,
+        is_paid: false,
+        is_invoiced: false,
+        has_conformity: false,
+        odl_generated: false,
+        transport_costs: 0,
+        restoration_costs: 0
+      };
+      
+      console.log("Attempting to insert with column names exactly matching database:", orderRecord);
+      
       // Create order directly using exact column names as in the database
-      console.log("Attempting to insert with column names exactly matching database");
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .insert({
-          vehicle_id: vehicle.id,
-          dealer_id: reservationDealerId,
-          customer_name: selectedDealerName,
-          status: 'processing',
-          order_date: new Date().toISOString(),
-          dealer_name: selectedDealerName,
-          model_name: vehicle.model,
-          price: calculatedPrice || 0,
-          plafond_dealer: dealerPlafond,
-          // Set default values for boolean fields
-          is_licensable: false,
-          has_proforma: false,
-          is_paid: false,
-          is_invoiced: false,
-          has_conformity: false,
-          odl_generated: false,
-          transport_costs: 0,
-          restoration_costs: 0
-        })
+        .insert(orderRecord)
         .select()
         .single();
         
