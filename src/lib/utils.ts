@@ -10,6 +10,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Generate UUID for application use
+export function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
 // Format currency values
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('it-IT', {

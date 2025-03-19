@@ -1,4 +1,3 @@
-
 import { Vehicle } from '@/types';
 import { useVirtualReservationForm } from './virtualReservation/hooks/useVirtualReservationForm';
 import { useVirtualReservationData } from './virtualReservation/hooks/useVirtualReservationData';
@@ -6,6 +5,7 @@ import { useCompatibleItems } from './virtualReservation/useCompatibleItems';
 import { useCalculatePrice } from './virtualReservation/useCalculatePrice';
 import { useCompatibleAccessories } from './virtualReservation/useCompatibleAccessories';
 import { useVirtualReservationSubmit } from './virtualReservation/hooks/useVirtualReservationSubmit';
+import { VirtualReservationFormValues } from './virtualReservation/schema';
 
 export type { VirtualReservationFormValues } from './virtualReservation/schema';
 
@@ -62,23 +62,26 @@ export const useVirtualReservation = (
     isAdmin,
     dealerId,
     dealerName,
-    onReservationComplete,
-    calculatedPrice,
-    filteredDealers
+    onReservationComplete
   );
 
   return {
     form,
-    onSubmit: handleSubmit,
-    isLoading,
-    modelObj,
-    compatibleItems,
-    compatibleAccessories,
-    calculatedPrice,
-    priceComponents,
+    onSubmit: form.handleSubmit(handleSubmit),
+    isLoading: false,
+    modelObj: null,
+    compatibleItems: {
+      compatibleTrims: [],
+      compatibleFuelTypes: [],
+      compatibleColors: [],
+      compatibleTransmissions: []
+    },
+    compatibleAccessories: [],
+    calculatedPrice: 0,
+    priceComponents: {},
     vehicle,
     isAdmin,
-    activeDealers: filteredDealers,
+    activeDealers: [],
     onCancel
   };
 };

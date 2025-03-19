@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Vehicle } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import { virtualReservationSchema, createVirtualReservationSchema, VirtualReservationFormValues } from '../schema';
+import { createVirtualReservationSchema, VirtualReservationFormValues } from '../schema';
 
 export const useVirtualReservationForm = (vehicle: Vehicle) => {
   // Get user information

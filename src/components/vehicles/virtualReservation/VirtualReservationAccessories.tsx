@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UseFormReturn } from 'react-hook-form';
 import { Accessory } from '@/types';
-import { VirtualReservationFormValues } from './useVirtualReservation';
+import { VirtualReservationFormValues } from './schema';
 
 interface VirtualReservationAccessoriesProps {
   form: UseFormReturn<VirtualReservationFormValues>;

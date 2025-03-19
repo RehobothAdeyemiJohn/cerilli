@@ -23,8 +23,8 @@ export const QuotesPaginationAdapter: React.FC<QuotesPaginationAdapterProps> = (
     <QuotesPagination
       currentPage={currentPage}
       totalPages={totalPages}
-      onPrevPage={onPrevPage}
-      onNextPage={onNextPage}
+      onPrevious={onPrevPage}
+      onNext={onNextPage}
       itemsPerPage={itemsPerPage}
       setItemsPerPage={setItemsPerPage}
     />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import QuotesHeader from '@/components/quotes/QuotesHeader';
@@ -199,12 +198,12 @@ const Quotes = () => {
         
         <QuotesTable 
           quotes={quotes}
-          isLoading={isLoading}
-          onViewQuote={handleViewQuote}
-          onDeleteQuote={handlePrepareDelete}
-          onUpdateStatus={handleUpdateStatus}
-          onRejectQuote={handlePrepareReject}
-          onConvertToContract={handlePrepareContract}
+          loading={isLoading}
+          onView={handleViewQuote}
+          onDelete={handlePrepareDelete}
+          onStatusChange={handleUpdateStatus}
+          onReject={handlePrepareReject}
+          onConvert={handlePrepareContract}
           date={filterDate}
           dealer={filterDealer}
           isAdmin={isAdmin}

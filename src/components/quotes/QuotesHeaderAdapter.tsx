@@ -11,7 +11,7 @@ export const QuotesHeaderAdapter: React.FC<QuotesHeaderAdapterProps> = ({
 }) => {
   return (
     <QuotesHeader
-      onAddCustomQuote={onAddCustomQuote}
+      onAddQuote={onAddCustomQuote}
     />
   );
 };

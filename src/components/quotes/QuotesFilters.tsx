@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
 
 interface QuotesFiltersProps {
+  activeStatus?: string;
   status?: string;
   onStatusChange?: (value: string) => void;
+  selectedDealer?: string;
   dealerId?: string;
   onDealerChange?: (value: string) => void;
   searchText?: string;
@@ -17,7 +18,6 @@ interface QuotesFiltersProps {
   onSortChange?: (value: string) => void;
   counts?: any;
   
-  // Legacy prop support
   searchQuery?: string;
   setSearchQuery?: (value: string) => void;
   filterModel?: string;
@@ -38,9 +38,10 @@ const QuotesFilters: React.FC<QuotesFiltersProps> = ({
   models = [],
   dealers = [],
   
-  // New props
+  activeStatus,
   status,
   onStatusChange,
+  selectedDealer,
   dealerId,
   onDealerChange,
   searchText,
@@ -51,14 +52,18 @@ const QuotesFilters: React.FC<QuotesFiltersProps> = ({
   onSortChange,
   counts
 }) => {
-  // Use either the new props or legacy props
+  const effectiveStatus = activeStatus || status || '';
+  const handleStatusChange = (value: string) => {
+    if (onStatusChange) onStatusChange(value);
+  };
+  
   const effectiveSearchQuery = searchText || searchQuery || '';
   const handleSearchChange = (value: string) => {
     if (onSearchChange) onSearchChange(value);
     if (setSearchQuery) setSearchQuery(value);
   };
   
-  const effectiveFilterDealer = dealerId || filterDealer || '';
+  const effectiveFilterDealer = selectedDealer || dealerId || filterDealer || '';
   const handleDealerChange = (value: string) => {
     if (onDealerChange) onDealerChange(value);
     if (setFilterDealer) setFilterDealer(value);

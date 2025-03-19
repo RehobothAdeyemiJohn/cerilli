@@ -74,6 +74,7 @@ export const QuoteDeleteDialogAdapter: React.FC<QuoteDeleteDialogAdapterProps> =
       onOpenChange={onOpenChange}
       onConfirm={onConfirm}
       onCancel={() => onOpenChange(false)}
+      isPending={isPending}
     />
   );
 };
@@ -95,9 +96,10 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
 }) => {
   return (
     <QuoteForm
-      vehicleId={vehicleId}
+      vehicle={vehicleId ? { id: vehicleId } as any : undefined}
       isManualQuote={isManualQuote}
-      onCreateQuote={onCreateQuote}
+      onSubmit={onCreateQuote}
+      onCancel={() => onOpenChange(false)}
     />
   );
 };
@@ -122,7 +124,7 @@ export const QuoteContractDialogAdapter: React.FC<QuoteContractDialogAdapterProp
       open={open}
       onClose={() => onOpenChange(false)}
       quote={quote}
-      onCreateContract={onCreateContract}
+      onSubmit={onCreateContract}
       isSubmitting={isSubmitting}
     />
   );

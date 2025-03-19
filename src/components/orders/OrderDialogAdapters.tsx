@@ -28,20 +28,21 @@ export const OrderDetailsDialogAdapter: React.FC<OrderDetailsDialogAdapterProps>
 };
 
 interface OrderDetailsFormAdapterProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   order: Order;
+  onSubmit?: (data: any) => void;
+  isLoading?: boolean;
 }
 
 export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = ({
-  open,
-  onOpenChange,
-  order
+  order,
+  onSubmit = () => {},
+  isLoading = false
 }) => {
-  // Convert the adapter props to match what OrderDetailsForm expects
   return (
     <OrderDetailsForm
       order={order}
+      onSubmit={onSubmit}
+      isLoading={isLoading}
     />
   );
 };
