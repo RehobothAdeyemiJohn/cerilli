@@ -1,5 +1,5 @@
 import { Order } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from './client';
 
 // Helper function to map database dealer to frontend type
 const mapDealerDbToFrontend = (dealer: any) => {
@@ -76,134 +76,147 @@ const mapOrderDbToFrontend = (order: any): Order => {
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
     console.log("Fetching all orders from Supabase");
-    
+
+    // Let's verify if the orders table exists and what columns it has
     try {
-      // First try with the full join query
+      console.log("Checking database tables...");
+      const { data: tables, error: tablesError } = await supabase.rpc('list_tables');
+      
+      if (tablesError) {
+        console.error('Error listing tables:', tablesError);
+      } else {
+        console.log("Available tables:", tables);
+        
+        // If we have orders table, let's check its columns
+        if (tables && tables.some((t: any) => t.table_name === 'orders')) {
+          console.log("Orders table exists, checking its columns...");
+          
+          // Get information about the orders table columns
+          const { data: columns, error: columnsError } = await supabase.from('information_schema.columns')
+            .select('column_name, data_type')
+            .eq('table_name', 'orders');
+          
+          if (columnsError) {
+            console.error('Error fetching columns:', columnsError);
+          } else {
+            console.log("Orders table columns:", columns);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error checking database structure:", e);
+    }
+    
+    // First try: Fetch orders directly
+    try {
+      console.log("Attempting to fetch orders with simple query...");
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*');
+      
+      if (error) {
+        console.error('Error with simple query:', error);
+      } else {
+        console.log("Simple query result:", data);
+        
+        if (data && data.length > 0) {
+          // We have orders! Now try to fetch related data separately
+          console.log(`Found ${data.length} orders. Fetching related data...`);
+          
+          const ordersWithRelations = await Promise.all(
+            data.map(async (order) => {
+              let vehicleData = null;
+              let dealerData = null;
+              
+              // Try to fetch the vehicle
+              if (order.vehicleid) {
+                const { data: vehicle } = await supabase
+                  .from('vehicles')
+                  .select('*')
+                  .eq('id', order.vehicleid)
+                  .maybeSingle();
+                
+                vehicleData = vehicle;
+              }
+              
+              // Try to fetch the dealer
+              if (order.dealerid) {
+                const { data: dealer } = await supabase
+                  .from('dealers')
+                  .select('*')
+                  .eq('id', order.dealerid)
+                  .maybeSingle();
+                
+                dealerData = dealer;
+              }
+              
+              // Return the order with manually fetched relations
+              return {
+                ...order,
+                vehicles: vehicleData,
+                dealers: dealerData
+              };
+            })
+          );
+          
+          console.log("Orders with manually fetched relations:", ordersWithRelations);
+          
+          // Map to frontend format
+          const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
+          console.log("Formatted orders:", formattedOrders);
+          return formattedOrders;
+        }
+      }
+    } catch (e) {
+      console.error("Error with simple fetch approach:", e);
+    }
+    
+    // Second try: Fetch with join
+    try {
+      console.log("Attempting to fetch orders with join query...");
       const { data, error } = await supabase
         .from('orders')
         .select('*, vehicles(*), dealers(*)');
       
       if (error) {
         console.error('Error with joined query:', error);
-        throw error;
+      } else {
+        console.log("Joined query result:", data);
+        
+        if (data && data.length > 0) {
+          // Map the orders from the joined query
+          const formattedOrders = data.map(mapOrderDbToFrontend);
+          console.log("Formatted orders from join:", formattedOrders);
+          return formattedOrders;
+        }
       }
-
-      console.log("Raw orders data from database:", data);
+    } catch (e) {
+      console.error("Error with join fetch approach:", e);
+    }
+    
+    // Final attempt: Use RPC function
+    try {
+      console.log("Attempting to use RPC function as last resort...");
       
-      if (!data || data.length === 0) {
-        console.log("No orders found with joined query. Trying raw orders query.");
+      // Try to call a custom function to get orders if it exists
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_all_orders');
+      
+      if (rpcError) {
+        console.error('RPC function error or not available:', rpcError);
+      } else if (rpcData && rpcData.length > 0) {
+        console.log("RPC function result:", rpcData);
         
-        // Try to fetch just the orders without joins
-        const { data: rawOrdersData, error: rawError } = await supabase
-          .from('orders')
-          .select('*');
-          
-        if (rawError) {
-          console.error('Error with raw orders query:', rawError);
-          throw rawError;
-        }
-        
-        console.log("Raw orders without joins:", rawOrdersData);
-        
-        if (!rawOrdersData || rawOrdersData.length === 0) {
-          console.log("No orders found at all. Returning empty array.");
-          return [];
-        }
-        
-        // We found some orders, but need to manually fetch the related data
-        const ordersWithRelations = await Promise.all(
-          rawOrdersData.map(async (order) => {
-            let vehicleData = null;
-            let dealerData = null;
-            
-            // Try to fetch the vehicle
-            if (order.vehicleid) {
-              const { data: vehicle } = await supabase
-                .from('vehicles')
-                .select('*')
-                .eq('id', order.vehicleid)
-                .maybeSingle();
-              
-              vehicleData = vehicle;
-            }
-            
-            // Try to fetch the dealer
-            if (order.dealerid) {
-              const { data: dealer } = await supabase
-                .from('dealers')
-                .select('*')
-                .eq('id', order.dealerid)
-                .maybeSingle();
-              
-              dealerData = dealer;
-            }
-            
-            // Return the order with manually fetched relations
-            return {
-              ...order,
-              vehicles: vehicleData,
-              dealers: dealerData
-            };
-          })
-        );
-        
-        console.log("Orders with manually fetched relations:", ordersWithRelations);
-        
-        // Map to frontend format
-        const formattedOrders = ordersWithRelations.map(mapOrderDbToFrontend);
+        // Map the orders 
+        const formattedOrders = rpcData.map(mapOrderDbToFrontend);
+        console.log("Formatted orders from RPC:", formattedOrders);
         return formattedOrders;
       }
-
-      // Map the orders from the joined query
-      const formattedOrders = data.map(mapOrderDbToFrontend);
-      console.log("Formatted orders:", formattedOrders);
-      return formattedOrders;
-    } catch (error) {
-      console.error('Unexpected error fetching orders:', error);
-      
-      // Last resort fallback - try a simple RPC call to list orders
-      try {
-        console.log("Trying fallback RPC call to list orders");
-        const { data: tables } = await supabase.rpc('list_tables');
-        console.log("Available tables:", tables);
-        
-        // Check if orders table is available
-        const hasOrdersTable = tables.some((t: any) => t.table_name === 'orders');
-        
-        if (hasOrdersTable) {
-          console.log("Orders table found, trying direct query without joins");
-          
-          // Try a direct query without any joins as a last resort
-          const { data: basicOrders } = await supabase
-            .from('orders')
-            .select('id, vehicleid, dealerid, customername, status, orderdate, deliverydate, progressive_number, price, contract_id');
-          
-          console.log("Basic orders query result:", basicOrders);
-          
-          if (basicOrders && basicOrders.length > 0) {
-            // Return a simplified version of the orders without relations
-            return basicOrders.map((order: any) => ({
-              id: order.id,
-              vehicleId: order.vehicleid,
-              dealerId: order.dealerid,
-              customerName: order.customername,
-              status: order.status || 'processing',
-              orderDate: order.orderdate,
-              deliveryDate: order.deliverydate,
-              progressiveNumber: order.progressive_number,
-              price: order.price,
-              contractId: order.contract_id
-            }));
-          }
-        }
-        
-        console.log("Could not fetch orders through any method. Returning empty array.");
-        return [];
-      } catch (fallbackError) {
-        console.error("Fallback query also failed:", fallbackError);
-        return [];
-      }
+    } catch (e) {
+      console.error("Error with RPC approach:", e);
     }
+    
+    console.log("Could not fetch orders through any method. Returning empty array.");
+    return [];
   },
 
   getById: async (id: string): Promise<Order> => {
