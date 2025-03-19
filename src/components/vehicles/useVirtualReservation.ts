@@ -38,7 +38,7 @@ export const useVirtualReservation = (
   const watchAccessories = form.watch('accessories');
 
   // Use custom hooks for modular functionality
-  const compatibleItems = useCompatibleItems(vehicle, modelObj, trims, fuelTypes, colors, transmissions);
+  const compatibleItems = useCompatibleItems(vehicle, modelObj, trims || [], fuelTypes || [], colors || [], transmissions || []);
   
   const { calculatedPrice, priceComponents } = useCalculatePrice(
     modelObj,
@@ -47,17 +47,17 @@ export const useVirtualReservation = (
     watchColor,
     watchTransmission,
     watchAccessories,
-    trims,
-    fuelTypes,
-    colors,
-    transmissions,
-    accessories
+    trims || [],
+    fuelTypes || [],
+    colors || [],
+    transmissions || [],
+    accessories || []
   );
   
-  const compatibleAccessories = useCompatibleAccessories(vehicle, watchTrim, modelObj, trims);
+  const compatibleAccessories = useCompatibleAccessories(vehicle, watchTrim, modelObj, trims || []);
 
   // Use custom hook for form submission
-  const { onSubmit } = useVirtualReservationSubmit(
+  const { handleSubmit, isSubmitting } = useVirtualReservationSubmit(
     vehicle,
     isAdmin,
     dealerId,
@@ -69,7 +69,7 @@ export const useVirtualReservation = (
 
   return {
     form,
-    onSubmit,
+    onSubmit: handleSubmit,
     isLoading,
     modelObj,
     compatibleItems,

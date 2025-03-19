@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { quotesApi } from '@/api/supabase';
@@ -68,7 +69,7 @@ export const useComprehensiveQuotesData = (
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
         filteredQuotes = filteredQuotes.filter(q => 
-          q.vehicleModel?.toLowerCase().includes(searchLower) ||
+          q.vehicleInfo?.model?.toLowerCase().includes(searchLower) ||
           q.customerName?.toLowerCase().includes(searchLower) ||
           q.customerEmail?.toLowerCase().includes(searchLower)
         );
@@ -92,7 +93,7 @@ export const useComprehensiveQuotesData = (
           if (filters.sortBy === 'createdAt') {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           } else if (filters.sortBy === 'price') {
-            return (b.totalPrice || 0) - (a.totalPrice || 0);
+            return (b.finalPrice || 0) - (a.finalPrice || 0);
           }
           return 0;
         });
@@ -152,11 +153,11 @@ export const useComprehensiveQuotesData = (
 
   // Update a quote status
   const { mutateAsync: updateQuoteStatus, isPending: isUpdating } = useMutation({
-    mutationFn: async (
-      quoteId: string, 
-      status: string, 
-      rejectionReason?: string
-    ) => {
+    mutationFn: async ({ quoteId, status, rejectionReason }: { 
+      quoteId: string; 
+      status: string; 
+      rejectionReason?: string 
+    }) => {
       const updates: any = { status };
       if (rejectionReason) {
         updates.rejectionReason = rejectionReason;
@@ -185,7 +186,7 @@ export const useComprehensiveQuotesData = (
       // Here you would call the API to create a contract
       // This is just a placeholder for now
       await new Promise(resolve => setTimeout(resolve, 1000));
-      return await quotesApi.update(quote.id, { status: 'completed' });
+      return await quotesApi.update(quote.id, { status: 'converted' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -203,6 +204,11 @@ export const useComprehensiveQuotesData = (
     }
   });
 
+  // Wrap updateQuoteStatus to match the expected signature in components
+  const updateQuoteStatusWrapper = async (quoteId: string, status: string, rejectionReason?: string) => {
+    return await updateQuoteStatus({ quoteId, status, rejectionReason });
+  };
+
   return {
     quotes,
     isLoading,
@@ -213,7 +219,7 @@ export const useComprehensiveQuotesData = (
     isCreating,
     deleteQuote,
     isDeleting,
-    updateQuoteStatus,
+    updateQuoteStatus: updateQuoteStatusWrapper,
     isUpdating,
     createContract,
     isContractSubmitting

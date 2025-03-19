@@ -49,7 +49,10 @@ const ModelsSettings = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => modelsApi.delete(id),
+    mutationFn: async (id: string) => {
+      await modelsApi.delete(id);
+      return;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       toast({

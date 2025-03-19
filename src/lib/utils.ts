@@ -36,11 +36,21 @@ export function formatDate(date: string | Date): string {
   }
 }
 
-export function calculateDaysInStock(dateAdded: string | Date): number {
+export function calculateDaysInStock(dateAdded: string | Date | Vehicle): number {
   if (!dateAdded) return 0;
   
   try {
-    const startDate = typeof dateAdded === 'string' ? new Date(dateAdded) : dateAdded;
+    let startDate: Date;
+    
+    if (typeof dateAdded === 'object' && 'dateAdded' in dateAdded) {
+      // It's a Vehicle object
+      startDate = new Date(dateAdded.dateAdded);
+    } else if (typeof dateAdded === 'string') {
+      startDate = new Date(dateAdded);
+    } else {
+      startDate = dateAdded as Date;
+    }
+    
     const today = new Date();
     return differenceInDays(today, startDate);
   } catch (error) {
@@ -55,7 +65,7 @@ export function calculateEstimatedArrival(estimatedArrival: string | Date | null
   try {
     const arrivalDate = typeof estimatedArrival === 'string' 
       ? new Date(estimatedArrival) 
-      : estimatedArrival;
+      : estimatedArrival as Date;
     
     // If the date is invalid, return a fallback message
     if (isNaN(arrivalDate.getTime())) return 'Non disponibile';
@@ -72,7 +82,8 @@ export function calculateEstimatedArrival(estimatedArrival: string | Date | null
     } else if (daysUntilArrival <= 7) {
       return `${daysUntilArrival} giorni`;
     } else {
-      return formatDate(arrivalDate);
+      const formatted = formatDate(arrivalDate);
+      return formatted;
     }
   } catch (error) {
     console.error('Error calculating estimated arrival:', error);

@@ -1,392 +1,579 @@
-
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
-import { useQuery } from '@tanstack/react-query';
-import { ordersApi } from '@/api/supabase';
-import { Button } from '@/components/ui/button';
-import { PlusIcon, FilePlus2 } from 'lucide-react';
-import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { generateOrdersPdf } from '@/lib/pdf-generator';
-import { ConfirmDeleteDialog } from '@/components/ui/ConfirmDeleteDialog';
-import { toast } from '@/hooks/use-toast';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useOrders } from '@/hooks/useOrders';
+import { Order } from '@/types';
+import { DateRange } from '@/types/date-range';
+import { formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format, addDays } from 'date-fns';
-import { cn } from '@/lib/utils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { CalendarIcon, CheckCheck, ChevronsUpDown, Copy, File, FileText, Filter, Search, X } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { toast } from '@/hooks/use-toast';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { ordersApi, vehiclesApi } from '@/api/apiClient';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { PdfPreviewDialog } from '@/components/orders/PdfPreviewDialog';
-import { OrderFiltersDialog } from '@/components/orders/OrderFiltersDialog';
-import { DateRange } from '@/types/date-range';
-import { OrderDetailsDialogAdapter, OrderDetailsFormAdapter } from '@/components/orders/OrderDialogAdapters';
-import { Order } from '@/types';
+import { OrderDetailsDialogAdapter } from '@/components/orders/OrderDialogAdapters';
 
 const Orders = () => {
-  const [rowSelection, setRowSelection] = useState({});
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [isFiltersDialogOpen, setIsFiltersDialogOpen] = useState(false);
-  const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
+  const dealerId = user?.dealerId;
+
+  // Filters state
+  const [searchText, setSearchText] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [selectedDealers, setSelectedDealers] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [isLicensable, setIsLicensable] = useState<boolean | null>(null);
+  const [hasProforma, setHasProforma] = useState<boolean | null>(null);
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [isInvoiced, setIsInvoiced] = useState<boolean | null>(null);
+  const [hasConformity, setHasConformity] = useState<boolean | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+
+  // Table state
+  const [isAllSelected, setIsAllSelected] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+  // Dialog states
+  const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
-  const [pdfData, setPdfData] = useState<Blob | null>(null);
-  const [filters, setFilters] = useState({
-    searchText: '',
-    dateRange: undefined as DateRange | undefined,
-    models: [] as string[],
-    dealers: [] as string[],
-    status: [] as string[],
-    isLicensable: null as boolean | null,
-    hasProforma: null as boolean | null,
-    isPaid: null as boolean | null,
-    isInvoiced: null as boolean | null,
-    hasConformity: null as boolean | null,
-    dealerId: null as string | null,
-    model: null as string | null
-  });
-  
-  const debouncedSearchText = useDebounce(filters.searchText, 500);
-  
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
-  
-  const { data: orders = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['orders'],
-    queryFn: ordersApi.getAll,
-    staleTime: 0
-  });
-  
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+
+  // PDF preview states
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+
+  // Copy to clipboard state
+  const [copied, setCopied] = useCopyToClipboard();
+
+  // Fetch orders using the custom hook
   const {
-    markAsDeliveredMutation,
-    cancelOrderMutation,
-    deleteOrderMutation,
-    generateODLMutation,
-    handleMarkAsDelivered,
-    handleCancelOrder,
-    handleDeleteOrder,
-    handleGenerateODL
-  } = useOrdersActions(refetch);
-  
-  const isDelivering = markAsDeliveredMutation.isPending;
-  const isCancelling = cancelOrderMutation.isPending;
-  const isDeleting = deleteOrderMutation.isPending;
-  const isGeneratingODL = generateODLMutation.isPending;
-  
-  const filteredOrders = React.useMemo(() => {
-    let filtered = [...orders];
-    
-    if (debouncedSearchText) {
-      filtered = filtered.filter(order => 
-        order.customerName.toLowerCase().includes(debouncedSearchText.toLowerCase()) ||
-        order.modelName?.toLowerCase().includes(debouncedSearchText.toLowerCase()) ||
-        order.dealerName?.toLowerCase().includes(debouncedSearchText.toLowerCase()) ||
-        order.id.toLowerCase().includes(debouncedSearchText.toLowerCase())
-      );
+    ordersList,
+    isLoading,
+    error,
+    refetchOrders
+  } = useOrders({
+    searchText,
+    dateRange,
+    models: selectedModels,
+    dealers: selectedDealers,
+    status: selectedStatus,
+    isLicensable,
+    hasProforma,
+    isPaid,
+    isInvoiced,
+    hasConformity,
+    dealerId,
+    model: selectedModel
+  });
+
+  // Models list for filter
+  const [models, setModels] = useState<string[]>([]);
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const vehicles = await vehiclesApi.getAll();
+        const uniqueModels = [...new Set(vehicles.map(vehicle => vehicle.model))];
+        setModels(uniqueModels);
+      } catch (error) {
+        console.error('Error fetching models:', error);
+      }
+    };
+
+    fetchModels();
+  }, []);
+
+  // Dealers list for filter
+  const [dealers, setDealers] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchDealers = async () => {
+      try {
+        const dealers = await ordersApi.getDealers();
+        setDealers(dealers);
+      } catch (error) {
+        console.error('Error fetching dealers:', error);
+      }
+    };
+
+    fetchDealers();
+  }, []);
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    setIsAllSelected(!isAllSelected);
+    setSelectedOrders(isAllSelected ? [] : ordersList.map(order => order.id));
+  };
+
+  // Handle row checkbox
+  const handleRowSelect = (orderId: string) => {
+    if (selectedOrders.includes(orderId)) {
+      setSelectedOrders(selectedOrders.filter(id => id !== orderId));
+    } else {
+      setSelectedOrders([...selectedOrders, orderId]);
     }
-    
-    if (filters.dateRange?.from && filters.dateRange?.to) {
-      filtered = filtered.filter(order => {
-        const orderDate = new Date(order.orderDate);
-        const fromDate = filters.dateRange?.from;
-        const toDate = filters.dateRange?.to ? addDays(filters.dateRange.to, 1) : undefined;
-        
-        if (fromDate && toDate) {
-          return orderDate >= fromDate && orderDate <= toDate;
-        }
-        return true;
-      });
-    }
-    
-    if (filters.models && filters.models.length > 0) {
-      filtered = filtered.filter(order => 
-        filters.models.includes(order.modelName || '')
-      );
-    }
-    
-    if (filters.dealers && filters.dealers.length > 0) {
-      filtered = filtered.filter(order => 
-        filters.dealers.includes(order.dealerName || '')
-      );
-    }
-    
-    if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter(order => 
-        filters.status.includes(order.status)
-      );
-    }
-    
-    if (filters.isLicensable !== null) {
-      filtered = filtered.filter(order => 
-        order.isLicensable === filters.isLicensable
-      );
-    }
-    
-    if (filters.hasProforma !== null) {
-      filtered = filtered.filter(order => 
-        order.hasProforma === filters.hasProforma
-      );
-    }
-    
-    if (filters.isPaid !== null) {
-      filtered = filtered.filter(order => 
-        order.isPaid === filters.isPaid
-      );
-    }
-    
-    if (filters.isInvoiced !== null) {
-      filtered = filtered.filter(order => 
-        order.isInvoiced === filters.isInvoiced
-      );
-    }
-    
-    if (filters.hasConformity !== null) {
-      filtered = filtered.filter(order => 
-        order.hasConformity === filters.hasConformity
-      );
-    }
-    
-    return filtered;
-  }, [orders, filters, debouncedSearchText]);
-  
-  const handleViewOrder = (order: Order) => {
+  };
+
+  // Handle open order details dialog
+  const handleOpenOrderDetails = (order: Order) => {
     setSelectedOrder(order);
-    setIsOrderDetailsDialogOpen(true);
+    setOrderDetailsOpen(true);
   };
-  
-  const handleCloseOrderDetails = () => {
-    setIsOrderDetailsDialogOpen(false);
-    setSelectedOrder(null);
-  };
-  
-  const handleEditOrderDetails = (order: Order) => {
-    setSelectedOrder(order);
-    setIsEditDialogOpen(true);
-  };
-  
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-    setSelectedOrder(null);
-    refetch();
-  };
-  
-  const handleDeleteButtonClick = (orderId: string) => {
-    setDeleteOrderId(orderId);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteDialogOpen(false);
-    setDeleteOrderId(null);
-  };
-  
-  const handleDeleteOrderConfirmed = () => {
-    if (deleteOrderId) {
-      handleDeleteOrder(deleteOrderId);
-      setIsDeleteDialogOpen(false);
-      setDeleteOrderId(null);
+
+  // Handle delete order
+  const handleDeleteOrder = async () => {
+    if (selectedOrder) {
+      try {
+        await ordersApi.delete(selectedOrder.id);
+        refetchOrders();
+        setIsDeleteAlertOpen(false);
+        toast({
+          title: 'Ordine eliminato',
+          description: 'L\'ordine è stato eliminato con successo',
+        });
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        toast({
+          title: 'Errore',
+          description: 'Si è verificato un errore durante l\'eliminazione dell\'ordine',
+          variant: 'destructive'
+        });
+      }
     }
   };
-  
-  const handleGeneratePdf = async (order: Order) => {
+
+  // Handle PDF preview
+  const handlePdfPreview = async (order: Order) => {
     try {
-      const pdfBlob = await generateOrdersPdf([order]);
-      // Convert the result to Blob if it's not already
-      const blob = pdfBlob instanceof Blob ? pdfBlob : new Blob([pdfBlob], { type: 'application/pdf' });
-      setPdfData(blob);
-      setIsPdfPreviewOpen(true);
+      const response = await ordersApi.generatePdfPreview(order);
+      // Convert Blob to Uint8Array
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      setPdfData(uint8Array);
+      setPdfPreviewOpen(true);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error('Error generating PDF preview:', error);
       toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la generazione del PDF",
-        variant: "destructive"
+        title: 'Errore',
+        description: 'Si è verificato un errore durante la generazione dell\'anteprima PDF',
+        variant: 'destructive'
       });
     }
   };
-  
-  const handlePreviewPdf = async () => {
+
+  // Handle ODL generation
+  const handleGenerateODL = async (orderId: string) => {
     try {
-      const pdfBlob = await generateOrdersPdf(filteredOrders);
-      // Convert the result to Blob if it's not already
-      const blob = pdfBlob instanceof Blob ? pdfBlob : new Blob([pdfBlob], { type: 'application/pdf' });
-      setPdfData(blob);
-      setIsPdfPreviewOpen(true);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la generazione del PDF",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const closePdfPreview = () => {
-    setIsPdfPreviewOpen(false);
-    setPdfData(null);
-  };
-  
-  // Render the main content
-  return (
-    <div className="container mx-auto py-10">
-      <Helmet>
-        <title>Ordini - Cirelli Motor Company</title>
-      </Helmet>
+      const order = ordersList.find(o => o.id === orderId);
+      if (!order) return;
       
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Ordini</h1>
-        <div className="flex space-x-2">
-          <Button onClick={handlePreviewPdf}>
-            <FilePlus2 className="mr-2 h-4 w-4" />
-            Anteprima PDF
-          </Button>
-          <Button onClick={() => setIsFiltersDialogOpen(true)}>
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Filtri
-          </Button>
+      const response = await ordersApi.generateOrderDeliveryForm(order);
+      // Convert Blob to Uint8Array
+      const arrayBuffer = await response.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      setPdfData(uint8Array);
+      setPdfPreviewOpen(true);
+      
+      // Update order to mark ODL as generated
+      await ordersApi.update(orderId, { odlGenerated: true });
+      
+      // Refetch orders to update the UI
+      refetchOrders();
+      
+    } catch (error) {
+      console.error('Error generating ODL:', error);
+      toast({
+        title: 'Errore',
+        description: 'Si è verificato un errore durante la generazione dell\'ODL',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
+          <p>Si è verificato un errore: {error.message}</p>
         </div>
       </div>
-      
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        <div className="w-full md:w-1/3 mb-2 md:mb-0">
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-2xl font-bold">Ordini</h1>
+        <div className="mt-4 md:mt-0 flex items-center space-x-2">
+          <Button variant="outline" size="sm" onClick={() => setCopied(ordersList.map(order => order.id).join(', '))}>
+            <Copy className="mr-2 h-4 w-4" />
+            Copia ID Ordini
+          </Button>
+          {copied ? <Badge variant="secondary">Copiato!</Badge> : null}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+        <div className="md:col-span-2">
           <Input
-            placeholder="Cerca ordini..."
-            value={filters.searchText}
-            onChange={(e) => setFilters({
-              ...filters,
-              searchText: e.target.value
-            })}
+            type="text"
+            placeholder="Cerca per nome cliente, telaio..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
-        
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal",
-                !filters.dateRange?.from || !filters.dateRange?.to ? "text-muted-foreground" : undefined
-              )}
+              variant={"outline"}
+              className={
+                "justify-start text-left font-normal" +
+                (dateRange?.from ? " !font-medium" : "")
+              }
             >
-              {filters.dateRange?.from && filters.dateRange?.to ? (
-                format(filters.dateRange.from, "LLL dd, yyyy") + " - " + format(filters.dateRange.to, "LLL dd, yyyy")
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
+                ) : (
+                  formatDate(dateRange.from)
+                )
               ) : (
-                <span>Seleziona intervallo date</span>
+                <span>Seleziona un intervallo...</span>
               )}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="center" side="bottom">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
+              initialFocus
               mode="range"
-              defaultMonth={filters.dateRange?.from}
-              selected={filters.dateRange}
-              onSelect={(dateRange) => {
-                setFilters({
-                  ...filters,
-                  dateRange
-                });
-              }}
+              defaultMonth={dateRange?.from}
+              selected={dateRange}
+              onSelect={setDateRange}
               numberOfMonths={2}
             />
           </PopoverContent>
         </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={selectedModels.length > 0} className="justify-between">
+              Modello
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-0">
+            <Command>
+              <CommandInput placeholder="Cerca modello..." />
+              <CommandList>
+                <CommandEmpty>Nessun modello trovato.</CommandEmpty>
+                <CommandGroup>
+                  {models.map((model) => (
+                    <CommandItem
+                      key={model}
+                      onSelect={() => {
+                        if (selectedModels.includes(model)) {
+                          setSelectedModels(selectedModels.filter((m) => m !== model));
+                        } else {
+                          setSelectedModels([...selectedModels, model]);
+                        }
+                      }}
+                    >
+                      <CheckCheck
+                        className={`mr-2 h-4 w-4 ${selectedModels.includes(model) ? "opacity-100" : "opacity-0"
+                          }`}
+                      />
+                      {model}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={selectedDealers.length > 0} className="justify-between">
+              Concessionario
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-0">
+            <Command>
+              <CommandInput placeholder="Cerca concessionario..." />
+              <CommandList>
+                <CommandEmpty>Nessun concessionario trovato.</CommandEmpty>
+                <CommandGroup>
+                  {dealers.map((dealer) => (
+                    <CommandItem
+                      key={dealer.id}
+                      onSelect={() => {
+                        if (selectedDealers.includes(dealer.id)) {
+                          setSelectedDealers(selectedDealers.filter((d) => d !== dealer.id));
+                        } else {
+                          setSelectedDealers([...selectedDealers, dealer.id]);
+                        }
+                      }}
+                    >
+                      <CheckCheck
+                        className={`mr-2 h-4 w-4 ${selectedDealers.includes(dealer.id) ? "opacity-100" : "opacity-0"
+                          }`}
+                      />
+                      {dealer.companyName}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={selectedStatus.length > 0} className="justify-between">
+              Stato
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-0">
+            <Command>
+              <CommandInput placeholder="Cerca stato..." />
+              <CommandList>
+                <CommandEmpty>Nessuno stato trovato.</CommandEmpty>
+                <CommandGroup>
+                  {['processing', 'delivered', 'cancelled'].map((status) => (
+                    <CommandItem
+                      key={status}
+                      onSelect={() => {
+                        if (selectedStatus.includes(status)) {
+                          setSelectedStatus(selectedStatus.filter((s) => s !== status));
+                        } else {
+                          setSelectedStatus([...selectedStatus, status]);
+                        }
+                      }}
+                    >
+                      <CheckCheck
+                        className={`mr-2 h-4 w-4 ${selectedStatus.includes(status) ? "opacity-100" : "opacity-0"
+                          }`}
+                      />
+                      {status}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
-      
-      {/* Placeholder for data table content - consider creating a custom orders table component */}
-      <div className="border rounded-md p-4">
-        {isLoading ? (
-          <p className="text-center py-8">Caricamento ordini...</p>
-        ) : error ? (
-          <p className="text-center py-8 text-red-500">Errore nel caricamento degli ordini.</p>
-        ) : filteredOrders.length === 0 ? (
-          <p className="text-center py-8">Nessun ordine trovato.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="p-2 text-left">ID</th>
-                  <th className="p-2 text-left">Cliente</th>
-                  <th className="p-2 text-left">Veicolo</th>
-                  <th className="p-2 text-left">Data</th>
-                  <th className="p-2 text-left">Stato</th>
-                  <th className="p-2 text-left">Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map(order => (
-                  <tr key={order.id} className="border-t">
-                    <td className="p-2">{order.id.substring(0, 8)}...</td>
-                    <td className="p-2">{order.customerName}</td>
-                    <td className="p-2">{order.modelName || "N/A"}</td>
-                    <td className="p-2">{new Date(order.orderDate).toLocaleDateString()}</td>
-                    <td className="p-2">
-                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                        order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {order.status === 'processing' ? 'In Lavorazione' :
-                          order.status === 'delivered' ? 'Consegnato' : 'Cancellato'}
-                      </span>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewOrder(order)}>
-                          Dettagli
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleEditOrderDetails(order)}>
-                          Modifica
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+
+      {/* Booleans Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+        <Select onValueChange={(value) => setIsLicensable(value === "true" ? true : value === "false" ? false : null)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Targabile" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Si</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="">Qualsiasi</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => setHasProforma(value === "true" ? true : value === "false" ? false : null)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Proforma" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Si</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="">Qualsiasi</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => setIsPaid(value === "true" ? true : value === "false" ? false : null)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Pagato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Si</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="">Qualsiasi</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => setInvoiced(value === "true" ? true : value === "false" ? false : null)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Fatturato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Si</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="">Qualsiasi</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => setHasConformity(value === "true" ? true : value === "false" ? false : null)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Conformità" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Si</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="">Qualsiasi</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
-      {/* Dialog components */}
-      <OrderFiltersDialog
-        open={isFiltersDialogOpen}
-        onOpenChange={setIsFiltersDialogOpen}
-        filters={filters as any} // Type cast to satisfy the component
-        setFilters={(newFilters) => setFilters(newFilters as any)} // Type cast to satisfy the component
-      />
-      
+
+      {/* Table */}
+      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <Table>
+          <TableCaption>Elenco degli ordini effettuati.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead>Progressivo</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Modello</TableHead>
+              <TableHead>Data Ordine</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead className="text-right">Azioni</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center">Caricamento...</TableCell>
+              </TableRow>
+            ) : ordersList.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center">Nessun ordine trovato.</TableCell>
+              </TableRow>
+            ) : (
+              ordersList.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => handleRowSelect(order.id)}
+                    />
+                  </TableCell>
+                  <TableCell>{order.progressiveNumber?.toString().padStart(3, '0')}</TableCell>
+                  <TableCell>{order.customerName}</TableCell>
+                  <TableCell>{order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Non disponibile')}</TableCell>
+                  <TableCell>{formatDate(new Date(order.orderDate))}</TableCell>
+                  <TableCell className="capitalize">{
+                    order.status === 'processing' ? 'In Lavorazione' :
+                      order.status === 'delivered' ? 'Consegnato' : 'Cancellato'
+                  }</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handlePdfPreview(order)}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Anteprima
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => handleOpenOrderDetails(order)}>
+                        <File className="mr-2 h-4 w-4" />
+                        Dettagli
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            Elimina
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Questa azione non può essere annullata. Vuoi veramente eliminare l'ordine?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setIsDeleteAlertOpen(false)}>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteOrder}>Elimina</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Order details dialog */}
       <OrderDetailsDialogAdapter
-        isOpen={isOrderDetailsDialogOpen}
-        onClose={handleCloseOrderDetails}
-        order={selectedOrder}
+        open={orderDetailsOpen}
+        onOpenChange={setOrderDetailsOpen}
+        order={selectedOrder || {} as Order}
+        onGenerateODL={handleGenerateODL}
       />
-      
-      <OrderDetailsFormAdapter
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseEditDialog}
-        order={selectedOrder}
-      />
-      
-      <ConfirmDeleteDialog
-        isOpen={isDeleteDialogOpen}
-        onCancel={handleDeleteCancel}
-        onConfirm={handleDeleteOrderConfirmed}
-        itemName="ordine"
-        pending={isDeleting}
-      />
-      
-      <PdfPreviewDialog
-        isOpen={isPdfPreviewOpen}
-        onClose={closePdfPreview}
-        pdfData={pdfData}
-      />
+
+      {/* PDF preview dialog */}
+      {pdfData && (
+        <PdfPreviewDialog
+          open={pdfPreviewOpen}
+          onOpenChange={setPdfPreviewOpen}
+          pdfData={pdfData}
+        />
+      )}
     </div>
   );
 };

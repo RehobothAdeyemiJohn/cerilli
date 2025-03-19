@@ -48,12 +48,15 @@ const FuelTypesSettings = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fuelTypesApi.delete(id),
+    mutationFn: async (id: string) => {
+      await fuelTypesApi.delete(id);
+      return;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fuelTypes'] });
       toast({
         title: "Alimentazione Eliminata",
-        description: "Il tipo di alimentazione è stato eliminato con successo.",
+        description: "L'alimentazione è stata eliminata con successo.",
       });
     },
   });

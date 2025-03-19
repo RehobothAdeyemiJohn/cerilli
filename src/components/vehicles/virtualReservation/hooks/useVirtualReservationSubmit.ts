@@ -1,130 +1,115 @@
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { ordersApi, vehiclesApi } from '@/api/supabase';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Vehicle, Dealer } from '@/types';
+import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
-import { Vehicle, Order } from '@/types';
-import { VirtualReservationFormValues } from '../schema';
+import { VirtualReservationFormValues, formSchema } from '../schema';
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
   isAdmin: boolean,
-  dealerId: string,
-  dealerName: string,
-  onClose: () => void,
+  userDealerId: string | undefined,
+  userDealerName: string | undefined,
+  onComplete: () => void,
   calculatedPrice: number,
-  dealers: { id: string; companyName: string; nuovoPlafond?: number }[]
+  dealers: Dealer[]
 ) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-
-  const createOrderMutation = useMutation({
-    mutationFn: async (orderData: Omit<Order, 'id'>) => {
-      return ordersApi.create(orderData);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Configurazione riservata",
-        description: "La configurazione è stata riservata con successo"
-      });
-      
-      setTimeout(() => {
-        onClose();
-        navigate('/orders');
-      }, 2000);
-    },
-    onError: (error) => {
-      console.error('Error creating order:', error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante la prenotazione. Riprova più tardi.",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
-    }
-  });
-
-  const updateVehicleMutation = useMutation({
-    mutationFn: async (vehicleData: Vehicle) => {
-      return vehiclesApi.update(vehicleData.id, vehicleData);
-    },
-    onSuccess: () => {
-      console.log('Vehicle updated successfully');
-    },
-    onError: (error) => {
-      console.error('Error updating vehicle:', error);
-    }
-  });
   
+  const form = useForm<VirtualReservationFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      trim: vehicle.trim || '',
+      fuelType: vehicle.fuelType || '',
+      exteriorColor: vehicle.exteriorColor || '',
+      transmission: vehicle.transmission || '',
+      accessories: vehicle.accessories || [],
+      dealerId: isAdmin ? '' : userDealerId,
+      reservationDestination: 'Conto Esposizione'
+    },
+    mode: "onChange"
+  });
+
   const handleSubmit = async (values: VirtualReservationFormValues) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
+      // Get the selected dealer
+      const selectedDealerId = isAdmin ? values.dealerId : userDealerId;
       
-      // Find the dealer info
-      const dealer = dealers.find(d => d.id === values.dealerId);
-      
-      if (!dealer) {
-        throw new Error("Dealer information not found");
+      if (!selectedDealerId) {
+        toast({
+          title: "Errore",
+          description: "Seleziona un concessionario per procedere",
+          variant: "destructive"
+        });
+        return;
       }
       
-      // Create an updated vehicle object with reservation info
-      const updatedVehicle: Vehicle = {
-        ...vehicle,
+      const selectedDealer = dealers.find(d => d.id === selectedDealerId);
+      
+      if (!selectedDealer) {
+        toast({
+          title: "Errore",
+          description: "Concessionario non trovato",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check if the dealer has enough credit
+      const reservationDestination = values.reservationDestination;
+      
+      if (reservationDestination === 'Conto Esposizione' && (selectedDealer.creditLimit || 0) < calculatedPrice) {
+        toast({
+          title: "Errore",
+          description: "Credito insufficiente per effettuare la prenotazione in conto esposizione",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Prepare the virtual configuration to save
+      const virtualConfig = {
+        trim: values.trim || '',
+        fuelType: values.fuelType || '',
+        exteriorColor: values.exteriorColor || '',
+        transmission: values.transmission || '',
+        accessories: values.accessories || [],
+        price: calculatedPrice
+      };
+      
+      // Update the vehicle with the virtual reservation
+      const updates: Partial<Vehicle> = {
         status: 'reserved',
-        reservedBy: values.dealerId,
-        reservedAccessories: values.accessories || [],
+        reservedBy: selectedDealer.id,
+        reservedAccessories: values.accessories,
         reservationDestination: values.reservationDestination,
         reservationTimestamp: new Date().toISOString(),
-        virtualConfig: {
-          trim: values.trim || '',
-          fuelType: values.fuelType || '',
-          exteriorColor: values.exteriorColor || '',
-          transmission: values.transmission || '',
-          accessories: values.accessories || [],
-          price: calculatedPrice
-        }
+        virtualConfig
       };
       
-      // Update the vehicle first
-      await updateVehicleMutation.mutateAsync(updatedVehicle);
+      await vehiclesApi.update(vehicle.id, updates);
       
-      // Then create the order
-      const orderData = {
-        vehicleId: vehicle.id,
-        dealerId: values.dealerId,
-        customerName: 'Cliente da confermare',
-        status: 'processing' as const, // Fixed typecasting
-        orderDate: new Date().toISOString(),
-        price: calculatedPrice,
-        dealerName: dealer.companyName,
-        modelName: vehicle.model,
-        plafondDealer: dealer.nuovoPlafond, // Just pass it through
-        isLicensable: false,
-        hasProforma: false,
-        isPaid: false,
-        isInvoiced: false,
-        hasConformity: false,
-        odlGenerated: false,
-        transportCosts: 0,
-        restorationCosts: 0
-      };
+      toast({
+        title: "Prenotazione effettuata",
+        description: `Veicolo prenotato con successo da ${selectedDealer.companyName}`,
+      });
       
-      await createOrderMutation.mutateAsync(orderData);
-      
+      // Call the completion callback
+      onComplete();
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error('Error submitting reservation:', error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante l'elaborazione della richiesta.",
+        description: `Si è verificato un errore durante la prenotazione: ${(error as Error).message}`,
         variant: "destructive"
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
-  
-  return {
-    handleSubmit,
-    isSubmitting: isSubmitting || createOrderMutation.isPending || updateVehicleMutation.isPending
-  };
+
+  return { handleSubmit, isSubmitting };
 };

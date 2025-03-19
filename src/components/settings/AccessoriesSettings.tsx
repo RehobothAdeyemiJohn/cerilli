@@ -61,7 +61,10 @@ const AccessoriesSettings = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => accessoriesApi.delete(id),
+    mutationFn: async (id: string) => {
+      await accessoriesApi.delete(id);
+      return;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accessories'] });
       toast({

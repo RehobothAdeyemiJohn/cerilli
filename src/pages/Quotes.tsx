@@ -5,21 +5,16 @@ import QuotesHeader from '@/components/quotes/QuotesHeader';
 import QuotesFilters from '@/components/quotes/QuotesFilters';
 import QuotesTable from '@/components/quotes/QuotesTable';
 import QuotesPagination from '@/components/quotes/QuotesPagination';
-import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
-import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
-import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
-import QuoteForm from '@/components/quotes/QuoteForm';
-import QuoteContractDialog from '@/components/quotes/QuoteContractDialog';
 import { useComprehensiveQuotesData } from '@/hooks/useComprehensiveQuotesData';
 import { Quote } from '@/types';
 import { 
-  QuotesHeaderAdapter,
   QuoteDetailsDialogAdapter,
   QuoteRejectDialogAdapter,
   QuoteDeleteDialogAdapter,
   QuoteFormAdapter,
   QuoteContractDialogAdapter,
 } from '@/components/quotes/QuotesDialogAdapters';
+import { QuotesHeaderAdapter } from '@/components/quotes/QuotesHeaderAdapter';
 import { QuotesPaginationAdapter } from '@/components/quotes/QuotesPaginationAdapter';
 
 const Quotes = () => {
@@ -114,7 +109,6 @@ const Quotes = () => {
   // Handle quote status update
   const handleUpdateStatus = async (quoteId: string, status: string) => {
     await updateQuoteStatus(quoteId, status);
-    refetch();
     setIsViewDialogOpen(false);
   };
 
@@ -190,29 +184,29 @@ const Quotes = () => {
       
       <div className="mt-6">
         <QuotesFilters 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          filterDealer={filterDealer}
-          setFilterDealer={setFilterDealer}
+          status={activeTab}
+          onStatusChange={setActiveTab}
+          dealerId={filterDealer}
+          onDealerChange={setFilterDealer}
           searchText={searchText}
-          setSearchText={setSearchText}
-          filterDate={filterDate}
-          setFilterDate={setFilterDate}
+          onSearchChange={setSearchText}
+          date={filterDate}
+          onDateChange={setFilterDate}
           sortOption={sortOption}
-          setSortOption={setSortOption}
-          statusCounts={statusCounts}
+          onSortChange={setSortOption}
+          counts={statusCounts}
         />
         
         <QuotesTable 
-          quotes={quotes}
-          isLoading={isLoading}
-          onViewQuote={handleViewQuote}
-          onDeleteQuote={handlePrepareDelete}
-          onUpdateStatus={handleUpdateStatus}
-          onRejectQuote={handlePrepareReject}
-          onConvertToContract={handlePrepareContract}
-          filterDate={filterDate}
-          filterDealer={filterDealer}
+          data={quotes}
+          loading={isLoading}
+          onView={handleViewQuote}
+          onDelete={handlePrepareDelete}
+          onStatusChange={handleUpdateStatus}
+          onReject={handlePrepareReject}
+          onContract={handlePrepareContract}
+          date={filterDate}
+          dealer={filterDealer}
           isAdmin={isAdmin}
         />
         

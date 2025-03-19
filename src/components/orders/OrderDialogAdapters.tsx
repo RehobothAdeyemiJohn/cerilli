@@ -8,37 +8,44 @@ interface OrderDetailsDialogAdapterProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: Order;
+  onGenerateODL?: (orderId: string) => void;
 }
 
 export const OrderDetailsDialogAdapter: React.FC<OrderDetailsDialogAdapterProps> = ({
   open,
   onOpenChange,
-  order
+  order,
+  onGenerateODL
 }) => {
   return (
     <OrderDetailsDialog
       open={open}
       onOpenChange={onOpenChange}
       order={order}
+      onGenerateODL={onGenerateODL}
     />
   );
 };
 
 interface OrderDetailsFormAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   order: Order;
 }
 
 export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   order
 }) => {
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
   return (
     <OrderDetailsForm
-      isOpen={isOpen}
-      onClose={onClose}
+      open={open}
+      onOpenChange={onOpenChange}
       order={order}
     />
   );
