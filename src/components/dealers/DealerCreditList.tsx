@@ -15,6 +15,14 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
     queryFn: dealersApi.getAll,
   });
 
+  React.useEffect(() => {
+    // Debug log per ogni dealer caricato
+    dealers.forEach(dealer => {
+      console.log(`DealerCreditList - Dealer ${dealer.companyName} raw data:`, dealer);
+      console.log(`DealerCreditList - Dealer ${dealer.companyName} nuovo_plafond:`, dealer.nuovo_plafond);
+    });
+  }, [dealers]);
+
   if (isLoading) {
     return (
       <Card className={`overflow-hidden ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}>
@@ -38,9 +46,15 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Access using the original field name from Supabase
-            const plafondDisponibile = dealer.nuovo_plafond !== undefined ? dealer.nuovo_plafond : 0;
-            console.log(`Rendering plafond for ${dealer.companyName}:`, dealer.nuovo_plafond);
+            // Utilizzo il valore dalla proprietà originale del database
+            const plafondDisponibile = dealer.nuovo_plafond !== undefined && dealer.nuovo_plafond !== null 
+              ? dealer.nuovo_plafond 
+              : 0;
+            
+            console.log(`Rendering plafond for ${dealer.companyName}:`, {
+              nuovo_plafond: dealer.nuovo_plafond,
+              formatted: formatCurrency(plafondDisponibile)
+            });
             
             return (
               <div key={dealer.id} className="flex justify-between items-center border-b last:border-0 pb-3 last:pb-0 mb-3 last:mb-0">

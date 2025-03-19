@@ -17,14 +17,27 @@ export const useOrdersModels = (ordersData: Order[]) => {
 export const formatPlafond = (dealer: any) => {
   if (!dealer) return '0 €';
   
-  // Use the correct field from Supabase (nuovo_plafond)
-  const plafondValue = dealer.nuovo_plafond !== undefined 
-    ? dealer.nuovo_plafond 
-    : (dealer.nuovoPlafond !== undefined ? dealer.nuovoPlafond : dealer.creditLimit);
+  // Log dealer object to debug
+  console.log('formatPlafond called with dealer:', dealer);
   
-  if (plafondValue !== undefined && plafondValue !== null) {
-    return `${plafondValue.toLocaleString()} €`;
+  // Primo controllo - accesso diretto al nuovo_plafond (snake_case dal database)
+  if (dealer.nuovo_plafond !== undefined && dealer.nuovo_plafond !== null) {
+    console.log('Usando nuovo_plafond (snake_case):', dealer.nuovo_plafond);
+    return `${dealer.nuovo_plafond.toLocaleString()} €`;
   }
   
-  return dealer.creditLimit ? `${dealer.creditLimit.toLocaleString()} €` : '0 €';
+  // Secondo controllo - accesso al nuovoPlafond (camelCase)
+  if (dealer.nuovoPlafond !== undefined && dealer.nuovoPlafond !== null) {
+    console.log('Usando nuovoPlafond (camelCase):', dealer.nuovoPlafond);
+    return `${dealer.nuovoPlafond.toLocaleString()} €`;
+  }
+  
+  // Fallback al vecchio creditLimit
+  if (dealer.creditLimit !== undefined && dealer.creditLimit !== null) {
+    console.log('Usando creditLimit come fallback:', dealer.creditLimit);
+    return `${dealer.creditLimit.toLocaleString()} €`;
+  }
+  
+  console.log('Nessun valore di plafond trovato, ritorno 0 €');
+  return '0 €';
 };

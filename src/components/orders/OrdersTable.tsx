@@ -96,8 +96,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
 
   React.useEffect(() => {
     orders.forEach((order) => {
-      if (order.status === 'delivered' && order.vehicle) {
-        console.log(`Delivered vehicle for order ${order.id}: ${order.vehicle.model}, Price: ${order.vehicle.price}`);
+      if (order.dealer) {
+        console.log(`OrdersTable - Dealer per ordine ${order.id}:`, order.dealer);
+        console.log(`OrdersTable - Dealer ${order.dealer.companyName} nuovo_plafond:`, order.dealer.nuovo_plafond);
       }
     });
   }, [orders]);
@@ -173,13 +174,25 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   const renderPlafondColumn = (order: Order) => {
     if (!order.dealer) return <span className="text-gray-400">-</span>;
     
-    const plafondValue = order.dealer.nuovo_plafond !== undefined ? order.dealer.nuovo_plafond : order.dealer.creditLimit;
-    console.log(`Rendering plafond for dealer ${order.dealer.companyName}:`, {
+    console.log(`RenderPlafondColumn per ${order.dealer.companyName}:`, {
       nuovo_plafond: order.dealer.nuovo_plafond,
+      nuovoPlafond: order.dealer.nuovoPlafond,
       creditLimit: order.dealer.creditLimit
     });
     
-    return plafondValue !== undefined ? `${plafondValue.toLocaleString()} €` : '0 €';
+    if (order.dealer.nuovo_plafond !== undefined && order.dealer.nuovo_plafond !== null) {
+      return `${order.dealer.nuovo_plafond.toLocaleString()} €`;
+    }
+    
+    if (order.dealer.nuovoPlafond !== undefined && order.dealer.nuovoPlafond !== null) {
+      return `${order.dealer.nuovoPlafond.toLocaleString()} €`;
+    }
+    
+    if (order.dealer.creditLimit !== undefined && order.dealer.creditLimit !== null) {
+      return `${order.dealer.creditLimit.toLocaleString()} €`;
+    }
+    
+    return '0 €';
   };
 
   return (
