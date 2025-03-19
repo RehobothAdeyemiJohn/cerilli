@@ -26,16 +26,17 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   order,
   onGenerateODL,
 }) => {
-  // Log the dealer object to check its structure
-  console.log('Dealer object in OrderDetailsDialog:', order.dealer);
-  console.log('Dealer nuovo_plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
-  console.log('Ordine completo:', order);
+  // Log dei dati per debug
+  console.log('Ordine completo in OrderDetailsDialog:', order);
+  console.log('Dealer in OrderDetailsDialog:', order.dealer);
+  console.log('Dealer plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
   console.log('Order details:', order.details);
+  console.log('Vehicle in order:', order.vehicle);
   
-  // Get the formatted order number
+  // Ottieni il numero ordine formattato
   const orderNumber = order.progressiveNumber 
     ? `#${order.progressiveNumber.toString().padStart(3, '0')}` 
-    : order.orderNumber || 'N/A';
+    : (order.orderNumber || 'N/A');
   
   // Verifica se ci sono dettagli del veicolo da mostrare
   const hasVehicleDetails = order?.vehicle !== null;
@@ -150,7 +151,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
             <div className="space-y-1">
               <p className="text-sm font-medium">Nome Dealer:</p>
               <p className="text-sm">
-                {order.dealer?.companyName || order.customerName || 'Non specificato'}
+                {order.dealer?.companyName || order.customerName || order.dealerName || 'Non specificato'}
               </p>
             </div>
             

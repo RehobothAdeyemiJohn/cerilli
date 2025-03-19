@@ -30,10 +30,20 @@ export const canPlaceOrder = (dealer: Dealer, orderAmount: number): boolean => {
 
 /**
  * Formatta l'importo del plafond per la visualizzazione
- * @param value Il valore numerico da formattare
+ * @param dealer Il dealer di cui formattare il plafond (o il valore numerico direttamente)
  * @returns Il valore formattato come stringa con simbolo dell'euro
  */
-export const formatPlafond = (value: number | undefined | null): string => {
-  if (value === undefined || value === null) return '0 €';
-  return `${value.toLocaleString()} €`;
+export const formatPlafond = (dealer: Dealer | number | undefined | null): string => {
+  if (dealer === undefined || dealer === null) return '0 €';
+  
+  // Se è un numero, formatta direttamente
+  if (typeof dealer === 'number') return `${dealer.toLocaleString()} €`;
+  
+  // Altrimenti, assumi che sia un oggetto dealer e usa il nuovo_plafond se disponibile
+  // altrimenti fallback sul creditLimit
+  const plafondValue = dealer.nuovo_plafond !== undefined ? 
+    dealer.nuovo_plafond : 
+    (dealer.creditLimit || 0);
+    
+  return `${plafondValue.toLocaleString()} €`;
 };

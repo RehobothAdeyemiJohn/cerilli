@@ -5,6 +5,9 @@ import { formatPlafond } from '@/utils/dealerUtils';
 
 export const useOrdersModels = (ordersData: Order[]) => {
   return useMemo(() => {
+    // Log tutti gli ordini per debug
+    console.log('Tutti gli ordini in useOrdersModels:', ordersData);
+    
     const models = new Set<string>();
     ordersData.forEach(order => {
       if (order.modelName) {
@@ -13,6 +16,10 @@ export const useOrdersModels = (ordersData: Order[]) => {
         models.add(order.vehicle.model);
       }
     });
-    return Array.from(models);
+    
+    const modelArray = Array.from(models);
+    console.log('Modelli estratti dagli ordini:', modelArray);
+    
+    return modelArray;
   }, [ordersData]);
 };
