@@ -72,15 +72,15 @@ export const useVirtualReservationSubmit = (
         virtualConfig: reservationData.virtualConfig,
       });
 
-      // Create order using correct database column names
+      // Create order using camelCase property names that match the Order interface
       await ordersApi.create({
-        vehicle_id: vehicle.id,              // Use snake_case for database columns
-        dealer_id: reservationDealerId,      // Use snake_case for database columns
-        customer_name: selectedDealerName,   // Use snake_case for database columns
+        vehicleId: vehicle.id,
+        dealerId: reservationDealerId,
+        customerName: selectedDealerName,
         status: 'processing',
-        order_date: new Date().toISOString(),  // Use snake_case for database columns
-        dealer_name: selectedDealerName,       // Use snake_case for database columns
-        model_name: vehicle.model,              // Use snake_case for database columns
+        orderDate: new Date().toISOString(),
+        dealerName: selectedDealerName,
+        modelName: vehicle.model,
         price: calculatedPrice || 0
       });
 
