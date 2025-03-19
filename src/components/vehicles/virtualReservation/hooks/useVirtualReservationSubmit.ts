@@ -5,7 +5,7 @@ import { Vehicle } from '@/types';
 import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';
-import { ordersApi } from '@/api/supabase';
+import { supabase } from '@/api/supabase/client';
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
@@ -72,17 +72,57 @@ export const useVirtualReservationSubmit = (
         virtualConfig: reservationData.virtualConfig,
       });
 
-      // Create order using camelCase property names that match the Order interface
-      await ordersApi.create({
-        vehicleId: vehicle.id,
-        dealerId: reservationDealerId,
-        customerName: selectedDealerName,
-        status: 'processing',
-        orderDate: new Date().toISOString(),
-        dealerName: selectedDealerName,
-        modelName: vehicle.model,
-        price: calculatedPrice || 0
-      });
+      // Get dealer info to store plafond_dealer at order creation time
+      let dealerPlafond = null;
+      
+      if (reservationDealerId) {
+        try {
+          const { data: dealer } = await supabase
+            .from('dealers')
+            .select('*')
+            .eq('id', reservationDealerId)
+            .maybeSingle();
+            
+          if (dealer) {
+            dealerPlafond = dealer.nuovo_plafond || dealer.credit_limit || 0;
+          }
+        } catch (e) {
+          console.error('Error fetching dealer for plafond:', e);
+        }
+      }
+      
+      // Create order directly using snake_case column names matching the database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          vehicle_id: vehicle.id,
+          dealer_id: reservationDealerId,
+          customer_name: selectedDealerName,
+          status: 'processing',
+          order_date: new Date().toISOString(),
+          dealer_name: selectedDealerName,
+          model_name: vehicle.model,
+          price: calculatedPrice || 0,
+          plafond_dealer: dealerPlafond,
+          // Set default values for boolean fields
+          is_licensable: false,
+          has_proforma: false,
+          is_paid: false,
+          is_invoiced: false,
+          has_conformity: false,
+          odl_generated: false,
+          transport_costs: 0,
+          restoration_costs: 0
+        })
+        .select()
+        .single();
+        
+      if (orderError) {
+        console.error("Error creating order:", orderError);
+        throw orderError;
+      }
+
+      console.log("Order created successfully:", orderData);
 
       // Invalidate queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
