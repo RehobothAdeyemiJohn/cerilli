@@ -5,6 +5,7 @@ import { ordersApi } from '@/api/apiClient';
 import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 import { Order, OrderDetails } from '@/types';
 import { useLocation } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 export const useOrdersData = (filters: {
   isLicensable: boolean | null;
@@ -29,7 +30,7 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 500, // Refetch every 0.5 seconds
+    refetchInterval: 1000, // Refetch every second
     refetchOnWindowFocus: true,
     retry: 5, // Retry 5 times before failing
   });
@@ -47,6 +48,11 @@ export const useOrdersData = (filters: {
       return allOrderDetails;
     } catch (error) {
       console.error("Error fetching all order details:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile recuperare i dettagli degli ordini",
+        variant: "destructive"
+      });
       return [];
     }
   };
@@ -61,19 +67,46 @@ export const useOrdersData = (filters: {
     queryKey: ['allOrderDetails'],
     queryFn: fetchOrderDetails,
     staleTime: 0,
-    refetchInterval: 500, // Refetch every 0.5 seconds
+    refetchInterval: 1000, // Refetch every second
   });
 
   useEffect(() => {
     console.log("All order details data fetched:", allOrderDetails);
   }, [allOrderDetails]);
 
+  // Function to create dummy orders from order details when no matching order is found
+  const createDummyOrdersFromDetails = (details: OrderDetails[]): Order[] => {
+    const detailsWithoutMatchingOrders = details.filter(
+      detail => !ordersData.some(order => order.id === detail.orderId)
+    );
+
+    console.log(`Creating ${detailsWithoutMatchingOrders.length} dummy orders from details without matching orders`);
+    
+    return detailsWithoutMatchingOrders.map(detail => ({
+      id: detail.orderId,
+      vehicleId: '',
+      dealerId: '',
+      customerName: 'Customer from details',
+      status: 'processing' as 'processing' | 'delivered' | 'cancelled',
+      orderDate: detail.createdAt,
+      // Include other required fields with default values
+      vehicle: null,
+      dealer: null
+    }));
+  };
+
   // Function to combine orders with their details
   const combineOrdersWithDetails = (orders: Order[], details: OrderDetails[]) => {
     console.log(`Combining ${orders.length} orders with ${details.length} details`);
     
+    // First, create a combined list of orders including any dummy orders created from orphaned details
+    const dummyOrders = createDummyOrdersFromDetails(details);
+    const allOrders = [...orders, ...dummyOrders];
+    
+    console.log(`Total orders after adding dummy orders: ${allOrders.length}`);
+    
     // Match orders with their details
-    return orders.map(order => {
+    return allOrders.map(order => {
       // Find matching details for this order
       const orderDetail = details.find(detail => detail.orderId === order.id);
       
@@ -127,7 +160,7 @@ export const useOrdersData = (filters: {
         queryClient.invalidateQueries({ queryKey: ['allOrderDetails'] });
         refetchOrders();
         refetchAllOrderDetails();
-      }, 2000); // Refresh every 2 seconds
+      }, 3000); // Refresh every 3 seconds
       
       return () => clearInterval(intervalId);
     }

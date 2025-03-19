@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
@@ -137,6 +138,7 @@ const Orders = () => {
 
   const printRef = useRef<HTMLDivElement>(null);
   const triggerPrint = useReactToPrint({
+    content: () => printRef.current,
     documentTitle: selectedOrder ? `Order-${selectedOrder.id}` : 'Order',
     onAfterPrint: () => console.log('Print completed'),
   });
