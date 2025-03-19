@@ -1,4 +1,3 @@
-
 import { Vehicle } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { KEYS, initLocalStorage } from './storageUtils';
@@ -176,15 +175,27 @@ export const vehiclesApi = {
     
     // Create an order record
     await ordersApi.create({
-      vehicleId: id,
-      dealerId: vehicle.reservedBy ? 
+      vehicle_id: id,
+      dealer_id: vehicle.reservedBy ? 
         // Try to find dealer ID by name
         await vehiclesApi.findDealerIdByName(vehicle.reservedBy) :
         // Use a dummy ID if dealer not found
         '00000000-0000-0000-0000-000000000000',
-      customerName: vehicle.reservedBy || 'Cliente sconosciuto',
+      customer_name: vehicle.reservedBy || 'Cliente sconosciuto',
       status: 'processing',
-      orderDate: new Date().toISOString()
+      order_date: new Date().toISOString(),
+      dealer_name: vehicle.reservedBy || 'Cliente sconosciuto',
+      model_name: vehicle.model || '',
+      
+      // Campi obbligatori per la nuova struttura della tabella
+      is_licensable: false,
+      has_proforma: false,
+      is_paid: false,
+      is_invoiced: false,
+      has_conformity: false,
+      odl_generated: false,
+      transport_costs: 0,
+      restoration_costs: 0
     });
     
     return vehiclesApi.update(id, updatedVehicle);
