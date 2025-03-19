@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Vehicle, Quote, Order } from '@/types';
-import { vehiclesApi as localVehiclesApi, quotesApi as localQuotesApi, ordersApi as localOrdersApi } from './localStorage';
+import { vehiclesApi as localVehiclesApi, quotesApi as localQuotesApi } from './localStorage';
+import { ordersApi as supabaseOrdersApi } from './supabase/ordersApi'; 
 
 // Check if we're in a Lovable production environment
 const isLovableProduction = window.location.hostname.includes('lovable.app');
@@ -67,31 +68,7 @@ export const quotesApi = isLovableProduction ? localQuotesApi : {
   }
 };
 
-// API for orders
-export const ordersApi = isLovableProduction ? localOrdersApi : {
-  getAll: async (): Promise<Order[]> => {
-    const response = await apiClient.get('/orders');
-    return response.data;
-  },
-  
-  getById: async (id: string): Promise<Order> => {
-    const response = await apiClient.get(`/orders/${id}`);
-    return response.data;
-  },
-  
-  create: async (order: Omit<Order, 'id'>): Promise<Order> => {
-    const response = await apiClient.post('/orders', order);
-    return response.data;
-  },
-  
-  update: async (id: string, order: Partial<Order>): Promise<Order> => {
-    const response = await apiClient.put(`/orders/${id}`, order);
-    return response.data;
-  },
-  
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/orders/${id}`);
-  }
-};
+// API for orders - always use Supabase implementation
+export const ordersApi = supabaseOrdersApi;
 
 export default apiClient;

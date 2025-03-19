@@ -19,7 +19,7 @@ export const useOrdersData = (filters: {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const location = useLocation();
 
-  // Fetch base orders data
+  // Fetch base orders data with more frequent updates
   const {
     data: ordersData = [],
     isLoading: isLoadingOrders,
@@ -29,9 +29,13 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 500, // Refetch every 0.5 seconds for real-time updates
+    refetchInterval: 300, // Refetch every 0.3 seconds for real-time updates
     refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    console.log("Orders data changed:", ordersData);
+  }, [ordersData]);
 
   // Create a default OrderDetails object
   const createDefaultOrderDetails = (orderId: string): OrderDetails => {
@@ -125,7 +129,7 @@ export const useOrdersData = (filters: {
     queryFn: () => fetchOrderDetails(ordersData),
     enabled: ordersData.length > 0,
     staleTime: 0,
-    refetchInterval: 500, // Refetch every 0.5 seconds for real-time updates
+    refetchInterval: 300, // Refetch every 0.3 seconds for real-time updates
   });
 
   // Effect to refresh data when dialog closes
@@ -154,14 +158,14 @@ export const useOrdersData = (filters: {
     }
   }, [location.pathname, queryClient, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
 
-  // Add an additional effect to periodically refresh data on the orders page
+  // Add an additional effect to periodically refresh data on the orders page with higher frequency
   useEffect(() => {
     if (location.pathname === '/orders') {
       const intervalId = setInterval(() => {
         console.log('Periodic refresh of orders data');
         queryClient.invalidateQueries({ queryKey: ['orders'] });
         refetchOrders();
-      }, 2000);
+      }, 1000);
       
       return () => clearInterval(intervalId);
     }
