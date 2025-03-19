@@ -5,24 +5,20 @@ import OrderDetailsForm from './OrderDetailsForm';
 import { Order } from '@/types';
 
 interface OrderDetailsDialogAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
-  order: Order | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  order: Order;
 }
 
 export const OrderDetailsDialogAdapter: React.FC<OrderDetailsDialogAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   order
 }) => {
-  if (!order) return null;
-  
   return (
     <OrderDetailsDialog
-      open={isOpen} // Map 'isOpen' to 'open'
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      open={open}
+      onOpenChange={onOpenChange}
       order={order}
     />
   );
@@ -31,7 +27,7 @@ export const OrderDetailsDialogAdapter: React.FC<OrderDetailsDialogAdapterProps>
 interface OrderDetailsFormAdapterProps {
   isOpen: boolean;
   onClose: () => void;
-  order: Order | null;
+  order: Order;
 }
 
 export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = ({
@@ -39,15 +35,10 @@ export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = (
   onClose,
   order
 }) => {
-  if (!order) return null;
-  
-  // Use the props expected by OrderDetailsForm
   return (
     <OrderDetailsForm
-      open={isOpen} // Changed from isOpen to open to match what OrderDetailsForm expects
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      isOpen={isOpen}
+      onClose={onClose}
       order={order}
     />
   );

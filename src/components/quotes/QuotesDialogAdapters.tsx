@@ -8,26 +8,24 @@ import QuoteForm from './QuoteForm';
 import QuoteContractDialog from './QuoteContractDialog';
 
 interface QuoteDetailsDialogAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   quote: Quote;
   onUpdateStatus: (quoteId: string, status: string) => void;
   onConvertToContract: (quote: Quote) => void;
 }
 
 export const QuoteDetailsDialogAdapter: React.FC<QuoteDetailsDialogAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   quote,
   onUpdateStatus,
   onConvertToContract
 }) => {
   return (
     <QuoteDetailsDialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      open={open}
+      onOpenChange={onOpenChange}
       quote={quote}
       onUpdateStatus={onUpdateStatus}
       onConvertToContract={onConvertToContract}
@@ -36,46 +34,43 @@ export const QuoteDetailsDialogAdapter: React.FC<QuoteDetailsDialogAdapterProps>
 };
 
 interface QuoteRejectDialogAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: (reason: string) => void;
 }
 
 export const QuoteRejectDialogAdapter: React.FC<QuoteRejectDialogAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   onConfirm
 }) => {
   return (
     <QuoteRejectDialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      open={open}
+      onOpenChange={onOpenChange}
       onConfirm={onConfirm}
+      onCancel={() => onOpenChange(false)}
     />
   );
 };
 
 interface QuoteDeleteDialogAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isPending: boolean;
 }
 
 export const QuoteDeleteDialogAdapter: React.FC<QuoteDeleteDialogAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   onConfirm,
   isPending
 }) => {
   return (
     <QuoteDeleteDialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      open={open}
+      onOpenChange={onOpenChange}
       onConfirm={onConfirm}
       isPending={isPending}
     />
@@ -83,26 +78,24 @@ export const QuoteDeleteDialogAdapter: React.FC<QuoteDeleteDialogAdapterProps> =
 };
 
 interface QuoteFormAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   vehicleId: string;
   isManualQuote: boolean;
   onCreateQuote: (quoteData: any) => void;
 }
 
 export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   vehicleId,
   isManualQuote,
   onCreateQuote
 }) => {
   return (
     <QuoteForm
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
       vehicleId={vehicleId}
       isManualQuote={isManualQuote}
       onCreateQuote={onCreateQuote}
@@ -111,26 +104,24 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
 };
 
 interface QuoteContractDialogAdapterProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   quote: Quote;
   onCreateContract: () => void;
   isSubmitting: boolean;
 }
 
 export const QuoteContractDialogAdapter: React.FC<QuoteContractDialogAdapterProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   quote,
   onCreateContract,
   isSubmitting
 }) => {
   return (
     <QuoteContractDialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
       quote={quote}
       onCreateContract={onCreateContract}
       isSubmitting={isSubmitting}
