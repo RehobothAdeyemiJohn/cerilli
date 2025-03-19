@@ -82,6 +82,10 @@ export const ordersApi = {
     const currentUser = userJson ? JSON.parse(userJson) : null;
     
     try {
+      // IMPORTANT: Use public method without RLS for testing
+      const { data: tables } = await supabase.rpc('list_tables');
+      console.log("Available tables:", tables);
+      
       let query = supabase
         .from('orders')
         .select('*, vehicles(*), dealers(*)')
@@ -93,6 +97,7 @@ export const ordersApi = {
         query = query.eq('dealerid', currentUser.dealerId);
       }
       
+      console.log("Executing orders query...");
       const { data, error } = await query;
       
       if (error) {
@@ -100,6 +105,8 @@ export const ordersApi = {
         throw error;
       }
 
+      console.log("Orders query returned data:", data);
+      
       if (!data || data.length === 0) {
         console.log("No orders found in database");
         return [];

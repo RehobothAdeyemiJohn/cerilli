@@ -29,7 +29,7 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 1000, // Refetch every 1 second for real-time updates
+    refetchInterval: 500, // Refetch every 0.5 seconds for real-time updates
     refetchOnWindowFocus: true,
   });
 
@@ -125,7 +125,7 @@ export const useOrdersData = (filters: {
     queryFn: () => fetchOrderDetails(ordersData),
     enabled: ordersData.length > 0,
     staleTime: 0,
-    refetchInterval: 1000, // Refetch every 1 second for real-time updates
+    refetchInterval: 500, // Refetch every 0.5 seconds for real-time updates
   });
 
   // Effect to refresh data when dialog closes
@@ -153,6 +153,19 @@ export const useOrdersData = (filters: {
       }
     }
   }, [location.pathname, queryClient, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
+
+  // Add an additional effect to periodically refresh data on the orders page
+  useEffect(() => {
+    if (location.pathname === '/orders') {
+      const intervalId = setInterval(() => {
+        console.log('Periodic refresh of orders data');
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        refetchOrders();
+      }, 2000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [location.pathname, queryClient, refetchOrders]);
 
   // Function to invalidate and refresh all order-related data
   const refreshAllOrderData = () => {
