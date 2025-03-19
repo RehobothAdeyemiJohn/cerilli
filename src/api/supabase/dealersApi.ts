@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Dealer } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,6 +17,9 @@ export const dealersApi = {
       throw error;
     }
     
+    // Add console logs to check what data is coming from Supabase
+    console.log('Raw dealers data from Supabase:', data);
+    
     const formattedDealers = data.map(dealer => ({
       id: dealer.id,
       companyName: dealer.companyname,
@@ -30,8 +34,15 @@ export const dealersApi = {
       isActive: dealer.isactive,
       logo: dealer.logo,
       creditLimit: dealer.credit_limit,
-      nuovoPlafond: dealer.nuovo_plafond
+      nuovoPlafond: dealer.nuovo_plafond // Make sure this is correctly mapped
     })) as Dealer[];
+    
+    console.log('Mapped dealers with nuovo_plafond:', formattedDealers.map(d => ({
+      id: d.id,
+      companyName: d.companyName,
+      nuovoPlafond: d.nuovoPlafond,
+      creditLimit: d.creditLimit
+    })));
     
     // Fetch all orders for each dealer (especially important for delivered ones)
     for (const dealer of formattedDealers) {
@@ -77,6 +88,8 @@ export const dealersApi = {
       throw error;
     }
     
+    console.log('Raw dealer data by ID from Supabase:', data);
+    
     const formattedDealer = {
       id: data.id,
       companyName: data.companyname,
@@ -91,8 +104,15 @@ export const dealersApi = {
       isActive: data.isactive,
       logo: data.logo,
       creditLimit: data.credit_limit,
-      nuovoPlafond: data.nuovo_plafond
+      nuovoPlafond: data.nuovo_plafond // Make sure this field is correctly mapped
     } as Dealer;
+    
+    console.log('Mapped dealer with nuovo_plafond:', {
+      id: formattedDealer.id,
+      companyName: formattedDealer.companyName,
+      nuovoPlafond: formattedDealer.nuovoPlafond,
+      creditLimit: formattedDealer.creditLimit
+    });
     
     // Fetch all orders for this dealer to calculate plafond correctly
     try {
