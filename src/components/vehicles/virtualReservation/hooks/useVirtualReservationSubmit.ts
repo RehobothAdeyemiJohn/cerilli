@@ -94,22 +94,15 @@ export const useVirtualReservationSubmit = (
           vehicleId: vehicle.id,
           dealerId: finalDealerId,
           customerName: finalDealerName,
-          status: 'processing',
+          status: 'processing' as const, // Use as const to specify literal type
           orderDate: new Date().toISOString(),
           price: calculatedPrice || 0,
           dealerName: finalDealerName,
           modelName: vehicle.model,
           plafondDealer: dealerPlafond,
           
-          // Required fields for orders
-          isLicensable: false,
-          hasProforma: false,
-          isPaid: false,
-          isInvoiced: false,
-          hasConformity: false,
-          odlGenerated: false,
-          transportCosts: 0,
-          restorationCosts: 0
+          // We're not passing the required fields that will be set with default values
+          // in the ordersApi.create method
         };
         
         const orderResponse = await ordersApi.create(orderData);

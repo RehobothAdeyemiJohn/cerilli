@@ -12,7 +12,7 @@ import QuotesHeader from '@/components/quotes/QuotesHeader';
 import QuotesFilters from '@/components/quotes/QuotesFilters';
 import QuotesTabs from '@/components/quotes/QuotesTabs';
 import QuotesPagination from '@/components/quotes/QuotesPagination';
-import { useQuotesData } from '@/hooks/useQuotesData';
+import { useComprehensiveQuotesData } from '@/hooks/useComprehensiveQuotesData';
 
 // Define the status counts type to match what getCountByStatus returns
 type StatusCounts = {
@@ -87,7 +87,7 @@ const Quotes = () => {
     handleOpenCreateQuoteDialog,
     handleConvertToContract,
     handleUpdateQuote
-  } = useQuotesData();
+  } = useComprehensiveQuotesData();
   
   // Handle navigation from other pages (e.g., vehicle inventory)
   useEffect(() => {

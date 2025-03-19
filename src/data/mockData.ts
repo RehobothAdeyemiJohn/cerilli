@@ -255,6 +255,15 @@ export const orders: Order[] = [
     status: 'delivered',
     orderDate: '2024-01-20',
     deliveryDate: '2024-02-10',
+    // Add required properties
+    isLicensable: false,
+    hasProforma: true,
+    isPaid: true,
+    isInvoiced: true,
+    hasConformity: true,
+    odlGenerated: true,
+    transportCosts: 0,
+    restorationCosts: 0
   },
   {
     id: '2',
@@ -264,6 +273,15 @@ export const orders: Order[] = [
     status: 'delivered',
     orderDate: '2023-11-10',
     deliveryDate: '2023-12-01',
+    // Add required properties
+    isLicensable: false,
+    hasProforma: true,
+    isPaid: true,
+    isInvoiced: true,
+    hasConformity: true,
+    odlGenerated: true,
+    transportCosts: 0,
+    restorationCosts: 0
   },
   {
     id: '3',
@@ -272,7 +290,16 @@ export const orders: Order[] = [
     customerName: 'Elena Conti',
     status: 'processing',
     orderDate: '2024-03-01',
-  },
+    // Add required properties
+    isLicensable: false,
+    hasProforma: false,
+    isPaid: false,
+    isInvoiced: false,
+    hasConformity: false,
+    odlGenerated: false,
+    transportCosts: 0,
+    restorationCosts: 0
+  }
 ];
 
 export const dashboardStats: Stat[] = [

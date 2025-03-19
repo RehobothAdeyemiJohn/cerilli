@@ -1,22 +1,9 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { quotesApi } from '@/api/supabase';
+import { quotesApi, dealerContractsApi } from '@/api/supabase';
 import { DealerContract, Quote } from '@/types';
 import { toast } from '@/hooks/use-toast';
-
-// Since dealerContractsApi is missing, let's temporarily define a mock version
-const mockDealerContractsApi = {
-  create: async (contractData: any) => {
-    console.log('Creating contract with data:', contractData);
-    return {
-      id: 'mock-contract-id',
-      ...contractData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  }
-};
 
 export const useQuotesData = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -85,7 +72,6 @@ export const useQuotesData = () => {
     setSelectedQuote(null);
   };
 
-  // Fix the property names in the contract creation
   const handleCreateContract = async () => {
     if (!selectedQuote) return;
     
@@ -105,7 +91,7 @@ export const useQuotesData = () => {
         }
       };
       
-      const result = await mockDealerContractsApi.create(contractData);
+      const result = await dealerContractsApi.create(contractData);
       
       if (result) {
         toast({

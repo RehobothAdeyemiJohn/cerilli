@@ -1,8 +1,8 @@
 
 // Type definition for DateRange used in various components
 export interface DateRange {
-  from: Date;
-  to?: Date;
+  from: Date | undefined;
+  to?: Date | undefined;
 }
 
 declare global {
