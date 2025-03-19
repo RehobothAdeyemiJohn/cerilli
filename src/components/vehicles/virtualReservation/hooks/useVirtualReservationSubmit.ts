@@ -46,26 +46,27 @@ export const useVirtualReservationSubmit = (
       // Prepare reservation data
       const reservationData = {
         vehicleId: vehicle.id,
-        dealerId: reservationDealerId,
-        dealerName: selectedDealerName,
-        trim: values.trim || '',
-        fuelType: values.fuelType || '',
-        exteriorColor: values.exteriorColor || '',
-        transmission: values.transmission || '',
-        accessories: values.accessories || [],
+        reservedBy: reservationDealerId,
         reservationDate: new Date().toISOString(),
         reservationStatus: 'pending',
-        destination: values.reservationDestination || 'Conto Esposizione',
-        finalPrice: calculatedPrice || 0
+        reservationDestination: values.reservationDestination || 'Conto Esposizione',
+        reservedAccessories: values.accessories || [],
+        virtualConfig: {
+          trim: values.trim || '',
+          fuelType: values.fuelType || '',
+          exteriorColor: values.exteriorColor || '',
+          transmission: values.transmission || '',
+          finalPrice: calculatedPrice || 0,
+          dealerName: selectedDealerName
+        }
       };
 
-      // Create the reservation
-      await vehiclesApi.createReservation(reservationData);
-
-      // Update vehicle status to reserved
+      // Update vehicle status to reserved with reservation data
       await vehiclesApi.update(vehicle.id, {
         status: 'reserved',
-        dealerId: reservationDealerId,
+        reservedBy: reservationDealerId,
+        reservedAccessories: values.accessories || [],
+        virtualConfig: reservationData.virtualConfig,
         updatedAt: new Date().toISOString()
       });
 

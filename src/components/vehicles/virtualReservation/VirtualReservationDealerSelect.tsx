@@ -4,12 +4,11 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dealer } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
-import { VirtualReservationFormValues } from './schema';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
 interface VirtualReservationDealerSelectProps {
-  form: UseFormReturn<VirtualReservationFormValues>;
+  form: UseFormReturn<any>;
   dealers: Dealer[];
   isAdmin: boolean;
 }
@@ -24,8 +23,7 @@ const VirtualReservationDealerSelect = ({
   // If user is a dealer, automatically set the dealerId
   useEffect(() => {
     if (!isAdmin && user?.dealerId) {
-      // Type assertion to handle the extended FormValues with optional dealerId
-      form.setValue('dealerId' as any, user.dealerId);
+      form.setValue('dealerId', user.dealerId);
     }
   }, [isAdmin, user, form]);
   
@@ -45,7 +43,7 @@ const VirtualReservationDealerSelect = ({
   return (
     <FormField
       control={form.control}
-      name={'dealerId' as any}
+      name="dealerId"
       render={({ field }) => (
         <FormItem>
           <FormLabel>Concessionario</FormLabel>

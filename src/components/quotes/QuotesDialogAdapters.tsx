@@ -27,7 +27,7 @@ export const QuoteDetailsDialogAdapter: React.FC<QuoteDetailsDialogAdapterProps>
       open={open}
       onOpenChange={onOpenChange}
       quote={quote}
-      vehicle={null} // Make sure to check if the component needs this or provide it
+      vehicle={null} 
       onStatusChange={onUpdateStatus}
       onConvert={() => onConvertToContract(quote)}
     />
@@ -74,7 +74,6 @@ export const QuoteDeleteDialogAdapter: React.FC<QuoteDeleteDialogAdapterProps> =
       onOpenChange={onOpenChange}
       onConfirm={onConfirm}
       onCancel={() => onOpenChange(false)}
-      isPending={isPending}
     />
   );
 };
@@ -124,6 +123,7 @@ export const QuoteContractDialogAdapter: React.FC<QuoteContractDialogAdapterProp
       open={open}
       onClose={() => onOpenChange(false)}
       quote={quote}
+      vehicle={quote.vehicleId ? { id: quote.vehicleId } as any : undefined}
       onSubmit={onCreateContract}
       isSubmitting={isSubmitting}
     />

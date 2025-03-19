@@ -29,13 +29,13 @@ export const OrderDetailsDialogAdapter: React.FC<OrderDetailsDialogAdapterProps>
 
 interface OrderDetailsFormAdapterProps {
   order: Order;
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data: any) => Promise<void>;
   isLoading?: boolean;
 }
 
 export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = ({
   order,
-  onSubmit = () => {},
+  onSubmit = async () => {},
   isLoading = false
 }) => {
   return (

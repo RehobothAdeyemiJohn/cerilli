@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -6,7 +7,7 @@ import { Accessory } from '@/types';
 import { VirtualReservationFormValues } from './schema';
 
 interface VirtualReservationAccessoriesProps {
-  form: UseFormReturn<VirtualReservationFormValues>;
+  form: UseFormReturn<any>;
   compatibleAccessories: Accessory[];
 }
 

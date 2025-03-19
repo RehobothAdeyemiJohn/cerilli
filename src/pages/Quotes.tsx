@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import QuotesHeader from '@/components/quotes/QuotesHeader';
@@ -198,7 +199,7 @@ const Quotes = () => {
         
         <QuotesTable 
           quotes={quotes}
-          loading={isLoading}
+          isLoading={isLoading}
           onView={handleViewQuote}
           onDelete={handlePrepareDelete}
           onStatusChange={handleUpdateStatus}

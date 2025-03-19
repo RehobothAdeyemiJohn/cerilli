@@ -67,7 +67,7 @@ const ReserveVirtualVehicleForm = ({
 
   return (
     <Form {...form}>
-      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4">
         <h3 className="text-lg font-medium">Configura e Prenota {vehicle.model}</h3>
         
         <VirtualReservationDealerSelect 

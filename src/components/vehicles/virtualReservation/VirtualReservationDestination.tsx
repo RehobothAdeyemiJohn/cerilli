@@ -6,7 +6,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { VirtualReservationFormValues } from './schema';
 
 interface VirtualReservationDestinationProps {
-  form: UseFormReturn<VirtualReservationFormValues>;
+  form: UseFormReturn<any>;
 }
 
 const VirtualReservationDestination = ({ form }: VirtualReservationDestinationProps) => {
