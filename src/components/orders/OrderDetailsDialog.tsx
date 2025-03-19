@@ -28,7 +28,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   // Verifica se ci sono dettagli del veicolo da mostrare
   const hasVehicleDetails = order?.vehicle !== null;
   const hasAccessories = order?.vehicle?.accessories && order.vehicle.accessories.length > 0;
-  const hasReservedAccessories = order?.vehicle?.reservedaccessories && order.vehicle.reservedaccessories.length > 0;
+  const hasReservedAccessories = order?.vehicle?.reservedAccessories && order.vehicle.reservedAccessories.length > 0;
   
   // Dettagli del veicolo
   const renderVehicleDetails = () => {
@@ -101,7 +101,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
           <div className="mt-4">
             <p className="text-sm font-medium">Accessori Prenotati:</p>
             <ul className="list-disc pl-5 mt-1">
-              {order.vehicle?.reservedaccessories.map((acc, idx) => (
+              {order.vehicle?.reservedAccessories.map((acc, idx) => (
                 <li key={idx} className="text-sm">{acc}</li>
               ))}
             </ul>
@@ -168,7 +168,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
         {renderVehicleDetails()}
         
         {/* Dettagli Ordine */}
-        <OrderDetailsForm order={order} onGenerateODL={onGenerateODL} />
+        <OrderDetailsForm orderId={order.id} onGenerateODL={onGenerateODL} />
       </DialogContent>
     </Dialog>
   );

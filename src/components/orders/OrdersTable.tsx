@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -243,8 +244,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                           : 'Cancellato'}
                       </span>
                     </TableCell>
-                    <TableCell>{order.orderDate ? formatDate(order.orderDate) : '-'}</TableCell>
-                    <TableCell>{order.deliveryDate ? formatDate(order.deliveryDate) : '-'}</TableCell>
+                    <TableCell>{order.orderDate ? formatDate(new Date(order.orderDate)) : '-'}</TableCell>
+                    <TableCell>{order.deliveryDate ? formatDate(new Date(order.deliveryDate)) : '-'}</TableCell>
                     <TableCell className="text-center">{renderCheckIcon(order.details?.isLicensable)}</TableCell>
                     <TableCell className="text-center">{renderCheckIcon(order.details?.hasProforma)}</TableCell>
                     <TableCell className="text-center">{renderCheckIcon(order.details?.isPaid)}</TableCell>
