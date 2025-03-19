@@ -5,14 +5,15 @@ import {
   FuelType, 
   ExteriorColor, 
   Transmission, 
-  Accessory 
+  Accessory,
+  Vehicle 
 } from '@/types';
 
 // Models API
 export const modelsApi = {
   getAll: async (): Promise<VehicleModel[]> => {
     const { data, error } = await supabase
-      .from('settings_models')
+      .from('models')
       .select('*')
       .order('name');
     
@@ -21,45 +22,28 @@ export const modelsApi = {
       throw error;
     }
     
-    return data.map(model => ({
-      id: model.id,
-      name: model.name,
-      basePrice: model.base_price,
-      imageUrl: model.imageurl
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<VehicleModel | null> => {
+  getById: async (id: string): Promise<VehicleModel> => {
     const { data, error } = await supabase
-      .from('settings_models')
+      .from('models')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching model:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.base_price,
-      imageUrl: data.imageurl
-    };
+    return data;
   },
   
   create: async (model: Omit<VehicleModel, 'id'>): Promise<VehicleModel> => {
     const { data, error } = await supabase
-      .from('settings_models')
-      .insert({
-        name: model.name,
-        base_price: model.basePrice,
-        imageurl: model.imageUrl
-      })
+      .from('models')
+      .insert(model)
       .select()
       .single();
     
@@ -68,23 +52,13 @@ export const modelsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.base_price,
-      imageUrl: data.imageurl
-    };
+    return data;
   },
   
-  update: async (id: string, model: VehicleModel): Promise<VehicleModel> => {
+  update: async (id: string, updates: Partial<VehicleModel>): Promise<VehicleModel> => {
     const { data, error } = await supabase
-      .from('settings_models')
-      .update({
-        name: model.name,
-        base_price: model.basePrice,
-        imageurl: model.imageUrl,
-        updated_at: new Date()
-      })
+      .from('models')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -94,17 +68,12 @@ export const modelsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.base_price,
-      imageUrl: data.imageurl
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_models')
+      .from('models')
       .delete()
       .eq('id', id);
     
@@ -119,7 +88,7 @@ export const modelsApi = {
 export const trimsApi = {
   getAll: async (): Promise<VehicleTrim[]> => {
     const { data, error } = await supabase
-      .from('settings_trims')
+      .from('trims')
       .select('*')
       .order('name');
     
@@ -128,45 +97,28 @@ export const trimsApi = {
       throw error;
     }
     
-    return data.map(trim => ({
-      id: trim.id,
-      name: trim.name,
-      basePrice: trim.price_adjustment,
-      compatibleModels: trim.compatible_models || []
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<VehicleTrim | null> => {
+  getById: async (id: string): Promise<VehicleTrim> => {
     const { data, error } = await supabase
-      .from('settings_trims')
+      .from('trims')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching trim:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   create: async (trim: Omit<VehicleTrim, 'id'>): Promise<VehicleTrim> => {
     const { data, error } = await supabase
-      .from('settings_trims')
-      .insert({
-        name: trim.name,
-        price_adjustment: trim.basePrice,
-        compatible_models: trim.compatibleModels || []
-      })
+      .from('trims')
+      .insert(trim)
       .select()
       .single();
     
@@ -175,23 +127,13 @@ export const trimsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
-  update: async (id: string, trim: VehicleTrim): Promise<VehicleTrim> => {
+  update: async (id: string, updates: Partial<VehicleTrim>): Promise<VehicleTrim> => {
     const { data, error } = await supabase
-      .from('settings_trims')
-      .update({
-        name: trim.name,
-        price_adjustment: trim.basePrice,
-        compatible_models: trim.compatibleModels || [],
-        updated_at: new Date()
-      })
+      .from('trims')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -201,17 +143,12 @@ export const trimsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      basePrice: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_trims')
+      .from('trims')
       .delete()
       .eq('id', id);
     
@@ -226,7 +163,7 @@ export const trimsApi = {
 export const fuelTypesApi = {
   getAll: async (): Promise<FuelType[]> => {
     const { data, error } = await supabase
-      .from('settings_fuel_types')
+      .from('fuel_types')
       .select('*')
       .order('name');
     
@@ -235,45 +172,28 @@ export const fuelTypesApi = {
       throw error;
     }
     
-    return data.map(fuelType => ({
-      id: fuelType.id,
-      name: fuelType.name,
-      priceAdjustment: fuelType.price_adjustment,
-      compatibleModels: fuelType.compatible_models || []
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<FuelType | null> => {
+  getById: async (id: string): Promise<FuelType> => {
     const { data, error } = await supabase
-      .from('settings_fuel_types')
+      .from('fuel_types')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching fuel type:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   create: async (fuelType: Omit<FuelType, 'id'>): Promise<FuelType> => {
     const { data, error } = await supabase
-      .from('settings_fuel_types')
-      .insert({
-        name: fuelType.name,
-        price_adjustment: fuelType.priceAdjustment,
-        compatible_models: fuelType.compatibleModels || []
-      })
+      .from('fuel_types')
+      .insert(fuelType)
       .select()
       .single();
     
@@ -282,23 +202,13 @@ export const fuelTypesApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
-  update: async (id: string, fuelType: FuelType): Promise<FuelType> => {
+  update: async (id: string, updates: Partial<FuelType>): Promise<FuelType> => {
     const { data, error } = await supabase
-      .from('settings_fuel_types')
-      .update({
-        name: fuelType.name,
-        price_adjustment: fuelType.priceAdjustment,
-        compatible_models: fuelType.compatibleModels || [],
-        updated_at: new Date()
-      })
+      .from('fuel_types')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -308,17 +218,12 @@ export const fuelTypesApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_fuel_types')
+      .from('fuel_types')
       .delete()
       .eq('id', id);
     
@@ -333,7 +238,7 @@ export const fuelTypesApi = {
 export const colorsApi = {
   getAll: async (): Promise<ExteriorColor[]> => {
     const { data, error } = await supabase
-      .from('settings_colors')
+      .from('exterior_colors')
       .select('*')
       .order('name');
     
@@ -342,50 +247,28 @@ export const colorsApi = {
       throw error;
     }
     
-    return data.map(color => ({
-      id: color.id,
-      name: color.name,
-      type: color.type,
-      priceAdjustment: color.price_adjustment,
-      compatibleModels: color.compatible_models || []
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<ExteriorColor | null> => {
+  getById: async (id: string): Promise<ExteriorColor> => {
     const { data, error } = await supabase
-      .from('settings_colors')
+      .from('exterior_colors')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching color:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      type: data.type,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   create: async (color: Omit<ExteriorColor, 'id'>): Promise<ExteriorColor> => {
-    console.log('Creating color in Supabase:', color);
-    
     const { data, error } = await supabase
-      .from('settings_colors')
-      .insert({
-        name: color.name,
-        type: color.type,
-        price_adjustment: color.priceAdjustment,
-        compatible_models: color.compatibleModels || []
-      })
+      .from('exterior_colors')
+      .insert(color)
       .select()
       .single();
     
@@ -394,25 +277,13 @@ export const colorsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      type: data.type,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
-  update: async (id: string, color: ExteriorColor): Promise<ExteriorColor> => {
+  update: async (id: string, updates: Partial<ExteriorColor>): Promise<ExteriorColor> => {
     const { data, error } = await supabase
-      .from('settings_colors')
-      .update({
-        name: color.name,
-        type: color.type,
-        price_adjustment: color.priceAdjustment,
-        compatible_models: color.compatibleModels || [],
-        updated_at: new Date()
-      })
+      .from('exterior_colors')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -422,18 +293,12 @@ export const colorsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      type: data.type,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_colors')
+      .from('exterior_colors')
       .delete()
       .eq('id', id);
     
@@ -448,7 +313,7 @@ export const colorsApi = {
 export const transmissionsApi = {
   getAll: async (): Promise<Transmission[]> => {
     const { data, error } = await supabase
-      .from('settings_transmissions')
+      .from('transmissions')
       .select('*')
       .order('name');
     
@@ -457,45 +322,28 @@ export const transmissionsApi = {
       throw error;
     }
     
-    return data.map(transmission => ({
-      id: transmission.id,
-      name: transmission.name,
-      priceAdjustment: transmission.price_adjustment,
-      compatibleModels: transmission.compatible_models || []
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<Transmission | null> => {
+  getById: async (id: string): Promise<Transmission> => {
     const { data, error } = await supabase
-      .from('settings_transmissions')
+      .from('transmissions')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching transmission:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   create: async (transmission: Omit<Transmission, 'id'>): Promise<Transmission> => {
     const { data, error } = await supabase
-      .from('settings_transmissions')
-      .insert({
-        name: transmission.name,
-        price_adjustment: transmission.priceAdjustment,
-        compatible_models: transmission.compatibleModels || []
-      })
+      .from('transmissions')
+      .insert(transmission)
       .select()
       .single();
     
@@ -504,23 +352,13 @@ export const transmissionsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
-  update: async (id: string, transmission: Transmission): Promise<Transmission> => {
+  update: async (id: string, updates: Partial<Transmission>): Promise<Transmission> => {
     const { data, error } = await supabase
-      .from('settings_transmissions')
-      .update({
-        name: transmission.name,
-        price_adjustment: transmission.priceAdjustment,
-        compatible_models: transmission.compatibleModels || [],
-        updated_at: new Date()
-      })
+      .from('transmissions')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -530,17 +368,12 @@ export const transmissionsApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_transmissions')
+      .from('transmissions')
       .delete()
       .eq('id', id);
     
@@ -555,7 +388,7 @@ export const transmissionsApi = {
 export const accessoriesApi = {
   getAll: async (): Promise<Accessory[]> => {
     const { data, error } = await supabase
-      .from('settings_accessories')
+      .from('accessories')
       .select('*')
       .order('name');
     
@@ -564,50 +397,28 @@ export const accessoriesApi = {
       throw error;
     }
     
-    return data.map(accessory => ({
-      id: accessory.id,
-      name: accessory.name,
-      priceWithVAT: accessory.price,
-      priceWithoutVAT: Math.round(accessory.price / 1.22),
-      compatibleModels: accessory.compatible_models || [],
-      compatibleTrims: accessory.compatible_trims || []
-    }));
+    return data || [];
   },
   
-  getById: async (id: string): Promise<Accessory | null> => {
+  getById: async (id: string): Promise<Accessory> => {
     const { data, error } = await supabase
-      .from('settings_accessories')
+      .from('accessories')
       .select('*')
       .eq('id', id)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
       console.error('Error fetching accessory:', error);
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceWithVAT: data.price,
-      priceWithoutVAT: Math.round(data.price / 1.22),
-      compatibleModels: data.compatible_models || [],
-      compatibleTrims: data.compatible_trims || []
-    };
+    return data;
   },
   
   create: async (accessory: Omit<Accessory, 'id'>): Promise<Accessory> => {
     const { data, error } = await supabase
-      .from('settings_accessories')
-      .insert({
-        name: accessory.name,
-        price: accessory.priceWithVAT,
-        compatible_models: accessory.compatibleModels || [],
-        compatible_trims: accessory.compatibleTrims || []
-      })
+      .from('accessories')
+      .insert(accessory)
       .select()
       .single();
     
@@ -616,26 +427,13 @@ export const accessoriesApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceWithVAT: data.price,
-      priceWithoutVAT: Math.round(data.price / 1.22),
-      compatibleModels: data.compatible_models || [],
-      compatibleTrims: data.compatible_trims || []
-    };
+    return data;
   },
   
-  update: async (id: string, accessory: Accessory): Promise<Accessory> => {
+  update: async (id: string, updates: Partial<Accessory>): Promise<Accessory> => {
     const { data, error } = await supabase
-      .from('settings_accessories')
-      .update({
-        name: accessory.name,
-        price: accessory.priceWithVAT,
-        compatible_models: accessory.compatibleModels || [],
-        compatible_trims: accessory.compatibleTrims || [],
-        updated_at: new Date()
-      })
+      .from('accessories')
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -645,19 +443,12 @@ export const accessoriesApi = {
       throw error;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      priceWithVAT: data.price,
-      priceWithoutVAT: Math.round(data.price / 1.22),
-      compatibleModels: data.compatible_models || [],
-      compatibleTrims: data.compatible_trims || []
-    };
+    return data;
   },
   
   delete: async (id: string): Promise<void> => {
     const { error } = await supabase
-      .from('settings_accessories')
+      .from('accessories')
       .delete()
       .eq('id', id);
     
@@ -665,92 +456,41 @@ export const accessoriesApi = {
       console.error('Error deleting accessory:', error);
       throw error;
     }
-  },
-  
-  getCompatible: async (modelId: string, trimId: string): Promise<Accessory[]> => {
-    const { data, error } = await supabase
-      .from('settings_accessories')
-      .select('*')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching compatible accessories:', error);
-      throw error;
-    }
-    
-    return data
-      .filter(acc => {
-        const modelCompatible = acc.compatible_models.length === 0 || acc.compatible_models.includes(modelId);
-        const trimCompatible = acc.compatible_trims.length === 0 || acc.compatible_trims.includes(trimId);
-        return modelCompatible && trimCompatible;
-      })
-      .map(accessory => ({
-        id: accessory.id,
-        name: accessory.name,
-        priceWithVAT: accessory.price,
-        priceWithoutVAT: Math.round(accessory.price / 1.22),
-        compatibleModels: accessory.compatible_models || [],
-        compatibleTrims: accessory.compatible_trims || []
-      }));
   }
 };
 
-// Helper function to calculate the total price of a vehicle
-export const calculateVehiclePrice = async (
-  modelId: string,
-  trimId: string,
-  fuelTypeId: string,
-  colorId: string,
-  transmissionId: string,
-  accessoryIds: string[]
-): Promise<number> => {
-  let totalPrice = 0;
+// Price calculation utility
+export const calculateVehiclePrice = (basePrice: number, options: {
+  trimPrice?: number;
+  fuelTypePrice?: number;
+  colorPrice?: number;
+  transmissionPrice?: number;
+  accessoriesPrices?: number[];
+}) => {
+  const {
+    trimPrice = 0,
+    fuelTypePrice = 0,
+    colorPrice = 0,
+    transmissionPrice = 0,
+    accessoriesPrices = []
+  } = options;
   
-  try {
-    // Base price from model
-    const model = await modelsApi.getById(modelId);
-    if (model) {
-      totalPrice += model.basePrice;
-    }
-    
-    // Add trim price adjustment
-    const trim = await trimsApi.getById(trimId);
-    if (trim) {
-      totalPrice += trim.basePrice;
-    }
-    
-    // Add fuel type price adjustment
-    const fuelType = await fuelTypesApi.getById(fuelTypeId);
-    if (fuelType) {
-      totalPrice += fuelType.priceAdjustment;
-    }
-    
-    // Add color price adjustment
-    const color = await colorsApi.getById(colorId);
-    if (color) {
-      totalPrice += color.priceAdjustment;
-    }
-    
-    // Add transmission price adjustment
-    const transmission = await transmissionsApi.getById(transmissionId);
-    if (transmission) {
-      totalPrice += transmission.priceAdjustment;
-    }
-    
-    // Add accessories prices
-    if (accessoryIds.length > 0) {
-      const allAccessories = await accessoriesApi.getAll();
-      for (const accId of accessoryIds) {
-        const accessory = allAccessories.find(a => a.id === accId);
-        if (accessory) {
-          totalPrice += accessory.priceWithVAT;
-        }
-      }
-    }
-    
-    return totalPrice;
-  } catch (error) {
-    console.error('Error calculating vehicle price:', error);
-    return 0;
-  }
+  // Calculate accessories total
+  const accessoriesTotal = accessoriesPrices.reduce((sum, price) => sum + price, 0);
+  
+  // Calculate total price
+  const totalPrice = basePrice + trimPrice + fuelTypePrice + colorPrice + transmissionPrice + accessoriesTotal;
+  
+  return totalPrice;
+};
+
+// Combined export for settings API
+export const settingsApi = {
+  models: modelsApi,
+  trims: trimsApi,
+  fuelTypes: fuelTypesApi,
+  colors: colorsApi,
+  transmissions: transmissionsApi,
+  accessories: accessoriesApi,
+  calculatePrice: calculateVehiclePrice
 };

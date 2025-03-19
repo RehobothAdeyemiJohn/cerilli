@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ContractsTable } from './ContractsTable';
+import ContractsTable from './ContractsTable';
 import { DealerContract } from '@/types';
 
 interface ContractsTableAdapterProps {

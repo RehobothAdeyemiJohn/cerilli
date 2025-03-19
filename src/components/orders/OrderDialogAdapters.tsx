@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { OrderDetailsDialog } from './OrderDetailsDialog';
-import { OrderDetailsForm } from './OrderDetailsForm';
+import OrderDetailsDialog from './OrderDetailsDialog';
+import OrderDetailsForm from './OrderDetailsForm';
 import { Order } from '@/types';
 
 interface OrderDetailsDialogAdapterProps {

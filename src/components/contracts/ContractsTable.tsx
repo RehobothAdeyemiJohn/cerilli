@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ColumnDef,
@@ -21,16 +22,28 @@ import { clsx } from 'clsx';
 
 interface ContractsTableProps {
   data: DealerContract[];
+  isLoading?: boolean;
+  error?: Error | null;
   onViewDetails: (contract: DealerContract) => void;
-  onUpdateStatus: (contractId: string) => void;
-  isStatusUpdating: boolean;
+  onUpdateStatus?: (contractId: string) => void;
+  isStatusUpdating?: boolean;
+  onDeleteContract?: (contractId: string) => void;
+  onDeleteConfirm?: () => void;
+  isAdmin?: boolean;
+  deleteContractPending?: boolean;
 }
 
 const ContractsTable: React.FC<ContractsTableProps> = ({
   data,
+  isLoading,
+  error,
   onViewDetails,
   onUpdateStatus,
   isStatusUpdating,
+  onDeleteContract,
+  onDeleteConfirm,
+  isAdmin,
+  deleteContractPending,
 }) => {
   const columns: ColumnDef<DealerContract>[] = [
     {
@@ -67,18 +80,30 @@ const ContractsTable: React.FC<ContractsTableProps> = ({
           >
             Dettagli
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onUpdateStatus(row.original.id)}
-            disabled={row.original.status !== 'attivo'}
-          >
-            {isStatusUpdating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              'Completa'
-            )}
-          </Button>
+          {onUpdateStatus && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onUpdateStatus(row.original.id)}
+              disabled={row.original.status !== 'attivo'}
+            >
+              {isStatusUpdating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                'Completa'
+              )}
+            </Button>
+          )}
+          {isAdmin && onDeleteContract && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-500"
+              onClick={() => onDeleteContract(row.original.id)}
+            >
+              Elimina
+            </Button>
+          )}
         </div>
       ),
     },
@@ -144,18 +169,20 @@ const ContractsTable: React.FC<ContractsTableProps> = ({
                     >
                       Dettagli
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onUpdateStatus(contract.id)}
-                      disabled={contract.status !== 'attivo'}
-                    >
-                      {isStatusUpdating ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Completa'
-                      )}
-                    </Button>
+                    {onUpdateStatus && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdateStatus(contract.id)}
+                        disabled={contract.status !== 'attivo'}
+                      >
+                        {isStatusUpdating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Completa'
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

@@ -6,6 +6,8 @@ import { vehiclesApi, dealersApi } from '@/api/supabase';
 import { Quote, Vehicle, Dealer } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
+import { quotesApi } from '@/api/supabase';
 
 export const useComprehensiveQuotesData = () => {
   // Get the base quotes data
@@ -113,14 +115,14 @@ export const useComprehensiveQuotesData = () => {
     setViewDialogOpen(true);
   };
   
-  const handleDeleteClick = (id: string) => {
-    baseQuotesData.handleDeleteButtonClick(id);
+  const handleDeleteClick = (quote: Quote) => {
+    baseQuotesData.handleDeleteButtonClick(quote.id);
     setDeleteDialogOpen(true);
   };
   
   const handleUpdateStatus = async (id: string, status: Quote['status']) => {
     try {
-      await baseQuotesData.quotesApi.update(id, { status });
+      await quotesApi.update(id, { status });
       await baseQuotesData.refetch();
       toast({
         title: "Status aggiornato",
@@ -173,7 +175,7 @@ export const useComprehensiveQuotesData = () => {
   
   const handleUpdateQuote = async (id: string, updates: Partial<Quote>) => {
     try {
-      await baseQuotesData.quotesApi.update(id, updates);
+      await quotesApi.update(id, updates);
       await baseQuotesData.refetch();
       toast({
         title: "Preventivo aggiornato",
@@ -245,5 +247,3 @@ export const useComprehensiveQuotesData = () => {
     handleUpdateQuote
   };
 };
-
-// Import this where it's needed in your Quotes.tsx
