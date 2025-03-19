@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/supabase/ordersApi';
@@ -29,6 +28,8 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 
   // Create a default OrderDetails object
@@ -138,17 +139,52 @@ export const useOrdersData = (filters: {
 
   // Effect to refresh data when we navigate to the orders page
   useEffect(() => {
-    console.log('Orders page navigated to, refreshing orders data');
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
-    refetchOrders();
-    if (ordersData.length > 0) {
-      refetchOrdersWithDetails();
+    if (location.pathname === '/orders') {
+      console.log('Orders page navigated to, refreshing orders data');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
+      
+      // Force immediate refetch
+      refetchOrders();
+      if (ordersData.length > 0) {
+        refetchOrdersWithDetails();
+      }
     }
   }, [location.pathname, queryClient, refetchOrders, refetchOrdersWithDetails, ordersData.length]);
 
+  // Function to invalidate and refresh all order-related data
+  const refreshAllOrderData = () => {
+    console.log("Manual refresh of all order data requested");
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['dealers'] });
+    refetchOrders();
+    refetchOrdersWithDetails();
+  };
+
+  // Format the order number with padding using the progressive_number from database
+  const getOrderNumber = (order: Order): string => {
+    if (!order || !order.id) return "#000";
+    
+    // Use the database progressive number if available, otherwise fallback
+    if (order.progressiveNumber) {
+      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
+    }
+    
+    // Fallback to index-based calculation for backward compatibility
+    const sortedOrders = [...ordersData].sort((a, b) => {
+      const dateA = new Date(a.orderDate || 0).getTime();
+      const dateB = new Date(b.orderDate || 0).getTime();
+      return dateA - dateB;
+    });
+    
+    const index = sortedOrders.findIndex(o => o.id === order.id);
+    return `#${(index + 1).toString().padStart(3, '0')}`;
+  };
+
   // Filter orders based on specified criteria
-  const filterOrders = (orders: Order[], status?: string) => {
+  const filterOrders = (orders: typeof ordersWithDetails, status?: string) => {
     let filtered = orders;
     
     if (status && status !== 'all') {
@@ -192,36 +228,6 @@ export const useOrdersData = (filters: {
   const deliveredOrders = filterOrders(ordersWithDetails, 'delivered');
   const cancelledOrders = filterOrders(ordersWithDetails, 'cancelled');
   const allOrders = filterOrders(ordersWithDetails);
-
-  // Function to invalidate and refresh all order-related data
-  const refreshAllOrderData = () => {
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
-    queryClient.invalidateQueries({ queryKey: ['dealers'] });
-    refetchOrders();
-    refetchOrdersWithDetails();
-  };
-
-  // Format the order number with padding using the progressive_number from database
-  const getOrderNumber = (order: Order): string => {
-    if (!order || !order.id) return "#000";
-    
-    // Use the database progressive number if available, otherwise fallback
-    if (order.progressiveNumber) {
-      return `#${order.progressiveNumber.toString().padStart(3, '0')}`;
-    }
-    
-    // Fallback to index-based calculation for backward compatibility
-    const sortedOrders = [...ordersData].sort((a, b) => {
-      const dateA = new Date(a.orderDate || 0).getTime();
-      const dateB = new Date(b.orderDate || 0).getTime();
-      return dateA - dateB;
-    });
-    
-    const index = sortedOrders.findIndex(o => o.id === order.id);
-    return `#${(index + 1).toString().padStart(3, '0')}`;
-  };
 
   return {
     ordersData,

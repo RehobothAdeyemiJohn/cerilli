@@ -231,7 +231,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       
       console.log("Creating order with dealerId:", dealerId);
       
-      // Disable RLS for orders by inserting directly using SQL
+      // Create order using the RPC function that bypasses RLS
       const { data: orderData, error: orderError } = await supabase.rpc(
         'insert_order',
         {

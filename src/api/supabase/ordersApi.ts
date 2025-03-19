@@ -1,4 +1,3 @@
-
 import { Order } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -99,6 +98,11 @@ export const ordersApi = {
       throw error;
     }
 
+    if (!data || data.length === 0) {
+      console.log("No orders found in database");
+      return [];
+    }
+
     // Map database response to frontend types
     const formattedOrders = data.map(mapOrderDbToFrontend);
 
@@ -131,28 +135,63 @@ export const ordersApi = {
       dealerid: order.dealerId,
       customername: order.customerName,
       status: order.status,
-      orderdate: order.orderDate,
+      orderdate: order.orderDate || new Date().toISOString(),
       deliverydate: order.deliveryDate,
-      price: order.price,
+      price: order.price || 0,
       contract_id: order.contractId
     };
     
     console.log("Formatted order for Supabase insert:", newOrder);
     
-    const { data, error } = await supabase
-      .from('orders')
-      .insert(newOrder)
-      .select('*, vehicles(*), dealers(*)')
-      .maybeSingle();
+    try {
+      // First try to use the RPC function which has security definer
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'insert_order',
+        {
+          p_vehicleid: order.vehicleId,
+          p_dealerid: order.dealerId,
+          p_customername: order.customerName,
+          p_status: order.status || 'processing'
+        }
+      );
+      
+      if (rpcError) {
+        console.error('Error creating order via RPC:', rpcError);
+        // Fall back to direct insert
+        const { data, error } = await supabase
+          .from('orders')
+          .insert(newOrder)
+          .select('*, vehicles(*), dealers(*)')
+          .single();
 
-    if (error || !data) {
-      console.error('Error creating order:', error);
-      throw error || new Error('Failed to create order');
+        if (error) {
+          console.error('Error creating order via direct insert:', error);
+          throw error;
+        }
+        
+        console.log("Order created successfully via direct insert:", data);
+        return mapOrderDbToFrontend(data);
+      }
+      
+      console.log("Order created successfully via RPC:", rpcData);
+      
+      // Fetch the created order since RPC just returns the ID
+      const { data: orderData, error: fetchError } = await supabase
+        .from('orders')
+        .select('*, vehicles(*), dealers(*)')
+        .eq('id', rpcData)
+        .single();
+      
+      if (fetchError) {
+        console.error('Error fetching created order:', fetchError);
+        throw fetchError;
+      }
+      
+      return mapOrderDbToFrontend(orderData);
+    } catch (error) {
+      console.error('Unexpected error creating order:', error);
+      throw error;
     }
-    
-    console.log("Order created successfully:", data);
-    
-    return mapOrderDbToFrontend(data);
   },
 
   update: async (id: string, updates: Partial<Order>): Promise<Order> => {
