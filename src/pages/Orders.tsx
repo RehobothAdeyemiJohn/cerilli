@@ -7,16 +7,14 @@ import { DataTable } from '@/components/ui/data-table';
 import { ordersColumns } from '@/components/orders/orders-columns';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, FilePlus2 } from 'lucide-react';
-import { useRouter } from 'next/router';
-import { useToast } from '@/hooks/use-toast';
-import { OrderFiltersDialog } from '@/components/orders/OrderFiltersDialog';
-import { OrderDetailsDialog } from '@/components/orders/OrderDetailsDialog';
-import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import { OrderFiltersDialog } from '@/components/orders/OrderFiltersDialog';
+import OrderDetailsDialog from '@/components/orders/OrderDetailsDialog';
+import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import { generateOrdersPdf } from '@/lib/pdf-generator';
 import { ConfirmDeleteDialog } from '@/components/ui/ConfirmDeleteDialog';
-import { OrderDetailsForm } from '@/components/orders/OrderDetailsForm';
-import { toast } from '@/hooks/use-toast';
+import OrderDetailsForm from '@/components/orders/OrderDetailsForm';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +23,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { DateRange } from 'react-day-picker';
 import { addDays } from 'date-fns';
 import { PdfPreviewDialog } from '@/components/orders/PdfPreviewDialog';
 
@@ -84,10 +81,10 @@ const Orders = () => {
     handleGenerateODL
   } = useOrdersActions(refetch);
   
-  const isDelivering = markAsDeliveredMutation.isLoading;
-  const isCancelling = cancelOrderMutation.isLoading;
-  const isDeleting = deleteOrderMutation.isLoading;
-  const isGeneratingODL = generateODLMutation.isLoading;
+  const isDelivering = markAsDeliveredMutation.isPending;
+  const isCancelling = cancelOrderMutation.isPending;
+  const isDeleting = deleteOrderMutation.isPending;
+  const isGeneratingODL = generateODLMutation.isPending;
   
   const filteredOrders = React.useMemo(() => {
     let filtered = [...orders];
