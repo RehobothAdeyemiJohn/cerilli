@@ -30,6 +30,11 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   console.log('Dealer object in OrderDetailsDialog:', order.dealer);
   console.log('Dealer nuovo_plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
   
+  // Get the formatted order number
+  const orderNumber = order.progressiveNumber 
+    ? `#${order.progressiveNumber.toString().padStart(3, '0')}` 
+    : order.orderNumber || 'N/A';
+  
   // Verifica se ci sono dettagli del veicolo da mostrare
   const hasVehicleDetails = order?.vehicle !== null;
   const hasAccessories = order?.vehicle?.accessories && order.vehicle.accessories.length > 0;
@@ -130,7 +135,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Dettagli Ordine</DialogTitle>
+          <DialogTitle>Dettagli Ordine {orderNumber}</DialogTitle>
           <DialogDescription>
             Gestisci i dettagli amministrativi dell'ordine
           </DialogDescription>
