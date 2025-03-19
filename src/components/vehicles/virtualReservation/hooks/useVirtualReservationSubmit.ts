@@ -56,6 +56,8 @@ export const useVirtualReservationSubmit = (
           fuelType: values.fuelType || '',
           exteriorColor: values.exteriorColor || '',
           transmission: values.transmission || '',
+          accessories: values.accessories || [],  // Add the missing accessories property
+          price: calculatedPrice || 0,           // Add the missing price property
           finalPrice: calculatedPrice || 0,
           dealerName: selectedDealerName
         }

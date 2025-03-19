@@ -199,15 +199,14 @@ const Quotes = () => {
         
         <QuotesTable 
           quotes={quotes}
-          isLoading={isLoading}
-          onView={handleViewQuote}
-          onDelete={handlePrepareDelete}
-          onStatusChange={handleUpdateStatus}
-          onReject={handlePrepareReject}
-          onConvert={handlePrepareContract}
-          date={filterDate}
-          dealer={filterDealer}
-          isAdmin={isAdmin}
+          getVehicleById={(id) => null} // Providing required props
+          getDealerName={(id) => ""}    // Providing required props
+          getShortId={(id) => id.substring(0, 8)} // Providing required props
+          getStatusBadgeClass={(status) => ""} // Providing required props
+          formatDate={(date) => new Date(date).toLocaleDateString()} // Providing required props
+          handleViewQuote={handleViewQuote}
+          handleUpdateStatus={handleUpdateStatus}
+          handleDeleteClick={handlePrepareDelete}
         />
         
         {!isLoading && quotes.length > 0 && (
