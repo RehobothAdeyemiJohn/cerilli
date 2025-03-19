@@ -91,10 +91,12 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // Debug the structure before insert
+      // Prepare order record with both field naming conventions for compatibility
       const orderRecord = {
         vehicle_id: vehicle.id,
+        vehicleid: vehicle.id, // Add compatibility field
         dealer_id: reservationDealerId,
+        dealerid: reservationDealerId, // Add compatibility field
         customer_name: selectedDealerName,
         status: 'processing',
         order_date: new Date().toISOString(),
@@ -113,7 +115,7 @@ export const useVirtualReservationSubmit = (
         restoration_costs: 0
       };
       
-      console.log("Attempting to insert with column names exactly matching database:", orderRecord);
+      console.log("Attempting to insert with both column naming patterns for compatibility:", orderRecord);
       
       // Create order directly using exact column names as in the database
       const { data: orderData, error: orderError } = await supabase

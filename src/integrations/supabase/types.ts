@@ -270,6 +270,7 @@ export type Database = {
           transport_costs: number | null
           updated_at: string | null
           vehicle_id: string | null
+          vehicleid: string | null
         }
         Insert: {
           chassis?: string | null
@@ -300,6 +301,7 @@ export type Database = {
           transport_costs?: number | null
           updated_at?: string | null
           vehicle_id?: string | null
+          vehicleid?: string | null
         }
         Update: {
           chassis?: string | null
@@ -330,6 +332,7 @@ export type Database = {
           transport_costs?: number | null
           updated_at?: string | null
           vehicle_id?: string | null
+          vehicleid?: string | null
         }
         Relationships: [
           {

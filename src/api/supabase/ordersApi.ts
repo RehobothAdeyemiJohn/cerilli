@@ -58,8 +58,8 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 const mapOrderDbToFrontend = (order: any): Order => {
   return {
     id: order.id,
-    vehicleId: order.vehicle_id || '',
-    dealerId: order.dealer_id || '',
+    vehicleId: order.vehicle_id || order.vehicleid || '',
+    dealerId: order.dealer_id || order.dealerid || '',
     customerName: order.customer_name,
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.order_date,
@@ -96,7 +96,9 @@ const mapOrderDbToFrontend = (order: any): Order => {
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
   return {
     vehicle_id: order.vehicleId,
+    vehicleid: order.vehicleId, // Add compatibility field
     dealer_id: order.dealerId,
+    dealerid: order.dealerId, // Add compatibility field
     customer_name: order.customerName,
     status: order.status,
     order_date: order.orderDate,
@@ -229,21 +231,26 @@ export const ordersApi = {
       plafondDealer: dealerPlafond
     };
     
-    // Map frontend field names to database column names
-    const dbOrder = mapOrderFrontendToDb({
-      ...orderData,
-      // Set default values for non-nullable fields
-      orderDate: orderData.orderDate || new Date().toISOString(),
-      // Default values for boolean fields
-      isLicensable: false,
-      hasProforma: false,
-      isPaid: false,
-      isInvoiced: false,
-      hasConformity: false,
-      odlGenerated: false,
-      transportCosts: 0,
-      restorationCosts: 0
-    });
+    // Map frontend field names to database column names with both naming conventions
+    const dbOrder = {
+      ...mapOrderFrontendToDb({
+        ...orderData,
+        // Set default values for non-nullable fields
+        orderDate: orderData.orderDate || new Date().toISOString(),
+        // Default values for boolean fields
+        isLicensable: false,
+        hasProforma: false,
+        isPaid: false,
+        isInvoiced: false,
+        hasConformity: false,
+        odlGenerated: false,
+        transportCosts: 0,
+        restorationCosts: 0
+      }),
+      // Ensure both camelCase and snake_case fields are populated
+      vehicleid: order.vehicleId,
+      dealerid: order.dealerId
+    };
     
     console.log("Formatted order for Supabase insert:", dbOrder);
     
