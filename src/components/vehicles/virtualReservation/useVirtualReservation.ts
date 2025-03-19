@@ -69,7 +69,7 @@ export const useVirtualReservation = (
 
   return {
     form,
-    onSubmit: handleSubmit,
+    onSubmit: form.handleSubmit(handleSubmit),
     isLoading,
     modelObj,
     compatibleItems,

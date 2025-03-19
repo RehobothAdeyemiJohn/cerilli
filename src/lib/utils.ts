@@ -2,6 +2,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format, differenceInDays } from 'date-fns';
+import { Vehicle } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -59,34 +60,52 @@ export function calculateDaysInStock(dateAdded: string | Date | Vehicle): number
   }
 }
 
-export function calculateEstimatedArrival(estimatedArrival: string | Date | null): string {
-  if (!estimatedArrival) return 'Non disponibile';
+export function calculateEstimatedArrival(estimatedArrival: string | Date | null | Vehicle): { formattedRange: string; daysUntilArrival?: number } {
+  if (!estimatedArrival) return { formattedRange: 'Non disponibile' };
   
   try {
-    const arrivalDate = typeof estimatedArrival === 'string' 
-      ? new Date(estimatedArrival) 
-      : estimatedArrival as Date;
+    let arrivalDate: Date;
+    let daysEstimate: number | undefined;
+    
+    if (typeof estimatedArrival === 'object' && 'estimatedArrivalDays' in estimatedArrival) {
+      // It's a Vehicle object
+      daysEstimate = estimatedArrival.estimatedArrivalDays;
+      
+      if (!daysEstimate) {
+        return { formattedRange: 'Non disponibile' };
+      }
+      
+      const today = new Date();
+      arrivalDate = new Date(today);
+      arrivalDate.setDate(today.getDate() + daysEstimate);
+    } else if (typeof estimatedArrival === 'string') {
+      arrivalDate = new Date(estimatedArrival);
+    } else {
+      arrivalDate = estimatedArrival as Date;
+    }
     
     // If the date is invalid, return a fallback message
-    if (isNaN(arrivalDate.getTime())) return 'Non disponibile';
+    if (arrivalDate && isNaN(arrivalDate.getTime())) {
+      return { formattedRange: 'Non disponibile' };
+    }
     
     const today = new Date();
-    const daysUntilArrival = differenceInDays(arrivalDate, today);
+    const daysUntilArrival = daysEstimate || differenceInDays(arrivalDate, today);
     
     if (daysUntilArrival < 0) {
-      return 'In ritardo';
+      return { formattedRange: 'In ritardo', daysUntilArrival };
     } else if (daysUntilArrival === 0) {
-      return 'Oggi';
+      return { formattedRange: 'Oggi', daysUntilArrival };
     } else if (daysUntilArrival === 1) {
-      return 'Domani';
+      return { formattedRange: 'Domani', daysUntilArrival };
     } else if (daysUntilArrival <= 7) {
-      return `${daysUntilArrival} giorni`;
+      return { formattedRange: `${daysUntilArrival} giorni`, daysUntilArrival };
     } else {
       const formatted = formatDate(arrivalDate);
-      return formatted;
+      return { formattedRange: formatted, daysUntilArrival };
     }
   } catch (error) {
     console.error('Error calculating estimated arrival:', error);
-    return 'Non disponibile';
+    return { formattedRange: 'Non disponibile' };
   }
 }

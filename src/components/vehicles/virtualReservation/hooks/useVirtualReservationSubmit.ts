@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Vehicle, Dealer } from '@/types';
 import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
-import { VirtualReservationFormValues, formSchema } from '../schema';
+import { VirtualReservationFormValues, createVirtualReservationSchema } from '../schema';
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
@@ -17,20 +18,6 @@ export const useVirtualReservationSubmit = (
 ) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<VirtualReservationFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      trim: vehicle.trim || '',
-      fuelType: vehicle.fuelType || '',
-      exteriorColor: vehicle.exteriorColor || '',
-      transmission: vehicle.transmission || '',
-      accessories: vehicle.accessories || [],
-      dealerId: isAdmin ? '' : userDealerId,
-      reservationDestination: 'Conto Esposizione'
-    },
-    mode: "onChange"
-  });
-
   const handleSubmit = async (values: VirtualReservationFormValues) => {
     setIsSubmitting(true);
     
