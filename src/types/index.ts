@@ -99,6 +99,10 @@ export type Order = {
   progressiveNumber?: number;
   price?: number;
   contractId?: string;
+  dealerName?: string;
+  modelName?: string;
+  orderNumber?: string;
+  plafondDealer?: number;
   vehicle?: Vehicle;
   dealer?: any;
   details?: OrderDetails;

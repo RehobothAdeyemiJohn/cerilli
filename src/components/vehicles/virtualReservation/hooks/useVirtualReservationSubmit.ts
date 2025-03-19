@@ -34,9 +34,17 @@ export const useVirtualReservationSubmit = (
     
     // For admin, get dealer name from selected dealer
     let finalDealerName = dealerName;
+    let dealerPlafond = null;
     if (isAdmin && values.dealerId) {
       const selectedDealer = filteredDealers.find(d => d.id === values.dealerId);
       finalDealerName = selectedDealer ? selectedDealer.companyName : '';
+      
+      // Get the dealer plafond value
+      dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
+    } else if (!isAdmin) {
+      // For dealer users, get their own plafond
+      const selectedDealer = filteredDealers.find(d => d.id === dealerId);
+      dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
     }
     
     if (!finalDealerName) {
@@ -55,6 +63,7 @@ export const useVirtualReservationSubmit = (
     console.log("Dealer ID:", finalDealerId);
     console.log("Dealer Name:", finalDealerName);
     console.log("Calculated price:", calculatedPrice);
+    console.log("Dealer Plafond:", dealerPlafond);
     
     try {
       // Prepare virtual config
@@ -87,7 +96,11 @@ export const useVirtualReservationSubmit = (
           customerName: finalDealerName,
           status: 'processing',
           orderDate: new Date().toISOString(),
-          price: calculatedPrice || 0
+          price: calculatedPrice || 0,
+          // New fields
+          dealerName: finalDealerName,
+          modelName: vehicle.model,
+          plafondDealer: dealerPlafond
         });
         console.log("Order created successfully");
       } catch (orderError) {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -89,16 +90,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     return `#${(index + 1).toString().padStart(3, '0')}`;
   };
 
-  const getCreditColorClass = (creditLimit: number) => {
-    return 'text-green-600';
-  };
-
   React.useEffect(() => {
     orders.forEach((order) => {
-      if (order.dealer) {
-        console.log(`OrdersTable - Dealer per ordine ${order.id}:`, order.dealer);
-        console.log(`OrdersTable - Dealer ${order.dealer.companyName} nuovo_plafond:`, order.dealer.nuovo_plafond);
-      }
+      console.log(`OrdersTable - Ordine ${order.id}:`, order);
+      console.log(`OrdersTable - Plafond dealer al momento dell'ordine:`, order.plafondDealer);
     });
   }, [orders]);
 
@@ -171,14 +166,17 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   };
 
   const renderPlafondColumn = (order: Order) => {
-    if (!order.dealer) return <span className="text-gray-400">-</span>;
+    // Use the plafond stored in the order at creation time
+    if (order.plafondDealer !== undefined && order.plafondDealer !== null) {
+      return formatCurrency(order.plafondDealer);
+    }
     
-    console.log(`RenderPlafondColumn per ${order.dealer.companyName}:`, {
-      creditLimit: order.dealer.creditLimit
-    });
+    // Fallback to dealer's current plafond if order plafond is not available
+    if (order.dealer?.creditLimit !== undefined) {
+      return formatCurrency(order.dealer.creditLimit);
+    }
     
-    const plafondValue = order.dealer.creditLimit !== undefined ? order.dealer.creditLimit : 0;
-    return formatCurrency(plafondValue);
+    return <span className="text-gray-400">-</span>;
   };
 
   return (
@@ -217,9 +215,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               </TableRow>
             ) : sortedOrders.length > 0 ? (
               sortedOrders.map((order) => {
-                const vehicleInfo = order.vehicle ? 
-                  `${order.vehicle.model} ${order.vehicle.trim || ''}` : 
-                  'Veicolo non disponibile';
+                const vehicleInfo = order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Veicolo non disponibile');
                 
                 const orderNumber = getOrderNumber(order);
                 
@@ -230,8 +226,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.progressiveNumber?.toString().padStart(3, '0') || '???'}</TableCell>
-                    <TableCell>{order.dealer?.companyName || order.customerName}</TableCell>
-                    <TableCell>{order.vehicle?.model || 'Veicolo non disponibile'} {order.vehicle?.trim || ''}</TableCell>
+                    <TableCell>{order.dealerName || order.dealer?.companyName || order.customerName}</TableCell>
+                    <TableCell>{vehicleInfo}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${

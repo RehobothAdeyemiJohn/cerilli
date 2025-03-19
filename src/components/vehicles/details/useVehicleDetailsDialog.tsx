@@ -237,10 +237,27 @@ export function useVehicleDetailsDialog(
           return;
         }
         
+        // Get dealer info to store plafond at order creation time
+        let dealerName = vehicle.reservedBy;
+        let dealerPlafond = null;
+        
+        try {
+          const selectedDealer = dealers.find(d => d.id === dealerId);
+          if (selectedDealer) {
+            dealerName = selectedDealer.companyName;
+            dealerPlafond = selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0;
+          }
+        } catch (e) {
+          console.error("Error getting dealer info:", e);
+        }
+        
         console.log("Creating order record with data:", {
           vehicleId: vehicle.id,
           dealerId,
-          customerName: vehicle.reservedBy
+          customerName: vehicle.reservedBy,
+          dealerName,
+          dealerPlafond,
+          modelName: vehicle.model
         });
         
         try {
@@ -250,7 +267,10 @@ export function useVehicleDetailsDialog(
             dealerId,
             customerName: vehicle.reservedBy,
             status: 'processing' as Order['status'],
-            orderDate: new Date().toISOString()
+            orderDate: new Date().toISOString(),
+            dealerName: dealerName,
+            modelName: vehicle.model,
+            plafondDealer: dealerPlafond
           };
           
           const createdOrder = await ordersApi.create(orderData);
@@ -424,10 +444,27 @@ export function useVehicleDetailsDialog(
             return;
           }
           
+          // Get dealer info to store plafond at order creation time
+          let dealerName = vehicle.reservedBy;
+          let dealerPlafond = null;
+          
+          try {
+            const selectedDealer = dealers.find(d => d.id === dealerId);
+            if (selectedDealer) {
+              dealerName = selectedDealer.companyName;
+              dealerPlafond = selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0;
+            }
+          } catch (e) {
+            console.error("Error getting dealer info:", e);
+          }
+          
           console.log("Creating order record with data:", {
             vehicleId: vehicle.id,
             dealerId,
-            customerName: vehicle.reservedBy
+            customerName: vehicle.reservedBy,
+            dealerName,
+            dealerPlafond,
+            modelName: vehicle.model
           });
           
           try {
@@ -437,7 +474,10 @@ export function useVehicleDetailsDialog(
               dealerId,
               customerName: vehicle.reservedBy,
               status: 'processing' as Order['status'],
-              orderDate: new Date().toISOString()
+              orderDate: new Date().toISOString(),
+              dealerName: dealerName,
+              modelName: vehicle.model,
+              plafondDealer: dealerPlafond
             };
             
             const createdOrder = await ordersApi.create(orderData);

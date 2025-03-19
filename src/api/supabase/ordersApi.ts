@@ -66,7 +66,10 @@ const mapOrderDbToFrontend = (order: any): Order => {
     progressiveNumber: order.progressive_number,
     price: order.price,
     contractId: order.contract_id,
-    // Include related data
+    dealerName: order.dealer_name,
+    modelName: order.model_name,
+    orderNumber: order.order_number,
+    plafondDealer: order.plafond_dealer,
     vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
     dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : null
   };
@@ -295,6 +298,45 @@ export const ordersApi = {
   create: async (order: Omit<Order, 'id'>): Promise<Order> => {
     console.log("Creating new order in Supabase:", order);
     
+    // Get dealer info to store plafond_dealer at order creation time
+    let dealerPlafond = null;
+    let dealerName = null;
+    let modelName = null;
+    
+    if (order.dealerId) {
+      try {
+        const { data: dealer } = await supabase
+          .from('dealers')
+          .select('*')
+          .eq('id', order.dealerId)
+          .maybeSingle();
+          
+        if (dealer) {
+          dealerPlafond = dealer.nuovo_plafond || dealer.credit_limit || 0;
+          dealerName = dealer.companyname;
+        }
+      } catch (e) {
+        console.error('Error fetching dealer for plafond:', e);
+      }
+    }
+    
+    // Get vehicle model if available
+    if (order.vehicleId) {
+      try {
+        const { data: vehicle } = await supabase
+          .from('vehicles')
+          .select('model')
+          .eq('id', order.vehicleId)
+          .maybeSingle();
+          
+        if (vehicle) {
+          modelName = vehicle.model;
+        }
+      } catch (e) {
+        console.error('Error fetching vehicle model:', e);
+      }
+    }
+    
     // Map frontend field names to database column names
     const newOrder = {
       vehicleid: order.vehicleId,
@@ -304,7 +346,11 @@ export const ordersApi = {
       orderdate: order.orderDate || new Date().toISOString(),
       deliverydate: order.deliveryDate,
       price: order.price || 0,
-      contract_id: order.contractId
+      contract_id: order.contractId,
+      dealer_name: dealerName || order.dealerName || order.customerName,
+      model_name: modelName || order.modelName,
+      order_number: order.orderNumber,
+      plafond_dealer: dealerPlafond
     };
     
     console.log("Formatted order for Supabase insert:", newOrder);
@@ -341,6 +387,23 @@ export const ordersApi = {
       
       console.log("Order created successfully via RPC with ID:", rpcData);
       
+      // Since RPC doesn't support the new columns, update the order with the additional data
+      if (rpcData) {
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({
+            dealer_name: newOrder.dealer_name,
+            model_name: newOrder.model_name,
+            order_number: newOrder.order_number,
+            plafond_dealer: newOrder.plafond_dealer
+          })
+          .eq('id', rpcData);
+          
+        if (updateError) {
+          console.error('Error updating order with additional fields:', updateError);
+        }
+      }
+      
       // Fetch the created order since RPC just returns the ID
       const { data: orderData, error: fetchError } = await supabase
         .from('orders')
@@ -373,7 +436,11 @@ export const ordersApi = {
       orderdate: updates.orderDate,
       deliverydate: updates.deliveryDate,
       price: updates.price,
-      contract_id: updates.contractId
+      contract_id: updates.contractId,
+      dealer_name: updates.dealerName,
+      model_name: updates.modelName,
+      order_number: updates.orderNumber,
+      plafond_dealer: updates.plafondDealer
     };
     
     // Remove undefined fields

@@ -83,9 +83,17 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     
     // For admin, get dealer name from selected dealer
     let finalDealerName = dealerName;
+    let dealerPlafond = null;
     if (isAdmin && data.dealerId) {
       const selectedDealer = activeDealers.find(d => d.id === data.dealerId);
       finalDealerName = selectedDealer ? selectedDealer.companyName : '';
+      
+      // Get the dealer plafond value
+      dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
+    } else if (!isAdmin) {
+      // For dealer users, get their own plafond
+      const selectedDealer = activeDealers.find(d => d.id === dealerId);
+      dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
     }
     
     if (!finalDealerName) {
@@ -102,6 +110,7 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     console.log("Reserving vehicle:", vehicle.id);
     console.log("Dealer ID:", finalDealerId);
     console.log("Dealer Name:", finalDealerName);
+    console.log("Dealer Plafond:", dealerPlafond);
     
     try {
       // Call the Supabase API directly to reserve the vehicle
@@ -115,7 +124,11 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
           dealerId: finalDealerId,
           customerName: finalDealerName,
           status: 'processing',
-          orderDate: new Date().toISOString()
+          orderDate: new Date().toISOString(),
+          // New fields
+          dealerName: finalDealerName,
+          modelName: vehicle.model,
+          plafondDealer: dealerPlafond
         });
         console.log("Order created successfully");
       } catch (orderError) {

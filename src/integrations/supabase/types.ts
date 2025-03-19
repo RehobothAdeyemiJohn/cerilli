@@ -315,11 +315,15 @@ export type Database = {
         Row: {
           contract_id: string | null
           customername: string
+          dealer_name: string | null
           dealerid: string
           deliverydate: string | null
           id: string
+          model_name: string | null
           notes: string | null
+          order_number: string | null
           orderdate: string | null
+          plafond_dealer: number | null
           price: number | null
           progressive_number: number
           quoteid: string | null
@@ -330,11 +334,15 @@ export type Database = {
         Insert: {
           contract_id?: string | null
           customername: string
+          dealer_name?: string | null
           dealerid: string
           deliverydate?: string | null
           id?: string
+          model_name?: string | null
           notes?: string | null
+          order_number?: string | null
           orderdate?: string | null
+          plafond_dealer?: number | null
           price?: number | null
           progressive_number?: number
           quoteid?: string | null
@@ -345,11 +353,15 @@ export type Database = {
         Update: {
           contract_id?: string | null
           customername?: string
+          dealer_name?: string | null
           dealerid?: string
           deliverydate?: string | null
           id?: string
+          model_name?: string | null
           notes?: string | null
+          order_number?: string | null
           orderdate?: string | null
+          plafond_dealer?: number | null
           price?: number | null
           progressive_number?: number
           quoteid?: string | null

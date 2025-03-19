@@ -27,3 +27,13 @@ export const canPlaceOrder = (dealer: Dealer, orderAmount: number): boolean => {
   // Altrimenti, controlla se l'importo dell'ordine è minore o uguale al credito disponibile
   return orderAmount <= availableCredit;
 };
+
+/**
+ * Formatta l'importo del plafond per la visualizzazione
+ * @param value Il valore numerico da formattare
+ * @returns Il valore formattato come stringa con simbolo dell'euro
+ */
+export const formatPlafond = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) return '0 €';
+  return `${value.toLocaleString()} €`;
+};

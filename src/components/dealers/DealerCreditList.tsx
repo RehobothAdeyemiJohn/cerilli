@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { formatCurrency } from '@/lib/utils';
+import { formatPlafond } from '@/utils/dealerUtils';
 
 interface DealerCreditListProps {
   darkMode?: boolean;
@@ -47,14 +48,14 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
             
             console.log(`Rendering plafond per ${dealer.companyName}:`, {
               creditLimit: dealer.creditLimit,
-              formatted: formatCurrency(plafondDisponibile)
+              formatted: formatPlafond(plafondDisponibile)
             });
             
             return (
               <div key={dealer.id} className="flex justify-between items-center border-b last:border-0 pb-3 last:pb-0 mb-3 last:mb-0">
                 <span className="font-medium">{dealer.companyName}</span>
                 <span className={`font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                  {formatCurrency(plafondDisponibile)}
+                  {formatPlafond(plafondDisponibile)}
                 </span>
               </div>
             );
