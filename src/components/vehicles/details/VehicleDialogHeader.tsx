@@ -7,8 +7,6 @@ import { FileText, ShoppingCart, Ban, Package } from 'lucide-react';
 
 interface VehicleDialogHeaderProps {
   vehicle: Vehicle;
-  onEdit?: () => void;
-  onDelete?: () => void;
   onDuplicate?: () => void;
   onCreateQuote?: (() => void) | ((vehicle: Vehicle) => void);
   onReserve?: () => void;

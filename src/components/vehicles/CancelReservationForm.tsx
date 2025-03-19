@@ -29,14 +29,17 @@ const CancelReservationForm = ({
   isSubmitting 
 }: CancelReservationFormProps) => {
   const handleConfirm = async () => {
-    // Call either onSubmit or onConfirm depending on which one was provided
-    if (onConfirm) {
-      return onConfirm();
-    } else if (onSubmit) {
-      onSubmit();
-      return Promise.resolve();
+    try {
+      // Call either onSubmit or onConfirm depending on which one was provided
+      if (onConfirm) {
+        await onConfirm();
+      } else if (onSubmit) {
+        onSubmit();
+      }
+    } catch (error) {
+      console.error("Error in CancelReservationForm handleConfirm:", error);
+      // Error is handled by the parent component
     }
-    return Promise.resolve();
   };
 
   // Simple confirmation dialog approach
