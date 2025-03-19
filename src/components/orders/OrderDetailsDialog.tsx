@@ -29,6 +29,8 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   // Log the dealer object to check its structure
   console.log('Dealer object in OrderDetailsDialog:', order.dealer);
   console.log('Dealer nuovo_plafond in OrderDetailsDialog:', order.dealer?.nuovo_plafond);
+  console.log('Ordine completo:', order);
+  console.log('Order details:', order.details);
   
   // Get the formatted order number
   const orderNumber = order.progressiveNumber 
