@@ -1,3 +1,4 @@
+
 import { Order } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -180,7 +181,7 @@ export const ordersApi = {
         return mapOrderDbToFrontend(data);
       }
       
-      console.log("Order created successfully via RPC:", rpcData);
+      console.log("Order created successfully via RPC with ID:", rpcData);
       
       // Fetch the created order since RPC just returns the ID
       const { data: orderData, error: fetchError } = await supabase
@@ -219,8 +220,8 @@ export const ordersApi = {
     
     // Remove undefined fields
     Object.keys(dbUpdates).forEach(key => {
-      if (dbUpdates[key] === undefined) {
-        delete dbUpdates[key];
+      if (dbUpdates[key as keyof typeof dbUpdates] === undefined) {
+        delete dbUpdates[key as keyof typeof dbUpdates];
       }
     });
     

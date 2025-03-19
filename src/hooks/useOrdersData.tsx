@@ -29,7 +29,7 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: ordersApi.getAll,
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 3000, // Refetch every 3 seconds
+    refetchInterval: 1000, // Refetch every 1 second for real-time updates
     refetchOnWindowFocus: true,
   });
 
@@ -125,7 +125,7 @@ export const useOrdersData = (filters: {
     queryFn: () => fetchOrderDetails(ordersData),
     enabled: ordersData.length > 0,
     staleTime: 0,
-    refetchInterval: 3000, // Refetch every 3 seconds
+    refetchInterval: 1000, // Refetch every 1 second for real-time updates
   });
 
   // Effect to refresh data when dialog closes

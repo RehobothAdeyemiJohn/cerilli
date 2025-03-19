@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -8,6 +9,7 @@ import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -47,6 +49,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const { user } = useAuth();
   const { handleVehicleDuplicate } = useInventory();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const userCanReserveVehicles = true;
@@ -246,7 +249,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         throw new Error(`Errore durante la creazione dell'ordine: ${orderError.message}`);
       }
       
-      console.log("Order created successfully:", orderData);
+      console.log("Order created successfully with ID:", orderData);
       
       // Update vehicle status to ordered
       const { error: vehicleError } = await supabase
@@ -274,6 +277,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       
       handleDialogClose();
       onVehicleUpdated();
+      
+      // Navigate to the Orders page after successful order creation
+      navigate('/orders');
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
