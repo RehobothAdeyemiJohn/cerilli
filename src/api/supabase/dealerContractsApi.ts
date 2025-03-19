@@ -59,10 +59,10 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 const mapContractDbToFrontend = (contract: any): DealerContract => {
   return {
     id: contract.id,
-    dealerId: contract.dealer_id,
-    carId: contract.car_id,
-    contractDate: contract.contract_date,
-    contractDetails: contract.contract_details,
+    dealer_id: contract.dealer_id,
+    car_id: contract.car_id,
+    contract_date: contract.contract_date,
+    contract_details: contract.contract_details,
     status: contract.status,
     createdAt: contract.created_at,
     updatedAt: contract.updated_at,
@@ -123,12 +123,12 @@ export const dealerContractsApi = {
   create: async (contract: Omit<DealerContract, 'id' | 'createdAt' | 'updatedAt'>): Promise<DealerContract> => {
     console.log("Creating new dealer contract in Supabase:", contract);
     
-    // Mappa i nomi dei campi frontend ai nomi delle colonne del database
+    // Map frontend field names to database column names
     const newContract = {
-      dealer_id: contract.dealerId,
-      car_id: contract.carId,
-      contract_date: contract.contractDate,
-      contract_details: contract.contractDetails,
+      dealer_id: contract.dealer_id,
+      car_id: contract.car_id,
+      contract_date: contract.contract_date,
+      contract_details: contract.contract_details,
       status: contract.status
     };
     
@@ -153,16 +153,16 @@ export const dealerContractsApi = {
   update: async (id: string, updates: Partial<DealerContract>): Promise<DealerContract> => {
     console.log("Updating dealer contract in Supabase:", id, updates);
     
-    // Mappa i nomi dei campi frontend ai nomi delle colonne del database
+    // Map frontend field names to database column names
     const dbUpdates = {
-      dealer_id: updates.dealerId,
-      car_id: updates.carId,
-      contract_date: updates.contractDate,
-      contract_details: updates.contractDetails,
+      dealer_id: updates.dealer_id,
+      car_id: updates.car_id,
+      contract_date: updates.contract_date,
+      contract_details: updates.contract_details,
       status: updates.status
     };
     
-    // Rimuovi i campi undefined
+    // Remove undefined fields
     Object.keys(dbUpdates).forEach(key => {
       if (dbUpdates[key] === undefined) {
         delete dbUpdates[key];
@@ -199,11 +199,11 @@ export const dealerContractsApi = {
     console.log("Dealer contract deleted successfully");
   },
 
-  // Metodo per creare un contratto da un ordine
+  // Method to create a contract from an order
   createFromOrder: async (orderId: string, contractDetails?: any): Promise<DealerContract> => {
     console.log(`Creating contract from order ${orderId}`);
     
-    // Ottieni i dettagli dell'ordine
+    // Get order details
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .select('*, vehicles(*), dealers(*)')
@@ -215,16 +215,16 @@ export const dealerContractsApi = {
       throw orderError || new Error('Order not found');
     }
     
-    // Crea il nuovo contratto
+    // Create new contract
     const newContract = {
-      dealer_id: orderData.dealerid,
-      car_id: orderData.vehicleid,
+      dealer_id: orderData.dealer_id,
+      car_id: orderData.vehicle_id,
       contract_date: new Date().toISOString(),
       contract_details: contractDetails || {},
       status: 'attivo'
     };
     
-    // Inserisci il contratto
+    // Insert contract
     const { data, error } = await supabase
       .from('dealer_contracts')
       .insert(newContract)
@@ -234,17 +234,6 @@ export const dealerContractsApi = {
     if (error || !data) {
       console.error('Error creating contract from order:', error);
       throw error || new Error('Failed to create contract from order');
-    }
-    
-    // Aggiorna l'ordine con il riferimento al contratto
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ contract_id: data.id })
-      .eq('id', orderId);
-      
-    if (updateError) {
-      console.error('Error updating order with contract reference:', updateError);
-      // Non blocchiamo l'operazione se l'aggiornamento fallisce, ma logghiamo l'errore
     }
     
     return mapContractDbToFrontend(data);

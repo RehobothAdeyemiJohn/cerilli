@@ -115,6 +115,7 @@ export interface Order {
   restorationCosts: number;
   fundingType?: string;
   odlGenerated: boolean;
+  notes?: string;
   
   vehicle?: Vehicle | null;
   dealer?: Dealer | null;
@@ -269,13 +270,13 @@ export interface OrderFilters {
 
 export interface DealerContract {
   id: string;
-  car_id: string;
   dealer_id: string;
+  car_id: string;
   contract_date: string;
   status: string;
   contract_details?: any;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   vehicle?: Vehicle;
   dealer?: Dealer;
 }

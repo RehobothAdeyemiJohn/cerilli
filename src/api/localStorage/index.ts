@@ -47,7 +47,6 @@ export const calculateVehiclePrice = useSupabase ? supabaseCalculateVehiclePrice
 
 // Export other APIs
 export * from './ordersApi';
-export * from './orderDetailsApi';
 export * from './quotesApi';
 export * from './vehiclesApi';
 export * from './settingsApi';

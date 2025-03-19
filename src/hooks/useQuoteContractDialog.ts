@@ -108,10 +108,10 @@ export const useQuoteContractDialog = () => {
 
       // Create contract from quote data
       const contract = await dealerContractsApi.create({
-        dealerId: quote.dealerId,
-        carId: quote.vehicleId,
-        contractDate: new Date().toISOString(),
-        contractDetails: {
+        dealer_id: quote.dealerId,
+        car_id: quote.vehicleId,
+        contract_date: new Date().toISOString(),
+        contract_details: {
           quoteId: quote.id,
           contractor: contractorData,
           priceDetails: priceDetails,

@@ -94,7 +94,7 @@ const ContractsTable = ({
                     <TableCell>{dealerName}</TableCell>
                     <TableCell>{vehicleInfo}</TableCell>
                     <TableCell>
-                      {contract.contractDate ? new Date(contract.contractDate).toLocaleDateString() : '-'}
+                      {contract.contract_date ? new Date(contract.contract_date).toLocaleDateString() : '-'}
                     </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(contract.status)}`}>

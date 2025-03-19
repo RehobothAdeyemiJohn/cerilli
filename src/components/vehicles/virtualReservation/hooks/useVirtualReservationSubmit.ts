@@ -100,7 +100,7 @@ export const useVirtualReservationSubmit = (
           modelName: vehicle.model,
           plafondDealer: dealerPlafond,
           
-          // Campi obbligatori per la nuova struttura della tabella
+          // Required fields for the new table structure
           isLicensable: false,
           hasProforma: false,
           isPaid: false,

@@ -24,8 +24,8 @@ const ContractDetailsDialog = ({ isOpen, onClose, contract }: ContractDetailsDia
   
   const price = contract.vehicle ? contract.vehicle.price : 0;
   
-  // Estrai i dettagli dal JSON salvato
-  const detailsObj = contract.contractDetails || {};
+  // Extract details from saved JSON
+  const detailsObj = contract.contract_details || {};
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -33,7 +33,7 @@ const ContractDetailsDialog = ({ isOpen, onClose, contract }: ContractDetailsDia
         <DialogHeader>
           <DialogTitle>Dettagli Contratto</DialogTitle>
           <DialogDescription>
-            Contratto {contract.id.substring(0, 8)}... creato il {new Date(contract.contractDate).toLocaleDateString()}
+            Contratto {contract.id.substring(0, 8)}... creato il {new Date(contract.contract_date).toLocaleDateString()}
           </DialogDescription>
         </DialogHeader>
 
