@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/AuthContext';
@@ -49,7 +48,7 @@ const Orders = () => {
     isDetailsDialogOpen,
     setIsDetailsDialogOpen,
     refetchOrders,
-    refetchOrdersWithDetails,
+    refetchAllOrderDetails,
     getOrderNumber
   } = useOrdersData(filters);
   
@@ -66,13 +65,11 @@ const Orders = () => {
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
   const [selectedOrderForContract, setSelectedOrderForContract] = useState<Order | null>(null);
 
-  // Gestisce la creazione di un contratto da un ordine
   const handleCreateContract = (order: Order) => {
     setSelectedOrderForContract(order);
     setIsContractFormOpen(true);
   };
 
-  // Gestisce la sottomissione del form di creazione contratto
   const handleContractFormSubmit = async (formData: any) => {
     if (selectedOrderForContract) {
       try {
@@ -120,7 +117,6 @@ const Orders = () => {
 
   const handleCloseDetailsDialog = () => {
     setIsDetailsDialogOpen(false);
-    // Small delay to prevent errors when selectedOrder is set to null
     setTimeout(() => {
       setSelectedOrder(null);
     }, 100);
@@ -282,7 +278,6 @@ const Orders = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Only render the dialog if there's a selected order */}
         {selectedOrder && (
           <OrderDetailsDialog
             open={isDetailsDialogOpen}
