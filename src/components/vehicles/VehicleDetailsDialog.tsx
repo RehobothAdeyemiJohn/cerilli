@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -7,8 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
 import { useQueryClient } from '@tanstack/react-query';
-import { ordersApi } from '@/api/localStorage/ordersApi';
-import { vehiclesApi } from '@/api/localStorage/vehiclesApi';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -83,11 +83,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     setShowCancelReservationForm(false);
   };
   
-  const handleEditVehicle = () => {
-    resetForms();
-    setShowEditForm(true);
-  };
-  
   const handleDuplicateVehicle = async () => {
     if (!selectedVehicle) return;
     
@@ -111,22 +106,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-  
-  const handleDeleteVehicle = async () => {
-    if (!selectedVehicle) return;
-    
-    try {
-      await onVehicleDeleted(selectedVehicle.id);
-      handleDialogClose();
-    } catch (error) {
-      console.error("Error deleting vehicle:", error);
-      toast({
-        title: "Errore",
-        description: "Si è verificato un errore durante l'eliminazione del veicolo",
-        variant: "destructive",
-      });
     }
   };
   
@@ -197,40 +176,76 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     
     try {
       setIsSubmitting(true);
+      console.log("Creating order for vehicle:", selectedVehicle.id);
       
       // Find dealer ID by dealerName
-      let dealerId = '00000000-0000-0000-0000-000000000000';
+      let dealerId = null;
       
       if (selectedVehicle.reservedBy) {
         try {
-          const { dealersApi } = await import('@/api/localStorage/dealersApi');
-          const dealers = await dealersApi.getAll();
-          const dealer = dealers.find(d => d.companyName === selectedVehicle.reservedBy);
-          if (dealer) {
-            dealerId = dealer.id;
+          // Get dealers directly from Supabase
+          const { data: dealers, error } = await supabase
+            .from('dealers')
+            .select('id, companyname')
+            .eq('companyname', selectedVehicle.reservedBy)
+            .maybeSingle();
+          
+          if (error) {
+            throw error;
+          }
+          
+          if (dealers) {
+            dealerId = dealers.id;
+            console.log("Found dealer ID:", dealerId);
+          } else {
+            console.log("Dealer not found for name:", selectedVehicle.reservedBy);
           }
         } catch (err) {
           console.error("Error finding dealer by name:", err);
+          // Continue with null dealerId
         }
+      }
+      
+      if (!dealerId) {
+        throw new Error("Non è stato possibile trovare il concessionario per creare l'ordine");
       }
       
       console.log("Creating order with dealerId:", dealerId);
       
-      // Create the order directly
-      const newOrder = await ordersApi.create({
-        vehicleId: selectedVehicle.id,
-        dealerId: dealerId,
-        customerName: selectedVehicle.reservedBy || 'Cliente sconosciuto',
-        status: 'processing',
-        orderDate: new Date().toISOString()
-      });
+      // Create the order directly using Supabase
+      const { data: newOrder, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          vehicleid: selectedVehicle.id,
+          dealerid: dealerId,
+          customername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
+          status: 'processing',
+          orderdate: new Date().toISOString(),
+          price: selectedVehicle.price || 0
+        })
+        .select()
+        .single();
+        
+      if (orderError) {
+        console.error("Error creating order:", orderError);
+        throw new Error(`Errore durante la creazione dell'ordine: ${orderError.message}`);
+      }
       
       console.log("Order created successfully:", newOrder);
       
       // Update vehicle status to ordered
-      await vehiclesApi.update(selectedVehicle.id, {
-        status: 'ordered'
-      });
+      const { error: vehicleError } = await supabase
+        .from('vehicles')
+        .update({
+          status: 'ordered',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedVehicle.id);
+        
+      if (vehicleError) {
+        console.error("Error updating vehicle status:", vehicleError);
+        throw new Error(`Ordine creato ma errore nell'aggiornamento dello stato del veicolo: ${vehicleError.message}`);
+      }
       
       // Refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
@@ -243,11 +258,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       
       handleDialogClose();
       onVehicleUpdated();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
         title: "Errore",
-        description: "Si è verificato un errore durante la creazione dell'ordine",
+        description: error.message || "Si è verificato un errore durante la creazione dell'ordine",
         variant: "destructive",
       });
     } finally {
@@ -273,8 +288,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
             <DialogHeader>
               <VehicleDialogHeader 
                 vehicle={selectedVehicle}
-                onEdit={handleEditVehicle}
-                onDelete={handleDeleteVehicle}
                 onDuplicate={selectedVehicle.location === 'Stock Virtuale' ? handleDuplicateVehicle : undefined}
                 onCreateQuote={selectedVehicle.location !== 'Stock Virtuale' ? handleCreateQuoteClick : undefined}
                 onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}

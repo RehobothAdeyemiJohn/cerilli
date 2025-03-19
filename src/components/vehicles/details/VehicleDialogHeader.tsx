@@ -21,8 +21,6 @@ interface VehicleDialogHeaderProps {
 
 const VehicleDialogHeader = ({ 
   vehicle,
-  onEdit,
-  onDelete,
   onDuplicate,
   onCreateQuote,
   onReserve,
