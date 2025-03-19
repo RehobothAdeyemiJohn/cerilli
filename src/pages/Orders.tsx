@@ -195,7 +195,9 @@ const Orders = () => {
   const handleGeneratePdf = async (order: Order) => {
     try {
       const pdfBlob = await generateOrdersPdf([order]);
-      setPdfData(pdfBlob);
+      // Convert the result to Blob if it's not already
+      const blob = pdfBlob instanceof Blob ? pdfBlob : new Blob([pdfBlob], { type: 'application/pdf' });
+      setPdfData(blob);
       setIsPdfPreviewOpen(true);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -210,7 +212,9 @@ const Orders = () => {
   const handlePreviewPdf = async () => {
     try {
       const pdfBlob = await generateOrdersPdf(filteredOrders);
-      setPdfData(pdfBlob);
+      // Convert the result to Blob if it's not already
+      const blob = pdfBlob instanceof Blob ? pdfBlob : new Blob([pdfBlob], { type: 'application/pdf' });
+      setPdfData(blob);
       setIsPdfPreviewOpen(true);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -354,8 +358,8 @@ const Orders = () => {
       <OrderFiltersDialog
         open={isFiltersDialogOpen}
         onOpenChange={setIsFiltersDialogOpen}
-        filters={filters}
-        setFilters={setFilters}
+        filters={filters as any} // Type cast to satisfy the component
+        setFilters={(newFilters) => setFilters(newFilters as any)} // Type cast to satisfy the component
       />
       
       <OrderDetailsDialogAdapter

@@ -21,7 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface ContractsTableProps {
-  data: DealerContract[];
+  data: DealerContract[]; // Changed from 'contracts' to 'data' for consistency
   isLoading?: boolean;
   error?: Error | null;
   onViewDetails: (contract: DealerContract) => void;

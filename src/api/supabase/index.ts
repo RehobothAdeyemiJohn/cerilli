@@ -1,17 +1,20 @@
 
-export { vehiclesApi } from './vehiclesApi';
-export { quotesApi } from './quotesApi';
-export { dealersApi } from './dealersApi';
-export { ordersApi } from './ordersApi';
-export { dealerContractsApi } from './dealerContractsApi';
-export { defectReportsApi } from './defectReportsApi';
-export { adminUsersApi } from './adminUsersApi';
-export { 
-  modelsApi,
-  trimsApi,
-  fuelTypesApi,
-  colorsApi,
-  transmissionsApi,
-  accessoriesApi,
-  calculateVehiclePrice
-} from './settingsApi';
+import { vehiclesApi } from './vehiclesApi';
+import { dealersApi } from './dealersApi';
+import { ordersApi } from './ordersApi';
+import { quotesApi } from './quotesApi';
+import { adminUsersApi } from './adminUsersApi';
+import { defectReportsApi } from './defectReportsApi';
+import { dealerContractsApi } from './dealerContractsApi';
+import { settingsApi } from './settingsApi';
+
+export {
+  vehiclesApi,
+  dealersApi,
+  ordersApi,
+  quotesApi,
+  adminUsersApi,
+  defectReportsApi,
+  dealerContractsApi,
+  settingsApi
+};

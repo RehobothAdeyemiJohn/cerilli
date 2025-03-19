@@ -24,11 +24,9 @@ export const ContractsTableAdapter: React.FC<ContractsTableAdapterProps> = ({
   isAdmin,
   deleteContractPending
 }) => {
-  // This is an adapter component that maps the props we have to the props 
-  // the ContractsTable component expects
   return (
     <ContractsTable
-      data={contracts} // Map 'contracts' to 'data'
+      data={contracts} // This component expects 'data' prop, not 'contracts'
       isLoading={isLoading}
       error={error}
       onViewDetails={onViewDetails}

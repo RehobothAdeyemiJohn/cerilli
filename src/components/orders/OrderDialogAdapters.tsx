@@ -41,12 +41,12 @@ export const OrderDetailsFormAdapter: React.FC<OrderDetailsFormAdapterProps> = (
 }) => {
   if (!order) return null;
   
+  // Check if OrderDetailsForm expects different props
   return (
     <OrderDetailsForm
-      open={isOpen} // Map 'isOpen' to 'open'
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+      // Use the props expected by OrderDetailsForm instead of 'open'
+      isOpen={isOpen}
+      onClose={onClose}
       order={order}
     />
   );

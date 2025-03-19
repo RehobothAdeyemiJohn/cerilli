@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { useComprehensiveQuotesData } from '@/hooks/useComprehensiveQuotesData';
-import { QuotesHeader } from '@/components/quotes/QuotesHeader';
-import { QuotesFilters } from '@/components/quotes/QuotesFilters';
+import QuotesHeader from '@/components/quotes/QuotesHeader';
+import QuotesFilters from '@/components/quotes/QuotesFilters';
 import QuotesTabs from '@/components/quotes/QuotesTabs';
-import { QuotesPagination } from '@/components/quotes/QuotesPagination';
-import { QuoteDetailsDialog } from '@/components/quotes/QuoteDetailsDialog';
-import { QuoteRejectDialog } from '@/components/quotes/QuoteRejectDialog';
-import { QuoteDeleteDialog } from '@/components/quotes/QuoteDeleteDialog';
-import { QuoteForm } from '@/components/quotes/QuoteForm';
-import { QuoteContractDialog } from '@/components/quotes/QuoteContractDialog';
+import QuotesPagination from '@/components/quotes/QuotesPagination';
+import QuoteDetailsDialog from '@/components/quotes/QuoteDetailsDialog';
+import QuoteRejectDialog from '@/components/quotes/QuoteRejectDialog';
+import QuoteDeleteDialog from '@/components/quotes/QuoteDeleteDialog';
+import QuoteForm from '@/components/quotes/QuoteForm';
+import QuoteContractDialog from '@/components/quotes/QuoteContractDialog';
 import { useAuth } from '@/context/AuthContext';
 import { Helmet } from 'react-helmet';
 import { Quote } from '@/types';
@@ -152,6 +153,8 @@ const Quotes = () => {
             totalPages={totalPages}
             onPrevPage={handlePrevPage}
             onNextPage={handleNextPage}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
           />
         )}
         

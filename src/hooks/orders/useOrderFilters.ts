@@ -1,46 +1,81 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { DateRange } from '@/types/date-range';
+
+export interface OrderFilters {
+  searchText?: string;
+  dateRange?: {
+    from: Date | undefined;
+    to?: Date | undefined;  // Make 'to' optional to match DateRange
+  };
+  models?: string[];
+  dealers?: string[];
+  status?: string[];
+  isLicensable: boolean | null;
+  hasProforma: boolean | null;
+  isPaid: boolean | null;
+  isInvoiced: boolean | null;
+  hasConformity: boolean | null;
+  dealerId: string | null;
+  model: string | null;
+}
 
 export const useOrderFilters = () => {
-  const [filters, setFilters] = useState({
-    isLicensable: null as boolean | null,
-    hasProforma: null as boolean | null,
-    isPaid: null as boolean | null,
-    isInvoiced: null as boolean | null,
-    hasConformity: null as boolean | null,
-    dealerId: null as string | null,
-    model: null as string | null,
+  const [filters, setFilters] = useState<OrderFilters>({
+    searchText: '',
+    dateRange: undefined,
+    models: [],
+    dealers: [],
+    status: [],
+    isLicensable: null,
+    hasProforma: null,
+    isPaid: null,
+    isInvoiced: null,
+    hasConformity: null,
+    dealerId: null,
+    model: null
   });
 
   const [showFilters, setShowFilters] = useState(false);
 
-  const updateFilter = (key: string, value: boolean | null | string) => {
+  const handleFilterChange = useCallback((filterName: string, value: any) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value
+      [filterName]: value
     }));
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters({
+      searchText: '',
+      dateRange: undefined,
+      models: [],
+      dealers: [],
+      status: [],
       isLicensable: null,
       hasProforma: null,
       isPaid: null,
       isInvoiced: null,
       hasConformity: null,
       dealerId: null,
-      model: null,
+      model: null
     });
-  };
+  }, []);
 
-  const activeFiltersCount = Object.values(filters).filter(value => value !== null).length;
+  const activeFiltersCount = Object.values(filters).filter(value => 
+    value !== null && 
+    value !== '' && 
+    !(Array.isArray(value) && value.length === 0) && 
+    value !== undefined
+  ).length;
 
   return {
     filters,
+    setFilters,  // Export the setFilters function directly
+    handleFilterChange,
+    resetFilters,
     showFilters,
     setShowFilters,
-    updateFilter,
-    resetFilters,
     activeFiltersCount
   };
 };
