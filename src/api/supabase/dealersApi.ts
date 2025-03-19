@@ -17,8 +17,13 @@ export const dealersApi = {
       throw error;
     }
     
-    // Add console logs to check what data is coming from Supabase
+    // Log the raw data to check the nuovo_plafond field
     console.log('Raw dealers data from Supabase:', data);
+    
+    // Check if nuovo_plafond exists in the raw data
+    data.forEach(dealer => {
+      console.log(`Dealer ${dealer.companyname} nuovo_plafond:`, dealer.nuovo_plafond);
+    });
     
     const formattedDealers = data.map(dealer => ({
       id: dealer.id,
@@ -34,10 +39,10 @@ export const dealersApi = {
       isActive: dealer.isactive,
       logo: dealer.logo,
       creditLimit: dealer.credit_limit,
-      nuovoPlafond: dealer.nuovo_plafond // Make sure this is correctly mapped
+      nuovoPlafond: dealer.nuovo_plafond // Direct access to the nuovo_plafond field
     })) as Dealer[];
     
-    console.log('Mapped dealers with nuovo_plafond:', formattedDealers.map(d => ({
+    console.log('Formatted dealers with nuovo_plafond:', formattedDealers.map(d => ({
       id: d.id,
       companyName: d.companyName,
       nuovoPlafond: d.nuovoPlafond,
@@ -89,6 +94,7 @@ export const dealersApi = {
     }
     
     console.log('Raw dealer data by ID from Supabase:', data);
+    console.log('Specific dealer nuovo_plafond field:', data.nuovo_plafond);
     
     const formattedDealer = {
       id: data.id,
@@ -104,10 +110,10 @@ export const dealersApi = {
       isActive: data.isactive,
       logo: data.logo,
       creditLimit: data.credit_limit,
-      nuovoPlafond: data.nuovo_plafond // Make sure this field is correctly mapped
+      nuovoPlafond: data.nuovo_plafond // Direct access to the nuovo_plafond field
     } as Dealer;
     
-    console.log('Mapped dealer with nuovo_plafond:', {
+    console.log('Formatted dealer with nuovo_plafond:', {
       id: formattedDealer.id,
       companyName: formattedDealer.companyName,
       nuovoPlafond: formattedDealer.nuovoPlafond,

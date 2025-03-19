@@ -17,7 +17,8 @@ export const useOrdersModels = (ordersData: Order[]) => {
 export const formatPlafond = (dealer: any) => {
   if (!dealer) return '0 €';
   
-  // Log the actual dealer data to inspect values
+  // Detailed logging to troubleshoot the plafond issue
+  console.log('DEALER OBJECT STRUCTURE:', dealer);
   console.log('Dealer in formatPlafond:', {
     id: dealer.id, 
     companyName: dealer.companyName,
@@ -25,13 +26,19 @@ export const formatPlafond = (dealer: any) => {
     creditLimit: dealer.creditLimit
   });
   
-  // Utilizziamo il nuovo plafond dalla colonna nuovo_plafond
+  // Check if nuovo_plafond is a direct property or nested
   if (dealer.nuovoPlafond !== undefined && dealer.nuovoPlafond !== null) {
     console.log(`Using nuovo_plafond for ${dealer.companyName}: ${dealer.nuovoPlafond}`);
     return `${dealer.nuovoPlafond.toLocaleString()} €`;
   }
   
-  // Fallback al credit_limit se nuovo_plafond non è disponibile
+  // Check if the value might be in a nested property or differently named
+  if (dealer.nuovo_plafond !== undefined && dealer.nuovo_plafond !== null) {
+    console.log(`Using nuovo_plafond (alternative) for ${dealer.companyName}: ${dealer.nuovo_plafond}`);
+    return `${dealer.nuovo_plafond.toLocaleString()} €`;
+  }
+  
+  // Fallback to credit_limit if nuovo_plafond is not available
   console.log(`Falling back to credit_limit for ${dealer.companyName}: ${dealer.creditLimit}`);
   return dealer.creditLimit ? `${dealer.creditLimit.toLocaleString()} €` : '0 €';
 };

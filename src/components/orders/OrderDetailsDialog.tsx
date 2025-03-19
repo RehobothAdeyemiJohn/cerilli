@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -26,6 +25,10 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   order,
   onGenerateODL,
 }) => {
+  // Log the dealer object to check its structure
+  console.log('Dealer object in OrderDetailsDialog:', order.dealer);
+  console.log('Dealer nuovoPlafond in OrderDetailsDialog:', order.dealer?.nuovoPlafond);
+  
   // Verifica se ci sono dettagli del veicolo da mostrare
   const hasVehicleDetails = order?.vehicle !== null;
   const hasAccessories = order?.vehicle?.accessories && order.vehicle.accessories.length > 0;
