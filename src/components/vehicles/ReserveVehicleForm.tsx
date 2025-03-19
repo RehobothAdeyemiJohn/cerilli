@@ -20,6 +20,7 @@ import { vehiclesApi } from '@/api/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
 import { ordersApi } from '@/api/apiClient'; 
+import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
 
 const reserveSchema = z.object({
   dealerId: z.string().optional(),
@@ -117,9 +118,10 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       await vehiclesApi.reserve(vehicle.id, finalDealerId, finalDealerName, [], undefined, data.destinazione);
       
       // Create an order for the reservation
+      let orderId = '';
       try {
         console.log("Creating order for the reserved vehicle");
-        await ordersApi.create({
+        const orderResponse = await ordersApi.create({
           vehicleId: vehicle.id,
           dealerId: finalDealerId,
           customerName: finalDealerName,
@@ -130,9 +132,27 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
           modelName: vehicle.model,
           plafondDealer: dealerPlafond
         });
-        console.log("Order created successfully");
+        
+        console.log("Order created successfully:", orderResponse);
+        orderId = orderResponse.id;
+        
+        // Ora creaiamo anche il relativo record in order_details
+        if (orderId) {
+          console.log("Creating order details for the order:", orderId);
+          const orderDetailsResponse = await orderDetailsApi.create({
+            orderId: orderId,
+            isLicensable: false,
+            hasProforma: false,
+            isPaid: false,
+            isInvoiced: false,
+            hasConformity: false,
+            odlGenerated: false
+          });
+          
+          console.log("Order details created successfully:", orderDetailsResponse);
+        }
       } catch (orderError) {
-        console.error("Error creating order:", orderError);
+        console.error("Error creating order or order details:", orderError);
         // Continue even if order creation fails, as the vehicle is already reserved
         toast({
           title: "Attenzione",
