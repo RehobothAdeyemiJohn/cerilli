@@ -5,6 +5,7 @@ import { Vehicle } from '@/types';
 import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';
+import { ordersApi } from '@/api/supabase';
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
@@ -71,8 +72,21 @@ export const useVirtualReservationSubmit = (
         virtualConfig: reservationData.virtualConfig,
       });
 
+      // Create order using correct database column names
+      await ordersApi.create({
+        vehicle_id: vehicle.id,              // Use snake_case for database columns
+        dealer_id: reservationDealerId,      // Use snake_case for database columns
+        customer_name: selectedDealerName,   // Use snake_case for database columns
+        status: 'processing',
+        order_date: new Date().toISOString(),  // Use snake_case for database columns
+        dealer_name: selectedDealerName,       // Use snake_case for database columns
+        model_name: vehicle.model,              // Use snake_case for database columns
+        price: calculatedPrice || 0
+      });
+
       // Invalidate queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
       // Show success message
       toast({
