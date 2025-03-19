@@ -1,283 +1,174 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { orderDetailsApi } from '@/api/orderDetailsApiSwitch';
-import { dealersApi } from '@/api/supabase/dealersApi';
-import { vehiclesApi } from '@/api/supabase/vehiclesApi';
-import { Order, OrderDetails, Vehicle, Dealer } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Order, OrderDetails } from '@/types';
+import { formatDate } from '@/lib/utils';
 import OrderDetailsForm from './OrderDetailsForm';
-import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from '@/components/ui/badge';
-import { calculateAvailableCredit } from '@/utils/dealerUtils';
 
 interface OrderDetailsDialogProps {
-  order: Order;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-  onGenerateODL?: (details: OrderDetails) => void;
+  order: Order;
+  onGenerateODL: (details: OrderDetails) => void;
 }
 
-const OrderDetailsDialog = ({
-  order,
+const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess,
+  order,
   onGenerateODL,
-}: OrderDetailsDialogProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [vehicleData, setVehicleData] = useState<Vehicle | null>(null);
-  const [dealerData, setDealerData] = useState<Dealer | null>(null);
-  const [isVehicleLoading, setIsVehicleLoading] = useState(false);
-  const [isDealerLoading, setIsDealerLoading] = useState(false);
-
-  const {
-    data: orderDetails,
-    isLoading: isLoadingDetails,
-    error: detailsError,
-    refetch,
-  } = useQuery({
-    queryKey: ['orderDetails', order.id],
-    queryFn: () => orderDetailsApi.getByOrderId(order.id),
-    enabled: !!order.id && open,
-    staleTime: 0,
-  });
-
-  const fetchVehicleDetails = async () => {
-    try {
-      if (order.vehicleId) {
-        setIsVehicleLoading(true);
-        console.log('Fetching vehicle details for ID:', order.vehicleId);
-        const vehicle = await vehiclesApi.getById(order.vehicleId);
-        console.log('Vehicle details fetched:', vehicle);
-        setVehicleData(vehicle);
-      }
-    } catch (error) {
-      console.error('Error fetching vehicle details:', error);
-      toast({
-        title: "Errore",
-        description: "Impossibile recuperare i dettagli del veicolo",
-        variant: "destructive",
-      });
-    } finally {
-      setIsVehicleLoading(false);
-    }
-  };
-
-  const fetchDealerDetails = async () => {
-    try {
-      if (order.dealerId) {
-        setIsDealerLoading(true);
-        console.log('Fetching dealer details for ID:', order.dealerId);
-        const dealer = await dealersApi.getById(order.dealerId);
-        console.log('Dealer details fetched:', dealer);
-        setDealerData(dealer);
-      }
-    } catch (error) {
-      console.error('Error fetching dealer details:', error);
-      toast({
-        title: "Errore",
-        description: "Impossibile recuperare i dettagli del dealer",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDealerLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (open && order) {
-      refetch();
-      
-      if (!vehicleData && order.vehicleId) {
-        fetchVehicleDetails();
-      }
-      
-      if (!dealerData && order.dealerId) {
-        fetchDealerDetails();
-      }
-
-      if (order.details) {
-        console.log("Order details structure:", JSON.stringify(order.details));
-      }
-    }
-  }, [open, order, refetch, vehicleData, dealerData]);
-
-  const getAvailableCreditColor = (availableCredit: number | null) => {
-    if (availableCredit === null) return "bg-gray-100 text-gray-800";
-    if (availableCredit > 50000) return "bg-green-100 text-green-800";
-    if (availableCredit > 10000) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  const formatCurrency = (amount: number | null | undefined) => {
-    if (amount === null || amount === undefined) return "N/A";
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  const availableCredit = dealerData ? calculateAvailableCredit(dealerData, order) : null;
-  const orderCost = vehicleData?.price || 0;
+}) => {
+  // Verifica se ci sono dettagli del veicolo da mostrare
+  const hasVehicleDetails = order?.vehicle !== null;
+  const hasAccessories = order?.vehicle?.accessories && order.vehicle.accessories.length > 0;
+  const hasReservedAccessories = order?.vehicle?.reservedaccessories && order.vehicle.reservedaccessories.length > 0;
   
-  console.log("Dealer data for plafond calculation:", dealerData);
-  console.log("Available credit calculation result:", availableCredit);
-
-  const handleGenerateODL = (details: OrderDetails) => {
-    if (onGenerateODL) {
-      onGenerateODL(details);
-    }
+  // Dettagli del veicolo
+  const renderVehicleDetails = () => {
+    if (!hasVehicleDetails) return (
+      <div className="mt-4">
+        <h3 className="text-sm font-medium">Dettagli Veicolo</h3>
+        <p className="text-sm text-muted-foreground">Nessun dettaglio disponibile per questo veicolo</p>
+      </div>
+    );
     
-    refetch();
-    
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
-    
-    toast({
-      title: "ODL generato con successo",
-      description: "L'Ordine Di Lavorazione è stato generato correttamente",
-    });
-  };
-
-  const handleSuccess = () => {
-    console.log('OrderDetailsForm reported success, notifying parent component');
-    
-    refetch();
-    
-    queryClient.invalidateQueries({ queryKey: ['orders'] });
-    queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-    queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
-    
-    if (onSuccess) {
-      onSuccess();
-    }
-    
-    onOpenChange(false);
+    return (
+      <div className="mt-4">
+        <h3 className="text-sm font-medium">Dettagli Veicolo</h3>
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Modello:</p>
+            <p className="text-sm">{order.vehicle?.model || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Trim:</p>
+            <p className="text-sm">{order.vehicle?.trim || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Alimentazione:</p>
+            <p className="text-sm">{order.vehicle?.fuelType || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Colore Esterno:</p>
+            <p className="text-sm">{order.vehicle?.exteriorColor || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Trasmissione:</p>
+            <p className="text-sm">{order.vehicle?.transmission || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Telaio:</p>
+            <p className="text-sm">{order.vehicle?.telaio || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Posizione:</p>
+            <p className="text-sm">{order.vehicle?.location || 'Non specificato'}</p>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Prezzo:</p>
+            <p className="text-sm">€{order.vehicle?.price?.toLocaleString() || 'Non specificato'}</p>
+          </div>
+        </div>
+        
+        {/* Accessori standard */}
+        {hasAccessories && (
+          <div className="mt-4">
+            <p className="text-sm font-medium">Accessori:</p>
+            <ul className="list-disc pl-5 mt-1">
+              {order.vehicle?.accessories.map((acc, idx) => (
+                <li key={idx} className="text-sm">{acc}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {/* Accessori alla prenotazione */}
+        {hasReservedAccessories && (
+          <div className="mt-4">
+            <p className="text-sm font-medium">Accessori Prenotati:</p>
+            <ul className="list-disc pl-5 mt-1">
+              {order.vehicle?.reservedaccessories.map((acc, idx) => (
+                <li key={idx} className="text-sm">{acc}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {/* Configurazione virtuale se presente */}
+        {order.vehicle?.virtualConfig && (
+          <div className="mt-4">
+            <p className="text-sm font-medium">Configurazione Virtuale:</p>
+            <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
+              {JSON.stringify(order.vehicle.virtualConfig, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Dettagli Ordine</DialogTitle>
           <DialogDescription>
             Gestisci i dettagli amministrativi dell'ordine
           </DialogDescription>
         </DialogHeader>
-        
-        {isLoadingDetails || isVehicleLoading || isDealerLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            <span className="ml-2 text-gray-500">Caricamento dettagli...</span>
-          </div>
-        ) : detailsError ? (
-          <div className="py-10 text-center text-red-500">
-            Si è verificato un errore durante il caricamento dei dettagli.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {dealerData && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Informazioni Dealer</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Dealer</p>
-                      <p>{dealerData.companyName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Plafond Totale</p>
-                      <p>{formatCurrency(dealerData.creditLimit)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Importo Ordine</p>
-                      <p>{formatCurrency(orderCost)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Plafond Disponibile</p>
-                      <div className="flex items-center">
-                        <Badge className={getAvailableCreditColor(availableCredit)}>
-                          {formatCurrency(availableCredit)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
-            {vehicleData && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Informazioni Veicolo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Modello</p>
-                      <p>{vehicleData.model || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Allestimento</p>
-                      <p>{vehicleData.trim || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Colore</p>
-                      <p>{vehicleData.exteriorColor || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Motore</p>
-                      <p>{vehicleData.fuelType || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Cambio</p>
-                      <p>{vehicleData.transmission || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Telaio</p>
-                      <p>{vehicleData.telaio || '-'}</p>
-                    </div>
-                  </div>
-                  
-                  {vehicleData.accessories && vehicleData.accessories.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm font-medium text-gray-500 mb-2">Optional</p>
-                      <ul className="list-disc pl-5 grid grid-cols-1 md:grid-cols-2 gap-1">
-                        {vehicleData.accessories.map((accessory, index) => (
-                          <li key={index} className="text-sm">{accessory}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+        {/* Dettagli Dealer */}
+        <div className="mt-4">
+          <h3 className="text-sm font-medium">Dettagli Dealer</h3>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Nome Dealer:</p>
+              <p className="text-sm">
+                {order.dealer?.companyName || order.customerName || 'Non specificato'}
+              </p>
+            </div>
             
-            <OrderDetailsForm
-              orderId={order.id}
-              orderDetails={orderDetails}
-              vehicle={vehicleData || undefined}
-              onGenerateODL={handleGenerateODL}
-              onSuccess={handleSuccess}
-            />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Email:</p>
+              <p className="text-sm">{order.dealer?.email || 'Non specificato'}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Indirizzo:</p>
+              <p className="text-sm">{order.dealer?.address || 'Non specificato'}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Città:</p>
+              <p className="text-sm">{order.dealer?.city || 'Non specificato'}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Plafond Disponibile:</p>
+              <p className="text-sm">€{order.dealer?.nuovoPlafond?.toLocaleString() || 'Non specificato'}</p>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Dettagli Veicolo */}
+        {renderVehicleDetails()}
+        
+        {/* Dettagli Ordine */}
+        <OrderDetailsForm order={order} onGenerateODL={onGenerateODL} />
       </DialogContent>
     </Dialog>
   );

@@ -13,3 +13,9 @@ export const useOrdersModels = (ordersData: Order[]) => {
     return Array.from(models);
   }, [ordersData]);
 };
+
+export const formatPlafond = (dealer: any) => {
+  if (!dealer) return '0 €';
+  // Utilizziamo il nuovo plafond invece del credit_limit
+  return dealer.nuovoPlafond ? `${dealer.nuovoPlafond.toLocaleString()} €` : '0 €';
+};

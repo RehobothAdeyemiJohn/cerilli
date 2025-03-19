@@ -22,7 +22,6 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useReactToPrint } from 'react-to-print';
 import OrderPrintTemplate from '@/components/orders/OrderPrintTemplate';
-import ContractFormDialog from '@/components/contracts/ContractFormDialog';
 
 const Orders = () => {
   const { isAdmin } = useAuth();
@@ -66,35 +65,7 @@ const Orders = () => {
   const [selectedOrderForContract, setSelectedOrderForContract] = useState<Order | null>(null);
 
   const handleCreateContract = (order: Order) => {
-    setSelectedOrderForContract(order);
-    setIsContractFormOpen(true);
-  };
-
-  const handleContractFormSubmit = async (formData: any) => {
-    if (selectedOrderForContract) {
-      try {
-        const { dealerContractsApi } = await import('@/api/supabase/dealerContractsApi');
-        
-        await dealerContractsApi.createFromOrder(selectedOrderForContract.id, formData);
-        
-        refreshAllOrderData();
-        
-        setIsContractFormOpen(false);
-        setSelectedOrderForContract(null);
-        
-        toast({
-          title: "Contratto creato",
-          description: "Il contratto è stato creato con successo",
-        });
-      } catch (error: any) {
-        console.error('Error creating contract:', error);
-        toast({
-          title: "Errore",
-          description: error.message || "Si è verificato un errore durante la creazione del contratto",
-          variant: "destructive"
-        });
-      }
-    }
+    console.log("Funzionalità rimossa: trasforma in contratto");
   };
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -158,8 +129,8 @@ const Orders = () => {
           showFilters={showFilters}
           setShowFilters={setShowFilters}
           activeFiltersCount={activeFiltersCount}
-          dealersData={[]} // Pass empty array for now
-          uniqueModels={[]} // Pass empty array for now
+          dealersData={[]} 
+          uniqueModels={[]} 
           onRefresh={refreshAllOrderData}
         />
 
@@ -311,14 +282,6 @@ const Orders = () => {
             <OrderPrintTemplate ref={printRef} order={selectedOrder} getOrderNumber={getOrderNumber} />
           </div>
         )}
-
-        <ContractFormDialog
-          isOpen={isContractFormOpen}
-          onClose={() => setIsContractFormOpen(false)}
-          onSubmit={handleContractFormSubmit}
-          order={selectedOrderForContract}
-          isSubmitting={false}
-        />
       </div>
     </>
   );

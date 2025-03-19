@@ -86,7 +86,7 @@ export const useOrdersData = (filters: {
       id: detail.orderId,
       vehicleId: '',
       dealerId: '',
-      customerName: 'Customer from details',
+      customerName: 'Dealer non trovato', // Cambiato da 'Customer from details'
       status: 'processing' as 'processing' | 'delivered' | 'cancelled',
       orderDate: detail.createdAt,
       // Include other required fields with default values
