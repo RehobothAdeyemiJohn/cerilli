@@ -247,6 +247,7 @@ export type Database = {
           customer_name: string
           dealer_id: string | null
           dealer_name: string | null
+          dealerid: string | null
           delivery_date: string | null
           funding_type: string | null
           has_conformity: boolean | null
@@ -278,6 +279,7 @@ export type Database = {
           customer_name: string
           dealer_id?: string | null
           dealer_name?: string | null
+          dealerid?: string | null
           delivery_date?: string | null
           funding_type?: string | null
           has_conformity?: boolean | null
@@ -309,6 +311,7 @@ export type Database = {
           customer_name?: string
           dealer_id?: string | null
           dealer_name?: string | null
+          dealerid?: string | null
           delivery_date?: string | null
           funding_type?: string | null
           has_conformity?: boolean | null

@@ -1,3 +1,4 @@
+
 import { Vehicle } from '@/types';
 import { useVirtualReservationForm } from './virtualReservation/hooks/useVirtualReservationForm';
 import { useVirtualReservationData } from './virtualReservation/hooks/useVirtualReservationData';
@@ -56,32 +57,30 @@ export const useVirtualReservation = (
   
   const compatibleAccessories = useCompatibleAccessories(vehicle, watchTrim, modelObj, trims || []);
 
-  // Use custom hook for form submission
+  // Use custom hook for form submission, passing calculated price and filtered dealers
   const { handleSubmit, isSubmitting } = useVirtualReservationSubmit(
     vehicle,
     isAdmin,
     dealerId,
     dealerName,
-    onReservationComplete
+    onReservationComplete,
+    calculatedPrice,
+    filteredDealers
   );
 
   return {
     form,
     onSubmit: form.handleSubmit(handleSubmit),
-    isLoading: false,
-    modelObj: null,
-    compatibleItems: {
-      compatibleTrims: [],
-      compatibleFuelTypes: [],
-      compatibleColors: [],
-      compatibleTransmissions: []
-    },
-    compatibleAccessories: [],
-    calculatedPrice: 0,
-    priceComponents: {},
+    isLoading,
+    modelObj,
+    compatibleItems,
+    compatibleAccessories,
+    calculatedPrice,
+    priceComponents,
     vehicle,
     isAdmin,
-    activeDealers: [],
+    activeDealers: filteredDealers || [],
+    isSubmitting,
     onCancel
   };
 };

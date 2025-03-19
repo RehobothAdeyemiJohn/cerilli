@@ -16,14 +16,12 @@ interface ReserveVirtualVehicleFormProps {
   vehicle: Vehicle;
   onCancel: () => void;
   onReservationComplete: () => void;
-  isSubmitting: boolean;
 }
 
 const ReserveVirtualVehicleForm = ({ 
   vehicle, 
   onCancel, 
-  onReservationComplete,
-  isSubmitting 
+  onReservationComplete
 }: ReserveVirtualVehicleFormProps) => {
   const {
     form,
@@ -36,6 +34,7 @@ const ReserveVirtualVehicleForm = ({
     priceComponents,
     isAdmin,
     activeDealers,
+    isSubmitting,
     onCancel: handleCancel,
   } = useVirtualReservation(vehicle, onCancel, onReservationComplete);
 
