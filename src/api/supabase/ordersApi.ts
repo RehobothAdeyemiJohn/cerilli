@@ -58,33 +58,33 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 const mapOrderDbToFrontend = (order: any): Order => {
   return {
     id: order.id,
-    vehicleId: order.vehicle_id || order.vehicleid || '',
-    dealerId: order.dealer_id || order.dealerid || '',
-    customerName: order.customer_name,
+    vehicleId: order.vehicleid || '',
+    dealerId: order.dealerid || '',
+    customerName: order.customername,
     status: order.status as 'processing' | 'delivered' | 'cancelled',
-    orderDate: order.order_date,
-    deliveryDate: order.delivery_date,
-    progressiveNumber: order.progressive_number,
+    orderDate: order.orderdate,
+    deliveryDate: order.deliverydate,
+    progressiveNumber: order.progressivenumber,
     price: order.price,
-    dealerName: order.dealer_name,
-    modelName: order.model_name,
-    plafondDealer: order.plafond_dealer,
+    dealerName: order.dealername,
+    modelName: order.modelname,
+    plafondDealer: order.plafonddealer,
     
-    // Campi precedentemente in order_details
-    isLicensable: order.is_licensable === true,
-    hasProforma: order.has_proforma === true,
-    isPaid: order.is_paid === true,
-    paymentDate: order.payment_date,
-    isInvoiced: order.is_invoiced === true,
-    invoiceNumber: order.invoice_number,
-    invoiceDate: order.invoice_date,
-    hasConformity: order.has_conformity === true,
-    previousChassis: order.previous_chassis,
+    // Map fields with camelCase frontend names to database column names
+    isLicensable: order.islicensable === true,
+    hasProforma: order.hasproforma === true,
+    isPaid: order.ispaid === true,
+    paymentDate: order.paymentdate,
+    isInvoiced: order.isinvoiced === true,
+    invoiceNumber: order.invoicenumber,
+    invoiceDate: order.invoicedate,
+    hasConformity: order.hasconformity === true,
+    previousChassis: order.previouschassis,
     chassis: order.chassis,
-    transportCosts: order.transport_costs || 0,
-    restorationCosts: order.restoration_costs || 0,
-    fundingType: order.funding_type,
-    odlGenerated: order.odl_generated === true,
+    transportCosts: order.transportcosts || 0,
+    restorationCosts: order.restorationcosts || 0,
+    fundingType: order.fundingtype,
+    odlGenerated: order.odlgenerated === true,
     
     // Relazioni (aggiunta se presenti nei dati)
     vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
@@ -95,34 +95,32 @@ const mapOrderDbToFrontend = (order: any): Order => {
 // Helper function to map frontend order to database format
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
   return {
-    vehicle_id: order.vehicleId,
-    vehicleid: order.vehicleId, // Add compatibility field
-    dealer_id: order.dealerId,
-    dealerid: order.dealerId, // Add compatibility field
-    customer_name: order.customerName,
+    vehicleid: order.vehicleId,
+    dealerid: order.dealerId,
+    customername: order.customerName,
     status: order.status,
-    order_date: order.orderDate,
-    delivery_date: order.deliveryDate,
+    orderdate: order.orderDate,
+    deliverydate: order.deliveryDate,
     price: order.price, 
-    dealer_name: order.dealerName,
-    model_name: order.modelName,
-    plafond_dealer: order.plafondDealer,
+    dealername: order.dealerName,
+    modelname: order.modelName,
+    plafonddealer: order.plafondDealer,
     
-    // Map camelCase fields to snake_case database columns
-    is_licensable: order.isLicensable,
-    has_proforma: order.hasProforma,
-    is_paid: order.isPaid,
-    payment_date: order.paymentDate,
-    is_invoiced: order.isInvoiced,
-    invoice_number: order.invoiceNumber,
-    invoice_date: order.invoiceDate,
-    has_conformity: order.hasConformity,
-    previous_chassis: order.previousChassis,
+    // Map camelCase fields to database columns
+    islicensable: order.isLicensable,
+    hasproforma: order.hasProforma,
+    ispaid: order.isPaid,
+    paymentdate: order.paymentDate,
+    isinvoiced: order.isInvoiced,
+    invoicenumber: order.invoiceNumber,
+    invoicedate: order.invoiceDate,
+    hasconformity: order.hasConformity,
+    previouschassis: order.previousChassis,
     chassis: order.chassis,
-    transport_costs: order.transportCosts,
-    restoration_costs: order.restorationCosts,
-    funding_type: order.fundingType,
-    odl_generated: order.odlGenerated
+    transportcosts: order.transportCosts,
+    restorationcosts: order.restorationCosts,
+    fundingtype: order.fundingType,
+    odlgenerated: order.odlGenerated
   };
 };
 
@@ -135,8 +133,8 @@ export const ordersApi = {
         .from('orders')
         .select(`
           *,
-          vehicles:vehicle_id (*),
-          dealers:dealer_id (*)
+          vehicles:vehicleid (*),
+          dealers:dealerid (*)
         `);
       
       if (error) {
@@ -167,8 +165,8 @@ export const ordersApi = {
       .from('orders')
       .select(`
         *,
-        vehicles:vehicle_id (*),
-        dealers:dealer_id (*)
+        vehicles:vehicleid (*),
+        dealers:dealerid (*)
       `)
       .eq('id', id)
       .maybeSingle();
@@ -231,26 +229,21 @@ export const ordersApi = {
       plafondDealer: dealerPlafond
     };
     
-    // Map frontend field names to database column names with both naming conventions
-    const dbOrder = {
-      ...mapOrderFrontendToDb({
-        ...orderData,
-        // Set default values for non-nullable fields
-        orderDate: orderData.orderDate || new Date().toISOString(),
-        // Default values for boolean fields
-        isLicensable: false,
-        hasProforma: false,
-        isPaid: false,
-        isInvoiced: false,
-        hasConformity: false,
-        odlGenerated: false,
-        transportCosts: 0,
-        restorationCosts: 0
-      }),
-      // Ensure both camelCase and snake_case fields are populated
-      vehicleid: order.vehicleId,
-      dealerid: order.dealerId
-    };
+    // Map frontend field names to database column names
+    const dbOrder = mapOrderFrontendToDb({
+      ...orderData,
+      // Set default values for non-nullable fields
+      orderDate: orderData.orderDate || new Date().toISOString(),
+      // Default values for boolean fields
+      isLicensable: false,
+      hasProforma: false,
+      isPaid: false,
+      isInvoiced: false,
+      hasConformity: false,
+      odlGenerated: false,
+      transportCosts: 0,
+      restorationCosts: 0
+    });
     
     console.log("Formatted order for Supabase insert:", dbOrder);
     
@@ -303,7 +296,7 @@ export const ordersApi = {
     
     const { data, error } = await supabase
       .from('orders')
-      .update({ odl_generated: true })
+      .update({ odlgenerated: true })
       .eq('id', id)
       .select()
       .single();

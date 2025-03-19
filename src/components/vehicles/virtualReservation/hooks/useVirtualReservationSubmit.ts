@@ -91,31 +91,29 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // Prepare order record with both field naming conventions for compatibility
+      // Prepare order record using the camelCase column names
       const orderRecord = {
-        vehicle_id: vehicle.id,
-        vehicleid: vehicle.id, // Add compatibility field
-        dealer_id: reservationDealerId,
-        dealerid: reservationDealerId, // Add compatibility field
-        customer_name: selectedDealerName,
+        vehicleid: vehicle.id,
+        dealerid: reservationDealerId,
+        customername: selectedDealerName,
         status: 'processing',
-        order_date: new Date().toISOString(),
-        dealer_name: selectedDealerName,
-        model_name: vehicle.model,
+        orderdate: new Date().toISOString(),
+        dealername: selectedDealerName,
+        modelname: vehicle.model,
         price: calculatedPrice || 0,
-        plafond_dealer: dealerPlafond,
+        plafonddealer: dealerPlafond,
         // Set default values for boolean fields
-        is_licensable: false,
-        has_proforma: false,
-        is_paid: false,
-        is_invoiced: false,
-        has_conformity: false,
-        odl_generated: false,
-        transport_costs: 0,
-        restoration_costs: 0
+        islicensable: false,
+        hasproforma: false,
+        ispaid: false,
+        isinvoiced: false,
+        hasconformity: false,
+        odlgenerated: false,
+        transportcosts: 0,
+        restorationcosts: 0
       };
       
-      console.log("Attempting to insert with both column naming patterns for compatibility:", orderRecord);
+      console.log("Attempting to insert order with new column names:", orderRecord);
       
       // Create order directly using exact column names as in the database
       const { data: orderData, error: orderError } = await supabase
