@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Order, OrderDetails } from '@/types';
 import { formatDate } from '@/lib/utils';
 import OrderDetailsForm from './OrderDetailsForm';
+import { formatPlafond } from '@/hooks/orders/useOrdersModels';
 
 interface OrderDetailsDialogProps {
   open: boolean;
@@ -159,7 +159,7 @@ const OrderDetailsDialog: React.FC<OrderDetailsDialogProps> = ({
             
             <div className="space-y-1">
               <p className="text-sm font-medium">Plafond Disponibile:</p>
-              <p className="text-sm">€{order.dealer?.nuovoPlafond?.toLocaleString() || 'Non specificato'}</p>
+              <p className="text-sm">{formatPlafond(order.dealer)}</p>
             </div>
           </div>
         </div>
