@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
 import { FileText, Printer, Check, X, Trash2 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
-import { formatPlafond } from '@/hooks/orders/useOrdersModels';
 
 interface OrdersTableProps {
   orders: Order[];
@@ -175,24 +174,11 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     if (!order.dealer) return <span className="text-gray-400">-</span>;
     
     console.log(`RenderPlafondColumn per ${order.dealer.companyName}:`, {
-      nuovo_plafond: order.dealer.nuovo_plafond,
-      nuovoPlafond: order.dealer.nuovoPlafond,
       creditLimit: order.dealer.creditLimit
     });
     
-    if (order.dealer.nuovo_plafond !== undefined && order.dealer.nuovo_plafond !== null) {
-      return `${order.dealer.nuovo_plafond.toLocaleString()} €`;
-    }
-    
-    if (order.dealer.nuovoPlafond !== undefined && order.dealer.nuovoPlafond !== null) {
-      return `${order.dealer.nuovoPlafond.toLocaleString()} €`;
-    }
-    
-    if (order.dealer.creditLimit !== undefined && order.dealer.creditLimit !== null) {
-      return `${order.dealer.creditLimit.toLocaleString()} €`;
-    }
-    
-    return '0 €';
+    const plafondValue = order.dealer.creditLimit !== undefined ? order.dealer.creditLimit : 0;
+    return formatCurrency(plafondValue);
   };
 
   return (

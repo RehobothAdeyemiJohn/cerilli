@@ -16,11 +16,7 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
   });
 
   React.useEffect(() => {
-    // Debug log per ogni dealer caricato
-    dealers.forEach(dealer => {
-      console.log(`DealerCreditList - Dealer ${dealer.companyName} raw data:`, dealer);
-      console.log(`DealerCreditList - Dealer ${dealer.companyName} nuovo_plafond:`, dealer.nuovo_plafond);
-    });
+    console.log("DealerCreditList - Tutti i dealer caricati:", dealers);
   }, [dealers]);
 
   if (isLoading) {
@@ -46,13 +42,11 @@ const DealerCreditList: React.FC<DealerCreditListProps> = ({ darkMode = false })
       <CardContent>
         <div className="space-y-4">
           {dealers.map((dealer) => {
-            // Utilizzo il valore dalla proprietà originale del database
-            const plafondDisponibile = dealer.nuovo_plafond !== undefined && dealer.nuovo_plafond !== null 
-              ? dealer.nuovo_plafond 
-              : 0;
+            // Usiamo il creditLimit come valore base
+            const plafondDisponibile = dealer.creditLimit || 0;
             
-            console.log(`Rendering plafond for ${dealer.companyName}:`, {
-              nuovo_plafond: dealer.nuovo_plafond,
+            console.log(`Rendering plafond per ${dealer.companyName}:`, {
+              creditLimit: dealer.creditLimit,
               formatted: formatCurrency(plafondDisponibile)
             });
             

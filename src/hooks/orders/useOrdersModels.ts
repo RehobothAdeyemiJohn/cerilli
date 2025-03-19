@@ -14,30 +14,18 @@ export const useOrdersModels = (ordersData: Order[]) => {
   }, [ordersData]);
 };
 
+// Versione semplificata che usa solo il campo base creditLimit
 export const formatPlafond = (dealer: any) => {
   if (!dealer) return '0 €';
   
-  // Log dealer object to debug
-  console.log('formatPlafond called with dealer:', dealer);
+  // Log dealer object per debug
+  console.log('formatPlafond chiamato con dealer:', dealer);
   
-  // Primo controllo - accesso diretto al nuovo_plafond (snake_case dal database)
-  if (dealer.nuovo_plafond !== undefined && dealer.nuovo_plafond !== null) {
-    console.log('Usando nuovo_plafond (snake_case):', dealer.nuovo_plafond);
-    return `${dealer.nuovo_plafond.toLocaleString()} €`;
-  }
-  
-  // Secondo controllo - accesso al nuovoPlafond (camelCase)
-  if (dealer.nuovoPlafond !== undefined && dealer.nuovoPlafond !== null) {
-    console.log('Usando nuovoPlafond (camelCase):', dealer.nuovoPlafond);
-    return `${dealer.nuovoPlafond.toLocaleString()} €`;
-  }
-  
-  // Fallback al vecchio creditLimit
+  // Controlla se il creditLimit esiste e ritorna il valore formattato
   if (dealer.creditLimit !== undefined && dealer.creditLimit !== null) {
-    console.log('Usando creditLimit come fallback:', dealer.creditLimit);
     return `${dealer.creditLimit.toLocaleString()} €`;
   }
   
-  console.log('Nessun valore di plafond trovato, ritorno 0 €');
+  // Se non troviamo il creditLimit, ritorniamo zero
   return '0 €';
 };
