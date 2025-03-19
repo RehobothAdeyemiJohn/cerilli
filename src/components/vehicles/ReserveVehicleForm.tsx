@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,14 +49,12 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
   const dealerName = user?.dealerName || '';
   const isAdmin = user?.type === 'admin';
   
-  // Get dealers list for admin selection
   const { data: dealers = [], isLoading: loadingDealers } = useQuery({
     queryKey: ['dealers'],
     queryFn: dealersApi.getAll,
     enabled: isAdmin,
   });
   
-  // Active dealers only
   const activeDealers = dealers.filter(dealer => dealer.isActive);
   
   const form = useForm<ReserveFormValues>({
@@ -69,10 +66,8 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
   });
   
   const onSubmit = async (data: ReserveFormValues) => {
-    // For admin, use selected dealer. For dealer, use their own ID
     const finalDealerId = isAdmin ? data.dealerId : dealerId;
     
-    // If dealer ID is missing, show error and return
     if (!finalDealerId) {
       toast({
         title: "Errore",
@@ -82,17 +77,14 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       return;
     }
     
-    // For admin, get dealer name from selected dealer
     let finalDealerName = dealerName;
     let dealerPlafond = null;
     if (isAdmin && data.dealerId) {
       const selectedDealer = activeDealers.find(d => d.id === data.dealerId);
       finalDealerName = selectedDealer ? selectedDealer.companyName : '';
       
-      // Get the dealer plafond value
       dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
     } else if (!isAdmin) {
-      // For dealer users, get their own plafond
       const selectedDealer = activeDealers.find(d => d.id === dealerId);
       dealerPlafond = selectedDealer ? (selectedDealer.nuovo_plafond || selectedDealer.creditLimit || 0) : 0;
     }
@@ -114,10 +106,8 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     console.log("Dealer Plafond:", dealerPlafond);
     
     try {
-      // Call the Supabase API directly to reserve the vehicle
       await vehiclesApi.reserve(vehicle.id, finalDealerId, finalDealerName, [], undefined, data.destinazione);
       
-      // Create an order for the reservation
       let orderId = '';
       try {
         console.log("Creating order for the reserved vehicle");
@@ -127,7 +117,6 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
           customerName: finalDealerName,
           status: 'processing',
           orderDate: new Date().toISOString(),
-          // New fields
           dealerName: finalDealerName,
           modelName: vehicle.model,
           plafondDealer: dealerPlafond
@@ -136,7 +125,6 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
         console.log("Order created successfully:", orderResponse);
         orderId = orderResponse.id;
         
-        // Ora creaiamo anche il relativo record in order_details
         if (orderId) {
           console.log("Creating order details for the order:", orderId);
           const orderDetailsResponse = await orderDetailsApi.create({
@@ -146,14 +134,15 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
             isPaid: false,
             isInvoiced: false,
             hasConformity: false,
-            odlGenerated: false
+            odlGenerated: false,
+            transportCosts: 0,
+            restorationCosts: 0
           });
           
           console.log("Order details created successfully:", orderDetailsResponse);
         }
       } catch (orderError) {
         console.error("Error creating order or order details:", orderError);
-        // Continue even if order creation fails, as the vehicle is already reserved
         toast({
           title: "Attenzione",
           description: "Veicolo prenotato ma si è verificato un problema nella creazione dell'ordine.",
@@ -180,7 +169,6 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
     }
   };
   
-  // Use either the external isSubmitting prop or the local state
   const isFormSubmitting = isSubmitting || isLocalSubmitting;
   
   return (
@@ -192,7 +180,6 @@ const ReserveVehicleForm: React.FC<ReserveVehicleFormProps> = ({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* Dealer selection for admin only */}
           {isAdmin && (
             <FormField
               control={form.control}

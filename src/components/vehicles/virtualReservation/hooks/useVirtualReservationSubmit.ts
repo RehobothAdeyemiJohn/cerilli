@@ -118,7 +118,9 @@ export const useVirtualReservationSubmit = (
             isPaid: false,
             isInvoiced: false,
             hasConformity: false,
-            odlGenerated: false
+            odlGenerated: false,
+            transportCosts: 0,  // Aggiungiamo i campi mancanti
+            restorationCosts: 0  // Aggiungiamo i campi mancanti
           });
           
           console.log("Order details created successfully:", orderDetailsResponse);
