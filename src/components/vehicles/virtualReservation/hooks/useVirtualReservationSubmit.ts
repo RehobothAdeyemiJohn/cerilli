@@ -90,25 +90,25 @@ export const useVirtualReservationSubmit = (
       try {
         console.log("Creating order for the reserved virtual vehicle");
         const orderResponse = await ordersApi.create({
-          vehicle_id: vehicle.id, // Corretto: vehicle_id invece di vehicleId
-          dealer_id: finalDealerId, // Corretto: dealer_id invece di dealerId
-          customer_name: finalDealerName, // Corretto: customer_name invece di customerName
+          vehicleId: vehicle.id,
+          dealerId: finalDealerId,
+          customerName: finalDealerName,
           status: 'processing',
-          order_date: new Date().toISOString(),
+          orderDate: new Date().toISOString(),
           price: calculatedPrice || 0,
-          dealer_name: finalDealerName,
-          model_name: vehicle.model,
-          plafond_dealer: dealerPlafond,
+          dealerName: finalDealerName,
+          modelName: vehicle.model,
+          plafondDealer: dealerPlafond,
           
           // Campi obbligatori per la nuova struttura della tabella
-          is_licensable: false,
-          has_proforma: false,
-          is_paid: false,
-          is_invoiced: false,
-          has_conformity: false,
-          odl_generated: false,
-          transport_costs: 0,
-          restoration_costs: 0
+          isLicensable: false,
+          hasProforma: false,
+          isPaid: false,
+          isInvoiced: false,
+          hasConformity: false,
+          odlGenerated: false,
+          transportCosts: 0,
+          restorationCosts: 0
         });
         
         console.log("Order created successfully:", orderResponse);

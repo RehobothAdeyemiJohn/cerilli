@@ -266,3 +266,16 @@ export interface OrderFilters {
   dealerId: string | null;
   model: string | null;
 }
+
+export interface DealerContract {
+  id: string;
+  car_id: string;
+  dealer_id: string;
+  contract_date: string;
+  status: string;
+  contract_details?: any;
+  created_at: string;
+  updated_at: string;
+  vehicle?: Vehicle;
+  dealer?: Dealer;
+}

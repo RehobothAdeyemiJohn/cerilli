@@ -175,27 +175,27 @@ export const vehiclesApi = {
     
     // Create an order record
     await ordersApi.create({
-      vehicle_id: id,
-      dealer_id: vehicle.reservedBy ? 
+      vehicleId: id,
+      dealerId: vehicle.reservedBy ? 
         // Try to find dealer ID by name
         await vehiclesApi.findDealerIdByName(vehicle.reservedBy) :
         // Use a dummy ID if dealer not found
         '00000000-0000-0000-0000-000000000000',
-      customer_name: vehicle.reservedBy || 'Cliente sconosciuto',
+      customerName: vehicle.reservedBy || 'Cliente sconosciuto',
       status: 'processing',
-      order_date: new Date().toISOString(),
-      dealer_name: vehicle.reservedBy || 'Cliente sconosciuto',
-      model_name: vehicle.model || '',
+      orderDate: new Date().toISOString(),
+      dealerName: vehicle.reservedBy || 'Cliente sconosciuto',
+      modelName: vehicle.model || '',
       
       // Campi obbligatori per la nuova struttura della tabella
-      is_licensable: false,
-      has_proforma: false,
-      is_paid: false,
-      is_invoiced: false,
-      has_conformity: false,
-      odl_generated: false,
-      transport_costs: 0,
-      restoration_costs: 0
+      isLicensable: false,
+      hasProforma: false,
+      isPaid: false,
+      isInvoiced: false,
+      hasConformity: false,
+      odlGenerated: false,
+      transportCosts: 0,
+      restorationCosts: 0
     });
     
     return vehiclesApi.update(id, updatedVehicle);

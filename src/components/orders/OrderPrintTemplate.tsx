@@ -66,21 +66,19 @@ const OrderPrintTemplate = forwardRef<HTMLDivElement, OrderPrintTemplateProps>(
           <p>{order.customerName}</p>
         </div>
 
-        {order.details && (
-          <div className="mb-8">
-            <h3 className="font-bold mb-3">Dettagli:</h3>
-            <div className="border-t border-b py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <p>Targabile: {order.details.isLicensable ? 'Sì' : 'No'}</p>
-                <p>Pagato: {order.details.isPaid ? 'Sì' : 'No'}</p>
-                <p>Ha Proforma: {order.details.hasProforma ? 'Sì' : 'No'}</p>
-                <p>Fatturato: {order.details.isInvoiced ? 'Sì' : 'No'}</p>
-                <p>N. Fattura: {order.details.invoiceNumber || 'N/A'}</p>
-                <p>Data Pagamento: {order.details.paymentDate ? new Date(order.details.paymentDate).toLocaleDateString() : 'N/A'}</p>
-              </div>
+        <div className="mb-8">
+          <h3 className="font-bold mb-3">Dettagli:</h3>
+          <div className="border-t border-b py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <p>Targabile: {order.isLicensable ? 'Sì' : 'No'}</p>
+              <p>Pagato: {order.isPaid ? 'Sì' : 'No'}</p>
+              <p>Ha Proforma: {order.hasProforma ? 'Sì' : 'No'}</p>
+              <p>Fatturato: {order.isInvoiced ? 'Sì' : 'No'}</p>
+              <p>N. Fattura: {order.invoiceNumber || 'N/A'}</p>
+              <p>Data Pagamento: {order.paymentDate ? new Date(order.paymentDate).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>Questo documento non ha valore fiscale</p>

@@ -74,7 +74,7 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Telaio</p>
-            <p className="break-words">{order.vehicle?.telaio || order.details?.chassis || '-'}</p>
+            <p className="break-words">{order.vehicle?.telaio || order.chassis || '-'}</p>
           </div>
         </div>
 
@@ -107,42 +107,34 @@ const OrderPrintContent: React.FC<OrderPrintContentProps> = ({ order, orderNumbe
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Telaio:</p>
-            <p>{order.details?.chassis || '-'}</p>
+            <p>{order.chassis || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Finanziamento:</p>
-            <p>{order.details?.fundingType || '-'}</p>
+            <p>{order.fundingType || '-'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Pagato:</p>
-            <p>{order.details?.isPaid ? 'Sì' : 'No'}</p>
+            <p>{order.isPaid ? 'Sì' : 'No'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Fatturato:</p>
-            <p>{order.details?.isInvoiced ? 'Sì' : 'No'}</p>
+            <p>{order.isInvoiced ? 'Sì' : 'No'}</p>
           </div>
-          {order.details?.invoiceNumber && (
+          {order.invoiceNumber && (
             <div>
               <p className="text-sm font-medium text-gray-500">Numero Fattura:</p>
-              <p>{order.details.invoiceNumber}</p>
+              <p>{order.invoiceNumber}</p>
             </div>
           )}
-          {order.details?.invoiceDate && (
+          {order.invoiceDate && (
             <div>
               <p className="text-sm font-medium text-gray-500">Data Fattura:</p>
-              <p>{formattedDate(order.details.invoiceDate)}</p>
+              <p>{formattedDate(order.invoiceDate)}</p>
             </div>
           )}
         </div>
       </div>
-
-      {/* Notes - Only display if order has details with notes */}
-      {order.details?.notes && (
-        <div className="mb-6">
-          <h2 className="text-lg md:text-xl font-semibold mb-2">Note</h2>
-          <p className="border p-2 md:p-3 rounded bg-gray-50 text-sm whitespace-pre-wrap">{order.details.notes}</p>
-        </div>
-      )}
 
       <div className="text-center text-xs text-gray-500 mt-6 md:mt-8">
         <p>Documento generato automaticamente dal sistema DMS Cirelli</p>

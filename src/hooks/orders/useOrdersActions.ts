@@ -16,14 +16,14 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         console.log("Order details for delivery check:", order);
         
         // Verificare se l'ODL è stato generato prima di consegnare
-        if (!order.odl_generated) {
+        if (!order.odlGenerated) {
           console.log('ODL not generated');
           throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
         }
         
         // Aggiornare lo stato del veicolo se esiste
-        if (order.vehicle_id && order.dealer_id) {
-          await vehiclesApi.update(order.vehicle_id, {
+        if (order.vehicleId && order.dealerId) {
+          await vehiclesApi.update(order.vehicleId, {
             status: 'delivered',
             location: 'Stock Dealer'
           });
@@ -32,7 +32,7 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         return ordersApi.update(orderId, {
           ...order,
           status: 'delivered',
-          delivery_date: new Date().toISOString()
+          deliveryDate: new Date().toISOString()
         });
       } catch (error) {
         console.error('Error in mark as delivered process:', error);
