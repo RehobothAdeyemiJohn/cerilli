@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -7,7 +8,7 @@ import { Vehicle, Accessory } from '@/types';
 import { 
   modelsApi, trimsApi, fuelTypesApi, colorsApi, 
   transmissionsApi, accessoriesApi, calculateVehiclePrice 
-} from '@/api/localStorage';
+} from '@/api/supabase/settingsApi';
 
 // Schema for vehicle form
 const vehicleSchema = z.object({
@@ -20,7 +21,7 @@ const vehicleSchema = z.object({
   status: z.enum(["available", "reserved", "sold", "ordered", "delivered"]).default("available"),
   telaio: z.string().optional(),
   accessories: z.array(z.string()).default([]),
-  originalStock: z.string().optional() // Add originalStock to the schema
+  originalStock: z.string().optional()
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -32,6 +33,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
   const [validationError, setValidationError] = useState<string | null>(null);
   const [priceComponents, setPriceComponents] = useState<any>({});
 
+  // Initialize form with default values
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
@@ -39,7 +41,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
       trim: '',
       fuelType: '',
       exteriorColor: '',
-      location: '',
+      location: 'Stock CMC',
       transmission: '',
       status: 'available',
       telaio: '',
@@ -48,6 +50,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
     },
   });
 
+  // Fetch data from Supabase
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll
@@ -78,6 +81,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
     queryFn: accessoriesApi.getAll
   });
 
+  // Watch form values
   const watchModel = form.watch('model');
   const watchTrim = form.watch('trim');
   const watchFuelType = form.watch('fuelType');
@@ -116,10 +120,20 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
         
-        const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
-        const colorName = colorParts ? colorParts[1] : watchColor;
-        const colorType = colorParts ? colorParts[2] : '';
-        const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+        // Handle different color formats
+        let colorObj;
+        if (watchColor) {
+          if (watchColor.includes('(')) {
+            const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
+            if (colorParts) {
+              const colorName = colorParts[1].trim();
+              const colorType = colorParts[2].trim();
+              colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+            }
+          } else {
+            colorObj = colors.find(c => c.name === watchColor);
+          }
+        }
         
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
@@ -132,9 +146,9 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         });
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          // For debugging, store and log each component's contribution to the price
+          // Store price components for debugging
           const components = {
-            baseModelPrice: modelObj.basePrice,
+            baseModelPrice: modelObj.basePrice || 0,
             trimPrice: trimObj.basePrice || 0,
             fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
             colorAdjustment: colorObj.priceAdjustment || 0,
@@ -144,22 +158,31 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
           console.log("Price components:", components);
           setPriceComponents(components);
 
-          const selectedAccessoryIds = watchAccessories.map(name => {
-            const acc = accessories.find(a => a.name === name);
-            return acc ? acc.id : '';
-          }).filter(id => id !== '');
+          // Get accessory IDs for price calculation
+          const selectedAccessoryIds = Array.isArray(watchAccessories) ? 
+            watchAccessories
+              .filter(name => name)
+              .map(name => {
+                const acc = accessories.find(a => a.name === name);
+                return acc ? acc.id : '';
+              })
+              .filter(id => id !== '') : [];
 
-          const price = await calculateVehiclePrice(
-            modelObj.id,
-            trimObj.id,
-            fuelTypeObj.id,
-            colorObj.id,
-            transmissionObj.id,
-            selectedAccessoryIds
-          );
-          
-          console.log("Final calculated price:", price);
-          setCalculatedPrice(price);
+          try {
+            const price = await calculateVehiclePrice(
+              modelObj.id,
+              trimObj.id,
+              fuelTypeObj.id,
+              colorObj.id,
+              transmissionObj.id,
+              selectedAccessoryIds
+            );
+            
+            console.log("Final calculated price:", price);
+            setCalculatedPrice(price);
+          } catch (error) {
+            console.error("Error calculating price:", error);
+          }
         }
       }
     };
@@ -171,18 +194,32 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
       if (watchModel && watchTrim) {
-        const modelObj = models.find(m => m.name === watchModel);
-        const trimObj = trims.find(t => t.name === watchTrim);
-        if (modelObj && trimObj) {
-          const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-          setCompatibleAccessories(compatibles);
+        try {
+          const modelObj = models.find(m => m.name === watchModel);
+          const trimObj = trims.find(t => t.name === watchTrim);
+          
+          if (modelObj && trimObj) {
+            console.log("Fetching compatible accessories for:", modelObj.id, trimObj.id);
+            const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
+            console.log("Received compatible accessories:", compatibles);
+            setCompatibleAccessories(compatibles);
+          } else {
+            console.log("Model or trim not found");
+            setCompatibleAccessories([]);
+          }
+        } catch (error) {
+          console.error("Error fetching compatible accessories:", error);
+          setCompatibleAccessories([]);
         }
+      } else {
+        setCompatibleAccessories([]);
       }
     };
 
     updateCompatibleAccessories();
   }, [watchModel, watchTrim, models, trims]);
 
+  // Form submission handler
   const onSubmit = async (data: VehicleFormValues) => {
     try {
       setValidationError(null);
@@ -200,7 +237,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
           return;
         }
         
-        // Validate that originalStock is either 'Cina' or 'Germania'
+        // Validate originalStock value
         if (data.originalStock !== 'Cina' && data.originalStock !== 'Germania') {
           setValidationError("Lo stock origine deve essere 'Cina' o 'Germania'");
           return;
@@ -214,12 +251,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         }
       }
       
-      // Log price components for debugging
-      console.log("Price components for new vehicle:", priceComponents);
-      console.log("Calculated final price:", calculatedPrice);
-      console.log("Original stock:", data.originalStock);
-      
-      // Calculate estimated arrival days based on original stock (for virtual stock)
+      // Calculate estimated arrival days for virtual stock
       let estimatedArrivalDays: number | undefined = undefined;
       if (isVirtualStock && data.originalStock) {
         // Ensure originalStock is of the correct type
@@ -235,6 +267,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         console.log("Estimated arrival days:", estimatedArrivalDays);
       }
       
+      // Prepare vehicle data for creation
       const newVehicleData: Omit<Vehicle, 'id'> = {
         model: data.model,
         trim: isVirtualStock ? '' : (data.trim || ''),
@@ -244,7 +277,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         transmission: isVirtualStock ? '' : (data.transmission || ''),
         status: data.status,
         telaio: isVirtualStock ? '' : (data.telaio || ''),
-        accessories: isVirtualStock ? [] : (data.accessories || []),
+        accessories: isVirtualStock ? [] : (Array.isArray(data.accessories) ? data.accessories : []),
         price: isVirtualStock ? 0 : calculatedPrice,
         dateAdded: new Date().toISOString().split('T')[0],
         imageUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
@@ -252,12 +285,12 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         estimatedArrivalDays: estimatedArrivalDays
       };
       
-      console.log("Preparazione dati veicolo per Supabase:", newVehicleData);
+      console.log("Prepared vehicle data for Supabase:", newVehicleData);
       
-      // Pass the vehicle directly to the callback
+      // Pass the vehicle to the callback
       onComplete(newVehicleData as Vehicle);
     } catch (error) {
-      console.error('Errore durante il salvataggio del veicolo:', error);
+      console.error('Error during vehicle save:', error);
       setValidationError("Si è verificato un errore durante il salvataggio del veicolo.");
     }
   };

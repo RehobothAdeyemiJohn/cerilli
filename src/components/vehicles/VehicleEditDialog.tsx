@@ -42,7 +42,7 @@ const VehicleEditDialog = ({
           <DialogDescription>
             {isVirtualStock 
               ? 'Modifica il modello del veicolo in stock virtuale' 
-              : `Modifica i dettagli del veicolo ${vehicle.model} ${vehicle.trim}`}
+              : `Modifica i dettagli del veicolo ${vehicle.model} ${vehicle.trim || ''}`}
           </DialogDescription>
         </DialogHeader>
         

@@ -8,7 +8,7 @@ import { Vehicle, Accessory } from '@/types';
 import { 
   modelsApi, trimsApi, fuelTypesApi, colorsApi, 
   transmissionsApi, accessoriesApi, calculateVehiclePrice 
-} from '@/api/supabase/settingsApi'; // Use Supabase directly
+} from '@/api/supabase/settingsApi';
 
 // Schema for vehicle edit form
 const vehicleSchema = z.object({
@@ -21,7 +21,7 @@ const vehicleSchema = z.object({
   status: z.enum(["available", "reserved", "sold", "ordered", "delivered"]).default("available"),
   telaio: z.string().optional(),
   accessories: z.array(z.string()).default([]),
-  originalStock: z.string().optional() // Add originalStock to the schema
+  originalStock: z.string().optional()
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -37,57 +37,68 @@ export const useEditVehicleForm = (
   const [validationError, setValidationError] = useState<string | null>(null);
   const [priceComponents, setPriceComponents] = useState<any>({});
 
-  console.log("Initial vehicle data:", vehicle);
+  console.log("Initial vehicle data for form:", vehicle);
+  console.log("Initial accessories:", vehicle.accessories);
+
+  // Make sure accessories is always an array
+  const safeAccessories = Array.isArray(vehicle.accessories) 
+    ? vehicle.accessories 
+    : [];
 
   // Initialize form with vehicle data
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
-      model: vehicle.model,
-      trim: vehicle.trim,
-      fuelType: vehicle.fuelType,
-      exteriorColor: vehicle.exteriorColor,
-      location: vehicle.location,
+      model: vehicle.model || '',
+      trim: vehicle.trim || '',
+      fuelType: vehicle.fuelType || '',
+      exteriorColor: vehicle.exteriorColor || '',
+      location: vehicle.location || '',
       transmission: vehicle.transmission || '',
-      status: vehicle.status,
+      status: vehicle.status || 'available',
       telaio: vehicle.telaio || '',
-      accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
-      originalStock: vehicle.originalStock || '' // Initialize with existing originalStock value
+      accessories: safeAccessories,
+      originalStock: vehicle.originalStock || ''
     },
   });
 
-  console.log("Initializing form with accessories:", vehicle.accessories);
-
+  // Fetch model data
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll
   });
 
+  // Fetch trim data
   const { data: trims = [] } = useQuery({
     queryKey: ['trims'],
     queryFn: trimsApi.getAll
   });
 
+  // Fetch fuel type data
   const { data: fuelTypes = [] } = useQuery({
     queryKey: ['fuelTypes'],
     queryFn: fuelTypesApi.getAll
   });
 
+  // Fetch color data
   const { data: colors = [] } = useQuery({
     queryKey: ['colors'],
     queryFn: colorsApi.getAll
   });
 
+  // Fetch transmission data
   const { data: transmissions = [] } = useQuery({
     queryKey: ['transmissions'],
     queryFn: transmissionsApi.getAll
   });
 
+  // Fetch accessory data
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
     queryFn: accessoriesApi.getAll
   });
 
+  // Watch form values
   const watchModel = form.watch('model');
   const watchTrim = form.watch('trim');
   const watchFuelType = form.watch('fuelType');
@@ -95,7 +106,7 @@ export const useEditVehicleForm = (
   const watchTransmission = form.watch('transmission');
   const watchAccessories = form.watch('accessories');
   const watchLocation = form.watch('location');
-  const watchOriginalStock = form.watch('originalStock'); // Add watcher for originalStock
+  const watchOriginalStock = form.watch('originalStock');
 
   // Update isVirtualStock when location changes
   useEffect(() => {
@@ -122,31 +133,47 @@ export const useEditVehicleForm = (
           accessories: watchAccessories
         });
         
+        // Find model
         const modelObj = models.find(m => m.name === watchModel);
+        
+        // Find trim
         const trimObj = trims.find(t => t.name === watchTrim);
+        
+        // Find fuel type
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
         
-        // Improved color handling
+        // Find color (handling different formats)
         let colorObj;
-        
-        if (watchColor) {
+        if (watchColor && colors.length > 0) {
+          // Try formatted string first (e.g., "Pure Ice (metallizzato)")
           if (watchColor.includes('(')) {
-            // If it has parentheses, try to parse it
             const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
             if (colorParts) {
               const colorName = colorParts[1].trim();
               const colorType = colorParts[2].trim();
               colorObj = colors.find(c => c.name === colorName && c.type === colorType);
             }
-          } else {
-            // Try to find by name only
+          }
+          
+          // If not found, try direct name match
+          if (!colorObj) {
             colorObj = colors.find(c => c.name === watchColor);
+          }
+          
+          // If still not found and there are parts, try each part
+          if (!colorObj && watchColor.includes(' ')) {
+            const parts = watchColor.split(' ');
+            for (const part of parts) {
+              colorObj = colors.find(c => c.name === part);
+              if (colorObj) break;
+            }
           }
         }
         
+        // Find transmission
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-        console.log("Found objects:", {
+        console.log("Found objects for price calculation:", {
           modelObj,
           trimObj,
           fuelTypeObj,
@@ -155,9 +182,9 @@ export const useEditVehicleForm = (
         });
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
-          // For debugging, store and log each component's contribution to the price
+          // Calculate each component's contribution to the price
           const components = {
-            baseModelPrice: modelObj.basePrice,
+            baseModelPrice: modelObj.basePrice || 0,
             trimPrice: trimObj.basePrice || 0,
             fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
             colorAdjustment: colorObj.priceAdjustment || 0,
@@ -180,6 +207,7 @@ export const useEditVehicleForm = (
           console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
 
           try {
+            // Calculate total price
             const price = await calculateVehiclePrice(
               modelObj.id,
               trimObj.id,
@@ -204,27 +232,36 @@ export const useEditVehicleForm = (
   // Update compatible accessories based on model and trim
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
-      if (watchModel && watchTrim) {
-        const modelObj = models.find(m => m.name === watchModel);
-        const trimObj = trims.find(t => t.name === watchTrim);
+      if (watchModel && watchTrim && accessories.length > 0) {
+        console.log("Fetching compatible accessories for model:", watchModel, "and trim:", watchTrim);
         
-        if (modelObj && trimObj) {
-          console.log("Fetching compatible accessories for model:", modelObj.id, "and trim:", trimObj.id);
-          try {
+        try {
+          const modelObj = models.find(m => m.name === watchModel);
+          const trimObj = trims.find(t => t.name === watchTrim);
+          
+          if (modelObj && trimObj) {
+            console.log("Found model and trim objects:", modelObj, trimObj);
             const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-            console.log("Compatible accessories received:", compatibles);
+            console.log("Compatible accessories:", compatibles);
             setCompatibleAccessories(compatibles);
-          } catch (error) {
-            console.error("Error fetching compatible accessories:", error);
+          } else {
+            console.log("Model or trim not found in available options");
             setCompatibleAccessories([]);
           }
+        } catch (error) {
+          console.error("Error fetching compatible accessories:", error);
+          setCompatibleAccessories([]);
         }
+      } else {
+        console.log("Missing model or trim, can't fetch compatible accessories");
+        setCompatibleAccessories([]);
       }
     };
 
     updateCompatibleAccessories();
-  }, [watchModel, watchTrim, models, trims]);
+  }, [watchModel, watchTrim, models, trims, accessories]);
 
+  // Form submission handler
   const onSubmit = async (data: VehicleFormValues) => {
     console.log("Form submitted with data:", data);
     setValidationError(null);
@@ -237,13 +274,11 @@ export const useEditVehicleForm = (
         return;
       }
       
-      // Validate originalStock only if it's virtual stock
       if (!data.originalStock) {
         setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
         return;
       }
       
-      // Validate that originalStock is either 'Cina' or 'Germania'
       if (data.originalStock !== 'Cina' && data.originalStock !== 'Germania') {
         setValidationError("Lo stock origine deve essere 'Cina' o 'Germania'");
         return;
@@ -257,44 +292,43 @@ export const useEditVehicleForm = (
       }
     }
     
-    // Log price components for debugging
-    console.log("Price components for edited vehicle:", priceComponents);
-    console.log("Calculated final price:", calculatedPrice);
-    console.log("Original stock:", data.originalStock);
-    console.log("Accessories to save:", data.accessories);
-    
-    // Calculate estimated arrival days if it's Virtual Stock and has an originalStock
+    // Calculate estimated arrival days for Virtual Stock
     let estimatedArrivalDays = vehicle.estimatedArrivalDays;
     if (isVirtualStock && data.originalStock) {
-      // Ensure originalStock is of the correct type
-      const stockOrigin = data.originalStock as 'Cina' | 'Germania';
+      // Only recalculate if origin changed or not previously set
+      const originChanged = data.originalStock !== vehicle.originalStock;
+      const noExistingEstimate = !vehicle.estimatedArrivalDays;
       
-      if (stockOrigin === 'Germania') {
-        // Germany stock: 38-52 days
-        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
-      } else if (stockOrigin === 'Cina') {
-        // China stock: 90-120 days
-        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+      if (originChanged || noExistingEstimate) {
+        if (data.originalStock === 'Germania') {
+          // Germany stock: 38-52 days
+          estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+        } else if (data.originalStock === 'Cina') {
+          // China stock: 90-120 days
+          estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+        }
+        console.log(`Calculated new estimated arrival days: ${estimatedArrivalDays}`);
       }
     }
     
+    // Prepare updated vehicle data
     const updatedVehicle: Vehicle = {
       ...vehicle,
       model: data.model,
-      trim: isVirtualStock ? '' : data.trim || '',
-      fuelType: isVirtualStock ? '' : data.fuelType || '',
-      exteriorColor: isVirtualStock ? '' : data.exteriorColor || '',
+      trim: isVirtualStock ? '' : (data.trim || ''),
+      fuelType: isVirtualStock ? '' : (data.fuelType || ''),
+      exteriorColor: isVirtualStock ? '' : (data.exteriorColor || ''),
       location: data.location,
-      transmission: isVirtualStock ? '' : data.transmission || '',
+      transmission: isVirtualStock ? '' : (data.transmission || ''),
       status: data.status,
-      telaio: isVirtualStock ? '' : data.telaio || '',
+      telaio: isVirtualStock ? '' : (data.telaio || ''),
       accessories: isVirtualStock ? [] : (Array.isArray(data.accessories) ? data.accessories : []),
       price: isVirtualStock ? 0 : calculatedPrice,
       originalStock: isVirtualStock ? (data.originalStock as 'Cina' | 'Germania') : undefined,
       estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
     };
     
-    console.log("Calling onComplete with updated vehicle:", updatedVehicle);
+    console.log("Submitting updated vehicle:", updatedVehicle);
     onComplete(updatedVehicle);
   };
 

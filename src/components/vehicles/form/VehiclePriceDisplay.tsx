@@ -3,66 +3,58 @@ import React from 'react';
 
 interface VehiclePriceDisplayProps {
   calculatedPrice: number;
-  priceComponents?: {
-    baseModelPrice?: number;
-    trimPrice?: number;
-    fuelTypeAdjustment?: number;
-    colorAdjustment?: number;
-    transmissionAdjustment?: number;
-  };
+  priceComponents?: any;
 }
 
 const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceDisplayProps) => {
-  // Format price helper function
-  const formatPrice = (price: number | undefined): string => {
-    if (price === undefined || price === null) return "€0";
-    return `€${price.toLocaleString('it-IT')}`;
-  };
-
   return (
-    <div className="rounded-lg bg-gray-50 p-4 mt-6">
-      {priceComponents && Object.keys(priceComponents).length > 0 && (
-        <div className="mb-4">
-          <h4 className="font-semibold mb-2">Componenti del prezzo:</h4>
-          <div className="space-y-1">
-            {priceComponents.baseModelPrice !== undefined && (
-              <div className="flex justify-between">
-                <span>Prezzo Base Modello:</span>
-                <span className="font-medium">{formatPrice(priceComponents.baseModelPrice)}</span>
-              </div>
-            )}
-            {priceComponents.trimPrice !== undefined && (
-              <div className="flex justify-between">
-                <span>Prezzo Allestimento:</span>
-                <span className="font-medium">{formatPrice(priceComponents.trimPrice)}</span>
-              </div>
-            )}
-            {priceComponents.fuelTypeAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Motore:</span>
-                <span className="font-medium">{formatPrice(priceComponents.fuelTypeAdjustment)}</span>
-              </div>
-            )}
-            {priceComponents.colorAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Colore:</span>
-                <span className="font-medium">{formatPrice(priceComponents.colorAdjustment)}</span>
-              </div>
-            )}
-            {priceComponents.transmissionAdjustment !== undefined && (
-              <div className="flex justify-between">
-                <span>Aggiustamento Cambio:</span>
-                <span className="font-medium">{formatPrice(priceComponents.transmissionAdjustment)}</span>
-              </div>
-            )}
-          </div>
+    <div className="border p-4 rounded-md bg-gray-50">
+      <h3 className="text-lg font-semibold mb-2">Prezzo di Listino</h3>
+      
+      {priceComponents && (
+        <div className="text-sm text-gray-600 mb-2 space-y-1">
+          {priceComponents.baseModelPrice !== undefined && (
+            <div className="flex justify-between">
+              <span>Prezzo base modello:</span>
+              <span>€{priceComponents.baseModelPrice.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          {priceComponents.trimPrice !== undefined && (
+            <div className="flex justify-between">
+              <span>Prezzo allestimento:</span>
+              <span>+€{priceComponents.trimPrice.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          {priceComponents.fuelTypeAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Alimentazione:</span>
+              <span>{priceComponents.fuelTypeAdjustment >= 0 ? '+' : ''}€{priceComponents.fuelTypeAdjustment.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          {priceComponents.colorAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Colore:</span>
+              <span>{priceComponents.colorAdjustment >= 0 ? '+' : ''}€{priceComponents.colorAdjustment.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          {priceComponents.transmissionAdjustment !== undefined && (
+            <div className="flex justify-between">
+              <span>Cambio:</span>
+              <span>{priceComponents.transmissionAdjustment >= 0 ? '+' : ''}€{priceComponents.transmissionAdjustment.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          <div className="border-t pt-1 mt-1"></div>
         </div>
       )}
-      <div className="font-semibold border-t pt-2">
-        <div className="flex justify-between items-center">
-          <span>Prezzo di Listino Calcolato:</span>
-          <span className="text-xl">{formatPrice(calculatedPrice)}</span>
-        </div>
+      
+      <div className="flex justify-between text-lg font-semibold">
+        <span>Prezzo Totale:</span>
+        <span>€{calculatedPrice.toLocaleString('it-IT')}</span>
       </div>
     </div>
   );

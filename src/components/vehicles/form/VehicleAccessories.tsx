@@ -12,10 +12,12 @@ interface VehicleAccessoriesProps {
 }
 
 const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAccessoriesProps) => {
-  // Log for debugging
+  // Debug log
   useEffect(() => {
-    console.log("Current accessories in form:", form.getValues('accessories'));
-    console.log("Compatible accessories:", compatibleAccessories);
+    console.log("VehicleAccessories rendered with:", {
+      formAccessories: form.getValues('accessories'),
+      compatibleAccessories
+    });
   }, [compatibleAccessories, form]);
 
   return (
@@ -29,15 +31,13 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
             <div className="space-y-2">
               {compatibleAccessories.length > 0 ? (
                 compatibleAccessories.map((accessory) => {
-                  // Ensure we have an array of accessories from form values
+                  // Get current accessories array
                   const currentAccessories = Array.isArray(form.getValues('accessories')) 
                     ? form.getValues('accessories') 
                     : [];
-                    
+                  
                   // Check if this accessory is selected
                   const isChecked = currentAccessories.includes(accessory.name);
-                  
-                  console.log(`Accessory ${accessory.name} checked:`, isChecked);
                   
                   return (
                     <div key={accessory.id} className="flex items-center space-x-3">
@@ -53,7 +53,7 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                           const updated = checked
                             ? [...current, accessory.name]
                             : current.filter((name: string) => name !== accessory.name);
-                            
+                          
                           // Set the updated array in the form
                           form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
                           console.log("Updated accessories:", updated);

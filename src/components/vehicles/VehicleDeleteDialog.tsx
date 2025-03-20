@@ -54,7 +54,8 @@ const VehicleDeleteDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Sei sicuro di voler eliminare questo veicolo?</AlertDialogTitle>
           <AlertDialogDescription>
-            Questa azione non può essere annullata. Il veicolo verrà permanentemente rimosso dall'inventario.
+            Questa azione non può essere annullata. Il veicolo {vehicle.model} {vehicle.trim} verrà 
+            permanentemente rimosso dall'inventario.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
