@@ -102,7 +102,7 @@ export const useVirtualReservationSubmit = (
         modelname: vehicle.model,
         price: calculatedPrice || 0,
         plafonddealer: dealerPlafond,
-        // Set default values for boolean fields
+        // Set default values for boolean fields with specific values instead of empty string
         islicensable: false,
         hasproforma: false,
         ispaid: false,

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useOrders } from '@/hooks/useOrders';
@@ -419,7 +418,7 @@ const Orders = () => {
           <SelectContent>
             <SelectItem value="true">Si</SelectItem>
             <SelectItem value="false">No</SelectItem>
-            <SelectItem value="">Qualsiasi</SelectItem>
+            <SelectItem value="null">Qualsiasi</SelectItem>
           </SelectContent>
         </Select>
 
@@ -430,7 +429,7 @@ const Orders = () => {
           <SelectContent>
             <SelectItem value="true">Si</SelectItem>
             <SelectItem value="false">No</SelectItem>
-            <SelectItem value="">Qualsiasi</SelectItem>
+            <SelectItem value="null">Qualsiasi</SelectItem>
           </SelectContent>
         </Select>
 
@@ -441,7 +440,7 @@ const Orders = () => {
           <SelectContent>
             <SelectItem value="true">Si</SelectItem>
             <SelectItem value="false">No</SelectItem>
-            <SelectItem value="">Qualsiasi</SelectItem>
+            <SelectItem value="null">Qualsiasi</SelectItem>
           </SelectContent>
         </Select>
 
@@ -452,7 +451,7 @@ const Orders = () => {
           <SelectContent>
             <SelectItem value="true">Si</SelectItem>
             <SelectItem value="false">No</SelectItem>
-            <SelectItem value="">Qualsiasi</SelectItem>
+            <SelectItem value="null">Qualsiasi</SelectItem>
           </SelectContent>
         </Select>
 
@@ -463,7 +462,7 @@ const Orders = () => {
           <SelectContent>
             <SelectItem value="true">Si</SelectItem>
             <SelectItem value="false">No</SelectItem>
-            <SelectItem value="">Qualsiasi</SelectItem>
+            <SelectItem value="null">Qualsiasi</SelectItem>
           </SelectContent>
         </Select>
       </div>

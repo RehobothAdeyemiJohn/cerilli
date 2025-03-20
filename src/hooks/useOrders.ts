@@ -15,15 +15,22 @@ export const useOrders = (filters = {}) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['orders', filters],
     queryFn: async () => {
-      const orders = await ordersApi.getAll();
-      // Apply filters (simplified implementation)
-      return orders;
+      try {
+        const orders = await ordersApi.getAll();
+        console.log("Retrieved orders:", orders);
+        // Apply filters (simplified implementation)
+        return orders;
+      } catch (err) {
+        console.error("Error fetching orders in useOrders hook:", err);
+        throw err;
+      }
     }
   });
   
   // Update the ordersList state when data changes
   useEffect(() => {
     if (data) {
+      console.log("Setting orders list with data:", data);
       setOrdersList(data);
     }
   }, [data]);
