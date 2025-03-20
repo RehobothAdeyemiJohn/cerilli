@@ -1,3 +1,4 @@
+
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -59,12 +60,14 @@ const mapOrderDbToFrontend = (order: any): Order => {
     id: order.id,
     vehicleId: order.vehicleid || '',
     dealerId: order.dealerid || '',
+    // Use customername for both dealerName and customerName
     customerName: order.customername,
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.orderdate,
     deliveryDate: order.deliverydate,
     progressiveNumber: order.progressivenumber,
     price: order.price,
+    // Use customername for dealerName for consistency with database
     dealerName: order.customername,
     modelName: order.modelname,
     plafondDealer: order.plafonddealer,
@@ -96,6 +99,7 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
+    // Use customerName for customername column, with dealerName as fallback
     customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
