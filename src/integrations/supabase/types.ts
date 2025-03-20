@@ -244,11 +244,12 @@ export type Database = {
         Row: {
           chassis: string | null
           created_at: string | null
-          customer_name: string
+          customername: string
           dealer_id: string | null
           dealer_name: string | null
           dealerid: string | null
           delivery_date: string | null
+          deliverydate: string | null
           funding_type: string | null
           has_conformity: boolean | null
           has_proforma: boolean | null
@@ -261,11 +262,13 @@ export type Database = {
           model_name: string | null
           odl_generated: boolean | null
           order_date: string | null
+          orderdate: string | null
           payment_date: string | null
           plafond_dealer: number | null
           previous_chassis: string | null
           price: number | null
           progressive_number: number
+          quoteid: string | null
           restoration_costs: number | null
           status: string | null
           transport_costs: number | null
@@ -276,11 +279,12 @@ export type Database = {
         Insert: {
           chassis?: string | null
           created_at?: string | null
-          customer_name: string
+          customername: string
           dealer_id?: string | null
           dealer_name?: string | null
           dealerid?: string | null
           delivery_date?: string | null
+          deliverydate?: string | null
           funding_type?: string | null
           has_conformity?: boolean | null
           has_proforma?: boolean | null
@@ -293,11 +297,13 @@ export type Database = {
           model_name?: string | null
           odl_generated?: boolean | null
           order_date?: string | null
+          orderdate?: string | null
           payment_date?: string | null
           plafond_dealer?: number | null
           previous_chassis?: string | null
           price?: number | null
           progressive_number?: number
+          quoteid?: string | null
           restoration_costs?: number | null
           status?: string | null
           transport_costs?: number | null
@@ -308,11 +314,12 @@ export type Database = {
         Update: {
           chassis?: string | null
           created_at?: string | null
-          customer_name?: string
+          customername?: string
           dealer_id?: string | null
           dealer_name?: string | null
           dealerid?: string | null
           delivery_date?: string | null
+          deliverydate?: string | null
           funding_type?: string | null
           has_conformity?: boolean | null
           has_proforma?: boolean | null
@@ -325,11 +332,13 @@ export type Database = {
           model_name?: string | null
           odl_generated?: boolean | null
           order_date?: string | null
+          orderdate?: string | null
           payment_date?: string | null
           plafond_dealer?: number | null
           previous_chassis?: string | null
           price?: number | null
           progressive_number?: number
+          quoteid?: string | null
           restoration_costs?: number | null
           status?: string | null
           transport_costs?: number | null

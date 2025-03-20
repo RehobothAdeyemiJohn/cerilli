@@ -232,25 +232,44 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       }
       
       console.log("Creating order with dealerId:", dealerId);
+
+      // Create order directly using all camelCase fields
+      const orderRecord = {
+        vehicleid: selectedVehicle.id,
+        dealerid: dealerId,
+        customername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
+        status: 'processing',
+        orderdate: new Date().toISOString(),
+        dealername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
+        modelname: selectedVehicle.model || '',
+        price: selectedVehicle.virtualConfig?.price || selectedVehicle.price || 0,
+        // Set default values for boolean fields
+        islicensable: false,
+        hasproforma: false,
+        ispaid: false,
+        isinvoiced: false,
+        hasconformity: false,
+        odlgenerated: false,
+        transportcosts: 0,
+        restorationcosts: 0
+      };
       
-      // Create order using the RPC function that bypasses RLS
-      const { data: orderData, error: orderError } = await supabase.rpc(
-        'insert_order',
-        {
-          p_vehicleid: selectedVehicle.id,
-          p_dealerid: dealerId,
-          p_customername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
-          p_status: 'processing'
-        }
-      );
+      console.log("Attempting to insert order with camelCase names:", orderRecord);
+      
+      // Insert using the camelCase column names
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderRecord)
+        .select()
+        .single();
         
       if (orderError) {
         console.error("Error creating order:", orderError);
-        throw new Error(`Errore durante la creazione dell'ordine: ${orderError.message}`);
+        throw orderError;
       }
-      
-      console.log("Order created successfully with ID:", orderData);
-      
+
+      console.log("Order created successfully:", orderData);
+
       // Update vehicle status to ordered
       const { error: vehicleError } = await supabase
         .from('vehicles')
