@@ -60,15 +60,15 @@ const mapOrderDbToFrontend = (order: any): Order => {
     id: order.id,
     vehicleId: order.vehicleid || order.vehicle_id || '',
     dealerId: order.dealerid || order.dealer_id || '',
-    // IMPORTANT: First try customername, then try dealer_name
-    customerName: order.customername || order.customer_name || '',
+    // CRITICAL FIX: Only use customername (the actual DB column) and fallback to others
+    customerName: order.customername || '',
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.orderdate || order.order_date,
     deliveryDate: order.deliverydate || order.delivery_date,
     progressiveNumber: order.progressivenumber || order.progressive_number,
     price: order.price,
-    // Map customername to dealerName in the frontend object
-    dealerName: order.customername || order.customer_name || order.dealer_name || '',
+    // Set dealerName from customername for frontend display
+    dealerName: order.customername || '',
     modelName: order.modelname || order.model_name,
     plafondDealer: order.plafonddealer || order.plafond_dealer,
     
@@ -96,11 +96,11 @@ const mapOrderDbToFrontend = (order: any): Order => {
 
 // Helper function to map frontend order to database format
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
-  // CRITICAL FIX: Use the exact column names from the database schema
+  // CRITICAL FIX: ONLY use the exact column names from the database schema
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
-    // Store either customerName or dealerName in the customername column
+    // Use customername for dealerName/customerName - this is the key fix
     customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
@@ -109,7 +109,7 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
     model_name: order.modelName,
     plafond_dealer: order.plafondDealer,
     
-    // Map camelCase fields to database columns with exact same names as in schema
+    // Use snake_case column names as seen in the database schema
     is_licensable: order.isLicensable,
     has_proforma: order.hasProforma,
     is_paid: order.isPaid,
