@@ -1,4 +1,3 @@
-
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -65,7 +64,7 @@ const mapOrderDbToFrontend = (order: any): Order => {
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.orderdate,
     deliveryDate: order.deliverydate,
-    progressiveNumber: order.progressivenumber,
+    progressiveNumber: order.progressivenumber || order.progressive_number,
     price: order.price,
     // Map customername to dealerName in the frontend object
     dealerName: order.customername,
