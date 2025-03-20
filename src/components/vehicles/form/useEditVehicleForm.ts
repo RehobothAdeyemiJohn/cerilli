@@ -83,10 +83,7 @@ export const useEditVehicleForm = (
 
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
-    queryFn: accessoriesApi.getAll,
-    onSuccess: (data) => {
-      console.log("Loaded accessories from API:", data);
-    }
+    queryFn: accessoriesApi.getAll
   });
 
   const watchModel = form.watch('model');

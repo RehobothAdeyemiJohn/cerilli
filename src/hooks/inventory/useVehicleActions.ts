@@ -1,48 +1,54 @@
+
 import { useState } from 'react';
 import { Vehicle } from '@/types';
 import { useInventoryMutations } from './useMutations';
-import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
 
 export const useVehicleActions = () => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDuplicating, setIsDuplicating] = useState(false);
-  
-  const { updateMutation, deleteMutation } = useInventoryMutations();
-  const queryClient = useQueryClient();
-  
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isDuplicating, setIsDuplicating] = useState<boolean>(false);
+  const { updateMutation, deleteMutation, createMutation } = useInventoryMutations();
+
   const handleVehicleUpdate = async (vehicle: Vehicle) => {
-    setIsUpdating(true);
+    console.log('Updating vehicle:', vehicle);
+    
     try {
       await updateMutation.mutateAsync(vehicle);
-      setIsUpdating(false);
+      
+      toast({
+        title: "Veicolo aggiornato",
+        description: `${vehicle.model} ${vehicle.trim || ''} è stato aggiornato.`,
+      });
+      
+      return true;
     } catch (error) {
-      console.error('Errore durante l\'aggiornamento del veicolo:', error);
-      setIsUpdating(false);
-      throw error;
+      console.error('Error updating vehicle:', error);
+      
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del veicolo.",
+        variant: "destructive",
+      });
+      
+      return false;
     }
   };
-  
+
   const handleVehicleDelete = async (vehicleId: string) => {
-    console.log('useVehicleActions: Deleting vehicle with ID:', vehicleId);
+    console.log('Deleting vehicle:', vehicleId);
     setIsDeleting(true);
     
     try {
       await deleteMutation.mutateAsync(vehicleId);
       
-      console.log('Vehicle successfully deleted:', vehicleId);
-      
       toast({
         title: "Veicolo eliminato",
-        description: "Il veicolo è stato eliminato con successo dall'inventario.",
+        description: "Il veicolo è stato eliminato con successo.",
       });
       
-      setIsDeleting(false);
       return true;
     } catch (error) {
-      console.error('Errore durante l\'eliminazione del veicolo:', error);
+      console.error('Error deleting vehicle:', error);
       
       toast({
         title: "Errore",
@@ -50,36 +56,31 @@ export const useVehicleActions = () => {
         variant: "destructive",
       });
       
+      return false;
+    } finally {
       setIsDeleting(false);
-      throw error;
     }
   };
   
-  const handleVehicleDuplicate = async (vehicleId: string) => {
-    if (isDuplicating) {
-      console.log('Already duplicating, ignoring duplicate request');
-      return null;
-    }
-    
-    console.log('useVehicleActions: Duplicating vehicle with ID:', vehicleId);
+  const handleVehicleDuplicate = async (vehicle: Vehicle) => {
+    console.log('Duplicating vehicle:', vehicle);
     setIsDuplicating(true);
     
     try {
-      const duplicatedVehicle = await vehiclesApi.duplicate(vehicleId);
+      // Remove the ID to create a new vehicle
+      const { id, ...vehicleWithoutId } = vehicle;
       
-      console.log('Vehicle successfully duplicated:', duplicatedVehicle);
-      
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      // Create a new vehicle with the same properties
+      await createMutation.mutateAsync(vehicleWithoutId as Omit<Vehicle, 'id'>);
       
       toast({
         title: "Veicolo duplicato",
-        description: "Il veicolo è stato duplicato con successo nell'inventario.",
+        description: `Una copia di ${vehicle.model} ${vehicle.trim || ''} è stata creata.`,
       });
       
-      setIsDuplicating(false);
-      return duplicatedVehicle;
+      return true;
     } catch (error) {
-      console.error('Errore durante la duplicazione del veicolo:', error);
+      console.error('Error duplicating vehicle:', error);
       
       toast({
         title: "Errore",
@@ -87,16 +88,16 @@ export const useVehicleActions = () => {
         variant: "destructive",
       });
       
+      return false;
+    } finally {
       setIsDuplicating(false);
-      throw error;
     }
   };
-  
+
   return {
     handleVehicleUpdate,
     handleVehicleDelete,
     handleVehicleDuplicate,
-    isUpdating,
     isDeleting,
     isDuplicating
   };

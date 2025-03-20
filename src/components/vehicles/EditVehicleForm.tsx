@@ -48,7 +48,13 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
   useEffect(() => {
     console.log("Vehicle accessories in EditVehicleForm:", vehicle.accessories);
     console.log("Compatible accessories:", compatibleAccessories);
-  }, [vehicle.accessories, compatibleAccessories]);
+    
+    // Make sure form is properly initialized with accessories
+    if (vehicle.accessories && vehicle.accessories.length > 0) {
+      console.log("Setting accessories in form:", vehicle.accessories);
+      form.setValue('accessories', vehicle.accessories);
+    }
+  }, [vehicle.accessories, compatibleAccessories, form]);
 
   return (
     <Form {...form}>

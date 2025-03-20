@@ -28,29 +28,37 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
             <FormLabel className="font-semibold text-base mb-2">Accessori Disponibili</FormLabel>
             <div className="space-y-2">
               {compatibleAccessories.length > 0 ? (
-                compatibleAccessories.map((accessory) => (
-                  <div key={accessory.id} className="flex items-center space-x-3">
-                    <Checkbox
-                      checked={form.getValues('accessories').includes(accessory.name)}
-                      onCheckedChange={(checked) => {
-                        const current = form.getValues('accessories') || [];
-                        const updated = checked
-                          ? [...current, accessory.name]
-                          : current.filter((name: string) => name !== accessory.name);
-                        form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
-                        console.log("Updated accessories:", updated);
-                      }}
-                    />
-                    <div className="flex items-center">
-                      <FormLabel className="font-normal cursor-pointer">
-                        {accessory.name} 
-                        <span className="text-sm text-gray-600 ml-1">
-                          (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
-                        </span>
-                      </FormLabel>
+                compatibleAccessories.map((accessory) => {
+                  const currentAccessories = form.getValues('accessories') || [];
+                  const isChecked = Array.isArray(currentAccessories) && 
+                    currentAccessories.includes(accessory.name);
+                    
+                  console.log(`Accessory ${accessory.name} checked:`, isChecked);
+                  
+                  return (
+                    <div key={accessory.id} className="flex items-center space-x-3">
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          const current = form.getValues('accessories') || [];
+                          const updated = checked
+                            ? [...current, accessory.name]
+                            : current.filter((name: string) => name !== accessory.name);
+                          form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
+                          console.log("Updated accessories:", updated);
+                        }}
+                      />
+                      <div className="flex items-center">
+                        <FormLabel className="font-normal cursor-pointer">
+                          {accessory.name} 
+                          <span className="text-sm text-gray-600 ml-1">
+                            (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
+                          </span>
+                        </FormLabel>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="text-gray-500 italic">
                   Nessun accessorio compatibile disponibile per questo modello e allestimento
