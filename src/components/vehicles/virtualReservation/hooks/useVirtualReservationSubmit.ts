@@ -96,21 +96,21 @@ export const useVirtualReservationSubmit = (
       const orderRecord = {
         vehicle_id: vehicle.id, // Correct DB column name
         dealer_id: reservationDealerId, // Correct DB column name
-        customer_name: selectedDealerName, // Correct DB column name (not dealername!)
+        customername: selectedDealerName, // Use customername as it appears in DB, not customer_name
         status: 'processing',
-        order_date: new Date().toISOString(), // Correct DB column name
+        orderdate: new Date().toISOString(), // Use orderdate as it appears in DB, not order_date
         model_name: vehicle.model, // Correct DB column name
         price: calculatedPrice || 0,
         plafond_dealer: dealerPlafond, // Correct DB column name
         // Default values for boolean fields
-        is_licensable: false, // Correct DB column name
-        has_proforma: false, // Correct DB column name
-        is_paid: false, // Correct DB column name
-        is_invoiced: false, // Correct DB column name
-        has_conformity: false, // Correct DB column name
-        odl_generated: false, // Correct DB column name
-        transport_costs: 0, // Correct DB column name
-        restoration_costs: 0 // Correct DB column name
+        is_licensable: false, 
+        has_proforma: false, 
+        is_paid: false, 
+        is_invoiced: false, 
+        has_conformity: false, 
+        odl_generated: false, 
+        transport_costs: 0, 
+        restoration_costs: 0 
       };
       
       console.log("Inserting order with correct DB columns:", orderRecord);
