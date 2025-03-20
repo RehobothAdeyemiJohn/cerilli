@@ -5,7 +5,6 @@ import { Vehicle } from '@/types';
 import { vehiclesApi } from '@/api/supabase';
 import { toast } from '@/hooks/use-toast';
 import { VirtualReservationFormValues } from '../schema';
-import { supabase } from '@/api/supabase/client';
 
 export const useVirtualReservationSubmit = (
   vehicle: Vehicle,
@@ -72,65 +71,10 @@ export const useVirtualReservationSubmit = (
         virtualConfig: reservationData.virtualConfig,
       });
 
-      // Get dealer info to store plafond_dealer at order creation time
-      let dealerPlafond = null;
-      
-      if (reservationDealerId) {
-        try {
-          const { data: dealer } = await supabase
-            .from('dealers')
-            .select('*')
-            .eq('id', reservationDealerId)
-            .maybeSingle();
-            
-          if (dealer) {
-            dealerPlafond = dealer.nuovo_plafond || dealer.credit_limit || 0;
-          }
-        } catch (e) {
-          console.error('Error fetching dealer for plafond:', e);
-        }
-      }
-      
-      // Use the exact column names from the database schema
-      console.log("Preparing order record with correct DB column names");
-      const orderRecord = {
-        vehicleid: vehicle.id,
-        dealerid: reservationDealerId,
-        customername: selectedDealerName, // Use customername instead of dealername
-        status: 'processing',
-        orderdate: new Date().toISOString(),
-        model_name: vehicle.model,
-        price: calculatedPrice || 0,
-        plafond_dealer: dealerPlafond,
-        is_licensable: false, 
-        has_proforma: false, 
-        is_paid: false, 
-        is_invoiced: false, 
-        has_conformity: false, 
-        odl_generated: false, 
-        transport_costs: 0, 
-        restoration_costs: 0 
-      };
-      
-      console.log("Inserting order with correct DB columns:", orderRecord);
-      
-      // Use the exact column names from the database schema
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderRecord)
-        .select()
-        .maybeSingle();
-        
-      if (orderError) {
-        console.error("Order creation error:", orderError);
-        throw orderError;
-      }
-
-      console.log("Order created successfully:", orderData);
+      // No order creation here - we'll only create the order when transforming to an order
 
       // Refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
       // Success message
       toast({
