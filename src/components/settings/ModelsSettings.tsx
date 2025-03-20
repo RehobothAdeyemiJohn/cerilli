@@ -86,7 +86,7 @@ const ModelsSettings = () => {
   };
 
   const handleSaveModel = () => {
-    if (!currentModel.name || !currentModel.basePrice) {
+    if (!currentModel.name || currentModel.basePrice === undefined) {
       toast({
         title: "Errore",
         description: "Tutti i campi sono obbligatori.",
@@ -112,7 +112,12 @@ const ModelsSettings = () => {
     },
     { 
       header: "Prezzo Base", 
-      accessor: (model) => `€${model.basePrice.toLocaleString('it-IT')}`,
+      accessor: (model) => {
+        // Verifica che basePrice sia definito prima di chiamare toLocaleString
+        return model.basePrice !== undefined ? 
+          `€${model.basePrice.toLocaleString('it-IT')}` : 
+          '€0';
+      },
       className: "text-right" 
     },
     { 

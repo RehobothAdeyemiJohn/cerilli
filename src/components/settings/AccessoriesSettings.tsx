@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -111,7 +112,7 @@ const AccessoriesSettings = () => {
     }
 
     // Calculate priceWithoutVAT by dividing priceWithVAT by 1.22 (22% VAT)
-    const priceWithoutVAT = Math.round(currentAccessory.priceWithVAT / 1.22);
+    const priceWithoutVAT = Math.round((currentAccessory.priceWithVAT || 0) / 1.22);
     
     if (currentAccessory.id) {
       updateMutation.mutate({
@@ -136,12 +137,20 @@ const AccessoriesSettings = () => {
     },
     { 
       header: "Prezzo con IVA", 
-      accessor: (accessory) => `€${accessory.priceWithVAT.toLocaleString('it-IT')}`,
+      accessor: (accessory) => {
+        return accessory.priceWithVAT !== undefined ? 
+          `€${accessory.priceWithVAT.toLocaleString('it-IT')}` : 
+          '€0';
+      },
       className: "text-right" 
     },
     { 
       header: "Prezzo senza IVA", 
-      accessor: (accessory) => `€${accessory.priceWithoutVAT.toLocaleString('it-IT')}`,
+      accessor: (accessory) => {
+        return accessory.priceWithoutVAT !== undefined ? 
+          `€${accessory.priceWithoutVAT.toLocaleString('it-IT')}` : 
+          '€0';
+      }, 
       className: "text-right" 
     },
   ];

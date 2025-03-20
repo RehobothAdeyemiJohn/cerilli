@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -111,7 +112,11 @@ const FuelTypesSettings = () => {
     },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (fuelType) => `€${fuelType.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (fuelType) => {
+        return fuelType.priceAdjustment !== undefined ? 
+          `€${fuelType.priceAdjustment.toLocaleString('it-IT')}` : 
+          '€0';
+      },
       className: "text-right" 
     },
   ];

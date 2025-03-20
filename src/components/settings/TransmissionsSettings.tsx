@@ -143,7 +143,11 @@ const TransmissionsSettings = () => {
     },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (transmission) => `€${transmission.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (transmission) => {
+        return transmission.priceAdjustment !== undefined ? 
+          `€${transmission.priceAdjustment.toLocaleString('it-IT')}` : 
+          '€0';
+      },
       className: "text-right" 
     },
   ];

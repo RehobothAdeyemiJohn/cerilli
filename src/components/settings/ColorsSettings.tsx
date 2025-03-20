@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -149,7 +148,11 @@ const ColorsSettings = () => {
     },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (color) => `€${color.priceAdjustment.toLocaleString('it-IT')}`,
+      accessor: (color) => {
+        return color.priceAdjustment !== undefined ? 
+          `€${color.priceAdjustment.toLocaleString('it-IT')}` : 
+          '€0';
+      },
       className: "text-right" 
     },
   ];
