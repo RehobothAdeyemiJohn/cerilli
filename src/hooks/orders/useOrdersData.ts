@@ -31,21 +31,18 @@ export const useOrdersData = (filters: {
       try {
         console.log("Fetching orders data...");
         const orders = await ordersApi.getAll();
-        console.log("Orders data fetched successfully:", orders.length, "orders");
+        console.log(`Orders data fetched successfully: ${orders.length} orders`);
         
         // Log detailed information about orders
         if (orders.length > 0) {
-          orders.forEach((order, index) => {
-            console.log(`Order ${index + 1}:`, {
-              id: order.id,
-              customerName: order.customerName,
-              status: order.status,
-              isLicensable: order.isLicensable,
-              hasProforma: order.hasProforma,
-              isPaid: order.isPaid,
-              isInvoiced: order.isInvoiced,
-              hasConformity: order.hasConformity
-            });
+          console.log("First order details:", orders[0]);
+          console.log("Boolean flags for first order:", {
+            isLicensable: orders[0].isLicensable,
+            hasProforma: orders[0].hasProforma,
+            isPaid: orders[0].isPaid,
+            isInvoiced: orders[0].isInvoiced,
+            hasConformity: orders[0].hasConformity,
+            odlGenerated: orders[0].odlGenerated
           });
         } else {
           console.log("No orders found in the database");

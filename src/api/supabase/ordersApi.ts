@@ -69,39 +69,39 @@ const mapOrderDbToFrontend = (order: any): Order => {
   
   return {
     id: order.id,
-    vehicleId: order.vehicleid || order.vehicle_id || '',
-    dealerId: order.dealerid || order.dealer_id || '',
+    vehicleId: order.vehicle_id || order.vehicleid || '',
+    dealerId: order.dealer_id || order.dealerid || '',
     // CRITICAL FIX: Only use customername (the actual DB column) and fallback to others
     customerName: order.customername || '',
     status: order.status as 'processing' | 'delivered' | 'cancelled',
-    orderDate: order.orderdate || order.order_date,
-    deliveryDate: order.deliverydate || order.delivery_date,
-    progressiveNumber: order.progressivenumber || order.progressive_number,
+    orderDate: order.order_date || order.orderdate,
+    deliveryDate: order.delivery_date || order.deliverydate,
+    progressiveNumber: order.progressive_number || order.progressivenumber,
     price: order.price,
     // Set dealerName from customername for frontend display
     dealerName: order.customername || '',
-    modelName: order.modelname || order.model_name,
-    plafondDealer: order.plafonddealer || order.plafond_dealer,
+    modelName: order.model_name,
+    plafondDealer: order.plafond_dealer,
     
     // Map boolean fields - convert explicit to boolean to handle db nulls or strings
-    isLicensable: order.is_licensable === true || order.islicensable === true,
-    hasProforma: order.has_proforma === true || order.hasproforma === true,
-    isPaid: order.is_paid === true || order.ispaid === true,
-    paymentDate: order.paymentdate || order.payment_date,
-    isInvoiced: order.is_invoiced === true || order.isinvoiced === true,
-    invoiceNumber: order.invoicenumber || order.invoice_number,
-    invoiceDate: order.invoicedate || order.invoice_date,
-    hasConformity: order.has_conformity === true || order.hasconformity === true,
-    previousChassis: order.previouschassis || order.previous_chassis,
+    isLicensable: order.is_licensable === true,
+    hasProforma: order.has_proforma === true,
+    isPaid: order.is_paid === true,
+    paymentDate: order.payment_date,
+    isInvoiced: order.is_invoiced === true,
+    invoiceNumber: order.invoice_number,
+    invoiceDate: order.invoice_date,
+    hasConformity: order.has_conformity === true,
+    previousChassis: order.previous_chassis,
     chassis: order.chassis,
-    transportCosts: order.transportcosts || order.transport_costs || 0,
-    restorationCosts: order.restorationcosts || order.restoration_costs || 0,
-    fundingType: order.fundingtype || order.funding_type,
-    odlGenerated: order.odlgenerated === true || order.odl_generated === true,
+    transportCosts: order.transport_costs || 0,
+    restorationCosts: order.restoration_costs || 0,
+    fundingType: order.funding_type,
+    odlGenerated: order.odl_generated === true,
     
     // Relations (add if present in data)
-    vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
-    dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : null
+    vehicle: order.vehicle ? mapVehicleDbToFrontend(order.vehicle) : null,
+    dealer: order.dealer ? mapDealerDbToFrontend(order.dealer) : null
   };
 };
 
@@ -109,13 +109,13 @@ const mapOrderDbToFrontend = (order: any): Order => {
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
   // IMPORTANT: ONLY use the exact column names from the database schema
   return {
-    vehicleid: order.vehicleId,
-    dealerid: order.dealerId,
+    vehicle_id: order.vehicleId,
+    dealer_id: order.dealerId,
     // Use customername for dealerName/customerName - this is the key fix
     customername: order.customerName || order.dealerName,
     status: order.status,
-    orderdate: order.orderDate,
-    deliverydate: order.deliveryDate,
+    order_date: order.orderDate,
+    delivery_date: order.deliveryDate,
     price: order.price, 
     model_name: order.modelName,
     plafond_dealer: order.plafondDealer,
@@ -143,12 +143,13 @@ export const ordersApi = {
     console.log("Fetching all orders from Supabase");
     
     try {
+      // IMPORTANT FIX: Use "vehicle" and "dealer" as join names instead of "vehicleid" and "dealerid"
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          vehicles:vehicleid (*),
-          dealers:dealerid (*)
+          vehicle:vehicle_id (*),
+          dealer:dealer_id (*)
         `);
       
       if (error) {
@@ -181,8 +182,8 @@ export const ordersApi = {
       .from('orders')
       .select(`
         *,
-        vehicles:vehicleid (*),
-        dealers:dealerid (*)
+        vehicle:vehicle_id (*),
+        dealer:dealer_id (*)
       `)
       .eq('id', id)
       .maybeSingle();
