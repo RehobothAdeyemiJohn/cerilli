@@ -107,10 +107,10 @@ const ReserveVehicleForm = ({
         const orderResponse = await ordersApi.create({
           vehicleId: vehicle.id,
           dealerId: finalDealerId,
-          customerName: finalDealerName,
+          customerName: finalDealerName, // This will be stored in customername column in DB
           status: 'processing',
           orderDate: new Date().toISOString(),
-          dealerName: finalDealerName,
+          // Don't pass dealerName explicitly, it's mapped to customername
           modelName: vehicle.model,
           plafondDealer: dealerPlafond
         });

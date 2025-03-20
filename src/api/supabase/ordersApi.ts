@@ -60,14 +60,14 @@ const mapOrderDbToFrontend = (order: any): Order => {
     id: order.id,
     vehicleId: order.vehicleid || '',
     dealerId: order.dealerid || '',
-    // Use customername for both dealerName and customerName
+    // Use customername for both dealerName and customerName for consistency
     customerName: order.customername,
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.orderdate,
     deliveryDate: order.deliverydate,
     progressiveNumber: order.progressivenumber,
     price: order.price,
-    // Use customername for dealerName for consistency with database
+    // Map customername to dealerName in the frontend object
     dealerName: order.customername,
     modelName: order.modelname,
     plafondDealer: order.plafonddealer,
@@ -99,7 +99,7 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
-    // Use customerName for customername column, with dealerName as fallback
+    // IMPORTANT: Store either customerName or dealerName in the customername column (database)
     customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
