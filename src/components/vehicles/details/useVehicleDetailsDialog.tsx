@@ -173,7 +173,7 @@ export function useVehicleDetailsDialog(
     
     try {
       setIsTransforming(true);
-      console.log("Starting order creation for vehicle:", vehicle.id);
+      console.log("Creating order for vehicle:", vehicle.id);
       
       if (vehicle.status !== 'reserved') {
         toast({
@@ -184,41 +184,40 @@ export function useVehicleDetailsDialog(
         return;
       }
       
-      // Find dealer by name in vehicle.reservedBy
-      let dealerId = null;
-      const reservedByName = vehicle.reservedBy || '';
+      // Get dealer name from vehicle reservation
+      const customerName = vehicle.reservedBy || 'Cliente sconosciuto';
+      console.log("Customer name from vehicle:", customerName);
       
-      if (reservedByName) {
-        // Cerca un dealer con il nome esatto
-        const dealer = dealers.find(d => 
-          d.companyName?.toLowerCase() === reservedByName.toLowerCase());
-        
-        if (dealer) {
-          dealerId = dealer.id;
-          console.log("Found dealer with exact match:", dealerId);
-        }
-        
-        // Se non trovato con nome esatto, prova a cercare per similitudine
-        if (!dealerId) {
-          for (const d of dealers) {
-            if (reservedByName.toLowerCase().includes(d.companyName.toLowerCase()) || 
-                d.companyName.toLowerCase().includes(reservedByName.toLowerCase())) {
-              dealerId = d.id;
-              console.log("Found dealer with partial match:", dealerId);
-              break;
-            }
+      // Find dealer ID by matching name
+      let dealerId = null;
+      
+      // Try exact match first (case insensitive)
+      const exactMatch = dealers.find(d => 
+        d.companyName?.toLowerCase() === customerName.toLowerCase());
+      
+      if (exactMatch) {
+        dealerId = exactMatch.id;
+        console.log("Found dealer with exact match:", dealerId);
+      } else {
+        // Try partial match
+        for (const d of dealers) {
+          if (customerName.toLowerCase().includes(d.companyName.toLowerCase()) || 
+              d.companyName.toLowerCase().includes(customerName.toLowerCase())) {
+            dealerId = d.id;
+            console.log("Found dealer with partial match:", dealerId);
+            break;
           }
         }
-      }
-      
-      // Fallback al dealer dell'utente o al primo disponibile
-      if (!dealerId) {
-        if (user?.dealerId) {
-          dealerId = user.dealerId;
-          console.log("Using user's dealer ID:", dealerId);
-        } else if (dealers.length > 0) {
-          dealerId = dealers[0].id;
-          console.log("Using first available dealer:", dealerId);
+        
+        // Fallback to user's dealer or first available
+        if (!dealerId) {
+          if (user?.dealerId) {
+            dealerId = user.dealerId;
+            console.log("Using user's dealer ID:", dealerId);
+          } else if (dealers.length > 0) {
+            dealerId = dealers[0].id;
+            console.log("Using first available dealer:", dealerId);
+          }
         }
       }
       
@@ -226,35 +225,49 @@ export function useVehicleDetailsDialog(
         throw new Error("Nessun concessionario disponibile per creare l'ordine");
       }
       
-      console.log("Creating order with dealer ID:", dealerId);
-      console.log("Customer name:", reservedByName);
+      // Extract vehicle price
+      const vehiclePrice = vehicle.virtualConfig?.price || vehicle.price || 0;
+      console.log("Using vehicle price:", vehiclePrice);
       
-      // Usa direttamente la funzione RPC insert_order che abbiamo definito
-      const { data: orderId, error: orderError } = await supabase.rpc(
-        'insert_order',
-        {
-          p_vehicleid: vehicle.id,
-          p_dealerid: dealerId,
-          p_customername: reservedByName, // Usa il nome del dealer come customer name
-          p_status: 'processing'
-        }
-      );
+      // DIRECT DATABASE INSERT APPROACH
+      console.log("Using direct Supabase insert for order creation");
       
-      if (orderError) {
-        console.error("Error creating order:", orderError);
-        throw new Error(`Errore durante la creazione dell'ordine: ${orderError.message}`);
+      // Create the order object with exact database column names
+      // We're intentionally using the snake_case column names here
+      const orderData = {
+        vehicleid: vehicle.id,
+        dealerid: dealerId, 
+        customername: customerName, // This is the correct column name in the database
+        status: 'processing',
+        orderdate: new Date().toISOString(),
+        price: vehiclePrice,
+        model_name: vehicle.model
+      };
+      
+      console.log("Direct insert order data:", orderData);
+      
+      // Perform a direct insert
+      const { data: insertedOrder, error: insertError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error("Error inserting order:", insertError);
+        throw new Error(`Errore durante l'inserimento dell'ordine: ${insertError.message}`);
       }
       
-      console.log("Order created successfully with ID:", orderId);
+      console.log("Order created successfully:", insertedOrder);
       
-      // Aggiorna lo stato del veicolo
+      // Update vehicle status to ordered
       await vehiclesApi.update(vehicle.id, {
         status: 'ordered'
       });
       
       console.log("Vehicle status updated to ordered");
       
-      // Aggiorna i dati in cache
+      // Refresh data in cache
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
