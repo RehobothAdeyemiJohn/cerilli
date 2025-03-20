@@ -9,7 +9,6 @@ import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -49,7 +48,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const { user } = useAuth();
   const { handleVehicleDuplicate } = useInventory();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const userCanReserveVehicles = true;
@@ -260,8 +258,9 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
       
       handleDialogClose();
       
-      // Optionally navigate to the orders page
-      // navigate('/orders');
+      // Note: We're not navigating to orders page anymore
+      // Simply refreshing the data and staying on the current page
+      
     } catch (error) {
       console.error("Error transforming vehicle to order:", error);
       toast({
