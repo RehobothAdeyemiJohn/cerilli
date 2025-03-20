@@ -23,6 +23,7 @@ export const useContractsData = () => {
   // Create contract mutation
   const createContractMutation = useMutation({
     mutationFn: (order: Order) => {
+      // Ensure we're using the correct properties that match the expected fields in the contract creation process
       return dealerContractsApi.createFromOrder(order);
     },
     onSuccess: () => {
