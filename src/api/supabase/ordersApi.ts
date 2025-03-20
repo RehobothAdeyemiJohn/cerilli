@@ -88,7 +88,7 @@ const mapOrderDbToFrontend = (order: any): Order => {
     fundingType: order.fundingtype || order.funding_type,
     odlGenerated: order.odlgenerated === true || order.odl_generated === true,
     
-    // Relazioni (aggiunta se presenti nei dati)
+    // Relations (add if present in data)
     vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
     dealer: order.dealers ? mapDealerDbToFrontend(order.dealers) : null
   };
@@ -96,7 +96,7 @@ const mapOrderDbToFrontend = (order: any): Order => {
 
 // Helper function to map frontend order to database format
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
-  // CRITICAL FIX: ONLY use the exact column names from the database schema
+  // IMPORTANT: ONLY use the exact column names from the database schema
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,

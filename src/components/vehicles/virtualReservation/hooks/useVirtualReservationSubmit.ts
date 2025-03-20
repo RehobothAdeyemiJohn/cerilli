@@ -91,12 +91,12 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // CRITICAL FIX: Use the exact column names from the database schema
+      // Use the exact column names from the database schema
       console.log("Preparing order record with correct DB column names");
       const orderRecord = {
         vehicleid: vehicle.id,
         dealerid: reservationDealerId,
-        customername: selectedDealerName, // THIS IS THE KEY FIX - use customername instead of dealername
+        customername: selectedDealerName, // Use customername instead of dealername
         status: 'processing',
         orderdate: new Date().toISOString(),
         model_name: vehicle.model,
@@ -114,7 +114,7 @@ export const useVirtualReservationSubmit = (
       
       console.log("Inserting order with correct DB columns:", orderRecord);
       
-      // IMPORTANT: Use the exact column names from the database schema
+      // Use the exact column names from the database schema
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert(orderRecord)

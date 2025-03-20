@@ -13,15 +13,12 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       try {
         const order = await ordersApi.getById(orderId);
         
-        console.log("Order details for delivery check:", order);
-        
-        // Verificare se l'ODL è stato generato prima di consegnare
+        // Check if ODL is generated before allowing delivery
         if (!order.odlGenerated) {
-          console.log('ODL not generated');
           throw new Error("È necessario generare l'ODL prima di poter consegnare l'ordine");
         }
         
-        // Aggiornare lo stato del veicolo se esiste
+        // Update vehicle status if exists
         if (order.vehicleId && order.dealerId) {
           await vehiclesApi.update(order.vehicleId, {
             status: 'delivered',
@@ -40,7 +37,7 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
       }
     },
     onSuccess: () => {
-      // Invalidate all related queries to ensure data is fresh
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['dealers'] });
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
