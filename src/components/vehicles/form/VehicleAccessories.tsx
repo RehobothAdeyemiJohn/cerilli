@@ -39,6 +39,8 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                   // Check if this accessory is selected
                   const isChecked = currentAccessories.includes(accessory.name);
                   
+                  console.log(`Rendering accessory ${accessory.name}, selected: ${isChecked}`);
+                  
                   return (
                     <div key={accessory.id} className="flex items-center space-x-3">
                       <Checkbox

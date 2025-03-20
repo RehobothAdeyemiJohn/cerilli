@@ -40,6 +40,7 @@ const VehicleEditDialog = ({
   
   const handleSaveComplete = async (updatedVehicle: Vehicle) => {
     console.log('VehicleEditDialog - Saving vehicle with data:', updatedVehicle);
+    console.log('VehicleEditDialog - Accessories:', updatedVehicle.accessories);
     
     try {
       const success = await handleVehicleUpdate(updatedVehicle);

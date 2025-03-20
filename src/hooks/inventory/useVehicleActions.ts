@@ -28,6 +28,14 @@ export const useVehicleActions = () => {
         vehicle.price = parseFloat(vehicle.price as any) || 0;
       }
       
+      // Calculate accessories adjustment for price display
+      let accessoriesAdjustment = 0;
+      if (Array.isArray(vehicle.accessories) && vehicle.accessories.length > 0) {
+        console.log('Vehicle has accessories:', vehicle.accessories);
+        // Note: In a real app, we would look up the actual price of each accessory
+        // For now, we'll just log that we detected accessories
+      }
+      
       // Clean up any null values to prevent Supabase errors
       const cleanVehicle = { ...vehicle };
       Object.keys(cleanVehicle).forEach(key => {

@@ -7,6 +7,9 @@ interface VehiclePriceDisplayProps {
 }
 
 const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceDisplayProps) => {
+  // Debug log to see price data
+  console.log("VehiclePriceDisplay - rendering with:", { calculatedPrice, priceComponents });
+  
   return (
     <div className="border p-4 rounded-md bg-gray-50">
       <h3 className="text-lg font-semibold mb-2">Prezzo di Listino</h3>
@@ -48,10 +51,10 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
             </div>
           )}
           
-          {priceComponents.accessoriesAdjustment !== undefined && priceComponents.accessoriesAdjustment > 0 && (
+          {priceComponents.accessoriesAdjustment !== undefined && (
             <div className="flex justify-between">
               <span>Accessori:</span>
-              <span>+€{priceComponents.accessoriesAdjustment.toLocaleString('it-IT')}</span>
+              <span>+€{(priceComponents.accessoriesAdjustment || 0).toLocaleString('it-IT')}</span>
             </div>
           )}
           
@@ -60,7 +63,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
       )}
       
       <div className="flex justify-between text-lg font-semibold">
-        <span>Prezzo Totale:</span>
+        <span>Prezzo Totale Chiavi in Mano:</span>
         <span>€{calculatedPrice.toLocaleString('it-IT')}</span>
       </div>
     </div>

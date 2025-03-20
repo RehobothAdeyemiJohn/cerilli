@@ -45,15 +45,23 @@ export const useCalculatePrice = (
       // For transmission
       const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-      // Get accessories price
-      const accessoriesPrice = watchAccessories && watchAccessories.length
-        ? watchAccessories
-            .map(name => {
-              const acc = accessories.find(a => a.name === name);
-              return acc ? acc.priceWithVAT : 0;
-            })
-            .reduce((sum, price) => sum + price, 0)
-        : 0;
+      // Get accessories price - improved handling
+      let accessoriesPrice = 0;
+      if (watchAccessories && Array.isArray(watchAccessories) && watchAccessories.length > 0) {
+        console.log("Calculating accessories price for:", watchAccessories);
+        
+        accessoriesPrice = watchAccessories.reduce((sum, accessoryName) => {
+          const accessory = accessories.find(a => a.name === accessoryName);
+          if (accessory) {
+            console.log(`Found accessory ${accessoryName} with price ${accessory.priceWithVAT}`);
+            return sum + (accessory.priceWithVAT || 0);
+          }
+          console.log(`Accessory ${accessoryName} not found in available accessories`);
+          return sum;
+        }, 0);
+        
+        console.log("Total accessories price:", accessoriesPrice);
+      }
 
       console.log("Selected items:", {
         model: modelObj?.name,
