@@ -45,11 +45,16 @@ const VehicleEditDialog = ({
       const success = await handleVehicleUpdate(updatedVehicle);
       
       if (success) {
-        // Invalidate and refetch vehicles data
+        // Force a complete refresh of the vehicles data
+        console.log('Vehicle update successful, invalidating queries');
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        await queryClient.refetchQueries({ queryKey: ['vehicles'] });
         
-        // Call the onComplete callback
+        // Call the onComplete callback with the updated vehicle
         onComplete(updatedVehicle);
+        
+        // Close the dialog
+        onOpenChange(false);
         
         toast({
           title: "Veicolo aggiornato",

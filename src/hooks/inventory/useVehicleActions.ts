@@ -65,6 +65,7 @@ export const useVehicleActions = () => {
       
       console.log('Cleaned vehicle data for update:', cleanVehicle);
       
+      // Actually perform the update
       const result = await updateMutation.mutateAsync(cleanVehicle);
       
       console.log('Vehicle update response:', result);

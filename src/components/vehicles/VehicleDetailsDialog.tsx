@@ -74,13 +74,18 @@ const VehicleDetailsDialog = ({
         console.log("Vehicle updated successfully");
         setShowEditForm(false);
         
-        // Invalidate the vehicles cache to trigger a refetch
+        // Force a complete refresh of the vehicles data
+        console.log('Invalidating and refetching vehicle queries');
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        await queryClient.refetchQueries({ queryKey: ['vehicles'] });
         
         // Call onVehicleUpdated callback if provided
         if (onVehicleUpdated) {
           onVehicleUpdated();
         }
+        
+        // Close the dialog after successful update
+        onOpenChange(false);
         
         toast({
           title: "Veicolo aggiornato",

@@ -27,11 +27,10 @@ export const useInventoryMutations = () => {
       return updatedVehicle;
     },
     onSuccess: () => {
+      // Force an immediate refetch of the vehicles data
+      console.log('Update mutation completed successfully, invalidating and refetching queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      toast({
-        title: "Veicolo aggiornato",
-        description: "Il veicolo è stato aggiornato con successo",
-      });
+      queryClient.refetchQueries({ queryKey: ['vehicles'] });
     },
     onError: (error) => {
       console.error('Error updating vehicle:', error);
@@ -50,7 +49,7 @@ export const useInventoryMutations = () => {
       return await vehiclesApi.delete(id);
     },
     onSuccess: () => {
-      console.log('Delete mutation completed successfully');
+      console.log('Delete mutation completed successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast({
@@ -75,6 +74,7 @@ export const useInventoryMutations = () => {
       return await vehiclesApi.create(vehicle);
     },
     onSuccess: () => {
+      console.log('Create mutation completed successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       toast({
         title: "Veicolo aggiunto",
@@ -109,7 +109,12 @@ export const useInventoryMutations = () => {
     try {
       console.log("Duplicating vehicle with ID:", vehicleId);
       const duplicatedVehicle = await vehiclesApi.duplicate(vehicleId);
+      
+      // Force a refresh of the vehicles data
+      console.log('Vehicle duplicated successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.refetchQueries({ queryKey: ['vehicles'] });
+      
       toast({
         title: "Veicolo duplicato",
         description: "Il veicolo è stato duplicato con successo",
