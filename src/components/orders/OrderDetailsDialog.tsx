@@ -332,8 +332,26 @@ const OrderDetailsDialog = ({
           </div>
         </div>
         
-        <DialogFooter className="flex justify-between">
-          <div>
+        <DialogFooter className="flex justify-between items-center space-x-4">
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {}}
+              className="bg-blue-100 text-blue-800 hover:bg-blue-200"
+            >
+              APRI ORDINE
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {}}
+              className="bg-gray-100 text-gray-800 hover:bg-gray-200"
+            >
+              Anteprima
+            </Button>
+          </div>
+          <div className="flex gap-2">
             {!localOrder.odlGenerated && (
               <Button 
                 type="button" 
@@ -344,8 +362,6 @@ const OrderDetailsDialog = ({
                 Genera ODL
               </Button>
             )}
-          </div>
-          <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annulla
             </Button>
