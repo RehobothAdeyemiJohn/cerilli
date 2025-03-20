@@ -91,55 +91,55 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // CRITICAL: Assicurati che i nomi delle colonne corrispondano esattamente 
-      // a quelli della tabella nel database
+      // Using EXACTLY the database column names from the schema
+      console.log("Preparing order record with correct DB column names");
       const orderRecord = {
-        vehicleid: vehicle.id, // DB column name
-        dealerid: reservationDealerId, // DB column name
-        customername: selectedDealerName, // DB column name (NON usare dealername!)
+        vehicle_id: vehicle.id, // Correct DB column name
+        dealer_id: reservationDealerId, // Correct DB column name
+        customer_name: selectedDealerName, // Correct DB column name (not dealername!)
         status: 'processing',
-        orderdate: new Date().toISOString(), // DB column name
-        model_name: vehicle.model, // DB column name (Usa model_name, non modelname)
+        order_date: new Date().toISOString(), // Correct DB column name
+        model_name: vehicle.model, // Correct DB column name
         price: calculatedPrice || 0,
-        plafond_dealer: dealerPlafond, // DB column name (Usa plafond_dealer, non plafonddealer)
-        // Imposta valori predefiniti per i campi booleani
-        is_licensable: false, // DB column name
-        has_proforma: false, // DB column name
-        is_paid: false, // DB column name
-        is_invoiced: false, // DB column name
-        has_conformity: false, // DB column name
-        odl_generated: false, // DB column name
-        transport_costs: 0, // DB column name
-        restoration_costs: 0 // DB column name
+        plafond_dealer: dealerPlafond, // Correct DB column name
+        // Default values for boolean fields
+        is_licensable: false, // Correct DB column name
+        has_proforma: false, // Correct DB column name
+        is_paid: false, // Correct DB column name
+        is_invoiced: false, // Correct DB column name
+        has_conformity: false, // Correct DB column name
+        odl_generated: false, // Correct DB column name
+        transport_costs: 0, // Correct DB column name
+        restoration_costs: 0 // Correct DB column name
       };
       
-      console.log("Inserimento ordine con le colonne corrette del DB:", orderRecord);
+      console.log("Inserting order with correct DB columns:", orderRecord);
       
-      // Utilizza i nomi esatti delle colonne del database
+      // Use the exact column names from the database schema
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert(orderRecord)
         .select()
-        .maybeSingle(); // Usa maybeSingle invece di single per evitare errori
+        .maybeSingle();
         
       if (orderError) {
-        console.error("Errore durante la creazione dell'ordine:", orderError);
+        console.error("Order creation error:", orderError);
         throw orderError;
       }
 
-      console.log("Ordine creato con successo:", orderData);
+      console.log("Order created successfully:", orderData);
 
-      // Aggiorna le query per ricaricare i dati
+      // Refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
-      // Mostra messaggio di successo
+      // Success message
       toast({
         title: "Prenotazione effettuata",
         description: `Il veicolo ${vehicle.model} è stato prenotato con successo.`,
       });
 
-      // Completa il flusso di prenotazione
+      // Complete reservation flow
       onReservationComplete();
     } catch (error) {
       console.error("Errore durante la creazione della prenotazione:", error);
