@@ -95,7 +95,7 @@ const OrderDetailsDialog = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] w-full">
+      <DialogContent className="sm:max-w-[1200px] w-full">
         <DialogHeader>
           <DialogTitle>Dettagli Ordine #{order.progressiveNumber?.toString().padStart(3, '0')}</DialogTitle>
           <DialogDescription>
@@ -103,8 +103,8 @@ const OrderDetailsDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-4 py-4">
-          <div className="col-span-2">
+        <div className="grid grid-cols-4 gap-4 py-4">
+          <div className="col-span-4">
             <p className="text-sm font-medium">Informazioni di base</p>
           </div>
           
@@ -131,7 +131,7 @@ const OrderDetailsDialog = ({
             <p className="text-sm">{formatCurrency(order.price || 0)}</p>
           </div>
 
-          <div className="col-span-2 border-t mt-2 pt-2">
+          <div className="col-span-4 border-t mt-2 pt-2">
             <p className="text-sm font-medium">Configurazione Veicolo</p>
           </div>
           
@@ -158,7 +158,7 @@ const OrderDetailsDialog = ({
               </div>
               
               {order.vehicle.accessories && order.vehicle.accessories.length > 0 && (
-                <div className="space-y-1 col-span-2">
+                <div className="space-y-1 col-span-4">
                   <Label htmlFor="accessories">Accessori</Label>
                   <ul className="text-sm list-disc pl-5">
                     {order.vehicle.accessories.map((acc, index) => (
@@ -170,11 +170,11 @@ const OrderDetailsDialog = ({
             </>
           )}
           
-          <div className="col-span-2 border-t mt-2 pt-2">
+          <div className="col-span-4 border-t mt-2 pt-2">
             <p className="text-sm font-medium">Dettagli Ordine</p>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-2">
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="is-licensable" 
@@ -239,7 +239,7 @@ const OrderDetailsDialog = ({
             )}
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-2">
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="is-invoiced" 
@@ -290,7 +290,7 @@ const OrderDetailsDialog = ({
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-1">
             <Label htmlFor="chassis">Telaio</Label>
             <Input 
               id="chassis" 
@@ -302,7 +302,7 @@ const OrderDetailsDialog = ({
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-1">
             <Label htmlFor="prev-chassis">Telaio Precedente</Label>
             <Input 
               id="prev-chassis" 
@@ -311,7 +311,7 @@ const OrderDetailsDialog = ({
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-1">
             <Label htmlFor="transport-costs">Costi di Trasporto (€)</Label>
             <Input 
               id="transport-costs" 
@@ -321,7 +321,7 @@ const OrderDetailsDialog = ({
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 col-span-1">
             <Label htmlFor="restoration-costs">Costi di Ripristino (€)</Label>
             <Input 
               id="restoration-costs" 
