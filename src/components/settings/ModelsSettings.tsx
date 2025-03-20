@@ -160,7 +160,7 @@ const ModelsSettings = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Gestione Modelli</h2>
-        <Button onClick={handleAddModel}>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Aggiungi Modello
         </Button>

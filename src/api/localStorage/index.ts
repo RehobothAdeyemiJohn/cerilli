@@ -33,17 +33,18 @@ initSettingsData();
 
 // Always use Supabase for settings
 localStorage.setItem('useSupabaseSettings', 'true');
-const useSupabase = true; // Imposta sempre su true per usare Supabase
+// Force using Supabase - this is crucial
+const useSupabase = true;
 console.log('Using Supabase for settings:', useSupabase);
 
-// Export the appropriate APIs based on the setting
-export const modelsApi = useSupabase ? supabaseModelsApi : localModelsApi;
-export const trimsApi = useSupabase ? supabaseTrimsApi : localTrimsApi;
-export const fuelTypesApi = useSupabase ? supabaseFuelTypesApi : localFuelTypesApi;
-export const colorsApi = useSupabase ? supabaseColorsApi : localColorsApi;
-export const transmissionsApi = useSupabase ? supabaseTransmissApi : localTransmissionsApi;
-export const accessoriesApi = useSupabase ? supabaseAccessoriesApi : localAccessoriesApi;
-export const calculateVehiclePrice = useSupabase ? supabaseCalculateVehiclePrice : localCalculateVehiclePrice;
+// Export the appropriate APIs based on the setting - forcing Supabase
+export const modelsApi = supabaseModelsApi;
+export const trimsApi = supabaseTrimsApi;
+export const fuelTypesApi = supabaseFuelTypesApi;
+export const colorsApi = supabaseColorsApi;
+export const transmissionsApi = supabaseTransmissApi;
+export const accessoriesApi = supabaseAccessoriesApi;
+export const calculateVehiclePrice = supabaseCalculateVehiclePrice;
 
 // Export other APIs
 export * from './ordersApi';

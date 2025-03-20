@@ -33,6 +33,14 @@ const TrimsSettings = () => {
       setIsAddDialogOpen(false);
       setCurrentTrim({});
     },
+    onError: (error) => {
+      console.error('Error creating trim:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta dell'allestimento.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateMutation = useMutation({
@@ -46,6 +54,14 @@ const TrimsSettings = () => {
       setIsEditDialogOpen(false);
       setCurrentTrim({});
     },
+    onError: (error) => {
+      console.error('Error updating trim:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento dell'allestimento.",
+        variant: "destructive",
+      });
+    }
   });
 
   const deleteMutation = useMutation({
@@ -60,6 +76,14 @@ const TrimsSettings = () => {
         description: "L'allestimento è stato eliminato con successo.",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting trim:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione dell'allestimento.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAddTrim = () => {

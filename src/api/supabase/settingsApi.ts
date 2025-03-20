@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { 
   VehicleModel, 
@@ -12,6 +11,7 @@ import {
 // Models API
 const modelsApi = {
   getAll: async (): Promise<VehicleModel[]> => {
+    console.log('Fetching models from Supabase');
     const { data, error } = await supabase
       .from('settings_models')
       .select('*')
@@ -22,10 +22,20 @@ const modelsApi = {
       return [];
     }
     
-    return data as VehicleModel[];
+    // Map the column names to our model structure
+    const mappedData = data.map(item => ({
+      id: item.id,
+      name: item.name,
+      basePrice: item.base_price,
+      imageUrl: item.imageurl
+    }));
+    
+    console.log('Fetched models:', mappedData);
+    return mappedData;
   },
   
   getById: async (id: string): Promise<VehicleModel | null> => {
+    console.log('Fetching model by id from Supabase:', id);
     const { data, error } = await supabase
       .from('settings_models')
       .select('*')
@@ -37,30 +47,72 @@ const modelsApi = {
       return null;
     }
     
-    return data as VehicleModel;
+    // Map the column names to our model structure
+    const model = {
+      id: data.id,
+      name: data.name,
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
+    };
+    
+    return model;
   },
   
   create: async (model: Omit<VehicleModel, 'id'>): Promise<VehicleModel> => {
+    console.log('Creating model in Supabase:', model);
     const { data, error } = await supabase
       .from('settings_models')
-      .insert([model])
+      .insert([{
+        name: model.name,
+        base_price: model.basePrice,
+        imageurl: model.imageUrl
+      }])
       .select()
       .single();
     
-    if (error) throw error;
-    return data as VehicleModel;
+    if (error) {
+      console.error('Error creating model:', error);
+      throw error;
+    }
+    
+    // Map the column names to our model structure
+    const createdModel = {
+      id: data.id,
+      name: data.name,
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
+    };
+    
+    return createdModel;
   },
   
   update: async (id: string, model: VehicleModel): Promise<VehicleModel> => {
+    console.log('Updating model in Supabase:', { id, model });
     const { data, error } = await supabase
       .from('settings_models')
-      .update(model)
+      .update({
+        name: model.name,
+        base_price: model.basePrice,
+        imageurl: model.imageUrl
+      })
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
-    return data as VehicleModel;
+    if (error) {
+      console.error('Error updating model:', error);
+      throw error;
+    }
+    
+    // Map the column names to our model structure
+    const updatedModel = {
+      id: data.id,
+      name: data.name,
+      basePrice: data.base_price,
+      imageUrl: data.imageurl
+    };
+    
+    return updatedModel;
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -77,6 +129,7 @@ const modelsApi = {
 // Trims API
 const trimsApi = {
   getAll: async (): Promise<VehicleTrim[]> => {
+    console.log('Fetching trims from Supabase');
     const { data, error } = await supabase
       .from('settings_trims')
       .select('*')
@@ -87,7 +140,16 @@ const trimsApi = {
       return [];
     }
     
-    return data as VehicleTrim[];
+    // Map the column names to our model structure
+    const mappedData = data.map(item => ({
+      id: item.id,
+      name: item.name,
+      basePrice: item.price_adjustment,
+      compatibleModels: item.compatible_models || []
+    }));
+    
+    console.log('Fetched trims:', mappedData);
+    return mappedData;
   },
   
   getById: async (id: string): Promise<VehicleTrim | null> => {
@@ -142,6 +204,7 @@ const trimsApi = {
 // Fuel Types API
 const fuelTypesApi = {
   getAll: async (): Promise<FuelType[]> => {
+    console.log('Fetching fuel types from Supabase');
     const { data, error } = await supabase
       .from('settings_fuel_types')
       .select('*')
@@ -152,7 +215,16 @@ const fuelTypesApi = {
       return [];
     }
     
-    return data as FuelType[];
+    // Map the column names to our model structure
+    const mappedData = data.map(item => ({
+      id: item.id,
+      name: item.name,
+      priceAdjustment: item.price_adjustment,
+      compatibleModels: item.compatible_models || []
+    }));
+    
+    console.log('Fetched fuel types:', mappedData);
+    return mappedData;
   },
   
   getById: async (id: string): Promise<FuelType | null> => {
@@ -524,3 +596,4 @@ export {
   accessoriesApi,
   calculateVehiclePrice
 };
+

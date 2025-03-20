@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -33,6 +32,14 @@ const FuelTypesSettings = () => {
       setIsAddDialogOpen(false);
       setCurrentFuelType({});
     },
+    onError: (error) => {
+      console.error('Error creating fuel type:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta del tipo di alimentazione.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateMutation = useMutation({
@@ -46,6 +53,14 @@ const FuelTypesSettings = () => {
       setIsEditDialogOpen(false);
       setCurrentFuelType({});
     },
+    onError: (error) => {
+      console.error('Error updating fuel type:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del tipo di alimentazione.",
+        variant: "destructive",
+      });
+    }
   });
 
   const deleteMutation = useMutation({
@@ -60,6 +75,14 @@ const FuelTypesSettings = () => {
         description: "L'alimentazione è stata eliminata con successo.",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting fuel type:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione dell'alimentazione.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAddFuelType = () => {

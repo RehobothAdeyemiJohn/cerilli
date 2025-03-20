@@ -38,6 +38,17 @@ export const isSupabaseConfigured = () => {
   return true;
 };
 
-// Logging at app initialization to verify configuration
+// Log connection information for debugging
 console.log('Inizializzazione client Supabase con URL:', supabaseUrl);
 isSupabaseConfigured();
+
+// Add additional diagnostic information
+console.log('Verifica connessione a Supabase...');
+// Test the connection
+supabase.from('settings_models').select('count').then(({ data, error }) => {
+  if (error) {
+    console.error('Errore di connessione a Supabase:', error);
+  } else {
+    console.log('Connessione a Supabase stabilita con successo');
+  }
+});
