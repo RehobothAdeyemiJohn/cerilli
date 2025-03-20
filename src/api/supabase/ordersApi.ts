@@ -252,11 +252,16 @@ export const ordersApi = {
       .from('orders')
       .insert(dbOrder)
       .select()
-      .single();
+      .maybeSingle(); // Changed from .single() to .maybeSingle()
     
     if (error) {
       console.error('Error creating order:', error);
       throw error;
+    }
+    
+    if (!data) {
+      console.error('No data returned from order creation');
+      throw new Error('Failed to create order - no data returned');
     }
     
     console.log("Order created successfully:", data);
