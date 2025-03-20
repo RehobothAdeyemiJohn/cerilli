@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Vehicle, Quote, Order } from '@/types';
 import { quotesApi } from '@/api/supabase/quotesApi';
@@ -172,7 +173,7 @@ export function useVehicleDetailsDialog(
     
     try {
       setIsTransforming(true);
-      console.log("Beginning transformation process for vehicle:", vehicle.id);
+      console.log("Starting order creation for vehicle:", vehicle.id);
       
       if (vehicle.status !== 'reserved') {
         toast({
@@ -183,38 +184,40 @@ export function useVehicleDetailsDialog(
         return;
       }
       
+      // Find dealer by name in vehicle.reservedBy
       let dealerId = null;
-      let dealerName = vehicle.reservedBy || '';
+      const reservedByName = vehicle.reservedBy || '';
       
-      if (dealerName) {
-        const dealer = dealers.find(d => d.companyName === dealerName);
+      if (reservedByName) {
+        // Cerca un dealer con il nome esatto
+        const dealer = dealers.find(d => 
+          d.companyName?.toLowerCase() === reservedByName.toLowerCase());
+        
         if (dealer) {
           dealerId = dealer.id;
-          console.log("Found dealer by name:", dealerName, "with ID:", dealerId);
-        } else {
-          console.log("Dealer not found by name, checking all dealers...");
+          console.log("Found dealer with exact match:", dealerId);
+        }
+        
+        // Se non trovato con nome esatto, prova a cercare per similitudine
+        if (!dealerId) {
           for (const d of dealers) {
-            if (dealerName.includes(d.companyName) || d.companyName.includes(dealerName)) {
+            if (reservedByName.toLowerCase().includes(d.companyName.toLowerCase()) || 
+                d.companyName.toLowerCase().includes(reservedByName.toLowerCase())) {
               dealerId = d.id;
-              dealerName = d.companyName;
-              console.log("Found similar dealer:", dealerName, "with ID:", dealerId);
+              console.log("Found dealer with partial match:", dealerId);
               break;
             }
           }
         }
       }
       
+      // Fallback al dealer dell'utente o al primo disponibile
       if (!dealerId) {
         if (user?.dealerId) {
           dealerId = user.dealerId;
-          const userDealer = dealers.find(d => d.id === dealerId);
-          if (userDealer) {
-            dealerName = userDealer.companyName;
-          }
           console.log("Using user's dealer ID:", dealerId);
         } else if (dealers.length > 0) {
           dealerId = dealers[0].id;
-          dealerName = dealers[0].companyName;
           console.log("Using first available dealer:", dealerId);
         }
       }
@@ -223,16 +226,17 @@ export function useVehicleDetailsDialog(
         throw new Error("Nessun concessionario disponibile per creare l'ordine");
       }
       
-      const price = vehicle.virtualConfig?.price || vehicle.price || 0;
+      console.log("Creating order with dealer ID:", dealerId);
+      console.log("Customer name:", reservedByName);
       
-      const { data: orderData, error: orderError } = await supabase.rpc(
+      // Usa direttamente la funzione RPC insert_order che abbiamo definito
+      const { data: orderId, error: orderError } = await supabase.rpc(
         'insert_order',
         {
           p_vehicleid: vehicle.id,
           p_dealerid: dealerId,
-          p_customername: dealerName,
-          p_status: 'processing',
-          p_orderdate: new Date().toISOString()
+          p_customername: reservedByName, // Usa il nome del dealer come customer name
+          p_status: 'processing'
         }
       );
       
@@ -241,14 +245,16 @@ export function useVehicleDetailsDialog(
         throw new Error(`Errore durante la creazione dell'ordine: ${orderError.message}`);
       }
       
-      console.log("Order created successfully with ID:", orderData);
+      console.log("Order created successfully with ID:", orderId);
       
+      // Aggiorna lo stato del veicolo
       await vehiclesApi.update(vehicle.id, {
         status: 'ordered'
       });
       
       console.log("Vehicle status updated to ordered");
       
+      // Aggiorna i dati in cache
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       
@@ -259,10 +265,10 @@ export function useVehicleDetailsDialog(
       
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error in transform to order process:', error);
+      console.error('Error creating order:', error);
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore durante la trasformazione in ordine",
+        description: error.message || "Si è verificato un errore durante la creazione dell'ordine",
         variant: "destructive",
       });
     } finally {
