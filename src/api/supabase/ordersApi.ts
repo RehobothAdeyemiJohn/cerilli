@@ -60,7 +60,7 @@ const mapOrderDbToFrontend = (order: any): Order => {
     id: order.id,
     vehicleId: order.vehicleid || '',
     dealerId: order.dealerid || '',
-    // Use customername for both dealerName and customerName for consistency
+    // IMPORTANT: Use customername for customerName in the frontend object
     customerName: order.customername,
     status: order.status as 'processing' | 'delivered' | 'cancelled',
     orderDate: order.orderdate,
@@ -69,24 +69,24 @@ const mapOrderDbToFrontend = (order: any): Order => {
     price: order.price,
     // Map customername to dealerName in the frontend object
     dealerName: order.customername,
-    modelName: order.modelname,
-    plafondDealer: order.plafonddealer,
+    modelName: order.modelname || order.model_name,
+    plafondDealer: order.plafonddealer || order.plafond_dealer,
     
     // Map fields with camelCase frontend names to database column names
-    isLicensable: order.islicensable === true,
-    hasProforma: order.hasproforma === true,
-    isPaid: order.ispaid === true,
-    paymentDate: order.paymentdate,
-    isInvoiced: order.isinvoiced === true,
-    invoiceNumber: order.invoicenumber,
-    invoiceDate: order.invoicedate,
-    hasConformity: order.hasconformity === true,
-    previousChassis: order.previouschassis,
+    isLicensable: order.islicensable === true || order.is_licensable === true,
+    hasProforma: order.hasproforma === true || order.has_proforma === true,
+    isPaid: order.ispaid === true || order.is_paid === true,
+    paymentDate: order.paymentdate || order.payment_date,
+    isInvoiced: order.isinvoiced === true || order.is_invoiced === true,
+    invoiceNumber: order.invoicenumber || order.invoice_number,
+    invoiceDate: order.invoicedate || order.invoice_date,
+    hasConformity: order.hasconformity === true || order.has_conformity === true,
+    previousChassis: order.previouschassis || order.previous_chassis,
     chassis: order.chassis,
-    transportCosts: order.transportcosts || 0,
-    restorationCosts: order.restorationcosts || 0,
-    fundingType: order.fundingtype,
-    odlGenerated: order.odlgenerated === true,
+    transportCosts: order.transportcosts || order.transport_costs || 0,
+    restorationCosts: order.restorationcosts || order.restoration_costs || 0,
+    fundingType: order.fundingtype || order.funding_type,
+    odlGenerated: order.odlgenerated === true || order.odl_generated === true,
     
     // Relazioni (aggiunta se presenti nei dati)
     vehicle: order.vehicles ? mapVehicleDbToFrontend(order.vehicles) : null,
@@ -96,10 +96,11 @@ const mapOrderDbToFrontend = (order: any): Order => {
 
 // Helper function to map frontend order to database format
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
+  // IMPORTANT: We're using the exact column names from the database schema
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
-    // IMPORTANT: Store either customerName or dealerName in the customername column (database)
+    // CRITICAL FIX: We store either customerName or dealerName in the customername column
     customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
@@ -108,7 +109,7 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
     modelname: order.modelName,
     plafonddealer: order.plafondDealer,
     
-    // Map camelCase fields to database columns
+    // Map camelCase fields to database columns with exact same names as in schema
     islicensable: order.isLicensable,
     hasproforma: order.hasProforma,
     ispaid: order.isPaid,
@@ -252,7 +253,7 @@ export const ordersApi = {
       .from('orders')
       .insert(dbOrder)
       .select()
-      .maybeSingle(); // Changed from .single() to .maybeSingle()
+      .maybeSingle();
     
     if (error) {
       console.error('Error creating order:', error);

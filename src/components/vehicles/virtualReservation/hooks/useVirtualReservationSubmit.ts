@@ -94,14 +94,17 @@ export const useVirtualReservationSubmit = (
       // Using EXACTLY the database column names from the schema
       console.log("Preparing order record with correct DB column names");
       const orderRecord = {
-        vehicleid: vehicle.id, // Using vehicleid as in the database
-        dealerid: reservationDealerId, // Using dealerid as in the database
-        customername: selectedDealerName, // Using customername as in the database
+        vehicleid: vehicle.id,
+        dealerid: reservationDealerId,
+        // CRITICAL FIX: Use customername instead of dealername
+        customername: selectedDealerName,
         status: 'processing',
-        orderdate: new Date().toISOString(), // Using orderdate as in the database
-        model_name: vehicle.model, // This appears to be correct (model_name)
+        orderdate: new Date().toISOString(),
+        // Use either model_name or modelname based on the database schema
+        // Using model_name as it appears in the schema
+        model_name: vehicle.model,
         price: calculatedPrice || 0,
-        plafond_dealer: dealerPlafond, // This appears to be correct (plafond_dealer)
+        plafond_dealer: dealerPlafond,
         // Default values for boolean fields
         is_licensable: false, 
         has_proforma: false, 
