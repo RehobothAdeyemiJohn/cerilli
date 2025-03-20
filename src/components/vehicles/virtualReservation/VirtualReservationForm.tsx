@@ -15,12 +15,14 @@ interface VirtualReservationFormProps {
   vehicle: Vehicle;
   onReservationComplete: () => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 const VirtualReservationForm: React.FC<VirtualReservationFormProps> = ({
   vehicle,
   onReservationComplete,
-  onCancel
+  onCancel,
+  isSubmitting: externalIsSubmitting
 }) => {
   const {
     form,
@@ -32,8 +34,12 @@ const VirtualReservationForm: React.FC<VirtualReservationFormProps> = ({
     calculatedPrice,
     priceComponents,
     isAdmin,
-    activeDealers
+    activeDealers,
+    isSubmitting: internalIsSubmitting
   } = useVirtualReservation(vehicle, onCancel, onReservationComplete);
+
+  // Use external isSubmitting value if provided, otherwise fall back to internal state
+  const isSubmittingState = externalIsSubmitting !== undefined ? externalIsSubmitting : internalIsSubmitting;
 
   if (isLoading) {
     return <VirtualReservationLoading />;
@@ -74,7 +80,7 @@ const VirtualReservationForm: React.FC<VirtualReservationFormProps> = ({
           />
 
           {/* Form actions */}
-          <VirtualReservationActions onCancel={onCancel} />
+          <VirtualReservationActions onCancel={onCancel} isSubmitting={isSubmittingState} />
         </form>
       </Form>
     </div>

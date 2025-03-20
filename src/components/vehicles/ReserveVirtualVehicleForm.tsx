@@ -12,16 +12,18 @@ import VirtualReservationLoading from './virtualReservation/VirtualReservationLo
 import VirtualReservationError from './virtualReservation/VirtualReservationError';
 import VirtualReservationDestination from './virtualReservation/VirtualReservationDestination';
 
-interface ReserveVirtualVehicleFormProps {
+export interface ReserveVirtualVehicleFormProps {
   vehicle: Vehicle;
   onCancel: () => void;
   onReservationComplete: () => void;
+  isSubmitting?: boolean;
 }
 
 const ReserveVirtualVehicleForm = ({ 
   vehicle, 
   onCancel, 
-  onReservationComplete
+  onReservationComplete,
+  isSubmitting: externalIsSubmitting
 }: ReserveVirtualVehicleFormProps) => {
   const {
     form,
@@ -34,9 +36,12 @@ const ReserveVirtualVehicleForm = ({
     priceComponents,
     isAdmin,
     activeDealers,
-    isSubmitting,
+    isSubmitting: internalIsSubmitting,
     onCancel: handleCancel,
   } = useVirtualReservation(vehicle, onCancel, onReservationComplete);
+
+  // Use external isSubmitting value if provided, otherwise fall back to internal state
+  const isSubmittingState = externalIsSubmitting !== undefined ? externalIsSubmitting : internalIsSubmitting;
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -95,7 +100,7 @@ const ReserveVirtualVehicleForm = ({
           priceComponents={priceComponents}
         />
         
-        <VirtualReservationActions onCancel={handleCancel} isSubmitting={isSubmitting} />
+        <VirtualReservationActions onCancel={handleCancel} isSubmitting={isSubmittingState} />
       </form>
     </Form>
   );
