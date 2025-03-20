@@ -78,8 +78,8 @@ const VehicleCard = ({
     return vehicle.location;
   };
 
-  // Don't show admin buttons on vehicle cards - removed per request 
-  const showAdminButtons = false;
+  // Show admin buttons for admins and only for stock that's not virtual
+  const showAdminButtons = isAdmin && !isVirtualStock;
 
   return (
     <div 
@@ -94,6 +94,16 @@ const VehicleCard = ({
           </div>
           
           <div className="flex items-center gap-2">
+            {showAdminButtons && (
+              <button
+                onClick={(e) => handleActionClick(e, onEdit)}
+                className="p-1 text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                aria-label="Modifica veicolo"
+                type="button"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
             {isVirtualStock && !isDealer && (
               <button
                 onClick={(e) => handleActionClick(e, onDuplicate)}
