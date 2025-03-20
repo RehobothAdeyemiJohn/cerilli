@@ -29,10 +29,14 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
             <div className="space-y-2">
               {compatibleAccessories.length > 0 ? (
                 compatibleAccessories.map((accessory) => {
-                  const currentAccessories = form.getValues('accessories') || [];
-                  const isChecked = Array.isArray(currentAccessories) && 
-                    currentAccessories.includes(accessory.name);
+                  // Ensure we have an array of accessories from form values
+                  const currentAccessories = Array.isArray(form.getValues('accessories')) 
+                    ? form.getValues('accessories') 
+                    : [];
                     
+                  // Check if this accessory is selected
+                  const isChecked = currentAccessories.includes(accessory.name);
+                  
                   console.log(`Accessory ${accessory.name} checked:`, isChecked);
                   
                   return (
@@ -40,10 +44,17 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                       <Checkbox
                         checked={isChecked}
                         onCheckedChange={(checked) => {
-                          const current = form.getValues('accessories') || [];
+                          // Get current accessories (ensuring it's an array)
+                          const current = Array.isArray(form.getValues('accessories')) 
+                            ? form.getValues('accessories') 
+                            : [];
+                            
+                          // Update the array based on checkbox state
                           const updated = checked
                             ? [...current, accessory.name]
                             : current.filter((name: string) => name !== accessory.name);
+                            
+                          // Set the updated array in the form
                           form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
                           console.log("Updated accessories:", updated);
                         }}

@@ -10,7 +10,15 @@ export const useInventoryMutations = () => {
   const updateMutation = useMutation({
     mutationFn: (vehicle: Vehicle) => {
       console.log('Mutation updating vehicle:', vehicle);
-      return vehiclesApi.update(vehicle.id, vehicle);
+      
+      // Ensure all required fields are properly formatted before sending to Supabase
+      const formattedVehicle = {
+        ...vehicle,
+        accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
+        price: typeof vehicle.price === 'number' ? vehicle.price : 0
+      };
+      
+      return vehiclesApi.update(vehicle.id, formattedVehicle);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });

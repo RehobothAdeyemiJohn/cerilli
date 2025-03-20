@@ -25,8 +25,23 @@ export const useVehicleActions = () => {
       
       // Make sure price is a number
       if (typeof vehicle.price !== 'number') {
-        vehicle.price = 0;
+        vehicle.price = parseFloat(vehicle.price as any) || 0;
       }
+      
+      // Clean up any null values to prevent Supabase errors
+      Object.keys(vehicle).forEach(key => {
+        if (vehicle[key] === null) {
+          if (key === 'accessories') {
+            vehicle[key] = [];
+          } else if (key === 'price') {
+            vehicle[key] = 0;
+          } else if (typeof vehicle[key] === 'string') {
+            vehicle[key] = '';
+          }
+        }
+      });
+      
+      console.log('Cleaned vehicle data for update:', vehicle);
       
       const result = await updateMutation.mutateAsync(vehicle);
       

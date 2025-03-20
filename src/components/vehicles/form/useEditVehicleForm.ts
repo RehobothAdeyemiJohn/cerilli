@@ -37,6 +37,8 @@ export const useEditVehicleForm = (
   const [validationError, setValidationError] = useState<string | null>(null);
   const [priceComponents, setPriceComponents] = useState<any>({});
 
+  console.log("Initial vehicle data:", vehicle);
+
   // Initialize form with vehicle data
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleSchema),
@@ -49,7 +51,7 @@ export const useEditVehicleForm = (
       transmission: vehicle.transmission || '',
       status: vehicle.status,
       telaio: vehicle.telaio || '',
-      accessories: vehicle.accessories || [],
+      accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
       originalStock: vehicle.originalStock || '' // Initialize with existing originalStock value
     },
   });
@@ -124,19 +126,22 @@ export const useEditVehicleForm = (
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
         
-        // Refine color handling to better match database values
+        // Improved color handling
         let colorObj;
         
-        if (watchColor.includes('(')) {
-          const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
-          if (colorParts) {
-            const colorName = colorParts[1];
-            const colorType = colorParts[2];
-            colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+        if (watchColor) {
+          if (watchColor.includes('(')) {
+            // If it has parentheses, try to parse it
+            const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
+            if (colorParts) {
+              const colorName = colorParts[1].trim();
+              const colorType = colorParts[2].trim();
+              colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+            }
+          } else {
+            // Try to find by name only
+            colorObj = colors.find(c => c.name === watchColor);
           }
-        } else {
-          // Try to find by name only
-          colorObj = colors.find(c => c.name === watchColor);
         }
         
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
@@ -163,13 +168,14 @@ export const useEditVehicleForm = (
           setPriceComponents(components);
           
           // Find accessory IDs based on names
-          const selectedAccessoryIds = watchAccessories
-            .filter(name => name) // Filter out any empty strings
-            .map(name => {
-              const acc = accessories.find(a => a.name === name);
-              return acc ? acc.id : '';
-            })
-            .filter(id => id !== '');
+          const selectedAccessoryIds = Array.isArray(watchAccessories) ? 
+            watchAccessories
+              .filter(name => name) // Filter out any empty strings
+              .map(name => {
+                const acc = accessories.find(a => a.name === name);
+                return acc ? acc.id : '';
+              })
+              .filter(id => id !== '') : [];
 
           console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
 
@@ -282,7 +288,7 @@ export const useEditVehicleForm = (
       transmission: isVirtualStock ? '' : data.transmission || '',
       status: data.status,
       telaio: isVirtualStock ? '' : data.telaio || '',
-      accessories: isVirtualStock ? [] : data.accessories || [],
+      accessories: isVirtualStock ? [] : (Array.isArray(data.accessories) ? data.accessories : []),
       price: isVirtualStock ? 0 : calculatedPrice,
       originalStock: isVirtualStock ? (data.originalStock as 'Cina' | 'Germania') : undefined,
       estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
