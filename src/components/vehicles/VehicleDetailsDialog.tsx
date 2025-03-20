@@ -49,7 +49,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { user } = useAuth();
-  const { handleVehicleDuplicate } = useInventory();
+  const { handleVehicleDuplicate, updateMutation } = useInventory();
   const queryClient = useQueryClient();
   
   // Utilizziamo i nostri hooks personalizzati per orders
@@ -244,15 +244,36 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     setShowEditForm(true);
   };
   
-  const handleVehicleEditCompleted = (updatedVehicle: Vehicle) => {
+  const handleVehicleEditCompleted = async (updatedVehicle: Vehicle) => {
     console.log("Vehicle edit completed with updated data:", updatedVehicle);
-    setShowEditForm(false);
-    setSelectedVehicle(updatedVehicle);
-    onVehicleUpdated();
-    toast({
-      title: "Veicolo Aggiornato",
-      description: `${updatedVehicle.model} è stato aggiornato con successo`,
-    });
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Use the updateMutation to save the changes to the database
+      await updateMutation.mutateAsync(updatedVehicle);
+      
+      // Update the selected vehicle and close the edit form
+      setSelectedVehicle(updatedVehicle);
+      setShowEditForm(false);
+      
+      // Refresh the vehicle list
+      onVehicleUpdated();
+      
+      toast({
+        title: "Veicolo Aggiornato",
+        description: `${updatedVehicle.model} è stato aggiornato con successo`,
+      });
+    } catch (error) {
+      console.error("Error updating vehicle:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del veicolo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleCancelEdit = () => {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -53,6 +54,8 @@ export const useEditVehicleForm = (
     },
   });
 
+  console.log("Initializing form with accessories:", vehicle.accessories);
+
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
     queryFn: modelsApi.getAll
@@ -80,7 +83,10 @@ export const useEditVehicleForm = (
 
   const { data: accessories = [] } = useQuery({
     queryKey: ['accessories'],
-    queryFn: accessoriesApi.getAll
+    queryFn: accessoriesApi.getAll,
+    onSuccess: (data) => {
+      console.log("Loaded accessories from API:", data);
+    }
   });
 
   const watchModel = form.watch('model');
@@ -149,22 +155,32 @@ export const useEditVehicleForm = (
           console.log("Price components:", components);
           setPriceComponents(components);
           
-          const selectedAccessoryIds = watchAccessories.map(name => {
-            const acc = accessories.find(a => a.name === name);
-            return acc ? acc.id : '';
-          }).filter(id => id !== '');
+          // Find accessory IDs based on names
+          const selectedAccessoryIds = watchAccessories
+            .filter(name => name) // Filter out any empty strings
+            .map(name => {
+              const acc = accessories.find(a => a.name === name);
+              return acc ? acc.id : '';
+            })
+            .filter(id => id !== '');
 
-          const price = await calculateVehiclePrice(
-            modelObj.id,
-            trimObj.id,
-            fuelTypeObj.id,
-            colorObj.id,
-            transmissionObj.id,
-            selectedAccessoryIds
-          );
-          
-          console.log("Final calculated price:", price);
-          setCalculatedPrice(price);
+          console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
+
+          try {
+            const price = await calculateVehiclePrice(
+              modelObj.id,
+              trimObj.id,
+              fuelTypeObj.id,
+              colorObj.id,
+              transmissionObj.id,
+              selectedAccessoryIds
+            );
+            
+            console.log("Final calculated price:", price);
+            setCalculatedPrice(price);
+          } catch (error) {
+            console.error("Error calculating price:", error);
+          }
         }
       }
     };
@@ -178,9 +194,17 @@ export const useEditVehicleForm = (
       if (watchModel && watchTrim) {
         const modelObj = models.find(m => m.name === watchModel);
         const trimObj = trims.find(t => t.name === watchTrim);
+        
         if (modelObj && trimObj) {
-          const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-          setCompatibleAccessories(compatibles);
+          console.log("Fetching compatible accessories for model:", modelObj.id, "and trim:", trimObj.id);
+          try {
+            const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
+            console.log("Compatible accessories received:", compatibles);
+            setCompatibleAccessories(compatibles);
+          } catch (error) {
+            console.error("Error fetching compatible accessories:", error);
+            setCompatibleAccessories([]);
+          }
         }
       }
     };
@@ -188,7 +212,8 @@ export const useEditVehicleForm = (
     updateCompatibleAccessories();
   }, [watchModel, watchTrim, models, trims]);
 
-  const onSubmit = (data: VehicleFormValues) => {
+  const onSubmit = async (data: VehicleFormValues) => {
+    console.log("Form submitted with data:", data);
     setValidationError(null);
     
     // Custom validation based on location
@@ -223,6 +248,7 @@ export const useEditVehicleForm = (
     console.log("Price components for edited vehicle:", priceComponents);
     console.log("Calculated final price:", calculatedPrice);
     console.log("Original stock:", data.originalStock);
+    console.log("Accessories to save:", data.accessories);
     
     // Calculate estimated arrival days if it's Virtual Stock and has an originalStock
     let estimatedArrivalDays = vehicle.estimatedArrivalDays;
@@ -255,6 +281,7 @@ export const useEditVehicleForm = (
       estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
     };
     
+    console.log("Calling onComplete with updated vehicle:", updatedVehicle);
     onComplete(updatedVehicle);
   };
 

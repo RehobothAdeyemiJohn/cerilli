@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Control } from 'react-hook-form';
@@ -12,6 +12,12 @@ interface VehicleAccessoriesProps {
 }
 
 const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAccessoriesProps) => {
+  // Log for debugging
+  useEffect(() => {
+    console.log("Current accessories in form:", form.getValues('accessories'));
+    console.log("Compatible accessories:", compatibleAccessories);
+  }, [compatibleAccessories, form]);
+
   return (
     <div className="space-y-4">
       <FormField
@@ -27,11 +33,12 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                     <Checkbox
                       checked={form.getValues('accessories').includes(accessory.name)}
                       onCheckedChange={(checked) => {
-                        const current = form.getValues('accessories');
+                        const current = form.getValues('accessories') || [];
                         const updated = checked
                           ? [...current, accessory.name]
                           : current.filter((name: string) => name !== accessory.name);
-                        form.setValue('accessories', updated, { shouldValidate: true });
+                        form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
+                        console.log("Updated accessories:", updated);
                       }}
                     />
                     <div className="flex items-center">
