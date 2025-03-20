@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -11,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import { useOrdersData } from '@/hooks/orders/useOrdersData';
+import EditVehicleForm from './EditVehicleForm';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -242,6 +242,19 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     setShowEditForm(true);
   };
   
+  const handleVehicleEditCompleted = (updatedVehicle: Vehicle) => {
+    setShowEditForm(false);
+    onVehicleUpdated();
+    toast({
+      title: "Veicolo Aggiornato",
+      description: `${updatedVehicle.model} è stato aggiornato con successo`,
+    });
+  };
+  
+  const handleCancelEdit = () => {
+    setShowEditForm(false);
+  };
+  
   const handleFormSubmitted = () => {
     onVehicleUpdated();
     handleDialogClose();
@@ -255,38 +268,51 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        {selectedVehicle && !showEditForm && (
+        {selectedVehicle && (
           <>
-            <DialogHeader>
-              <VehicleDialogHeader 
-                vehicle={selectedVehicle}
-                onDuplicate={selectedVehicle.location === 'Stock Virtuale' ? handleDuplicateVehicle : undefined}
-                onCreateQuote={selectedVehicle.location !== 'Stock Virtuale' ? handleCreateQuoteClick : undefined}
-                onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}
-                onCancelReservation={selectedVehicle.status === 'reserved' ? handleCancelReservation : undefined}
-                onTransformToOrder={selectedVehicle.status === 'reserved' ? handleTransformToOrder : undefined}
-                onEdit={isAdmin && !selectedVehicle.location.includes('Virtuale') ? handleEditClick : undefined}
-                isDealer={isDealer}
-                isVirtualStock={isVirtualStock}
-                isDealerStock={isDealerStock}
-                isAdmin={isAdmin}
-              />
-            </DialogHeader>
-            
-            <VehicleDialogContent 
-              vehicle={selectedVehicle}
-              showQuoteForm={showQuoteForm}
-              showReserveForm={showReserveForm}
-              showVirtualReserveForm={showVirtualReserveForm}
-              showCancelReservationForm={showCancelReservationForm}
-              isSubmitting={isSubmitting}
-              onCreateQuote={handleCreateQuoteClick}
-              onCancel={resetForms}
-              onSubmit={handleFormSubmitted}
-              onConfirm={handleCancelReservationConfirm}
-              userCanReserveVehicles={userCanReserveVehicles}
-              userCanCreateQuotes={userCanCreateQuotes}
-            />
+            {showEditForm ? (
+              <div className="p-4">
+                <h2 className="text-xl font-semibold mb-4">Modifica Veicolo</h2>
+                <EditVehicleForm 
+                  vehicle={selectedVehicle}
+                  onComplete={handleVehicleEditCompleted}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
+            ) : (
+              <>
+                <DialogHeader>
+                  <VehicleDialogHeader 
+                    vehicle={selectedVehicle}
+                    onDuplicate={selectedVehicle.location === 'Stock Virtuale' ? handleDuplicateVehicle : undefined}
+                    onCreateQuote={selectedVehicle.location !== 'Stock Virtuale' ? handleCreateQuoteClick : undefined}
+                    onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}
+                    onCancelReservation={selectedVehicle.status === 'reserved' ? handleCancelReservation : undefined}
+                    onTransformToOrder={selectedVehicle.status === 'reserved' ? handleTransformToOrder : undefined}
+                    onEdit={isAdmin && !selectedVehicle.location.includes('Virtuale') ? handleEditClick : undefined}
+                    isDealer={isDealer}
+                    isVirtualStock={isVirtualStock}
+                    isDealerStock={isDealerStock}
+                    isAdmin={isAdmin}
+                  />
+                </DialogHeader>
+                
+                <VehicleDialogContent 
+                  vehicle={selectedVehicle}
+                  showQuoteForm={showQuoteForm}
+                  showReserveForm={showReserveForm}
+                  showVirtualReserveForm={showVirtualReserveForm}
+                  showCancelReservationForm={showCancelReservationForm}
+                  isSubmitting={isSubmitting}
+                  onCreateQuote={handleCreateQuoteClick}
+                  onCancel={resetForms}
+                  onSubmit={handleFormSubmitted}
+                  onConfirm={handleCancelReservationConfirm}
+                  userCanReserveVehicles={userCanReserveVehicles}
+                  userCanCreateQuotes={userCanCreateQuotes}
+                />
+              </>
+            )}
           </>
         )}
       </DialogContent>
