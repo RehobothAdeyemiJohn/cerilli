@@ -119,6 +119,10 @@ export interface Order {
   odlGenerated: boolean;
   notes?: string;
   
+  // New fields for proforma details
+  proformaNumber?: string;
+  proformaDate?: string;
+  
   vehicle?: Vehicle | null;
   dealer?: Dealer | null;
 }

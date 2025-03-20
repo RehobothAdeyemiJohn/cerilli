@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Dialog, 
@@ -67,6 +68,13 @@ const OrderDetailsDialog = ({
   };
   
   const handleInputChange = (field: keyof Order, value: string) => {
+    setLocalOrder({
+      ...localOrder,
+      [field]: value
+    });
+  };
+
+  const handleDateChange = (field: keyof Order, value: string) => {
     setLocalOrder({
       ...localOrder,
       [field]: value
@@ -185,6 +193,28 @@ const OrderDetailsDialog = ({
               <Label htmlFor="has-proforma">Proforma</Label>
             </div>
             
+            {localOrder.hasProforma && (
+              <div className="pl-6 space-y-2 border-l-2 border-gray-200">
+                <div className="space-y-1">
+                  <Label htmlFor="proforma-number">Numero Proforma</Label>
+                  <Input 
+                    id="proforma-number" 
+                    value={localOrder.proformaNumber || ''} 
+                    onChange={(e) => handleInputChange('proformaNumber', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="proforma-date">Data Proforma</Label>
+                  <Input 
+                    id="proforma-date" 
+                    type="date" 
+                    value={localOrder.proformaDate ? new Date(localOrder.proformaDate).toISOString().split('T')[0] : ''} 
+                    onChange={(e) => handleDateChange('proformaDate', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="is-paid" 
@@ -193,6 +223,20 @@ const OrderDetailsDialog = ({
               />
               <Label htmlFor="is-paid">Pagato</Label>
             </div>
+            
+            {localOrder.isPaid && (
+              <div className="pl-6 space-y-2 border-l-2 border-gray-200">
+                <div className="space-y-1">
+                  <Label htmlFor="payment-date">Data di Pagamento</Label>
+                  <Input 
+                    id="payment-date" 
+                    type="date" 
+                    value={localOrder.paymentDate ? new Date(localOrder.paymentDate).toISOString().split('T')[0] : ''} 
+                    onChange={(e) => handleDateChange('paymentDate', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -204,6 +248,28 @@ const OrderDetailsDialog = ({
               />
               <Label htmlFor="is-invoiced">Fatturato</Label>
             </div>
+            
+            {localOrder.isInvoiced && (
+              <div className="pl-6 space-y-2 border-l-2 border-gray-200">
+                <div className="space-y-1">
+                  <Label htmlFor="invoice-number">Numero Fattura</Label>
+                  <Input 
+                    id="invoice-number" 
+                    value={localOrder.invoiceNumber || ''} 
+                    onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="invoice-date">Data Fattura</Label>
+                  <Input 
+                    id="invoice-date" 
+                    type="date" 
+                    value={localOrder.invoiceDate ? new Date(localOrder.invoiceDate).toISOString().split('T')[0] : ''} 
+                    onChange={(e) => handleDateChange('invoiceDate', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
             
             <div className="flex items-center space-x-2">
               <Checkbox 
@@ -222,15 +288,6 @@ const OrderDetailsDialog = ({
               />
               <Label htmlFor="odl-generated">ODL Generato</Label>
             </div>
-          </div>
-          
-          <div className="col-span-2 space-y-2">
-            <Label htmlFor="invoice-number">Numero Fattura</Label>
-            <Input 
-              id="invoice-number" 
-              value={localOrder.invoiceNumber || ''} 
-              onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
-            />
           </div>
           
           <div className="space-y-2">
