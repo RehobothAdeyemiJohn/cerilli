@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { fuelTypesApi } from '@/api/localStorage';
+import { fuelTypesApi } from '@/api/supabase/settingsApi';
 import { FuelType } from '@/types';
 import FormDialog from './common/FormDialog';
 import FuelTypeForm from './fueltypes/FuelTypeForm';

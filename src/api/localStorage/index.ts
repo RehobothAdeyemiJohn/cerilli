@@ -22,7 +22,7 @@ import {
   trimsApi as supabaseTrimsApi,
   fuelTypesApi as supabaseFuelTypesApi,
   colorsApi as supabaseColorsApi,
-  transmissionsApi as supabaseTransmissionsApi,
+  transmissionsApi as supabaseTransmissApi,
   accessoriesApi as supabaseAccessoriesApi,
   calculateVehiclePrice as supabaseCalculateVehiclePrice
 } from '@/api/supabase/settingsApi';
@@ -33,7 +33,7 @@ initSettingsData();
 
 // Always use Supabase for settings
 localStorage.setItem('useSupabaseSettings', 'true');
-const useSupabase = true;
+const useSupabase = true; // Imposta sempre su true per usare Supabase
 console.log('Using Supabase for settings:', useSupabase);
 
 // Export the appropriate APIs based on the setting
@@ -41,7 +41,7 @@ export const modelsApi = useSupabase ? supabaseModelsApi : localModelsApi;
 export const trimsApi = useSupabase ? supabaseTrimsApi : localTrimsApi;
 export const fuelTypesApi = useSupabase ? supabaseFuelTypesApi : localFuelTypesApi;
 export const colorsApi = useSupabase ? supabaseColorsApi : localColorsApi;
-export const transmissionsApi = useSupabase ? supabaseTransmissionsApi : localTransmissionsApi;
+export const transmissionsApi = useSupabase ? supabaseTransmissApi : localTransmissionsApi;
 export const accessoriesApi = useSupabase ? supabaseAccessoriesApi : localAccessoriesApi;
 export const calculateVehiclePrice = useSupabase ? supabaseCalculateVehiclePrice : localCalculateVehiclePrice;
 
@@ -51,4 +51,4 @@ export * from './quotesApi';
 export * from './vehiclesApi';
 export * from './settingsApi';
 export * from './adminUsersApi';
-export * from './dealersApi';  // Export the dealersApi module
+export * from './dealersApi';

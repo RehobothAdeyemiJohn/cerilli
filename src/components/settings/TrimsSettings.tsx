@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { trimsApi } from '@/api/localStorage';
+import { trimsApi } from '@/api/supabase/settingsApi';
 import { VehicleTrim } from '@/types';
 import FormDialog from './common/FormDialog';
 import TrimForm from './trims/TrimForm';

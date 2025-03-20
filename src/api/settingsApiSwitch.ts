@@ -46,14 +46,14 @@ export const isUsingSupabase = () => {
 // Export the API to use based on the setting
 export const getSettingsApi = () => {
   const useSupabase = isUsingSupabase();
-  
+  // Forziamo l'uso di Supabase
   return {
-    modelsApi: useSupabase ? supabaseModelsApi : localModelsApi,
-    trimsApi: useSupabase ? supabaseTrimsApi : localTrimsApi,
-    fuelTypesApi: useSupabase ? supabaseFuelTypesApi : localFuelTypesApi,
-    colorsApi: useSupabase ? supabaseColorsApi : localColorsApi,
-    transmissionsApi: useSupabase ? supabaseTransmissApi : localTransmissApi,
-    accessoriesApi: useSupabase ? supabaseAccessoriesApi : localAccessoriesApi,
-    calculateVehiclePrice: useSupabase ? supabaseCalculatePrice : localCalculatePrice
+    modelsApi: supabaseModelsApi,
+    trimsApi: supabaseTrimsApi,
+    fuelTypesApi: supabaseFuelTypesApi,
+    colorsApi: supabaseColorsApi,
+    transmissionsApi: supabaseTransmissApi,
+    accessoriesApi: supabaseAccessoriesApi,
+    calculateVehiclePrice: supabaseCalculatePrice
   };
 };

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { accessoriesApi } from '@/api/localStorage';
+import { accessoriesApi } from '@/api/supabase/settingsApi';
 import { Accessory } from '@/types';
 import FormDialog from './common/FormDialog';
 import AccessoryForm from './accessories/AccessoryForm';

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { modelsApi } from '@/api/localStorage';
+import { modelsApi } from '@/api/supabase/settingsApi';
 import { VehicleModel } from '@/types';
 import FormDialog from './common/FormDialog';
 import ModelForm from './models/ModelForm';
@@ -23,7 +22,10 @@ const ModelsSettings = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (model: Omit<VehicleModel, 'id'>) => modelsApi.create(model),
+    mutationFn: (model: Omit<VehicleModel, 'id'>) => {
+      console.log('Creating model:', model);
+      return modelsApi.create(model);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       toast({
@@ -33,10 +35,21 @@ const ModelsSettings = () => {
       setIsAddDialogOpen(false);
       setCurrentModel({});
     },
+    onError: (error) => {
+      console.error('Error creating model:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiunta del modello.",
+        variant: "destructive",
+      });
+    }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, model }: { id: string; model: VehicleModel }) => modelsApi.update(id, model),
+    mutationFn: ({ id, model }: { id: string; model: VehicleModel }) => {
+      console.log('Updating model:', { id, model });
+      return modelsApi.update(id, model);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       toast({
@@ -46,13 +59,18 @@ const ModelsSettings = () => {
       setIsEditDialogOpen(false);
       setCurrentModel({});
     },
+    onError: (error) => {
+      console.error('Error updating model:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del modello.",
+        variant: "destructive",
+      });
+    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await modelsApi.delete(id);
-      return;
-    },
+    mutationFn: (id: string) => modelsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['models'] });
       toast({
@@ -60,6 +78,14 @@ const ModelsSettings = () => {
         description: "Il modello è stato eliminato con successo.",
       });
     },
+    onError: (error) => {
+      console.error('Error deleting model:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'eliminazione del modello.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAddModel = () => {
@@ -113,7 +139,6 @@ const ModelsSettings = () => {
     { 
       header: "Prezzo Base", 
       accessor: (model) => {
-        // Verifica che basePrice sia definito prima di chiamare toLocaleString
         return model.basePrice !== undefined ? 
           `€${model.basePrice.toLocaleString('it-IT')}` : 
           '€0';
