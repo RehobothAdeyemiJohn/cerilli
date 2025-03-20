@@ -65,6 +65,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const { handleTransformVehicleToOrder } = useOrdersActions(refreshAllOrderData);
   
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
+  const isAdmin = user?.type === 'admin';
   const userCanReserveVehicles = true;
   const userCanCreateQuotes = true;
   
@@ -236,6 +237,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
+  const handleEditClick = () => {
+    resetForms();
+    setShowEditForm(true);
+  };
+  
   const handleFormSubmitted = () => {
     onVehicleUpdated();
     handleDialogClose();
@@ -259,9 +265,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                 onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}
                 onCancelReservation={selectedVehicle.status === 'reserved' ? handleCancelReservation : undefined}
                 onTransformToOrder={selectedVehicle.status === 'reserved' ? handleTransformToOrder : undefined}
+                onEdit={isAdmin && !selectedVehicle.location.includes('Virtuale') ? handleEditClick : undefined}
                 isDealer={isDealer}
                 isVirtualStock={isVirtualStock}
                 isDealerStock={isDealerStock}
+                isAdmin={isAdmin}
               />
             </DialogHeader>
             

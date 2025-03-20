@@ -3,7 +3,7 @@ import React from 'react';
 import { Vehicle } from '@/types';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, ShoppingCart, Ban, PackageCheck } from 'lucide-react';
+import { FileText, ShoppingCart, Ban, PackageCheck, Pencil } from 'lucide-react';
 
 interface VehicleDialogHeaderProps {
   vehicle: Vehicle;
@@ -12,9 +12,11 @@ interface VehicleDialogHeaderProps {
   onReserve?: () => void;
   onCancelReservation?: () => void;
   onTransformToOrder?: () => void;
+  onEdit?: () => void;
   isDealer?: boolean;
   isVirtualStock?: boolean;
   isDealerStock?: boolean;
+  isAdmin?: boolean;
 }
 
 const VehicleDialogHeader = ({ 
@@ -24,9 +26,11 @@ const VehicleDialogHeader = ({
   onReserve,
   onCancelReservation,
   onTransformToOrder,
+  onEdit,
   isDealer,
   isVirtualStock,
-  isDealerStock
+  isDealerStock,
+  isAdmin
 }: VehicleDialogHeaderProps) => {
   const getDialogTitle = () => {
     if (vehicle.status === 'reserved') {
@@ -59,6 +63,12 @@ const VehicleDialogHeader = ({
     <>
       <DialogTitle>{getDialogTitle()}</DialogTitle>
       <DialogDescription className="flex flex-wrap gap-2 mt-2">
+        {onEdit && isAdmin && !isVirtualStock && (
+          <Button variant="outline" size="sm" onClick={onEdit} className="h-8 text-gray-600 border-gray-200 hover:bg-gray-50">
+            <Pencil className="h-4 w-4 mr-1" /> Modifica
+          </Button>
+        )}
+        
         {onDuplicate && (
           <Button variant="outline" size="sm" onClick={onDuplicate} className="h-8">
             Duplica
