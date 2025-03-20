@@ -91,14 +91,14 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // Prepare order record using camelCase column names
+      // Prepare order record using column names that match the database
       const orderRecord = {
         vehicleid: vehicle.id,
         dealerid: reservationDealerId,
-        customername: selectedDealerName,
+        customername: selectedDealerName, // Use customername instead of dealername
         status: 'processing',
         orderdate: new Date().toISOString(),
-        dealername: selectedDealerName,
+        // No longer setting dealername since it doesn't exist in the database
         modelname: vehicle.model,
         price: calculatedPrice || 0,
         plafonddealer: dealerPlafond,
@@ -113,9 +113,9 @@ export const useVirtualReservationSubmit = (
         restorationcosts: 0
       };
       
-      console.log("Attempting to insert order with camelCase names:", orderRecord);
+      console.log("Attempting to insert order with correct column names:", orderRecord);
       
-      // Create order directly using exact camelCase column names
+      // Create order directly using exact column names
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert(orderRecord)

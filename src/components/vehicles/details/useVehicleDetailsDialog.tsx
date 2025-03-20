@@ -255,7 +255,6 @@ export function useVehicleDetailsDialog(
           vehicleId: vehicle.id,
           dealerId,
           customerName: vehicle.reservedBy,
-          dealerName,
           dealerPlafond,
           modelName: vehicle.model
         });
@@ -268,7 +267,7 @@ export function useVehicleDetailsDialog(
             customerName: vehicle.reservedBy,
             status: 'processing' as Order['status'],
             orderDate: new Date().toISOString(),
-            dealerName: dealerName,
+            dealerName,
             modelName: vehicle.model,
             plafondDealer: dealerPlafond
           };
@@ -462,7 +461,6 @@ export function useVehicleDetailsDialog(
             vehicleId: vehicle.id,
             dealerId,
             customerName: vehicle.reservedBy,
-            dealerName,
             dealerPlafond,
             modelName: vehicle.model
           });
@@ -475,7 +473,7 @@ export function useVehicleDetailsDialog(
               customerName: vehicle.reservedBy,
               status: 'processing' as Order['status'],
               orderDate: new Date().toISOString(),
-              dealerName: dealerName,
+              dealerName,
               modelName: vehicle.model,
               plafondDealer: dealerPlafond
             };
@@ -518,3 +516,4 @@ export function useVehicleDetailsDialog(
     }
   };
 }
+

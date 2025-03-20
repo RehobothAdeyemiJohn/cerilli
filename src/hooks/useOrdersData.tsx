@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
@@ -27,15 +26,33 @@ export const useOrdersData = (filters: {
     refetch: refetchOrders
   } = useQuery({
     queryKey: ['orders'],
-    queryFn: ordersApi.getAll,
+    queryFn: async () => {
+      try {
+        console.log("Fetching orders data...");
+        const orders = await ordersApi.getAll();
+        console.log("Orders data fetched successfully:", orders);
+        return orders;
+      } catch (error) {
+        console.error("Error fetching orders in useOrdersData hook:", error);
+        // Show a toast for the error
+        toast({
+          title: "Errore nel caricamento ordini",
+          description: "Si è verificato un errore durante il caricamento degli ordini.",
+          variant: "destructive",
+        });
+        return [];
+      }
+    },
     staleTime: 0, // Always consider data stale to force refresh
-    refetchInterval: 1000, // Refetch every second
+    refetchInterval: 10000, // Refetch every 10 seconds instead of every second to reduce load
     refetchOnWindowFocus: true,
-    retry: 5, // Retry 5 times before failing
+    retry: 3, // Retry 3 times before failing
   });
 
   useEffect(() => {
-    console.log("Orders data fetched:", ordersData);
+    if (ordersData && ordersData.length > 0) {
+      console.log("Orders data loaded:", ordersData.length, "orders");
+    }
   }, [ordersData]);
 
   // Effect to refresh data when dialog closes

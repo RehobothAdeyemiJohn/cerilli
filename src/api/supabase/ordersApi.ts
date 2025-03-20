@@ -1,4 +1,3 @@
-
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -66,7 +65,7 @@ const mapOrderDbToFrontend = (order: any): Order => {
     deliveryDate: order.deliverydate,
     progressiveNumber: order.progressivenumber,
     price: order.price,
-    dealerName: order.dealername,
+    dealerName: order.customername,
     modelName: order.modelname,
     plafondDealer: order.plafonddealer,
     
@@ -97,12 +96,11 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
-    customername: order.customerName,
+    customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
     deliverydate: order.deliveryDate,
     price: order.price, 
-    dealername: order.dealerName,
     modelname: order.modelName,
     plafonddealer: order.plafondDealer,
     
@@ -184,8 +182,6 @@ export const ordersApi = {
     
     // Get dealer info to store plafond_dealer at order creation time
     let dealerPlafond = null;
-    let dealerName = null;
-    let modelName = null;
     
     if (order.dealerId) {
       try {
@@ -197,7 +193,6 @@ export const ordersApi = {
           
         if (dealer) {
           dealerPlafond = dealer.nuovo_plafond || dealer.credit_limit || 0;
-          dealerName = dealer.companyname;
         }
       } catch (e) {
         console.error('Error fetching dealer for plafond:', e);
@@ -205,7 +200,8 @@ export const ordersApi = {
     }
     
     // Get vehicle model if available
-    if (order.vehicleId) {
+    let modelName = order.modelName;
+    if (order.vehicleId && !modelName) {
       try {
         const { data: vehicle } = await supabase
           .from('vehicles')
@@ -221,12 +217,13 @@ export const ordersApi = {
       }
     }
     
-    // Prepare order data with default values for required fields
+    // Prepare order data with the correct column names
     const orderData = {
       ...order,
-      dealerName: dealerName || order.dealerName || order.customerName,
-      modelName: modelName || order.modelName,
-      plafondDealer: dealerPlafond
+      modelName: modelName,
+      plafondDealer: dealerPlafond,
+      // Make sure customerName is set (use dealerName as fallback if needed)
+      customerName: order.customerName || order.dealerName
     };
     
     // Map frontend field names to database column names
