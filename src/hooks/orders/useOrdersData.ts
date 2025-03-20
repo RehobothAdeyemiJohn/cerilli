@@ -33,9 +33,22 @@ export const useOrdersData = (filters: {
         const orders = await ordersApi.getAll();
         console.log("Orders data fetched successfully:", orders.length, "orders");
         
-        // Log some sample orders to verify data structure
+        // Log detailed information about orders
         if (orders.length > 0) {
-          console.log("Sample order data:", orders[0]);
+          orders.forEach((order, index) => {
+            console.log(`Order ${index + 1}:`, {
+              id: order.id,
+              customerName: order.customerName,
+              status: order.status,
+              isLicensable: order.isLicensable,
+              hasProforma: order.hasProforma,
+              isPaid: order.isPaid,
+              isInvoiced: order.isInvoiced,
+              hasConformity: order.hasConformity
+            });
+          });
+        } else {
+          console.log("No orders found in the database");
         }
         
         return orders;
@@ -82,10 +95,13 @@ export const useOrdersData = (filters: {
 
   // Filter orders based on specified criteria
   const filterOrders = (orders: Order[], status?: string) => {
-    let filtered = orders;
+    let filtered = [...orders]; // Create a copy to avoid mutating the original
+    
+    console.log(`Filtering ${filtered.length} orders with status: ${status || 'all'}`);
     
     if (status && status !== 'all') {
       filtered = filtered.filter(o => o.status === status);
+      console.log(`After status filter: ${filtered.length} orders`);
     }
     
     // Apply detailed filters
@@ -100,10 +116,12 @@ export const useOrdersData = (filters: {
             filtered = filtered.filter(order => 
               order[key as keyof Order] === true
             );
+            console.log(`After ${key} filter: ${filtered.length} orders`);
             break;
           case 'dealerId':
             if (value) {
               filtered = filtered.filter(order => order.dealerId === value);
+              console.log(`After dealerId filter: ${filtered.length} orders`);
             }
             break;
           case 'model':
@@ -111,6 +129,7 @@ export const useOrdersData = (filters: {
               filtered = filtered.filter(order => 
                 order.vehicle && order.vehicle.model === value
               );
+              console.log(`After model filter: ${filtered.length} orders`);
             }
             break;
         }

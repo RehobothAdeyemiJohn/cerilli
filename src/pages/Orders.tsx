@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useOrders } from '@/hooks/useOrders';
 import { Order } from '@/types';
 import { DateRange } from '@/types/date-range';
 import { formatDate } from '@/lib/utils';
@@ -13,11 +12,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { CalendarIcon, CheckCheck, ChevronsUpDown, Copy, File, FileText, Filter, Search, X } from 'lucide-react';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
-import { Label } from '@/components/ui/label';
+import { CalendarIcon, CheckCheck, ChevronsUpDown, Copy, File, FileText, X } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -34,7 +31,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from '@/hooks/use-toast';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
@@ -55,10 +51,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { PdfPreviewDialog } from '@/components/orders/PdfPreviewDialog';
 import { OrderDetailsDialogAdapter } from '@/components/orders/OrderDialogAdapters';
+import { useOrdersData } from '@/hooks/orders/useOrdersData';
+import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
+import { Check } from 'lucide-react';
 
 const Orders = () => {
   const { user, isAdmin } = useAuth();
@@ -85,6 +83,7 @@ const Orders = () => {
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   // PDF preview states
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
@@ -93,22 +92,18 @@ const Orders = () => {
   // Copy to clipboard state
   const [copied, setCopied] = useCopyToClipboard();
 
-  // Fetch orders using the custom hook
+  // Get orders using our custom hooks
   const {
-    ordersList,
+    ordersData,
+    allOrders,
+    processingOrders,
+    deliveredOrders,
+    cancelledOrders,
     isLoading,
     error,
-    refetchOrders,
-    getDealers,
-    generatePdfPreview,
-    generateOrderDeliveryForm,
-    delete: deleteOrder
-  } = useOrders({
-    searchText,
-    dateRange,
-    models: selectedModels,
-    dealers: selectedDealers,
-    status: selectedStatus,
+    refreshAllOrderData,
+    getOrderNumber
+  } = useOrdersData({
     isLicensable,
     hasProforma,
     isPaid,
@@ -117,6 +112,14 @@ const Orders = () => {
     dealerId,
     model: selectedModel
   });
+
+  // Get order actions
+  const {
+    handleMarkAsDelivered,
+    handleCancelOrder,
+    handleDeleteOrder,
+    handleGenerateODL
+  } = useOrdersActions(refreshAllOrderData);
 
   // Models list for filter
   const [models, setModels] = useState<string[]>([]);
@@ -139,20 +142,22 @@ const Orders = () => {
   useEffect(() => {
     const fetchDealers = async () => {
       try {
-        const dealersList = await getDealers();
-        setDealers(dealersList);
+        const { data, error } = await ordersApi.getDealers();
+        if (!error && data) {
+          setDealers(data);
+        }
       } catch (error) {
         console.error('Error fetching dealers:', error);
       }
     };
 
     fetchDealers();
-  }, [getDealers]);
+  }, []);
 
   // Handle select all checkbox
   const handleSelectAll = () => {
     setIsAllSelected(!isAllSelected);
-    setSelectedOrders(isAllSelected ? [] : ordersList.map(order => order.id));
+    setSelectedOrders(isAllSelected ? [] : allOrders.map(order => order.id));
   };
 
   // Handle row checkbox
@@ -171,31 +176,23 @@ const Orders = () => {
   };
 
   // Handle delete order
-  const handleDeleteOrder = async () => {
-    if (selectedOrder) {
-      try {
-        await deleteOrder(selectedOrder.id);
-        refetchOrders();
-        setIsDeleteAlertOpen(false);
-        toast({
-          title: 'Ordine eliminato',
-          description: 'L\'ordine è stato eliminato con successo',
-        });
-      } catch (error) {
-        console.error('Error deleting order:', error);
-        toast({
-          title: 'Errore',
-          description: 'Si è verificato un errore durante l\'eliminazione dell\'ordine',
-          variant: 'destructive'
-        });
-      }
+  const handleOpenDeleteDialog = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const confirmDeleteOrder = () => {
+    if (orderToDelete) {
+      handleDeleteOrder(orderToDelete);
+      setIsDeleteAlertOpen(false);
+      setOrderToDelete(null);
     }
   };
 
   // Handle PDF preview
   const handlePdfPreview = async (order: Order) => {
     try {
-      const response = await generatePdfPreview(order);
+      const response = await ordersApi.generatePdf(order.id);
       setPdfData(response);
       setPdfPreviewOpen(true);
     } catch (error) {
@@ -208,27 +205,12 @@ const Orders = () => {
     }
   };
 
-  // Handle ODL generation
-  const handleGenerateODL = async (orderId: string) => {
-    try {
-      const response = await generateOrderDeliveryForm(orderId);
-      setPdfData(response);
-      setPdfPreviewOpen(true);
-      
-      // Update order to mark ODL as generated
-      await ordersApi.update(orderId, { odlGenerated: true });
-      
-      // Refetch orders to update the UI
-      refetchOrders();
-      
-    } catch (error) {
-      console.error('Error generating ODL:', error);
-      toast({
-        title: 'Errore',
-        description: 'Si è verificato un errore durante la generazione dell\'ODL',
-        variant: 'destructive'
-      });
+  // Function to render boolean values as check icons or X icons
+  const renderBooleanStatus = (value: boolean | undefined) => {
+    if (value === true) {
+      return <Check className="h-4 w-4 text-green-600 mx-auto" />;
     }
+    return <X className="h-4 w-4 text-red-500 mx-auto" />;
   };
 
   if (error) {
@@ -246,11 +228,15 @@ const Orders = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Ordini</h1>
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setCopied(ordersList.map(order => order.id).join(', '))}>
+          <Button variant="outline" size="sm" onClick={() => setCopied(allOrders.map(order => order.id).join(', '))}>
             <Copy className="mr-2 h-4 w-4" />
             Copia ID Ordini
           </Button>
           {copied ? <Badge variant="secondary">Copiato!</Badge> : null}
+          
+          <Button variant="default" size="sm" onClick={refreshAllOrderData}>
+            Aggiorna
+          </Button>
         </div>
       </div>
 
@@ -400,7 +386,8 @@ const Orders = () => {
                         className={`mr-2 h-4 w-4 ${selectedStatus.includes(status) ? "opacity-100" : "opacity-0"
                           }`}
                       />
-                      {status}
+                      {status === 'processing' ? 'In Lavorazione' : 
+                       status === 'delivered' ? 'Consegnato' : 'Annullato'}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -410,9 +397,12 @@ const Orders = () => {
         </Popover>
       </div>
 
-      {/* Booleans Filters */}
+      {/* Boolean Filters */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-        <Select onValueChange={(value) => setIsLicensable(value === "true" ? true : value === "false" ? false : null)}>
+        <Select 
+          onValueChange={(value) => setIsLicensable(value === "true" ? true : value === "false" ? false : null)}
+          defaultValue="null"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Targabile" />
           </SelectTrigger>
@@ -423,7 +413,10 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setHasProforma(value === "true" ? true : value === "false" ? false : null)}>
+        <Select 
+          onValueChange={(value) => setHasProforma(value === "true" ? true : value === "false" ? false : null)}
+          defaultValue="null"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Proforma" />
           </SelectTrigger>
@@ -434,7 +427,10 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setIsPaid(value === "true" ? true : value === "false" ? false : null)}>
+        <Select 
+          onValueChange={(value) => setIsPaid(value === "true" ? true : value === "false" ? false : null)}
+          defaultValue="null"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Pagato" />
           </SelectTrigger>
@@ -445,7 +441,10 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setIsInvoiced(value === "true" ? true : value === "false" ? false : null)}>
+        <Select 
+          onValueChange={(value) => setIsInvoiced(value === "true" ? true : value === "false" ? false : null)}
+          defaultValue="null"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Fatturato" />
           </SelectTrigger>
@@ -456,7 +455,10 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select onValueChange={(value) => setHasConformity(value === "true" ? true : value === "false" ? false : null)}>
+        <Select 
+          onValueChange={(value) => setHasConformity(value === "true" ? true : value === "false" ? false : null)}
+          defaultValue="null"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Conformità" />
           </SelectTrigger>
@@ -486,20 +488,25 @@ const Orders = () => {
               <TableHead>Modello</TableHead>
               <TableHead>Data Ordine</TableHead>
               <TableHead>Stato</TableHead>
+              <TableHead className="text-center">Targabile</TableHead>
+              <TableHead className="text-center">Proforma</TableHead>
+              <TableHead className="text-center">Pagato</TableHead>
+              <TableHead className="text-center">Fatturato</TableHead>
+              <TableHead className="text-center">Conformità</TableHead>
               <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">Caricamento...</TableCell>
+                <TableCell colSpan={12} className="text-center">Caricamento...</TableCell>
               </TableRow>
-            ) : ordersList.length === 0 ? (
+            ) : allOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">Nessun ordine trovato.</TableCell>
+                <TableCell colSpan={12} className="text-center">Nessun ordine trovato.</TableCell>
               </TableRow>
             ) : (
-              ordersList.map((order) => (
+              allOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="w-12">
                     <input
@@ -508,14 +515,43 @@ const Orders = () => {
                       onChange={() => handleRowSelect(order.id)}
                     />
                   </TableCell>
-                  <TableCell>{order.progressiveNumber?.toString().padStart(3, '0')}</TableCell>
+                  <TableCell>
+                    {order.progressiveNumber ? 
+                      `#${order.progressiveNumber.toString().padStart(3, '0')}` : 
+                      getOrderNumber(order)
+                    }
+                  </TableCell>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>{order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Non disponibile')}</TableCell>
-                  <TableCell>{formatDate(new Date(order.orderDate))}</TableCell>
-                  <TableCell className="capitalize">{
-                    order.status === 'processing' ? 'In Lavorazione' :
-                      order.status === 'delivered' ? 'Consegnato' : 'Cancellato'
-                  }</TableCell>
+                  <TableCell>{order.orderDate ? formatDate(new Date(order.orderDate)) : '-'}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }
+                    >
+                      {order.status === 'processing' ? 'In Lavorazione' :
+                       order.status === 'delivered' ? 'Consegnato' : 'Cancellato'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderBooleanStatus(order.isLicensable)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderBooleanStatus(order.hasProforma)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderBooleanStatus(order.isPaid)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderBooleanStatus(order.isInvoiced)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {renderBooleanStatus(order.hasConformity)}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" size="sm" onClick={() => handlePdfPreview(order)}>
@@ -526,25 +562,15 @@ const Orders = () => {
                         <File className="mr-2 h-4 w-4" />
                         Dettagli
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            Elimina
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Questa azione non può essere annullata. Vuoi veramente eliminare l'ordine?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setIsDeleteAlertOpen(false)}>Annulla</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteOrder}>Elimina</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      {isAdmin && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleOpenDeleteDialog(order.id)}
+                        >
+                          Elimina
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -570,6 +596,22 @@ const Orders = () => {
           pdfData={pdfData}
         />
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione non può essere annullata. Vuoi veramente eliminare l'ordine?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteAlertOpen(false)}>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteOrder}>Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -56,6 +56,17 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 
 // Helper function to map database order to frontend type
 const mapOrderDbToFrontend = (order: any): Order => {
+  // Log raw order data to debug
+  console.log("Raw order data from DB:", {
+    id: order.id,
+    customername: order.customername,
+    is_licensable: order.is_licensable,
+    has_proforma: order.has_proforma,
+    is_paid: order.is_paid,
+    is_invoiced: order.is_invoiced,
+    has_conformity: order.has_conformity
+  });
+  
   return {
     id: order.id,
     vehicleId: order.vehicleid || order.vehicle_id || '',
@@ -72,15 +83,15 @@ const mapOrderDbToFrontend = (order: any): Order => {
     modelName: order.modelname || order.model_name,
     plafondDealer: order.plafonddealer || order.plafond_dealer,
     
-    // Map fields with camelCase frontend names to database column names
-    isLicensable: order.islicensable === true || order.is_licensable === true,
-    hasProforma: order.hasproforma === true || order.has_proforma === true,
-    isPaid: order.ispaid === true || order.is_paid === true,
+    // Map boolean fields - convert explicit to boolean to handle db nulls or strings
+    isLicensable: order.is_licensable === true || order.islicensable === true,
+    hasProforma: order.has_proforma === true || order.hasproforma === true,
+    isPaid: order.is_paid === true || order.ispaid === true,
     paymentDate: order.paymentdate || order.payment_date,
-    isInvoiced: order.isinvoiced === true || order.is_invoiced === true,
+    isInvoiced: order.is_invoiced === true || order.isinvoiced === true,
     invoiceNumber: order.invoicenumber || order.invoice_number,
     invoiceDate: order.invoicedate || order.invoice_date,
-    hasConformity: order.hasconformity === true || order.has_conformity === true,
+    hasConformity: order.has_conformity === true || order.hasconformity === true,
     previousChassis: order.previouschassis || order.previous_chassis,
     chassis: order.chassis,
     transportCosts: order.transportcosts || order.transport_costs || 0,
@@ -151,9 +162,11 @@ export const ordersApi = {
       }
       
       console.log(`Retrieved ${data.length} orders from database`);
+      console.log("Sample raw order:", data[0]);
       
       // Map each database record to our frontend Order type
       const orders = data.map(order => mapOrderDbToFrontend(order));
+      console.log("Mapped first order:", orders[0]);
       return orders;
     } catch (error) {
       console.error('Unexpected error fetching orders:', error);
@@ -303,7 +316,7 @@ export const ordersApi = {
     
     const { data, error } = await supabase
       .from('orders')
-      .update({ odlgenerated: true })
+      .update({ odl_generated: true })
       .eq('id', id)
       .select()
       .single();
@@ -331,5 +344,28 @@ export const ordersApi = {
     }
     
     console.log("Order deleted successfully");
+  },
+  
+  generatePdf: async (orderId: string): Promise<Uint8Array> => {
+    console.log("Generating PDF for order:", orderId);
+    
+    // Mock implementation - in a real app, you'd call an API to generate the PDF
+    const mockPdfData = new Uint8Array([80, 68, 70, 45, 49, 46, 52, 10]);
+    
+    // Mark proforma as generated
+    await supabase
+      .from('orders')
+      .update({ has_proforma: true })
+      .eq('id', orderId);
+    
+    return mockPdfData;
+  },
+  
+  getDealers: async () => {
+    const { data, error } = await supabase
+      .from('dealers')
+      .select('*');
+    
+    return { data, error };
   }
 };

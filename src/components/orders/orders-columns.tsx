@@ -4,7 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, FileText, Truck, X, Edit, Trash2, FileCheck } from 'lucide-react';
+import { MoreHorizontal, FileText, Truck, X, Edit, Trash2, FileCheck, Check } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -38,6 +38,14 @@ export const ordersColumns = ({
   handleGenerateODL,
   onDeleteButtonClick
 }: OrdersColumnsOptions): ColumnDef<Order>[] => {
+  
+  // Helper function to render boolean values as check icons or X icons
+  const renderBooleanStatus = (value: boolean | undefined) => {
+    if (value === true) {
+      return <Check className="h-4 w-4 text-green-600 mx-auto" />;
+    }
+    return <X className="h-4 w-4 text-red-500 mx-auto" />;
+  };
   
   const columns: ColumnDef<Order>[] = [
     {
@@ -97,6 +105,46 @@ export const ordersColumns = ({
       },
     },
     {
+      accessorKey: 'isLicensable',
+      header: 'Targabile',
+      cell: ({ row }) => {
+        const value = row.getValue('isLicensable') as boolean;
+        return renderBooleanStatus(value);
+      },
+    },
+    {
+      accessorKey: 'hasProforma',
+      header: 'Proforma',
+      cell: ({ row }) => {
+        const value = row.getValue('hasProforma') as boolean;
+        return renderBooleanStatus(value);
+      },
+    },
+    {
+      accessorKey: 'isPaid',
+      header: 'Pagato',
+      cell: ({ row }) => {
+        const value = row.getValue('isPaid') as boolean;
+        return renderBooleanStatus(value);
+      },
+    },
+    {
+      accessorKey: 'isInvoiced',
+      header: 'Fatturato',
+      cell: ({ row }) => {
+        const value = row.getValue('isInvoiced') as boolean;
+        return renderBooleanStatus(value);
+      },
+    },
+    {
+      accessorKey: 'hasConformity',
+      header: 'Conformità',
+      cell: ({ row }) => {
+        const value = row.getValue('hasConformity') as boolean;
+        return renderBooleanStatus(value);
+      },
+    },
+    {
       id: 'actions',
       cell: ({ row }) => {
         const order = row.original;
@@ -124,7 +172,7 @@ export const ordersColumns = ({
               {order.status === 'processing' && (
                 <DropdownMenuItem
                   onClick={() => handleMarkAsDelivered(order.id)}
-                  disabled={isDelivering}
+                  disabled={isDelivering || !order.odlGenerated}
                 >
                   <Truck className="mr-2 h-4 w-4" /> Segna come consegnato
                 </DropdownMenuItem>
