@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -127,7 +126,6 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
     }
   });
 
-  // Aggiungiamo una nuova mutation per trasformare un veicolo in ordine
   const transformVehicleToOrderMutation = useMutation({
     mutationFn: async (vehicleId: string) => {
       console.log("Starting transformation of vehicle to order:", vehicleId);
@@ -145,8 +143,7 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         // 2. Aggiorna lo stato del veicolo a 'ordered'
         await vehiclesApi.update(vehicle.id, {
-          status: 'ordered',
-          updated_at: new Date().toISOString()
+          status: 'ordered'
         });
         
         // 3. Trova il dealer ID se disponibile
