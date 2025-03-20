@@ -9,6 +9,8 @@ import VehicleDialogHeader from './details/VehicleDialogHeader';
 import VehicleDialogContent from './details/VehicleDialogContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
+import { useOrdersData } from '@/hooks/orders/useOrdersData';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle;
@@ -48,6 +50,19 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const { user } = useAuth();
   const { handleVehicleDuplicate } = useInventory();
   const queryClient = useQueryClient();
+  
+  // Utilizziamo i nostri hooks personalizzati per orders
+  const { refreshAllOrderData } = useOrdersData({
+    isLicensable: null,
+    hasProforma: null,
+    isPaid: null,
+    isInvoiced: null,
+    hasConformity: null,
+    dealerId: null,
+    model: null
+  });
+  
+  const { handleTransformVehicleToOrder } = useOrdersActions(refreshAllOrderData);
   
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const userCanReserveVehicles = true;
@@ -184,82 +199,19 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     
     try {
       setIsSubmitting(true);
+      console.log("Trasforming vehicle to order:", selectedVehicle.id);
       
-      console.log("Transforming vehicle to order:", selectedVehicle.id);
+      // Utilizziamo la nostra nuova mutation per trasformare il veicolo in ordine
+      await handleTransformVehicleToOrder(selectedVehicle.id);
       
-      // Step 1: Update vehicle status to 'ordered'
-      const { data: vehicleData, error: vehicleError } = await supabase
-        .from('vehicles')
-        .update({
-          status: 'ordered',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedVehicle.id)
-        .select();
-        
-      if (vehicleError) {
-        console.error("Error updating vehicle status:", vehicleError);
-        throw vehicleError;
-      }
+      // La funzione handleTransformVehicleToOrder si occupa già di:
+      // 1. Aggiornare lo stato del veicolo
+      // 2. Creare l'ordine
+      // 3. Aggiornare i dati dell'applicazione
+      // 4. Mostrare un toast di successo
       
-      // Step 2: Find dealer ID if available
-      let dealerId = '00000000-0000-0000-0000-000000000000'; // Default ID if no dealer
-      
-      if (selectedVehicle.reservedBy) {
-        // Try to find dealer by name
-        const { data: dealerData, error: dealerError } = await supabase
-          .from('dealers')
-          .select('id')
-          .eq('companyname', selectedVehicle.reservedBy)
-          .maybeSingle();
-        
-        if (!dealerError && dealerData) {
-          dealerId = dealerData.id;
-          console.log("Found dealer ID for reservation:", dealerId);
-        } else {
-          console.log("Could not find dealer ID for name:", selectedVehicle.reservedBy);
-        }
-      }
-      
-      // Step 3: Create the order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          vehicleid: selectedVehicle.id,
-          dealerid: dealerId,
-          customername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
-          model_name: selectedVehicle.model,
-          status: 'processing',
-          order_date: new Date().toISOString(),
-          is_licensable: false,
-          has_proforma: false,
-          is_paid: false,
-          is_invoiced: false,
-          has_conformity: false,
-          odl_generated: false,
-          transport_costs: 0,
-          restoration_costs: 0
-        })
-        .select();
-      
-      if (orderError) {
-        console.error("Error creating order:", orderError);
-        throw orderError;
-      }
-      
-      toast({
-        title: "Ordine Creato",
-        description: `Il veicolo ${selectedVehicle.model} è stato trasformato in ordine con successo`,
-      });
-      
-      // Refresh data and close dialog
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
-      
+      // Chiudiamo il dialog
       handleDialogClose();
-      
-      // Note: We're not navigating to orders page anymore
-      // Simply refreshing the data and staying on the current page
       
     } catch (error) {
       console.error("Error transforming vehicle to order:", error);

@@ -31,7 +31,13 @@ export const useOrdersData = (filters: {
       try {
         console.log("Fetching orders data...");
         const orders = await ordersApi.getAll();
-        console.log("Orders data fetched successfully:", orders);
+        console.log("Orders data fetched successfully:", orders.length, "orders");
+        
+        // Log some sample orders to verify data structure
+        if (orders.length > 0) {
+          console.log("Sample order data:", orders[0]);
+        }
+        
         return orders;
       } catch (error) {
         console.error("Error fetching orders in useOrdersData hook:", error);
@@ -45,7 +51,8 @@ export const useOrdersData = (filters: {
     },
     staleTime: 0, // Always consider data stale to force refresh
     refetchInterval: 5000, // Refetch every 5 seconds
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    retry: 3 // Retry 3 times before failing
   });
 
   // Effect to refresh data when dialog closes
@@ -69,6 +76,7 @@ export const useOrdersData = (filters: {
   const refreshAllOrderData = () => {
     console.log("Manual refresh of all order data requested");
     queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     refetchOrders();
   };
 
