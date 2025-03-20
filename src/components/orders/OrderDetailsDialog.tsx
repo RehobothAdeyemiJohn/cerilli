@@ -84,10 +84,13 @@ const OrderDetailsDialog = ({
       onGenerateODL(order.id);
     }
   };
+
+  // Check if vehicle is from Stock CMC (not virtual)
+  const isStockCMC = order.vehicle?.location !== 'Stock Virtuale';
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px] w-full">
         <DialogHeader>
           <DialogTitle>Dettagli Ordine #{order.progressiveNumber?.toString().padStart(3, '0')}</DialogTitle>
           <DialogDescription>
@@ -122,6 +125,46 @@ const OrderDetailsDialog = ({
             <Label htmlFor="price">Prezzo</Label>
             <p className="text-sm">{formatCurrency(order.price || 0)}</p>
           </div>
+
+          {/* Vehicle Configuration Section - Added as requested */}
+          <div className="col-span-2 border-t mt-2 pt-2">
+            <p className="text-sm font-medium">Configurazione Veicolo</p>
+          </div>
+          
+          {order.vehicle && (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="model">Modello</Label>
+                <p className="text-sm">{order.vehicle.model || 'Non specificato'}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="trim">Allestimento</Label>
+                <p className="text-sm">{order.vehicle.trim || 'Non specificato'}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="fuelType">Alimentazione</Label>
+                <p className="text-sm">{order.vehicle.fuelType || 'Non specificato'}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="exteriorColor">Colore Esterno</Label>
+                <p className="text-sm">{order.vehicle.exteriorColor || 'Non specificato'}</p>
+              </div>
+              
+              {order.vehicle.accessories && order.vehicle.accessories.length > 0 && (
+                <div className="space-y-1 col-span-2">
+                  <Label htmlFor="accessories">Accessori</Label>
+                  <ul className="text-sm list-disc pl-5">
+                    {order.vehicle.accessories.map((acc, index) => (
+                      <li key={index}>{acc}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
           
           <div className="col-span-2 border-t mt-2 pt-2">
             <p className="text-sm font-medium">Dettagli Ordine</p>
@@ -198,8 +241,11 @@ const OrderDetailsDialog = ({
             <Label htmlFor="chassis">Telaio</Label>
             <Input 
               id="chassis" 
-              value={localOrder.chassis || ''} 
+              value={isStockCMC ? (order.vehicle?.chassis || localOrder.chassis || '') : ''} 
               onChange={(e) => handleInputChange('chassis', e.target.value)}
+              readOnly={!isStockCMC}
+              placeholder={!isStockCMC ? "Non disponibile per Stock Virtuale" : ""}
+              className={!isStockCMC ? "bg-gray-100" : ""}
             />
           </div>
           

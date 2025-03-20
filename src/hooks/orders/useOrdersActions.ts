@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -143,43 +144,48 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
         
         let dealerId = null;
         let dealerPlafond = null;
+        let dealerName = null;
         
         if (vehicle.reservedBy) {
           const { data: dealerData, error: dealerError } = await supabase
             .from('dealers')
             .select('*')
-            .eq('companyname', vehicle.reservedBy)
+            .eq('id', vehicle.reservedBy)
             .maybeSingle();
           
           if (!dealerError && dealerData) {
             dealerId = dealerData.id;
+            dealerName = dealerData.companyname;
             dealerPlafond = dealerData.nuovo_plafond || dealerData.credit_limit || 0;
-            console.log("Found dealer ID for reservation:", dealerId, "with plafond:", dealerPlafond);
+            console.log("Found dealer info for reservation:", dealerId, dealerName, "with plafond:", dealerPlafond);
           } else {
-            console.log("Could not find dealer ID for name:", vehicle.reservedBy);
+            console.log("Could not find dealer ID:", vehicle.reservedBy);
           }
         }
         
         if (!dealerId) {
           const { data: firstDealer } = await supabase
             .from('dealers')
-            .select('id')
+            .select('id, companyname, credit_limit, nuovo_plafond')
             .limit(1)
             .single();
             
           dealerId = firstDealer?.id || '00000000-0000-0000-0000-000000000000';
-          console.log("Using fallback dealer ID:", dealerId);
+          dealerName = firstDealer?.companyname || 'Dealer sconosciuto';
+          dealerPlafond = firstDealer?.nuovo_plafond || firstDealer?.credit_limit || 0;
+          console.log("Using fallback dealer ID:", dealerId, "with name:", dealerName);
         }
         
         const orderRecord = {
           vehicle_id: vehicle.id,
           dealer_id: dealerId,
-          customername: vehicle.reservedBy || 'Cliente sconosciuto',
+          customername: 'Cliente ' + (dealerName || 'Sconosciuto'),
           status: 'processing',
           order_date: new Date().toISOString(),
           model_name: vehicle.model,
           price: vehicle.price || 0,
           plafond_dealer: dealerPlafond,
+          dealer_name: dealerName,
           is_licensable: false,
           has_proforma: false,
           is_paid: false,
@@ -187,7 +193,8 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
           has_conformity: false, 
           odl_generated: false,
           transport_costs: 0,
-          restoration_costs: 0
+          restoration_costs: 0,
+          chassis: vehicle.chassis || ''
         };
         
         console.log("Creating order with data:", orderRecord);

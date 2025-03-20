@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Order } from '@/types';
+import { FileText, Truck } from 'lucide-react';
 
 interface DataTableProps {
   columns: any[];
@@ -65,6 +66,39 @@ export function DataTable({
       },
     },
   });
+
+  // Function to render action buttons with consistent order
+  const renderRowActions = (row: any) => {
+    const item = row.original;
+    return (
+      <div className="flex justify-end space-x-2">
+        {onGeneratePdf && (
+          <Button variant="outline" size="sm" onClick={() => onGeneratePdf(item)}>
+            <FileText className="mr-2 h-4 w-4" /> 
+            Anteprima
+          </Button>
+        )}
+        
+        {onViewDetails && (
+          <Button variant="secondary" size="sm" onClick={() => onViewDetails(item)}>
+            APRI ORDINE
+          </Button>
+        )}
+        
+        {onMarkAsDelivered && item.status === 'processing' && item.odlGenerated && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onMarkAsDelivered(item.id)}
+            className="bg-green-100 text-green-800 hover:bg-green-200"
+          >
+            <Truck className="mr-2 h-4 w-4" />
+            Consegna
+          </Button>
+        )}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return <div className="text-center py-8">Caricamento...</div>;

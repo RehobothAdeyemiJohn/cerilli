@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/types';
-import { FileText, Printer, Check, X, Trash2 } from 'lucide-react';
+import { FileText, Printer, Check, X, Trash2, Truck } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 
 interface OrdersTableProps {
@@ -100,33 +100,33 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onViewDetails(order)}
+          onClick={() => onPrintOrder(order)}
           className="h-8"
         >
-          <FileText className="h-4 w-4 mr-1" />
-          Visualizza
+          <Printer className="h-4 w-4 mr-1" />
+          Anteprima
         </Button>
         
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPrintOrder(order)}
+          onClick={() => onViewDetails(order)}
           className="h-8"
         >
-          <Printer className="h-4 w-4 mr-1" />
-          Stampa Ordine
+          <FileText className="h-4 w-4 mr-1" />
+          APRI ORDINE
         </Button>
         
-        {order.status === 'processing' && (
+        {order.status === 'processing' && order.odlGenerated && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => onMarkAsDelivered(order.id)}
-            disabled={markAsDeliveredPending || !order.odlGenerated}
+            disabled={markAsDeliveredPending}
             className="h-8 bg-green-100 hover:bg-green-200 text-green-800"
             title={!order.odlGenerated ? "Genera prima l'ODL" : "Marca come consegnato"}
           >
-            <Check className="h-4 w-4 mr-1" />
+            <Truck className="h-4 w-4 mr-1" />
             Consegna
           </Button>
         )}
@@ -166,7 +166,19 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   const renderPlafondColumn = (order: Order) => {
     // Use the plafond stored in the order at creation time
     if (order.plafondDealer !== undefined && order.plafondDealer !== null) {
-      return formatCurrency(order.plafondDealer);
+      // Set color based on plafond value
+      let colorClass = "text-gray-800";
+      const plafond = order.plafondDealer;
+      
+      if (plafond > 80000) {
+        colorClass = "text-green-600 font-medium";
+      } else if (plafond < 20000) {
+        colorClass = "text-red-600 font-medium";
+      } else if (plafond < 50000) {
+        colorClass = "text-orange-500 font-medium";
+      }
+      
+      return <span className={colorClass}>{formatCurrency(plafond)}</span>;
     }
     
     // Fallback to dealer's current plafond if order plafond is not available
@@ -185,6 +197,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
             <TableRow>
               <TableHead className="w-[100px]">Ordine</TableHead>
               <TableHead>Cliente</TableHead>
+              <TableHead>Plafond Dealer</TableHead>
               <TableHead>Veicolo</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead>Data Ordine</TableHead>
@@ -194,7 +207,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               <TableHead className="text-center">Saldata</TableHead>
               <TableHead className="text-center">Fatturata</TableHead>
               <TableHead className="text-center">Conformità</TableHead>
-              <TableHead>Plafond</TableHead>
               <TableHead>Azioni</TableHead>
             </TableRow>
           </TableHeader>
@@ -221,6 +233,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.progressiveNumber?.toString().padStart(3, '0') || '???'}</TableCell>
                     <TableCell>{order.dealerName || order.dealer?.companyName || order.customerName}</TableCell>
+                    <TableCell>{renderPlafondColumn(order)}</TableCell>
                     <TableCell>{vehicleInfo}</TableCell>
                     <TableCell>
                       <span
@@ -240,7 +253,6 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                     <TableCell className="text-center">{renderCheckIcon(order.isPaid)}</TableCell>
                     <TableCell className="text-center">{renderCheckIcon(order.isInvoiced)}</TableCell>
                     <TableCell className="text-center">{renderCheckIcon(order.hasConformity)}</TableCell>
-                    <TableCell>{renderPlafondColumn(order)}</TableCell>
                     <TableCell>{renderOrderActions(order)}</TableCell>
                   </TableRow>
                 );

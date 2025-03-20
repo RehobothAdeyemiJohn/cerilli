@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
 interface OrdersColumnsOptions {
   isAdmin: boolean;
@@ -46,6 +47,15 @@ export const ordersColumns = ({
     }
     return <X className="h-4 w-4 text-red-500 mx-auto" />;
   };
+
+  // Helper function to determine plafond color
+  const getPlafondColor = (plafond: number | undefined | null) => {
+    if (plafond === undefined || plafond === null) return "text-gray-500";
+    if (plafond > 80000) return "text-green-600";
+    if (plafond < 20000) return "text-red-600";
+    if (plafond < 50000) return "text-orange-500";
+    return "text-gray-900";
+  };
   
   const columns: ColumnDef<Order>[] = [
     {
@@ -59,6 +69,21 @@ export const ordersColumns = ({
     {
       accessorKey: 'customerName',
       header: 'Cliente',
+    },
+    {
+      accessorKey: 'plafondDealer',
+      header: 'Plafond Dealer',
+      cell: ({ row }) => {
+        const plafond = row.getValue('plafondDealer') as number;
+        const colorClass = getPlafondColor(plafond);
+        return (
+          <span className={`font-medium ${colorClass}`}>
+            {plafond !== undefined && plafond !== null 
+              ? formatCurrency(plafond) 
+              : '-'}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'modelName',
@@ -161,20 +186,20 @@ export const ordersColumns = ({
               <DropdownMenuItem
                 onClick={() => handleEditOrderDetails(order)}
               >
-                <Edit className="mr-2 h-4 w-4" /> Modifica
+                <Edit className="mr-2 h-4 w-4" /> APRI ORDINE
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleGeneratePdf(order)}
               >
-                <FileText className="mr-2 h-4 w-4" /> Genera PDF
+                <FileText className="mr-2 h-4 w-4" /> Anteprima
               </DropdownMenuItem>
               
-              {order.status === 'processing' && (
+              {order.status === 'processing' && order.odlGenerated && (
                 <DropdownMenuItem
                   onClick={() => handleMarkAsDelivered(order.id)}
-                  disabled={isDelivering || !order.odlGenerated}
+                  disabled={isDelivering}
                 >
-                  <Truck className="mr-2 h-4 w-4" /> Segna come consegnato
+                  <Truck className="mr-2 h-4 w-4" /> Consegna
                 </DropdownMenuItem>
               )}
               
