@@ -485,6 +485,7 @@ const Orders = () => {
               </TableHead>
               <TableHead>Progressivo</TableHead>
               <TableHead>Cliente</TableHead>
+              <TableHead>Plafond Dealer</TableHead>
               <TableHead>Modello</TableHead>
               <TableHead>Data Ordine</TableHead>
               <TableHead>Stato</TableHead>
@@ -499,11 +500,11 @@ const Orders = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center">Caricamento...</TableCell>
+                <TableCell colSpan={13} className="text-center">Caricamento...</TableCell>
               </TableRow>
             ) : allOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center">Nessun ordine trovato.</TableCell>
+                <TableCell colSpan={13} className="text-center">Nessun ordine trovato.</TableCell>
               </TableRow>
             ) : (
               allOrders.map((order) => (
@@ -522,6 +523,19 @@ const Orders = () => {
                     }
                   </TableCell>
                   <TableCell>{order.customerName}</TableCell>
+                  <TableCell>
+                    {order.plafondDealer !== undefined ? 
+                      <span className={
+                        order.plafondDealer > 80000 ? "text-green-600 font-medium" :
+                        order.plafondDealer < 20000 ? "text-red-600 font-medium" :
+                        order.plafondDealer < 50000 ? "text-orange-500 font-medium" :
+                        "text-gray-800"
+                      }>
+                        {formatCurrency(order.plafondDealer)}
+                      </span> : 
+                      "-"
+                    }
+                  </TableCell>
                   <TableCell>{order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Non disponibile')}</TableCell>
                   <TableCell>{order.orderDate ? formatDate(new Date(order.orderDate)) : '-'}</TableCell>
                   <TableCell>
@@ -560,8 +574,19 @@ const Orders = () => {
                       </Button>
                       <Button variant="secondary" size="sm" onClick={() => handleOpenOrderDetails(order)}>
                         <File className="mr-2 h-4 w-4" />
-                        Dettagli
+                        APRI ORDINE
                       </Button>
+                      {order.status === 'processing' && order.odlGenerated && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleMarkAsDelivered(order.id)}
+                          className="bg-green-100 hover:bg-green-200 text-green-800"
+                        >
+                          <Truck className="mr-2 h-4 w-4" />
+                          Consegna
+                        </Button>
+                      )}
                       {isAdmin && (
                         <Button 
                           variant="destructive" 
