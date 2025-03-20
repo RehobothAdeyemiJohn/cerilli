@@ -192,125 +192,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
   
-  const handleCreateOrder = async () => {
-    if (!selectedVehicle) return;
-    
-    try {
-      setIsSubmitting(true);
-      console.log("Creating order for vehicle:", selectedVehicle.id);
-      
-      // Find dealer ID by dealerName
-      let dealerId = null;
-      
-      if (selectedVehicle.reservedBy) {
-        try {
-          // Get dealers directly from Supabase
-          const { data: dealers, error } = await supabase
-            .from('dealers')
-            .select('id, companyname')
-            .eq('companyname', selectedVehicle.reservedBy)
-            .maybeSingle();
-          
-          if (error) {
-            console.error("Error finding dealer by name:", error);
-            throw error;
-          }
-          
-          if (dealers) {
-            dealerId = dealers.id;
-            console.log("Found dealer ID:", dealerId);
-          } else {
-            console.log("Dealer not found for name:", selectedVehicle.reservedBy);
-            throw new Error(`Concessionario "${selectedVehicle.reservedBy}" non trovato nel database`);
-          }
-        } catch (err) {
-          console.error("Error finding dealer by name:", err);
-          throw new Error(`Errore durante la ricerca del concessionario: ${(err as Error).message}`);
-        }
-      } else {
-        throw new Error("Questo veicolo non ha un concessionario assegnato per la prenotazione");
-      }
-      
-      console.log("Creating order with dealerId:", dealerId);
-
-      // Create order directly using all camelCase fields
-      const orderRecord = {
-        vehicleid: selectedVehicle.id,
-        dealerid: dealerId,
-        customername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
-        status: 'processing',
-        orderdate: new Date().toISOString(),
-        dealername: selectedVehicle.reservedBy || 'Cliente sconosciuto',
-        modelname: selectedVehicle.model || '',
-        price: selectedVehicle.virtualConfig?.price || selectedVehicle.price || 0,
-        // Set default values for boolean fields
-        islicensable: false,
-        hasproforma: false,
-        ispaid: false,
-        isinvoiced: false,
-        hasconformity: false,
-        odlgenerated: false,
-        transportcosts: 0,
-        restorationcosts: 0
-      };
-      
-      console.log("Attempting to insert order with camelCase names:", orderRecord);
-      
-      // Insert using the camelCase column names
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderRecord)
-        .select()
-        .single();
-        
-      if (orderError) {
-        console.error("Error creating order:", orderError);
-        throw orderError;
-      }
-
-      console.log("Order created successfully:", orderData);
-
-      // Update vehicle status to ordered
-      const { error: vehicleError } = await supabase
-        .from('vehicles')
-        .update({
-          status: 'ordered',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedVehicle.id);
-        
-      if (vehicleError) {
-        console.error("Error updating vehicle status:", vehicleError);
-        throw new Error(`Ordine creato ma errore nell'aggiornamento dello stato del veicolo: ${vehicleError.message}`);
-      }
-      
-      // Refresh data
-      await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
-      await queryClient.invalidateQueries({ queryKey: ['ordersWithDetails'] });
-      
-      toast({
-        title: "Ordine Creato",
-        description: `L'ordine per ${selectedVehicle.model} è stato creato con successo. Vai alla sezione Ordini per visualizzarlo.`,
-      });
-      
-      handleDialogClose();
-      onVehicleUpdated();
-      
-      // Navigate to the Orders page after successful order creation
-      navigate('/orders');
-    } catch (error: any) {
-      console.error("Error creating order:", error);
-      toast({
-        title: "Errore",
-        description: error.message || "Si è verificato un errore durante la creazione dell'ordine",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
   const handleFormSubmitted = () => {
     onVehicleUpdated();
     handleDialogClose();
@@ -333,7 +214,6 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                 onCreateQuote={selectedVehicle.location !== 'Stock Virtuale' ? handleCreateQuoteClick : undefined}
                 onReserve={selectedVehicle.status === 'available' ? handleReserveVehicle : undefined}
                 onCancelReservation={selectedVehicle.status === 'reserved' ? handleCancelReservation : undefined}
-                onCreateOrder={selectedVehicle.status === 'reserved' && !isVirtualStock ? handleCreateOrder : undefined}
                 isDealer={isDealer}
                 isVirtualStock={isVirtualStock}
                 isDealerStock={isDealerStock}

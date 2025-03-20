@@ -3,7 +3,7 @@ import React from 'react';
 import { Vehicle } from '@/types';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, ShoppingCart, Ban, Package } from 'lucide-react';
+import { FileText, ShoppingCart, Ban } from 'lucide-react';
 
 interface VehicleDialogHeaderProps {
   vehicle: Vehicle;
@@ -11,7 +11,6 @@ interface VehicleDialogHeaderProps {
   onCreateQuote?: (() => void) | ((vehicle: Vehicle) => void);
   onReserve?: () => void;
   onCancelReservation?: () => void;
-  onCreateOrder?: () => void;
   isDealer?: boolean;
   isVirtualStock?: boolean;
   isDealerStock?: boolean;
@@ -23,7 +22,6 @@ const VehicleDialogHeader = ({
   onCreateQuote,
   onReserve,
   onCancelReservation,
-  onCreateOrder,
   isDealer,
   isVirtualStock,
   isDealerStock
@@ -80,12 +78,6 @@ const VehicleDialogHeader = ({
         {onCancelReservation && (
           <Button variant="outline" size="sm" onClick={onCancelReservation} className="h-8 text-orange-600 border-orange-200 hover:bg-orange-50">
             <Ban className="h-4 w-4 mr-1" /> Annulla Prenotazione
-          </Button>
-        )}
-        
-        {onCreateOrder && (
-          <Button variant="outline" size="sm" onClick={onCreateOrder} className="h-8 text-purple-600 border-purple-200 hover:bg-purple-50">
-            <Package className="h-4 w-4 mr-1" /> Crea Ordine
           </Button>
         )}
       </DialogDescription>
