@@ -36,7 +36,7 @@ export function useVehicleDetailsDialog(
     setIsDuplicating(true);
     
     try {
-      await handleVehicleDuplicate(vehicle.id);
+      await handleVehicleDuplicate(vehicle);
       
       // Refresh the vehicles list
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });

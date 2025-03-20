@@ -19,9 +19,13 @@ interface VehicleDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onVehicleUpdated?: () => void;
   onVehicleDeleted?: (vehicleId: string) => Promise<void>;
+  onCreateQuote?: ((vehicle: Vehicle) => void) | undefined;
+  onReserve?: ((vehicle: Vehicle) => void) | undefined;
   showActions?: boolean;
   isDealerStock?: boolean;
   isVirtualStock?: boolean;
+  shouldReserve?: boolean;
+  requestedAction?: string;
 }
 
 const VehicleDetailsDialog = ({
@@ -30,9 +34,13 @@ const VehicleDetailsDialog = ({
   onOpenChange,
   onVehicleUpdated,
   onVehicleDeleted,
+  onCreateQuote,
+  onReserve,
   showActions = true,
   isDealerStock,
   isVirtualStock,
+  shouldReserve,
+  requestedAction,
 }: VehicleDetailsDialogProps) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const { locationOptions, handleVehicleUpdate } = useInventory();
@@ -129,6 +137,8 @@ const VehicleDetailsDialog = ({
             onDelete={showActions ? handleDelete : undefined}
             isDealerStock={isDealerStock}
             isVirtualStock={isVirtualStock}
+            onCreateQuote={onCreateQuote}
+            onReserve={onReserve}
           />
         )}
       </DialogContent>

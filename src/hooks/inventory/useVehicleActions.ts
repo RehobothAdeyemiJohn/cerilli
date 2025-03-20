@@ -62,11 +62,28 @@ export const useVehicleActions = () => {
     }
   };
   
-  const handleVehicleDuplicate = async (vehicle: Vehicle) => {
-    console.log('Duplicating vehicle:', vehicle);
+  const handleVehicleDuplicate = async (vehicleData: Vehicle | string) => {
+    console.log('Duplicating vehicle:', vehicleData);
     setIsDuplicating(true);
     
     try {
+      // Handle both Vehicle object and vehicle ID string
+      if (typeof vehicleData === 'string') {
+        const vehicleId = vehicleData;
+        // In this case, we need to fetch the vehicle data first
+        // This might require additional logic, but for now, let's return early
+        console.log('Vehicle ID provided instead of Vehicle object:', vehicleId);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la duplicazione del veicolo (ID fornito invece dell'oggetto).",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // If we have a Vehicle object, proceed with duplication
+      const vehicle = vehicleData as Vehicle;
+      
       // Remove the ID to create a new vehicle
       const { id, ...vehicleWithoutId } = vehicle;
       
