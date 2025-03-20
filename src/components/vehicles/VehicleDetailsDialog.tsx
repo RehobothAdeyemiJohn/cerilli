@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Vehicle } from '@/types';
@@ -238,12 +239,15 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   };
   
   const handleEditClick = () => {
+    console.log("Edit button clicked for vehicle:", selectedVehicle);
     resetForms();
     setShowEditForm(true);
   };
   
   const handleVehicleEditCompleted = (updatedVehicle: Vehicle) => {
+    console.log("Vehicle edit completed with updated data:", updatedVehicle);
     setShowEditForm(false);
+    setSelectedVehicle(updatedVehicle);
     onVehicleUpdated();
     toast({
       title: "Veicolo Aggiornato",
@@ -252,6 +256,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   };
   
   const handleCancelEdit = () => {
+    console.log("Edit canceled");
     setShowEditForm(false);
   };
   

@@ -44,6 +44,12 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
     }
   }, [locationOptions]);
 
+  // Log vehicle accessories for debugging
+  useEffect(() => {
+    console.log("Vehicle accessories in EditVehicleForm:", vehicle.accessories);
+    console.log("Compatible accessories:", compatibleAccessories);
+  }, [vehicle.accessories, compatibleAccessories]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
