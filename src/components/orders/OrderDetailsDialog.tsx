@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Dialog, 
@@ -35,7 +34,6 @@ const OrderDetailsDialog = ({
   
   const [localOrder, setLocalOrder] = React.useState<Order>(order);
   
-  // Reset local state when order changes
   React.useEffect(() => {
     setLocalOrder(order);
   }, [order]);
@@ -85,7 +83,6 @@ const OrderDetailsDialog = ({
     }
   };
 
-  // Check if vehicle is from Stock CMC (not virtual)
   const isStockCMC = order.vehicle?.location !== 'Stock Virtuale';
   
   return (
@@ -126,7 +123,6 @@ const OrderDetailsDialog = ({
             <p className="text-sm">{formatCurrency(order.price || 0)}</p>
           </div>
 
-          {/* Vehicle Configuration Section - Added as requested */}
           <div className="col-span-2 border-t mt-2 pt-2">
             <p className="text-sm font-medium">Configurazione Veicolo</p>
           </div>
@@ -241,7 +237,7 @@ const OrderDetailsDialog = ({
             <Label htmlFor="chassis">Telaio</Label>
             <Input 
               id="chassis" 
-              value={isStockCMC ? (order.vehicle?.chassis || localOrder.chassis || '') : ''} 
+              value={isStockCMC ? (order.vehicle?.telaio || localOrder.chassis || '') : ''} 
               onChange={(e) => handleInputChange('chassis', e.target.value)}
               readOnly={!isStockCMC}
               placeholder={!isStockCMC ? "Non disponibile per Stock Virtuale" : ""}

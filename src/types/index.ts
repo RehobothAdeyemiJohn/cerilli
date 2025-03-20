@@ -1,3 +1,4 @@
+
 export type Vehicle = {
   id: string;
   model: string;
@@ -13,6 +14,7 @@ export type Vehicle = {
   dateAdded: string;
   transmission?: string;
   telaio: string;
+  chassis?: string; // Added chassis property
   previousChassis?: string;
   originalStock?: 'Cina' | 'Germania';
   year?: string;

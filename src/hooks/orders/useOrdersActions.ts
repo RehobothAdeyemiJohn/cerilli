@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/api/apiClient';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi';
@@ -194,7 +193,7 @@ export const useOrdersActions = (refreshAllOrderData: () => void) => {
           odl_generated: false,
           transport_costs: 0,
           restoration_costs: 0,
-          chassis: vehicle.chassis || ''
+          chassis: vehicle.telaio || ''
         };
         
         console.log("Creating order with data:", orderRecord);
