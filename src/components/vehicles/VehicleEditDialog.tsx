@@ -9,6 +9,9 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import EditVehicleForm from './EditVehicleForm';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import { useVehicleActions } from '@/hooks/inventory/useVehicleActions';
 
 interface VehicleEditDialogProps {
   vehicle: Vehicle | null;
@@ -27,10 +30,47 @@ const VehicleEditDialog = ({
   onCancel,
   locationOptions
 }: VehicleEditDialogProps) => {
+  const { handleVehicleUpdate } = useVehicleActions();
+  const queryClient = useQueryClient();
+  
   if (!vehicle) return null;
   
   // Determine if the vehicle is in Virtual Stock
   const isVirtualStock = vehicle.location === 'Stock Virtuale';
+  
+  const handleSaveComplete = async (updatedVehicle: Vehicle) => {
+    console.log('VehicleEditDialog - Saving vehicle with data:', updatedVehicle);
+    
+    try {
+      const success = await handleVehicleUpdate(updatedVehicle);
+      
+      if (success) {
+        // Invalidate and refetch vehicles data
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        
+        // Call the onComplete callback
+        onComplete(updatedVehicle);
+        
+        toast({
+          title: "Veicolo aggiornato",
+          description: `${updatedVehicle.model} ${updatedVehicle.trim || ''} è stato aggiornato con successo.`,
+        });
+      } else {
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante l'aggiornamento del veicolo.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving vehicle:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del veicolo.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,7 +88,7 @@ const VehicleEditDialog = ({
         
         <EditVehicleForm 
           vehicle={vehicle}
-          onComplete={onComplete}
+          onComplete={handleSaveComplete}
           onCancel={onCancel}
           locationOptions={locationOptions}
         />

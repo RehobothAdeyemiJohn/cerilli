@@ -11,7 +11,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
     <div className="border p-4 rounded-md bg-gray-50">
       <h3 className="text-lg font-semibold mb-2">Prezzo di Listino</h3>
       
-      {priceComponents && (
+      {priceComponents && Object.keys(priceComponents).length > 0 && (
         <div className="text-sm text-gray-600 mb-2 space-y-1">
           {priceComponents.baseModelPrice !== undefined && (
             <div className="flex justify-between">
@@ -45,6 +45,13 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
             <div className="flex justify-between">
               <span>Cambio:</span>
               <span>{priceComponents.transmissionAdjustment >= 0 ? '+' : ''}€{priceComponents.transmissionAdjustment.toLocaleString('it-IT')}</span>
+            </div>
+          )}
+          
+          {priceComponents.accessoriesAdjustment !== undefined && priceComponents.accessoriesAdjustment > 0 && (
+            <div className="flex justify-between">
+              <span>Accessori:</span>
+              <span>+€{priceComponents.accessoriesAdjustment.toLocaleString('it-IT')}</span>
             </div>
           )}
           

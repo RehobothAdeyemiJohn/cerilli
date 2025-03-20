@@ -42,6 +42,27 @@ export const useVehicleActions = () => {
         }
       });
       
+      // Handling for specific fields in non-virtual stock vehicles
+      if (cleanVehicle.location !== 'Stock Virtuale') {
+        // Make sure these fields are properly set
+        if (!cleanVehicle.trim) cleanVehicle.trim = '';
+        if (!cleanVehicle.fuelType) cleanVehicle.fuelType = '';
+        if (!cleanVehicle.exteriorColor) cleanVehicle.exteriorColor = '';
+        if (!cleanVehicle.transmission) cleanVehicle.transmission = '';
+        if (!cleanVehicle.telaio) cleanVehicle.telaio = '';
+      }
+      
+      // For virtual stock, clear fields that should be empty
+      if (cleanVehicle.location === 'Stock Virtuale') {
+        cleanVehicle.trim = '';
+        cleanVehicle.fuelType = '';
+        cleanVehicle.exteriorColor = '';
+        cleanVehicle.transmission = '';
+        cleanVehicle.telaio = '';
+        cleanVehicle.accessories = [];
+        cleanVehicle.price = 0;
+      }
+      
       console.log('Cleaned vehicle data for update:', cleanVehicle);
       
       const result = await updateMutation.mutateAsync(cleanVehicle);

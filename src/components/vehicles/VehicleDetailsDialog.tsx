@@ -11,7 +11,8 @@ import VehicleDetailsContent from './details/VehicleDetailsContent';
 import { useInventory } from '@/hooks/useInventory';
 import EditVehicleForm from './EditVehicleForm';
 import { toast } from '@/hooks/use-toast';
-import { useInventoryMutations } from '@/hooks/inventory/useMutations';
+import { useVehicleActions } from '@/hooks/inventory/useVehicleActions';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -43,8 +44,9 @@ const VehicleDetailsDialog = ({
   requestedAction,
 }: VehicleDetailsDialogProps) => {
   const [showEditForm, setShowEditForm] = useState(false);
-  const { locationOptions, handleVehicleUpdate } = useInventory();
-  const { updateMutation } = useInventoryMutations();
+  const { locationOptions } = useInventory();
+  const { handleVehicleUpdate } = useVehicleActions();
+  const queryClient = useQueryClient();
   
   const handleEdit = () => {
     console.log("Edit button clicked, showing edit form for vehicle:", vehicle);
@@ -65,21 +67,32 @@ const VehicleDetailsDialog = ({
   const handleEditComplete = async (updatedVehicle: Vehicle) => {
     console.log("Edit complete, updated vehicle:", updatedVehicle);
     try {
-      // Use the updateMutation to update the vehicle
-      await updateMutation.mutateAsync(updatedVehicle);
+      // Use the handleVehicleUpdate function to update the vehicle
+      const success = await handleVehicleUpdate(updatedVehicle);
       
-      console.log("Vehicle updated successfully");
-      setShowEditForm(false);
-      
-      // Call onVehicleUpdated callback if provided
-      if (onVehicleUpdated) {
-        onVehicleUpdated();
+      if (success) {
+        console.log("Vehicle updated successfully");
+        setShowEditForm(false);
+        
+        // Invalidate the vehicles cache to trigger a refetch
+        await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        
+        // Call onVehicleUpdated callback if provided
+        if (onVehicleUpdated) {
+          onVehicleUpdated();
+        }
+        
+        toast({
+          title: "Veicolo aggiornato",
+          description: `${updatedVehicle.model} ${updatedVehicle.trim || ''} è stato aggiornato con successo.`,
+        });
+      } else {
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante l'aggiornamento del veicolo.",
+          variant: "destructive",
+        });
       }
-      
-      toast({
-        title: "Veicolo aggiornato",
-        description: `${updatedVehicle.model} ${updatedVehicle.trim || ''} è stato aggiornato con successo.`,
-      });
     } catch (error) {
       console.error("Error updating vehicle:", error);
       toast({

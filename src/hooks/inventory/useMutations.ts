@@ -20,7 +20,11 @@ export const useInventoryMutations = () => {
       };
       
       // Send update to Supabase
-      return await vehiclesApi.update(vehicle.id, formattedVehicle);
+      const updatedVehicle = await vehiclesApi.update(vehicle.id, formattedVehicle);
+      
+      console.log('Vehicle updated successfully:', updatedVehicle);
+      
+      return updatedVehicle;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
