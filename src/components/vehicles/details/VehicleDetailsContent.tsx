@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Pencil } from 'lucide-react';
 import VehicleDialogHeader from './VehicleDialogHeader';
 import VehicleDialogContent from './VehicleDialogContent';
-import { useVehicleDetailsDialog } from '@/hooks/useVehicleDetailsDialog';
+import { useVehicleDetailsDialog } from '../details/useVehicleDetailsDialog';
 
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
@@ -32,8 +32,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const canDeleteVehicle = isAdmin && !isDealerStock;
   
   // Determine if the user can create quotes and reserve vehicles
-  const userCanCreateQuotes = isAdmin || user?.permissions?.createQuotes;
-  const userCanReserveVehicles = isAdmin || user?.permissions?.reserveVehicles;
+  const userCanCreateQuotes = isAdmin || user?.permissions?.includes('quotes');
+  const userCanReserveVehicles = isAdmin || user?.permissions?.includes('inventory');
   
   // Use the custom hook for all dialog state management
   const {
