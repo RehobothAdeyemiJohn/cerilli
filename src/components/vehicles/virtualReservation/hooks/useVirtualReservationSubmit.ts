@@ -98,7 +98,6 @@ export const useVirtualReservationSubmit = (
         customername: selectedDealerName, // Use customername instead of dealername
         status: 'processing',
         orderdate: new Date().toISOString(),
-        // No longer setting dealername since it doesn't exist in the database
         modelname: vehicle.model,
         price: calculatedPrice || 0,
         plafonddealer: dealerPlafond,
