@@ -8,7 +8,7 @@ import { Vehicle, Accessory } from '@/types';
 import { 
   modelsApi, trimsApi, fuelTypesApi, colorsApi, 
   transmissionsApi, accessoriesApi, calculateVehiclePrice 
-} from '@/api/localStorage';
+} from '@/api/supabase/settingsApi'; // Use Supabase directly
 
 // Schema for vehicle edit form
 const vehicleSchema = z.object({
@@ -124,10 +124,20 @@ export const useEditVehicleForm = (
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
         
-        const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
-        const colorName = colorParts ? colorParts[1] : watchColor;
-        const colorType = colorParts ? colorParts[2] : '';
-        const colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+        // Refine color handling to better match database values
+        let colorObj;
+        
+        if (watchColor.includes('(')) {
+          const colorParts = watchColor.match(/^(.+) \((.+)\)$/);
+          if (colorParts) {
+            const colorName = colorParts[1];
+            const colorType = colorParts[2];
+            colorObj = colors.find(c => c.name === colorName && c.type === colorType);
+          }
+        } else {
+          // Try to find by name only
+          colorObj = colors.find(c => c.name === watchColor);
+        }
         
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 

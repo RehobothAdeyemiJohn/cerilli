@@ -10,10 +10,27 @@ export const useVehicleActions = () => {
   const { updateMutation, deleteMutation, createMutation } = useInventoryMutations();
 
   const handleVehicleUpdate = async (vehicle: Vehicle) => {
-    console.log('Updating vehicle:', vehicle);
+    console.log('Updating vehicle with data:', vehicle);
     
     try {
-      await updateMutation.mutateAsync(vehicle);
+      // Make sure accessories is an array
+      if (!Array.isArray(vehicle.accessories)) {
+        vehicle.accessories = [];
+      }
+      
+      // Ensure we're sending a proper location
+      if (!vehicle.location) {
+        vehicle.location = 'Stock CMC';
+      }
+      
+      // Make sure price is a number
+      if (typeof vehicle.price !== 'number') {
+        vehicle.price = 0;
+      }
+      
+      const result = await updateMutation.mutateAsync(vehicle);
+      
+      console.log('Vehicle update response:', result);
       
       toast({
         title: "Veicolo aggiornato",

@@ -52,7 +52,7 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                         <FormLabel className="font-normal cursor-pointer">
                           {accessory.name} 
                           <span className="text-sm text-gray-600 ml-1">
-                            (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
+                            (+€{accessory.priceWithVAT ? accessory.priceWithVAT.toLocaleString('it-IT') : '0'})
                           </span>
                         </FormLabel>
                       </div>

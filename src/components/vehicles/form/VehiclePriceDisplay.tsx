@@ -13,6 +13,12 @@ interface VehiclePriceDisplayProps {
 }
 
 const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceDisplayProps) => {
+  // Format price helper function
+  const formatPrice = (price: number | undefined): string => {
+    if (price === undefined || price === null) return "€0";
+    return `€${price.toLocaleString('it-IT')}`;
+  };
+
   return (
     <div className="rounded-lg bg-gray-50 p-4 mt-6">
       {priceComponents && Object.keys(priceComponents).length > 0 && (
@@ -22,31 +28,31 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
             {priceComponents.baseModelPrice !== undefined && (
               <div className="flex justify-between">
                 <span>Prezzo Base Modello:</span>
-                <span className="font-medium">€{priceComponents.baseModelPrice.toLocaleString('it-IT')}</span>
+                <span className="font-medium">{formatPrice(priceComponents.baseModelPrice)}</span>
               </div>
             )}
             {priceComponents.trimPrice !== undefined && (
               <div className="flex justify-between">
                 <span>Prezzo Allestimento:</span>
-                <span className="font-medium">€{priceComponents.trimPrice.toLocaleString('it-IT')}</span>
+                <span className="font-medium">{formatPrice(priceComponents.trimPrice)}</span>
               </div>
             )}
             {priceComponents.fuelTypeAdjustment !== undefined && (
               <div className="flex justify-between">
                 <span>Aggiustamento Motore:</span>
-                <span className="font-medium">€{priceComponents.fuelTypeAdjustment.toLocaleString('it-IT')}</span>
+                <span className="font-medium">{formatPrice(priceComponents.fuelTypeAdjustment)}</span>
               </div>
             )}
             {priceComponents.colorAdjustment !== undefined && (
               <div className="flex justify-between">
                 <span>Aggiustamento Colore:</span>
-                <span className="font-medium">€{priceComponents.colorAdjustment.toLocaleString('it-IT')}</span>
+                <span className="font-medium">{formatPrice(priceComponents.colorAdjustment)}</span>
               </div>
             )}
             {priceComponents.transmissionAdjustment !== undefined && (
               <div className="flex justify-between">
                 <span>Aggiustamento Cambio:</span>
-                <span className="font-medium">€{priceComponents.transmissionAdjustment.toLocaleString('it-IT')}</span>
+                <span className="font-medium">{formatPrice(priceComponents.transmissionAdjustment)}</span>
               </div>
             )}
           </div>
@@ -55,7 +61,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
       <div className="font-semibold border-t pt-2">
         <div className="flex justify-between items-center">
           <span>Prezzo di Listino Calcolato:</span>
-          <span className="text-xl">€{calculatedPrice.toLocaleString('it-IT')}</span>
+          <span className="text-xl">{formatPrice(calculatedPrice)}</span>
         </div>
       </div>
     </div>

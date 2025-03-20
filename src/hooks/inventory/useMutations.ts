@@ -1,6 +1,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { vehiclesApi } from '@/api/supabase';
+import { vehiclesApi } from '@/api/supabase/vehiclesApi'; // Use Supabase directly
 import { Vehicle } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -8,7 +8,10 @@ export const useInventoryMutations = () => {
   const queryClient = useQueryClient();
   
   const updateMutation = useMutation({
-    mutationFn: (vehicle: Vehicle) => vehiclesApi.update(vehicle.id, vehicle),
+    mutationFn: (vehicle: Vehicle) => {
+      console.log('Mutation updating vehicle:', vehicle);
+      return vehiclesApi.update(vehicle.id, vehicle);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       toast({
@@ -16,6 +19,14 @@ export const useInventoryMutations = () => {
         description: "Il veicolo è stato aggiornato con successo",
       });
     },
+    onError: (error) => {
+      console.error('Error updating vehicle in mutation:', error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante l'aggiornamento del veicolo",
+        variant: "destructive",
+      });
+    }
   });
   
   const deleteMutation = useMutation({
