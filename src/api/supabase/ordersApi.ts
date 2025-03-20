@@ -1,3 +1,4 @@
+
 import { Order } from '@/types';
 import { supabase } from './client';
 
@@ -57,17 +58,17 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 const mapOrderDbToFrontend = (order: any): Order => {
   return {
     id: order.id,
-    vehicleId: order.vehicleid || '',
-    dealerId: order.dealerid || '',
-    // IMPORTANT: Use customername for customerName in the frontend object
-    customerName: order.customername,
+    vehicleId: order.vehicleid || order.vehicle_id || '',
+    dealerId: order.dealerid || order.dealer_id || '',
+    // IMPORTANT: First try customername, then try dealer_name
+    customerName: order.customername || order.customer_name || '',
     status: order.status as 'processing' | 'delivered' | 'cancelled',
-    orderDate: order.orderdate,
-    deliveryDate: order.deliverydate,
+    orderDate: order.orderdate || order.order_date,
+    deliveryDate: order.deliverydate || order.delivery_date,
     progressiveNumber: order.progressivenumber || order.progressive_number,
     price: order.price,
     // Map customername to dealerName in the frontend object
-    dealerName: order.customername,
+    dealerName: order.customername || order.customer_name || order.dealer_name || '',
     modelName: order.modelname || order.model_name,
     plafondDealer: order.plafonddealer || order.plafond_dealer,
     
@@ -95,34 +96,34 @@ const mapOrderDbToFrontend = (order: any): Order => {
 
 // Helper function to map frontend order to database format
 const mapOrderFrontendToDb = (order: Partial<Order>) => {
-  // IMPORTANT: We're using the exact column names from the database schema
+  // CRITICAL FIX: Use the exact column names from the database schema
   return {
     vehicleid: order.vehicleId,
     dealerid: order.dealerId,
-    // CRITICAL FIX: We store either customerName or dealerName in the customername column
+    // Store either customerName or dealerName in the customername column
     customername: order.customerName || order.dealerName,
     status: order.status,
     orderdate: order.orderDate,
     deliverydate: order.deliveryDate,
     price: order.price, 
-    modelname: order.modelName,
-    plafonddealer: order.plafondDealer,
+    model_name: order.modelName,
+    plafond_dealer: order.plafondDealer,
     
     // Map camelCase fields to database columns with exact same names as in schema
-    islicensable: order.isLicensable,
-    hasproforma: order.hasProforma,
-    ispaid: order.isPaid,
-    paymentdate: order.paymentDate,
-    isinvoiced: order.isInvoiced,
-    invoicenumber: order.invoiceNumber,
-    invoicedate: order.invoiceDate,
-    hasconformity: order.hasConformity,
-    previouschassis: order.previousChassis,
+    is_licensable: order.isLicensable,
+    has_proforma: order.hasProforma,
+    is_paid: order.isPaid,
+    payment_date: order.paymentDate,
+    is_invoiced: order.isInvoiced,
+    invoice_number: order.invoiceNumber,
+    invoice_date: order.invoiceDate,
+    has_conformity: order.hasConformity,
+    previous_chassis: order.previousChassis,
     chassis: order.chassis,
-    transportcosts: order.transportCosts,
-    restorationcosts: order.restorationCosts,
-    fundingtype: order.fundingType,
-    odlgenerated: order.odlGenerated
+    transport_costs: order.transportCosts,
+    restoration_costs: order.restorationCosts,
+    funding_type: order.fundingType,
+    odl_generated: order.odlGenerated
   };
 };
 

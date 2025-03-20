@@ -91,7 +91,7 @@ export const useVirtualReservationSubmit = (
         }
       }
       
-      // Use the exact column names from the database schema
+      // IMPORTANT: Use the exact column names from the database schema
       console.log("Preparing order record with correct DB column names");
       const orderRecord = {
         vehicleid: vehicle.id,
