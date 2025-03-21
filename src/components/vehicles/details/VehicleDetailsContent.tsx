@@ -120,11 +120,17 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   // We determine if the duplicate button should be shown
   const showDuplicateButton = isVirtualStock || vehicle.location === 'Stock Virtuale';
   
+  // Create a simple duplicate handler
+  const handleDuplicate = () => {
+    console.log("Duplicate button clicked for vehicle:", vehicle.id);
+    // Implementation would go here
+  };
+  
   return (
     <div className="space-y-6">
       <VehicleDialogHeader 
         vehicle={vehicle}
-        onDuplicate={showDuplicateButton ? vehicleDetailsHook.handleDuplicate : undefined}
+        onDuplicate={showDuplicateButton ? handleDuplicate : undefined}
         onCreateQuote={userCanCreateQuotes ? handleCreateQuoteClick : undefined}
         onReserve={
           userCanReserveVehicles && vehicle.status === 'available' 
