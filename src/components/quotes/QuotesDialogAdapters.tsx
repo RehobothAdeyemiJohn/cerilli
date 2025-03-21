@@ -4,7 +4,7 @@ import { Quote } from '@/types';
 import QuoteDetailsDialog from './QuoteDetailsDialog';
 import QuoteRejectDialog from './QuoteRejectDialog';
 import QuoteDeleteDialog from './QuoteDeleteDialog';
-import QuoteForm from './QuoteForm';
+import QuoteFormAdapter from './QuoteFormAdapter';
 import QuoteContractDialog from './QuoteContractDialog';
 
 interface QuoteDetailsDialogAdapterProps {
@@ -78,7 +78,8 @@ export const QuoteDeleteDialogAdapter: React.FC<QuoteDeleteDialogAdapterProps> =
   );
 };
 
-interface QuoteFormAdapterProps {
+// Renamed to QuoteCreateFormAdapter to avoid naming conflicts
+interface QuoteCreateFormAdapterProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   vehicleId: string;
@@ -86,7 +87,7 @@ interface QuoteFormAdapterProps {
   onCreateQuote: (quoteData: any) => void;
 }
 
-export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
+export const QuoteCreateFormAdapter: React.FC<QuoteCreateFormAdapterProps> = ({
   open,
   onOpenChange,
   vehicleId,
@@ -94,11 +95,12 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
   onCreateQuote
 }) => {
   return (
-    <QuoteForm
-      vehicle={vehicleId ? { id: vehicleId } as any : undefined}
+    <QuoteFormAdapter
+      open={open}
+      onOpenChange={onOpenChange}
+      vehicleId={vehicleId}
       isManualQuote={isManualQuote}
-      onSubmit={onCreateQuote}
-      onCancel={() => onOpenChange(false)}
+      onCreateQuote={onCreateQuote}
     />
   );
 };

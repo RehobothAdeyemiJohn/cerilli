@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import QuotesHeader from '@/components/quotes/QuotesHeader';
@@ -11,7 +10,7 @@ import {
   QuoteDetailsDialogAdapter,
   QuoteRejectDialogAdapter,
   QuoteDeleteDialogAdapter,
-  QuoteFormAdapter,
+  QuoteCreateFormAdapter,
   QuoteContractDialogAdapter,
 } from '@/components/quotes/QuotesDialogAdapters';
 import { QuotesHeaderAdapter } from '@/components/quotes/QuotesHeaderAdapter';
@@ -21,7 +20,6 @@ const Quotes = () => {
   const { user, isAdmin } = useAuth();
   const dealerId = user?.dealerId;
 
-  // State for filters and pagination
   const [activeTab, setActiveTab] = useState('all');
   const [searchText, setSearchText] = useState('');
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -29,8 +27,7 @@ const Quotes = () => {
   const [sortOption, setSortOption] = useState('createdAt');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Dialog states
+
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -40,7 +37,6 @@ const Quotes = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isManualQuote, setIsManualQuote] = useState(false);
 
-  // Get quotes data from our hook
   const {
     quotes,
     isLoading,
@@ -66,14 +62,12 @@ const Quotes = () => {
     }
   );
 
-  // Calculate total pages
   const totalItems = activeTab === 'all' 
     ? statusCounts.total 
     : statusCounts[activeTab] || 0;
   
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Handle page navigation
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(prev => prev - 1);
@@ -86,39 +80,33 @@ const Quotes = () => {
     }
   };
 
-  // Open quote detail dialog
   const handleViewQuote = (quote: Quote) => {
     setSelectedQuote(quote);
     setIsViewDialogOpen(true);
   };
 
-  // Open quote form dialog
   const handleAddCustomQuote = () => {
     setIsManualQuote(true);
     setSelectedVehicleId(null);
     setIsFormDialogOpen(true);
   };
 
-  // Handle creating a new quote
   const handleCreateQuote = async (quoteData: any) => {
     await createQuote(quoteData);
     setIsFormDialogOpen(false);
     refetch();
   };
 
-  // Handle quote status update
   const handleUpdateStatus = async (quoteId: string, status: string) => {
     await updateQuoteStatus(quoteId, status);
     setIsViewDialogOpen(false);
   };
 
-  // Prepare rejection
   const handlePrepareReject = (quote: Quote) => {
     setSelectedQuote(quote);
     setIsRejectDialogOpen(true);
   };
 
-  // Handle quote rejection
   const handleRejectQuote = async (reason: string) => {
     if (selectedQuote) {
       await updateQuoteStatus(selectedQuote.id, 'rejected', reason);
@@ -127,13 +115,11 @@ const Quotes = () => {
     }
   };
 
-  // Prepare deletion
   const handlePrepareDelete = (quote: Quote) => {
     setSelectedQuote(quote);
     setIsDeleteDialogOpen(true);
   };
 
-  // Handle quote deletion
   const handleDeleteQuote = async () => {
     if (selectedQuote) {
       await deleteQuote(selectedQuote.id);
@@ -142,13 +128,11 @@ const Quotes = () => {
     }
   };
 
-  // Prepare contract creation
   const handlePrepareContract = (quote: Quote) => {
     setSelectedQuote(quote);
     setIsContractDialogOpen(true);
   };
 
-  // Handle contract creation
   const handleCreateContract = async () => {
     if (selectedQuote) {
       await createContract(selectedQuote);
@@ -158,7 +142,6 @@ const Quotes = () => {
     }
   };
 
-  // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, searchText, filterDate, filterDealer, sortOption, itemsPerPage]);
@@ -196,14 +179,14 @@ const Quotes = () => {
         
         <QuotesTable 
           quotes={quotes}
-          getVehicleById={(id) => null} // Providing required props
-          getDealerName={(id) => ""}    // Providing required props
-          getShortId={(id) => id.substring(0, 8)} // Providing required props
-          getStatusBadgeClass={(status) => ""} // Providing required props
-          formatDate={(date) => new Date(date).toLocaleDateString()} // Providing required props
+          getVehicleById={(id) => null}
+          getDealerName={(id) => ""}
+          getShortId={(id) => id.substring(0, 8)}
+          getStatusBadgeClass={(status) => ""}
+          formatDate={(date) => new Date(date).toLocaleDateString()}
           handleViewQuote={handleViewQuote}
           handleUpdateStatus={handleUpdateStatus}
-          handleDeleteClick={handlePrepareDelete} // Fixed: Now passing a function that accepts a Quote
+          handleDeleteClick={handlePrepareDelete}
         />
         
         {!isLoading && quotes.length > 0 && (
@@ -241,7 +224,7 @@ const Quotes = () => {
         isPending={isDeleting}
       />
       
-      <QuoteFormAdapter
+      <QuoteCreateFormAdapter
         open={isFormDialogOpen}
         onOpenChange={setIsFormDialogOpen}
         vehicleId={selectedVehicleId || ''}
