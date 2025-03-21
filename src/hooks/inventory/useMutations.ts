@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehiclesApi } from '@/api/supabase/vehiclesApi'; 
 import { Vehicle } from '@/types';
