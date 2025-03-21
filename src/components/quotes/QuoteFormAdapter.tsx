@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QuoteForm from './QuoteForm';
 
 interface QuoteFormAdapterProps {
@@ -35,30 +36,20 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
   
   console.log('QuoteFormAdapter rendering with vehicleId:', effectiveVehicleId);
   
-  // Only render if open is true
-  if (!open) return null;
-  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="bg-background max-w-[900px] w-[95%] max-h-[90vh] overflow-y-auto p-6 rounded-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">{isManualQuote ? "Crea Preventivo Manuale" : "Crea Preventivo"}</h2>
-          <button 
-            onClick={() => onOpenChange(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        </div>
-        
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[900px] w-[95%] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isManualQuote ? "Crea Preventivo Manuale" : "Crea Preventivo"}</DialogTitle>
+        </DialogHeader>
         <QuoteForm
           vehicle={effectiveVehicleId ? { id: effectiveVehicleId } as any : undefined}
           isManualQuote={isManualQuote}
           onSubmit={onCreateQuote}
           onCancel={() => onOpenChange(false)}
         />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

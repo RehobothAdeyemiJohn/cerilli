@@ -61,7 +61,8 @@ const QuoteForm = ({
     watchTradeInValue,
     handleSubmit,
     totalDiscount,
-    roadPreparationFee
+    roadPreparationFee,
+    watchReducedVAT
   } = useQuoteForm(vehicle, onSubmit, editQuote);
 
   // If no vehicle is provided, show a selection screen
@@ -125,7 +126,7 @@ const QuoteForm = ({
                     basePrice={basePrice}
                     accessoryTotalPrice={accessoryTotalPrice}
                     finalPrice={finalPrice}
-                    watchReducedVAT={form.watch('reducedVAT')}
+                    watchReducedVAT={watchReducedVAT}
                     totalDiscount={totalDiscount}
                     roadPreparationFee={roadPreparationFee}
                   />
