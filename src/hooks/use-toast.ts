@@ -89,7 +89,7 @@ export const toast = ({
   action?: ToastActionElement;
   variant?: "default" | "destructive";
 }) => {
-  // Direct toast implementation
+  // Ensure toast is logged
   console.log("Direct toast triggered:", { title, description, variant });
   
   // Create a DOM toast

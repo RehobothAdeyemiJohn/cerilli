@@ -10,6 +10,9 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
   // Debug log to see price data
   console.log("VehiclePriceDisplay - rendering with:", { calculatedPrice, priceComponents });
   
+  // Ensure calculatedPrice is a valid number
+  const price = typeof calculatedPrice === 'number' && !isNaN(calculatedPrice) ? calculatedPrice : 0;
+  
   return (
     <div className="border p-4 rounded-md bg-gray-50">
       <h3 className="text-lg font-semibold mb-2">Prezzo di Listino</h3>
@@ -64,7 +67,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
       
       <div className="flex justify-between text-lg font-semibold">
         <span>Prezzo Totale Chiavi in Mano:</span>
-        <span>€{calculatedPrice.toLocaleString('it-IT')}</span>
+        <span>€{price.toLocaleString('it-IT')}</span>
       </div>
     </div>
   );

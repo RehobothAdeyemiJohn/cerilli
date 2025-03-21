@@ -16,7 +16,7 @@ export const useInventoryMutations = () => {
       const formattedVehicle = {
         ...vehicle,
         accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
-        price: typeof vehicle.price === 'number' ? vehicle.price : 0
+        price: typeof vehicle.price === 'number' ? vehicle.price : parseFloat(String(vehicle.price)) || 0
       };
       
       // Send update to Supabase
@@ -71,7 +71,15 @@ export const useInventoryMutations = () => {
   const createMutation = useMutation({
     mutationFn: async (vehicle: Omit<Vehicle, 'id'>) => {
       console.log('Create mutation called with vehicle:', vehicle);
-      return await vehiclesApi.create(vehicle);
+      
+      // Ensure price is a number and accessories is an array
+      const formattedVehicle = {
+        ...vehicle,
+        accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
+        price: typeof vehicle.price === 'number' ? vehicle.price : parseFloat(String(vehicle.price)) || 0
+      };
+      
+      return await vehiclesApi.create(formattedVehicle);
     },
     onSuccess: () => {
       console.log('Create mutation completed successfully, invalidating queries');

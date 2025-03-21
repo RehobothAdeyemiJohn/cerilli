@@ -40,7 +40,7 @@ export const switchToSupabase = (enable: boolean) => {
 
 // Check if we should use Supabase or localStorage
 export const isUsingSupabase = () => {
-  return localStorage.getItem('useSupabaseSettings') === 'true';
+  return true; // Always use Supabase for settings now
 };
 
 // Export the API to use based on the setting

@@ -179,15 +179,29 @@ const trimsApi = {
   },
   
   update: async (id: string, trim: VehicleTrim): Promise<VehicleTrim> => {
+    // Map from our API model to the database columns
+    const dbTrim = {
+      name: trim.name,
+      price_adjustment: trim.basePrice,
+      compatible_models: trim.compatibleModels || []
+    };
+    
     const { data, error } = await supabase
       .from('settings_trims')
-      .update(trim)
+      .update(dbTrim)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as VehicleTrim;
+    
+    // Map back from database columns to our API model
+    return {
+      id: data.id,
+      name: data.name,
+      basePrice: data.price_adjustment,
+      compatibleModels: data.compatible_models || []
+    };
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -254,15 +268,29 @@ const fuelTypesApi = {
   },
   
   update: async (id: string, fuelType: FuelType): Promise<FuelType> => {
+    // Map from our API model to the database columns
+    const dbFuelType = {
+      name: fuelType.name,
+      price_adjustment: fuelType.priceAdjustment,
+      compatible_models: fuelType.compatibleModels || []
+    };
+    
     const { data, error } = await supabase
       .from('settings_fuel_types')
-      .update(fuelType)
+      .update(dbFuelType)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as FuelType;
+    
+    // Map back from database columns to our API model
+    return {
+      id: data.id,
+      name: data.name,
+      priceAdjustment: data.price_adjustment,
+      compatibleModels: data.compatible_models || []
+    };
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -319,15 +347,31 @@ const colorsApi = {
   },
   
   update: async (id: string, color: ExteriorColor): Promise<ExteriorColor> => {
+    // Map from our API model to the database columns
+    const dbColor = {
+      name: color.name,
+      type: color.type,
+      price_adjustment: color.priceAdjustment,
+      compatible_models: color.compatibleModels || []
+    };
+    
     const { data, error } = await supabase
       .from('settings_colors')
-      .update(color)
+      .update(dbColor)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as ExteriorColor;
+    
+    // Map back from database columns to our API model
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      priceAdjustment: data.price_adjustment,
+      compatibleModels: data.compatible_models || []
+    };
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -384,15 +428,34 @@ const transmissionsApi = {
   },
   
   update: async (id: string, transmission: Transmission): Promise<Transmission> => {
+    // Map from our API model to the database columns
+    const dbTransmission = {
+      name: transmission.name,
+      price_adjustment: transmission.priceAdjustment,
+      compatible_models: transmission.compatibleModels || []
+    };
+    
+    console.log('Updating transmission with data:', dbTransmission);
+    
     const { data, error } = await supabase
       .from('settings_transmissions')
-      .update(transmission)
+      .update(dbTransmission)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
-    return data as Transmission;
+    if (error) {
+      console.error('Error updating transmission in database:', error);
+      throw error;
+    }
+    
+    // Map back from database columns to our API model
+    return {
+      id: data.id,
+      name: data.name,
+      priceAdjustment: data.price_adjustment,
+      compatibleModels: data.compatible_models || []
+    };
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -473,20 +536,44 @@ const accessoriesApi = {
   
   update: async (id: string, accessory: Partial<Accessory>): Promise<Accessory> => {
     // If priceWithVAT is being updated, recalculate priceWithoutVAT
-    let updates = { ...accessory };
+    let dbUpdates: any = {
+      name: accessory.name
+    };
+    
     if (accessory.priceWithVAT !== undefined) {
-      updates.priceWithoutVAT = Math.round(accessory.priceWithVAT / 1.22);
+      dbUpdates.price_with_vat = accessory.priceWithVAT;
+      dbUpdates.price_without_vat = Math.round(accessory.priceWithVAT / 1.22);
+    }
+    
+    if (accessory.compatibleModels !== undefined) {
+      dbUpdates.compatible_models = accessory.compatibleModels;
+    }
+    
+    if (accessory.compatibleTrims !== undefined) {
+      dbUpdates.compatible_trims = accessory.compatibleTrims;
     }
     
     const { data, error } = await supabase
       .from('settings_accessories')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
-    return data as Accessory;
+    if (error) {
+      console.error('Error updating accessory:', error);
+      throw error;
+    }
+    
+    // Map back from database columns to our API model
+    return {
+      id: data.id,
+      name: data.name,
+      priceWithVAT: data.price_with_vat,
+      priceWithoutVAT: data.price_without_vat,
+      compatibleModels: data.compatible_models || [],
+      compatibleTrims: data.compatible_trims || []
+    };
   },
   
   delete: async (id: string): Promise<boolean> => {
@@ -596,4 +683,3 @@ export {
   accessoriesApi,
   calculateVehiclePrice
 };
-
