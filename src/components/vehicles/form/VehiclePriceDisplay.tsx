@@ -16,10 +16,10 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
       
       {priceComponents && Object.keys(priceComponents).length > 0 && (
         <div className="text-sm text-gray-600 mb-2 space-y-1">
-          {priceComponents.baseModelPrice !== undefined && (
+          {priceComponents.basePrice !== undefined && (
             <div className="flex justify-between">
               <span>Prezzo base modello:</span>
-              <span>€{priceComponents.baseModelPrice.toLocaleString('it-IT')}</span>
+              <span>€{priceComponents.basePrice.toLocaleString('it-IT')}</span>
             </div>
           )}
           
@@ -51,10 +51,10 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
             </div>
           )}
           
-          {priceComponents.accessoriesAdjustment !== undefined && (
+          {priceComponents.accessoriesPrice !== undefined && (
             <div className="flex justify-between">
               <span>Accessori:</span>
-              <span>+€{(priceComponents.accessoriesAdjustment || 0).toLocaleString('it-IT')}</span>
+              <span>+€{(priceComponents.accessoriesPrice || 0).toLocaleString('it-IT')}</span>
             </div>
           )}
           

@@ -47,7 +47,7 @@ const VehicleEditDialog = ({
       
       if (success) {
         // Force a complete refresh of the vehicles data
-        console.log('Vehicle update successful, invalidating queries');
+        console.log('Vehicle update successful, invalidating and refetching queries');
         await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
         await queryClient.refetchQueries({ queryKey: ['vehicles'] });
         
