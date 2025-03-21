@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import VehicleCard from './VehicleCard';
@@ -46,6 +47,19 @@ const VehicleList: React.FC<VehicleListProps> = ({
       setProcessingAction(false);
     }
   }, [vehicles, openVehicleDetails]);
+  
+  useEffect(() => {
+    // Check if we should automatically open a vehicle for reservation
+    if (locationState?.reserveVehicle && locationState.vehicleId) {
+      console.log("Auto-opening vehicle for reservation:", locationState.vehicleId);
+      const vehicleToReserve = vehicles.find(v => v.id === locationState.vehicleId);
+      if (vehicleToReserve) {
+        setSelectedVehicle(vehicleToReserve);
+        setOpenVehicleDetails(true);
+        setRequestedAction('reserve');
+      }
+    }
+  }, [locationState, vehicles]);
   
   const handleViewVehicle = (vehicle: Vehicle) => {
     console.log("Opening vehicle details:", vehicle);
@@ -109,6 +123,17 @@ const VehicleList: React.FC<VehicleListProps> = ({
     setProcessingAction(false);
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   };
+  
+  const handleReserveClick = (vehicle: Vehicle) => {
+    console.log("Reserve button clicked for vehicle:", vehicle.id);
+    if (onReserve) {
+      onReserve(vehicle);
+    } else {
+      setSelectedVehicle(vehicle);
+      setOpenVehicleDetails(true);
+      setRequestedAction('reserve');
+    }
+  };
 
   if (vehicles.length === 0) {
     return (
@@ -129,8 +154,8 @@ const VehicleList: React.FC<VehicleListProps> = ({
             onEdit={handleEditVehicle}
             onDelete={handleDeleteVehicle}
             onDuplicate={handleDuplicateVehicle}
-            onCreateQuote={onCreateQuote}
-            onReserve={onReserve}
+            onCreateQuote={onCreateQuote ? () => onCreateQuote(vehicle) : undefined}
+            onReserve={() => handleReserveClick(vehicle)}
             isDealerStock={isDealerStock}
           />
         ))}
@@ -147,7 +172,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
           onReserve={onReserve}
           isDealerStock={isDealerStock}
           isVirtualStock={isVirtualStock}
-          shouldReserve={locationState?.reserveVehicle && locationState?.vehicleId === selectedVehicle?.id}
+          shouldReserve={requestedAction === 'reserve' || (locationState?.reserveVehicle && locationState?.vehicleId === selectedVehicle?.id)}
           requestedAction={requestedAction}
         />
       )}

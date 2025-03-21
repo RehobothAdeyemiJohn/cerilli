@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ interface VehicleDetailsContentProps {
   isVirtualStock?: boolean;
   onCreateQuote?: ((vehicle: Vehicle) => void) | undefined;
   onReserve?: ((vehicle: Vehicle) => void) | undefined;
+  shouldReserve?: boolean;
 }
 
 const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({ 
@@ -25,7 +26,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   isDealerStock,
   isVirtualStock,
   onCreateQuote,
-  onReserve
+  onReserve,
+  shouldReserve
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
@@ -50,6 +52,18 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     () => {}  // onClose
   );
   
+  // Auto-open reservation form if shouldReserve is true
+  useEffect(() => {
+    if (shouldReserve && vehicle && vehicle.status === 'available') {
+      console.log("Auto-opening reservation form based on shouldReserve flag");
+      if (vehicle.location === 'Stock Virtuale') {
+        setShowVirtualReserveForm(true);
+      } else {
+        setShowReserveForm(true);
+      }
+    }
+  }, [shouldReserve, vehicle]);
+  
   // Define handlers for quote and reservation actions
   const handleShowQuoteForm = () => setShowQuoteForm(true);
   const handleCancelQuote = () => setShowQuoteForm(false);
@@ -61,8 +75,16 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     setShowQuoteForm(false);
   };
   
-  const handleReserveVehicle = () => setShowReserveForm(true);
-  const handleReserveVirtualVehicle = () => setShowVirtualReserveForm(true);
+  const handleReserveVehicle = () => {
+    console.log("Opening standard reservation form");
+    setShowReserveForm(true);
+  };
+  
+  const handleReserveVirtualVehicle = () => {
+    console.log("Opening virtual reservation form");
+    setShowVirtualReserveForm(true);
+  };
+  
   const handleCancelReservation = () => {
     setShowReserveForm(false);
     setShowVirtualReserveForm(false);
@@ -88,6 +110,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   
   // Handle reserve click
   const handleReserveClick = () => {
+    console.log("Reserve button clicked in VehicleDetailsContent");
     if (onReserve) {
       onReserve(vehicle);
     } else {
@@ -131,8 +154,8 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         showCancelReservationForm={showCancelReservationForm}
         isSubmitting={isSubmitting}
         onCreateQuote={handleCreateQuote}
-        onCancel={handleCancelQuote}
-        onSubmit={handleCancelQuote}
+        onCancel={handleCancelReservation}
+        onSubmit={handleCancelReservation}
         onConfirm={handleCancelReservationSubmit}
         userCanReserveVehicles={userCanReserveVehicles}
         userCanCreateQuotes={userCanCreateQuotes}

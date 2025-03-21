@@ -63,15 +63,17 @@ export const useVirtualReservationSubmit = (
         }
       };
 
-      // Update vehicle status to reserved with reservation data
-      await vehiclesApi.update(vehicle.id, {
-        status: 'reserved',
-        reservedBy: reservationDealerId,
-        reservedAccessories: values.accessories || [],
-        virtualConfig: reservationData.virtualConfig,
-      });
+      console.log("Submitting vehicle reservation:", reservationData);
 
-      // No order creation here - we'll only create the order when transforming to an order
+      // Call the reserve method from vehiclesApi
+      await vehiclesApi.reserve(
+        vehicle.id, 
+        reservationDealerId, 
+        selectedDealerName,
+        values.accessories || [],
+        reservationData.virtualConfig,
+        values.reservationDestination
+      );
 
       // Refresh data
       await queryClient.invalidateQueries({ queryKey: ['vehicles'] });
