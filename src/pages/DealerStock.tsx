@@ -65,6 +65,14 @@ const DealerStock = () => {
   
   const handleCreateQuote = (vehicle: Vehicle) => {
     console.log('Creating quote for vehicle from DealerStock:', vehicle);
+    
+    // Display confirmation toast
+    toast({
+      title: 'Creazione preventivo',
+      description: `Navigazione alla pagina preventivi per ${vehicle.model}`,
+    });
+    
+    // Navigate to quotes page with the selected vehicle
     navigate('/quotes', { 
       state: { 
         fromInventory: true,

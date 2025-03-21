@@ -47,10 +47,12 @@ const VehicleDialogHeader = ({
   };
   
   const handleCreateQuote = () => {
+    console.log("Create quote button clicked in VehicleDialogHeader", { onCreateQuote, vehicle });
     if (onCreateQuote) {
+      // Check if the function expects a vehicle parameter
       if (typeof onCreateQuote === 'function') {
-        // Check if the function expects a vehicle parameter
-        if (onCreateQuote.length > 0) {
+        const functionLength = (onCreateQuote as Function).length;
+        if (functionLength > 0) {
           onCreateQuote(vehicle);
         } else {
           (onCreateQuote as () => void)();
@@ -76,7 +78,12 @@ const VehicleDialogHeader = ({
         )}
         
         {onCreateQuote && !isVirtualStock && (
-          <Button variant="outline" size="sm" onClick={handleCreateQuote} className="h-8 text-green-600 border-green-200 hover:bg-green-50">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCreateQuote} 
+            className="h-8 text-green-600 border-green-200 hover:bg-green-50"
+          >
             <FileText className="h-4 w-4 mr-1" /> Crea Preventivo
           </Button>
         )}

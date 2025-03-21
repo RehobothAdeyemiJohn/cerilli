@@ -46,14 +46,6 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Use the custom hook with limited functionality
-  const vehicleDetailsHook = useVehicleDetailsDialog(
-    vehicle, 
-    () => {}, // onVehicleUpdated
-    () => {}, // onVehicleDeleted
-    () => {}  // onClose
-  );
-  
   // Auto-open reservation form if shouldReserve is true
   useEffect(() => {
     if (shouldReserve && vehicle && vehicle.status === 'available') {
@@ -103,6 +95,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   
   // Handle quote creation
   const handleCreateQuoteClick = () => {
+    console.log("Create quote button clicked in VehicleDetailsContent", { onCreateQuote, vehicle });
     if (onCreateQuote) {
       onCreateQuote(vehicle);
     } else {
