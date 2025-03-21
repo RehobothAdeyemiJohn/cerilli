@@ -18,6 +18,9 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
     queryFn: modelsApi.getAll
   });
 
+  // Debug the compatible models to understand what's being saved
+  console.log("Current transmission compatibleModels:", transmission.compatibleModels);
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -45,22 +48,35 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
           Lascia vuoto per tutti i modelli
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {models.map((model) => (
-            <div key={model.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`model-${model.id}`}
-                checked={(transmission.compatibleModels || []).includes(model.id)}
-                onCheckedChange={(checked) => {
-                  const currentModels = transmission.compatibleModels || [];
-                  const updatedModels = checked
-                    ? [...currentModels, model.id]
-                    : currentModels.filter(id => id !== model.id);
-                  onChange('compatibleModels', updatedModels);
-                }}
-              />
-              <Label htmlFor={`model-${model.id}`}>{model.name}</Label>
-            </div>
-          ))}
+          {models.map((model) => {
+            // Check if the model ID exists in compatibleModels
+            const isChecked = Array.isArray(transmission.compatibleModels) && 
+              transmission.compatibleModels.includes(model.id);
+            
+            console.log(`Model ${model.name} (${model.id}) checked:`, isChecked);
+            
+            return (
+              <div key={model.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`model-${model.id}`}
+                  checked={isChecked}
+                  onCheckedChange={(checked) => {
+                    const currentModels = Array.isArray(transmission.compatibleModels) 
+                      ? [...transmission.compatibleModels] 
+                      : [];
+                    
+                    const updatedModels = checked
+                      ? [...currentModels, model.id]
+                      : currentModels.filter(id => id !== model.id);
+                    
+                    console.log("Updating compatibleModels to:", updatedModels);
+                    onChange('compatibleModels', updatedModels);
+                  }}
+                />
+                <Label htmlFor={`model-${model.id}`}>{model.name}</Label>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

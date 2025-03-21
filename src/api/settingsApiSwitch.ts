@@ -46,6 +46,7 @@ export const isUsingSupabase = () => {
 // Export the API to use based on the setting
 export const getSettingsApi = () => {
   // Always use Supabase for settings
+  console.log("Using Supabase for settings API");
   return {
     modelsApi: supabaseModelsApi,
     trimsApi: supabaseTrimsApi,

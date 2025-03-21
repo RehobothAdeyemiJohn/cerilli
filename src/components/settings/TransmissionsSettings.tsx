@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -94,7 +95,9 @@ const TransmissionsSettings = () => {
   };
 
   const handleEditTransmission = (transmission: Transmission) => {
-    setCurrentTransmission(transmission);
+    console.log("Opening edit dialog with transmission:", transmission);
+    // Create a deep copy to avoid reference issues
+    setCurrentTransmission({...transmission});
     setIsEditDialogOpen(true);
   };
 
@@ -105,10 +108,11 @@ const TransmissionsSettings = () => {
   };
 
   const handleTransmissionChange = (field: keyof Transmission, value: any) => {
-    setCurrentTransmission({
-      ...currentTransmission,
+    console.log(`Changing ${field} to:`, value);
+    setCurrentTransmission(prev => ({
+      ...prev,
       [field]: value,
-    });
+    }));
   };
 
   const handleSaveTransmission = () => {
@@ -125,6 +129,8 @@ const TransmissionsSettings = () => {
       ...currentTransmission,
       compatibleModels: currentTransmission.compatibleModels || []
     };
+
+    console.log("Saving transmission:", transmissionToSave);
 
     if (transmissionToSave.id) {
       updateMutation.mutate({
