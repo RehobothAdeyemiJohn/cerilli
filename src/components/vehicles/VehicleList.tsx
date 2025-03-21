@@ -41,15 +41,16 @@ const VehicleList: React.FC<VehicleListProps> = ({
     openDialog?: boolean;
   } | null;
 
+  // Clean up state when dialog closes
   useEffect(() => {
     if (!openVehicleDetails) {
       setRequestedAction(undefined);
       setProcessingAction(false);
     }
-  }, [vehicles, openVehicleDetails]);
+  }, [openVehicleDetails]);
   
+  // Auto-open vehicle dialog for reservation when navigating with state
   useEffect(() => {
-    // Check if we should automatically open a vehicle for reservation
     if (locationState?.reserveVehicle && locationState.vehicleId) {
       console.log("Auto-opening vehicle for reservation:", locationState.vehicleId);
       const vehicleToReserve = vehicles.find(v => v.id === locationState.vehicleId);
@@ -118,6 +119,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
   };
 
   const handleDialogClose = () => {
+    console.log("Dialog closed, cleaning up state");
     setOpenVehicleDetails(false);
     setRequestedAction(undefined);
     setProcessingAction(false);
@@ -129,6 +131,7 @@ const VehicleList: React.FC<VehicleListProps> = ({
     if (onReserve) {
       onReserve(vehicle);
     } else {
+      // Direct handling when onReserve is not provided
       setSelectedVehicle(vehicle);
       setOpenVehicleDetails(true);
       setRequestedAction('reserve');

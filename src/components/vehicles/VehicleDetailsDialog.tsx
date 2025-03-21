@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,17 @@ const VehicleDetailsDialog = ({
   const { locationOptions } = useInventory();
   const { handleVehicleUpdate } = useVehicleActions();
   const queryClient = useQueryClient();
+  
+  // Create a new state to track if we should show the reservation form
+  const [autoOpenReservation, setAutoOpenReservation] = useState(false);
+  
+  // Set autoOpenReservation when shouldReserve changes or when dialog opens
+  useEffect(() => {
+    if (open && shouldReserve) {
+      console.log("Setting autoOpenReservation to true based on shouldReserve flag");
+      setAutoOpenReservation(true);
+    }
+  }, [shouldReserve, open]);
   
   const handleEdit = () => {
     console.log("Edit button clicked, showing edit form for vehicle:", vehicle);
@@ -123,6 +134,8 @@ const VehicleDetailsDialog = ({
       }
     } else {
       onOpenChange(false);
+      // Reset the autoOpenReservation flag when closing
+      setAutoOpenReservation(false);
     }
   };
 
@@ -157,6 +170,7 @@ const VehicleDetailsDialog = ({
             isVirtualStock={isVirtualStock}
             onCreateQuote={onCreateQuote}
             onReserve={onReserve}
+            shouldReserve={autoOpenReservation || shouldReserve}
           />
         )}
       </DialogContent>

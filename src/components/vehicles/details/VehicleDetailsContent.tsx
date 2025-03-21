@@ -37,7 +37,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const userCanCreateQuotes = isAdmin || user?.permissions?.includes('quotes');
   const userCanReserveVehicles = isAdmin || user?.permissions?.includes('inventory');
   
-  // Use separate state for forms since the hook we're importing doesn't provide these properties
+  // State for forms visibility
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showReserveForm, setShowReserveForm] = useState(false);
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
@@ -55,7 +55,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   // Auto-open reservation form if shouldReserve is true
   useEffect(() => {
     if (shouldReserve && vehicle && vehicle.status === 'available') {
-      console.log("Auto-opening reservation form based on shouldReserve flag");
+      console.log("Auto-opening reservation form based on shouldReserve flag in VehicleDetailsContent");
       if (vehicle.location === 'Stock Virtuale') {
         setShowVirtualReserveForm(true);
       } else {
