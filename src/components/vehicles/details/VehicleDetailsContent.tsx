@@ -16,6 +16,7 @@ interface VehicleDetailsContentProps {
   isVirtualStock?: boolean;
   onCreateQuote?: ((vehicle: Vehicle) => void) | undefined;
   onReserve?: ((vehicle: Vehicle) => void) | undefined;
+  onTransformToOrder?: () => void;
   shouldReserve?: boolean;
 }
 
@@ -27,6 +28,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   isVirtualStock,
   onCreateQuote,
   onReserve,
+  onTransformToOrder,
   shouldReserve
 }) => {
   const { user } = useAuth();
@@ -139,6 +141,11 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
         onCancelReservation={
           isAdmin && vehicle.status === 'reserved' 
             ? handleShowCancelReservationForm 
+            : undefined
+        }
+        onTransformToOrder={
+          isAdmin && vehicle.status === 'reserved' 
+            ? onTransformToOrder 
             : undefined
         }
         isAdmin={isAdmin}

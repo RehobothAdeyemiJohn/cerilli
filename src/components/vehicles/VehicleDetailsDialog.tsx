@@ -13,6 +13,7 @@ import EditVehicleForm from './EditVehicleForm';
 import { toast } from '@/hooks/use-toast';
 import { useVehicleActions } from '@/hooks/inventory/useVehicleActions';
 import { useQueryClient } from '@tanstack/react-query';
+import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 
 interface VehicleDetailsDialogProps {
   vehicle: Vehicle | null;
@@ -50,6 +51,13 @@ const VehicleDetailsDialog = ({
   
   // Create a new state to track if we should show the reservation form
   const [autoOpenReservation, setAutoOpenReservation] = useState(false);
+  
+  // Get transform to order functionality from the orders hook
+  const { handleTransformVehicleToOrder } = useOrdersActions(() => {
+    // Callback to refresh data after transforming
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+  });
   
   // Set autoOpenReservation when shouldReserve changes or when dialog opens
   useEffect(() => {
@@ -123,6 +131,28 @@ const VehicleDetailsDialog = ({
     console.log("Edit cancelled");
     setShowEditForm(false);
   };
+  
+  // Handle transform to order button click
+  const handleTransformToOrder = async () => {
+    if (vehicle) {
+      console.log("Transforming vehicle to order:", vehicle.id);
+      try {
+        await handleTransformVehicleToOrder(vehicle.id);
+        onOpenChange(false);
+        toast({
+          title: "Veicolo trasformato in ordine",
+          description: `${vehicle.model} ${vehicle.trim || ''} è stato trasformato in ordine con successo.`,
+        });
+      } catch (error) {
+        console.error("Error transforming vehicle to order:", error);
+        toast({
+          title: "Errore",
+          description: "Si è verificato un errore durante la trasformazione del veicolo in ordine.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   // Close the dialog when clicking outside
   const handleCloseDialog = () => {
@@ -170,6 +200,7 @@ const VehicleDetailsDialog = ({
             isVirtualStock={isVirtualStock}
             onCreateQuote={onCreateQuote}
             onReserve={onReserve}
+            onTransformToOrder={handleTransformToOrder}
             shouldReserve={autoOpenReservation || shouldReserve}
           />
         )}
