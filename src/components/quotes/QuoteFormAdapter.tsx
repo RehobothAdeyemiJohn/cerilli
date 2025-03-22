@@ -40,14 +40,26 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[900px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isManualQuote ? "Crea Preventivo Manuale" : "Crea Preventivo"}</DialogTitle>
+          <DialogTitle>
+            {isManualQuote ? "Crea Preventivo Manuale" : "Crea Nuovo Preventivo"}
+          </DialogTitle>
         </DialogHeader>
-        <QuoteForm
-          vehicle={effectiveVehicleId ? { id: effectiveVehicleId } as any : undefined}
-          isManualQuote={isManualQuote}
-          onSubmit={onCreateQuote}
-          onCancel={() => onOpenChange(false)}
-        />
+        {isManualQuote ? (
+          // Manual quote form
+          <QuoteForm
+            isManualQuote={isManualQuote}
+            onSubmit={onCreateQuote}
+            onCancel={() => onOpenChange(false)}
+          />
+        ) : (
+          // Regular quote form
+          <QuoteForm
+            vehicle={effectiveVehicleId ? { id: effectiveVehicleId } as any : undefined}
+            isManualQuote={isManualQuote}
+            onSubmit={onCreateQuote}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -5,14 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Vehicle, Quote } from '@/types';
 import { useQuoteForm } from './form/useQuoteForm';
 import ManualQuoteForm from './form/ManualQuoteForm';
-
-// Import our form section components
-import QuoteVehicleInfo from './form/QuoteVehicleInfo';
-import QuoteCustomerInfo from './form/QuoteCustomerInfo';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
 import QuoteDiscountSection from './form/QuoteDiscountSection';
 import QuoteTradeIn from './form/QuoteTradeIn';
-import QuotePriceSummary from './form/QuotePriceSummary';
-import QuoteFormActions from './form/QuoteFormActions';
 
 interface QuoteFormProps {
   vehicle?: Vehicle;
@@ -65,85 +63,318 @@ const QuoteForm = ({
     watchReducedVAT
   } = useQuoteForm(vehicle, onSubmit, editQuote);
 
-  // If no vehicle is provided, show a selection screen
+  // If no vehicle is provided, show a message
   if (!vehicle) {
     return (
       <div className="text-center p-6">
-        <h3 className="text-lg font-medium mb-4">Nessun Veicolo Selezionato</h3>
-        <p className="text-gray-500 mb-4">
-          Non è stato selezionato nessun veicolo per il preventivo.
-          Torna indietro e seleziona un veicolo.
+        <p className="text-gray-600 mb-4">
+          Compila il modulo per creare un preventivo manuale senza un veicolo selezionato.
         </p>
-        <Button variant="outline" onClick={onCancel}>
-          Torna Indietro
-        </Button>
       </div>
     );
   }
 
-  console.log("Rendering quote form for vehicle:", vehicle);
-
   return (
-    <div className="w-full text-sm">
-      {/* Form */}
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column - Customer and Vehicle Information */}
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <p className="text-sm text-blue-600 mb-2">
+          Compila il modulo per creare un preventivo manuale senza un veicolo selezionato.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column - Customer and Vehicle Information */}
+          <div className="space-y-6">
+            {/* Customer Information Section */}
             <div className="space-y-4">
-              {/* Customer Information - Gray background */}
-              <QuoteCustomerInfo 
-                isAdmin={isAdmin} 
-                dealers={dealers} 
-                userId={user?.id}
-                dealerId={user?.dealerId}
-              />
+              <h3 className="text-md font-semibold">Informazioni Cliente</h3>
               
-              {/* Vehicle Information - Gray background */}
-              <QuoteVehicleInfo 
-                vehicle={vehicle} 
-                compatibleAccessories={compatibleAccessories}
-              />
-            </div>
-            
-            {/* Right Column - Price Configuration */}
-            <div className="space-y-4">
-              {/* Price Configuration Section */}
-              <div className="space-y-4">
-                <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="customerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome Cliente *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Inserisci nome cliente" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 
-                {/* Discount and VAT Section */}
-                <QuoteDiscountSection />
-                
-                {/* Trade-In Section - Only if hasTradeIn is true */}
-                {watchHasTradeIn && (
-                  <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />
-                )}
-                
-                {/* Price Summary */}
-                <div className="mt-4">
-                  <QuotePriceSummary 
-                    basePrice={basePrice}
-                    accessoryTotalPrice={accessoryTotalPrice}
-                    finalPrice={finalPrice}
-                    watchReducedVAT={watchReducedVAT}
-                    totalDiscount={totalDiscount}
-                    roadPreparationFee={roadPreparationFee}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="customerEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="cliente@esempio.com" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="customerPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefono *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+39 123 456 7890" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
                   />
                 </div>
               </div>
             </div>
+            
+            {/* Dealer Section */}
+            <div className="space-y-4">
+              <h3 className="text-md font-semibold">Dealer</h3>
+              
+              <FormField
+                control={form.control}
+                name="dealerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dealer</FormLabel>
+                    <FormControl>
+                      <select 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        value={field.value}
+                        onChange={field.onChange}
+                      >
+                        {dealers.map(dealer => (
+                          <option key={dealer.id} value={dealer.id}>
+                            {dealer.name}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Vehicle Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-md font-semibold">Informazioni Veicolo</h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="vehicleModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modello</FormLabel>
+                      <FormControl>
+                        <select 
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled
+                        >
+                          <option value={vehicle.model}>{vehicle.model}</option>
+                        </select>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="vehicleTrim"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Allestimento</FormLabel>
+                      <FormControl>
+                        <select 
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled
+                        >
+                          <option value={vehicle.trim}>{vehicle.trim}</option>
+                        </select>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="vehicleColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Colore</FormLabel>
+                        <FormControl>
+                          <select 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled
+                          >
+                            <option value={vehicle.exteriorColor}>{vehicle.exteriorColor}</option>
+                          </select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="vehicleFuelType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Motore</FormLabel>
+                        <FormControl>
+                          <select 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled
+                          >
+                            <option value={vehicle.fuelType}>{vehicle.fuelType}</option>
+                          </select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="listingPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prezzo di Listino Calcolato:</FormLabel>
+                    <div className="text-xl font-bold">€{basePrice}</div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
-
-          {/* Form Actions */}
-          <QuoteFormActions 
-            onCancel={onCancel} 
-            isSubmitting={isSubmitting} 
-            isEditing={editQuote !== null}
-          />
-        </form>
-      </FormProvider>
-    </div>
+          
+          {/* Right Column - Price Configuration */}
+          <div className="space-y-6">
+            <h3 className="text-md font-semibold">Configurazione Prezzo</h3>
+            
+            {/* Permuta Toggle */}
+            <div className="flex items-center space-x-2">
+              <FormField
+                control={form.control}
+                name="hasTradeIn"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">Permuta</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* IVA agevolata Toggle */}
+            <div className="flex items-center space-x-2">
+              <FormField
+                control={form.control}
+                name="reducedVAT"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">IVA agevolata (4% al posto di 22%)</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Discount Section */}
+            <QuoteDiscountSection />
+            
+            {/* Trade-In Section - Only if hasTradeIn is true */}
+            {watchHasTradeIn && <QuoteTradeIn showTradeIn={showTradeIn} setShowTradeIn={setShowTradeIn} />}
+            
+            {/* Price Summary */}
+            <div className="mt-6 bg-gray-50 p-4 rounded-md">
+              <h3 className="text-md font-semibold mb-2">Prezzo Finale</h3>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Prezzo Veicolo:</span>
+                  <span>€ {basePrice}</span>
+                </div>
+                
+                {accessoryTotalPrice > 0 && (
+                  <div className="flex justify-between">
+                    <span>Accessori:</span>
+                    <span>€ {accessoryTotalPrice}</span>
+                  </div>
+                )}
+                
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Sconto:</span>
+                    <span>- € {totalDiscount}</span>
+                  </div>
+                )}
+                
+                {watchHasTradeIn && watchTradeInValue > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Valore Permuta:</span>
+                    <span>- € {watchTradeInValue}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between font-bold border-t border-gray-300 pt-2 mt-2">
+                  <span>Prezzo Finale:</span>
+                  <span>€ {finalPrice}</span>
+                </div>
+                <div className="text-xs text-gray-500 text-right">
+                  {watchReducedVAT ? 'IVA 4% inclusa' : 'IVA 22% inclusa'}
+                </div>
+              </div>
+            </div>
+            
+            {/* Submit Button */}
+            <div className="mt-auto pt-4">
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3"
+                disabled={isSubmitting}
+              >
+                Prezzo Totale / Chiudi in mano
+                <span className="block text-lg font-bold">€ {finalPrice}</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Form Actions */}
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annulla
+          </Button>
+          <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+            Crea Preventivo
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 
