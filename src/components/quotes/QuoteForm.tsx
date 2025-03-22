@@ -150,7 +150,7 @@ const QuoteForm = ({
                       >
                         {dealers.map(dealer => (
                           <option key={dealer.id} value={dealer.id}>
-                            {dealer.name}
+                            {dealer.companyName}
                           </option>
                         ))}
                       </select>
@@ -165,99 +165,49 @@ const QuoteForm = ({
               <h3 className="text-md font-semibold">Informazioni Veicolo</h3>
               
               <div className="grid grid-cols-1 gap-4">
-                <FormField
-                  control={form.control}
-                  name="vehicleModel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Modello</FormLabel>
-                      <FormControl>
-                        <select 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled
-                        >
-                          <option value={vehicle.model}>{vehicle.model}</option>
-                        </select>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <Label>Modello</Label>
+                  <Input 
+                    value={vehicle.model} 
+                    className="bg-gray-100"
+                    readOnly
+                  />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="vehicleTrim"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Allestimento</FormLabel>
-                      <FormControl>
-                        <select 
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                          value={field.value}
-                          onChange={field.onChange}
-                          disabled
-                        >
-                          <option value={vehicle.trim}>{vehicle.trim}</option>
-                        </select>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <Label>Allestimento</Label>
+                  <Input 
+                    value={vehicle.trim} 
+                    className="bg-gray-100"
+                    readOnly
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="vehicleColor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Colore</FormLabel>
-                        <FormControl>
-                          <select 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            value={field.value}
-                            onChange={field.onChange}
-                            disabled
-                          >
-                            <option value={vehicle.exteriorColor}>{vehicle.exteriorColor}</option>
-                          </select>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <div>
+                    <Label>Colore</Label>
+                    <Input 
+                      value={vehicle.exteriorColor} 
+                      className="bg-gray-100"
+                      readOnly
+                    />
+                  </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="vehicleFuelType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Motore</FormLabel>
-                        <FormControl>
-                          <select 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            value={field.value}
-                            onChange={field.onChange}
-                            disabled
-                          >
-                            <option value={vehicle.fuelType}>{vehicle.fuelType}</option>
-                          </select>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <div>
+                    <Label>Motore</Label>
+                    <Input 
+                      value={vehicle.fuelType} 
+                      className="bg-gray-100"
+                      readOnly
+                    />
+                  </div>
                 </div>
               </div>
               
-              <FormField
-                control={form.control}
-                name="listingPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prezzo di Listino Calcolato:</FormLabel>
-                    <div className="text-xl font-bold">€{basePrice}</div>
-                  </FormItem>
-                )}
-              />
+              <div>
+                <Label>Prezzo di Listino Calcolato:</Label>
+                <div className="text-xl font-bold">€{basePrice}</div>
+              </div>
             </div>
           </div>
           
