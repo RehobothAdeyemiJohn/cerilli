@@ -56,15 +56,6 @@ const mapVehicleDbToFrontend = (vehicle: any) => {
 // Helper function to map database order to frontend type
 const mapOrderDbToFrontend = (order: any): Order => {
   // Log raw order data to debug
-  console.log("Raw order data from DB:", {
-    id: order.id,
-    customername: order.customername,
-    is_licensable: order.is_licensable,
-    has_proforma: order.has_proforma,
-    is_paid: order.is_paid,
-    is_invoiced: order.is_invoiced,
-    has_conformity: order.has_conformity
-  });
   
   return {
     id: order.id,
@@ -165,7 +156,7 @@ export const ordersApi = {
       
       // Map each database record to our frontend Order type
       const orders = data.map(order => mapOrderDbToFrontend(order));
-      console.log("Mapped first order:", orders[0]);
+      // console.log("Mapped first order:", orders[0]);
       return orders;
     } catch (error) {
       console.error('Unexpected error fetching orders:', error);
@@ -277,7 +268,7 @@ export const ordersApi = {
       throw new Error('Failed to create order - no data returned');
     }
     
-    console.log("Order created successfully:", data);
+    // console.log("Order created successfully:", data);
     return mapOrderDbToFrontend(data);
   },
   
@@ -306,7 +297,7 @@ export const ordersApi = {
       throw error;
     }
     
-    console.log("Order updated successfully:", data);
+    // console.log("Order updated successfully:", data);
     return mapOrderDbToFrontend(data);
   },
   
@@ -325,7 +316,7 @@ export const ordersApi = {
       throw error;
     }
     
-    console.log("ODL generated successfully for order:", data);
+    // console.log("ODL generated successfully for order:", data);
     return mapOrderDbToFrontend(data);
   },
   

@@ -23,7 +23,7 @@ const modelsApi = {
     }
     
     // Map the column names to our model structure
-    const mappedData = data.map(item => ({
+    const mappedData = data.filter((obj:any, index:any, self:any) => index === self.findIndex((o:any) => o.name === obj.name)).map(item => ({
       id: item.id,
       name: item.name,
       basePrice: item.base_price,

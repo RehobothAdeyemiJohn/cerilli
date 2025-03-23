@@ -5,6 +5,15 @@
   text-align: center;
 }
 
+#scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+}
+
+#scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

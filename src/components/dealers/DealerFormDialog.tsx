@@ -197,7 +197,7 @@ const DealerFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] h-screen py-[40px] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>
             {dealer ? 'Modifica Dealer' : 'Nuovo Dealer'}

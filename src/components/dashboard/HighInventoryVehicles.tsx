@@ -39,7 +39,10 @@ const HighInventoryVehicles: React.FC<HighInventoryVehiclesProps> = ({ vehicles,
                 </tr>
               </thead>
               <tbody>
-                {sortedVehicles.map((vehicle) => (
+                {sortedVehicles.filter((obj: any, index: any, self: any) => {
+                    console.log(self.findIndex((o: any) => o.model === obj.model));
+                     return index === self.findIndex((o: any) => o.model === obj.model)
+                    }).map((vehicle) => (
                   <tr key={vehicle.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                     <td className="py-3">{vehicle.model}</td>
                     <td className="py-3">{vehicle.telaio || 'N/A'}</td>

@@ -144,6 +144,8 @@ const Orders = () => {
       try {
         const { data, error } = await ordersApi.getDealers();
         if (!error && data) {
+          console.log("dealers")
+          console.log(data)
           setDealers(data);
         }
       } catch (error) {

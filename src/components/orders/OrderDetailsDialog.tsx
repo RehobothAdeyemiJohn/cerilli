@@ -94,7 +94,7 @@ const OrderDetailsDialog = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1200px] w-full">
+      <DialogContent className="sm:max-w-[1200px] w-full h-screen py-8 overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>Dettagli Ordine #{order.progressiveNumber?.toString().padStart(3, '0')}</DialogTitle>
           <DialogDescription>

@@ -133,12 +133,7 @@ const Inventory = () => {
   
   const handleCreateQuote = (vehicle: Vehicle) => {
     console.log('Creating quote for vehicle:', vehicle);
-    navigate('/quotes', { 
-      state: { 
-        fromInventory: true,
-        vehicleId: vehicle.id 
-      } 
-    });
+    navigate(`/quotes?vehicleId=${vehicle.id }`);
   };
 
   const handleReserve = (vehicle: Vehicle) => {
@@ -264,8 +259,8 @@ const Inventory = () => {
       </div>
       
       <Drawer open={showAddVehicleDrawer} onOpenChange={setShowAddVehicleDrawer}>
-        <DrawerContent>
-          <div className="p-6 max-w-2xl mx-auto">
+        <DrawerContent >
+          <div className="px-6  max-w-2xl mx-auto h-screen py-10 overflow-y-auto" id='scrollbar-hide'>
             <h2 className="text-xl font-bold mb-4">Aggiungi Nuovo Veicolo</h2>
             <AddVehicleForm 
               onComplete={handleVehicleAdd}

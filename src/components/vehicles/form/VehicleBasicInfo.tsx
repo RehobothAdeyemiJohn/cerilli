@@ -62,7 +62,7 @@ const VehicleBasicInfo = ({ control, locations, isVirtualStock }: VehicleBasicIn
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {models.map((model) => (
+                {models.filter((obj:any, index:any, self:any) => index === self.findIndex((o:any) => o.name === obj.name)).map((model) => (
                   <SelectItem key={model.id} value={model.name}>
                     {model.name}
                   </SelectItem>

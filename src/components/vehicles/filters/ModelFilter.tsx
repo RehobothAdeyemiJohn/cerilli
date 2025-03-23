@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { 
+import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
@@ -20,7 +20,7 @@ const ModelFilter = ({ models, selectedModels, onToggleModel }: ModelFilterProps
       <AccordionTrigger>Modello</AccordionTrigger>
       <AccordionContent>
         <div className="space-y-2">
-          {models.map((modelSetting: VehicleModel) => (
+          {models.filter((obj: any, index: any, self: any) => index === self.findIndex((o: any) => o.name === obj.name)).map((modelSetting: VehicleModel) => (
             <FilterItem
               key={modelSetting.id}
               id={modelSetting.id}

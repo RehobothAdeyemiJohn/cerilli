@@ -12,24 +12,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, calculateDaysInStock } from '@/lib/utils';
 import { Vehicle } from '@/types';
-import { 
-  Car, 
-  Clock, 
-  FileText, 
-  ShoppingCart, 
-  TrendingUp, 
-  Target, 
-  Percent, 
+import {
+  Car,
+  Clock,
+  FileText,
+  ShoppingCart,
+  TrendingUp,
+  Target,
+  Percent,
   CreditCard,
   Users
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   TooltipProps,
   ResponsiveContainer,
   Legend,
@@ -47,7 +47,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const isDealer = user?.type === 'dealer';
   const dealerId = user?.dealerId;
-  
+
   const [renderKey, setRenderKey] = useState(Date.now().toString());
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [useDarkMode, setUseDarkMode] = useState(false);
@@ -55,7 +55,7 @@ const Dashboard = () => {
     from: undefined,
     to: undefined
   });
-  
+
   useEffect(() => {
     setRenderKey(Date.now().toString());
   }, []);
@@ -64,38 +64,38 @@ const Dashboard = () => {
     queryKey: ['dealerDashboard', dealerId, selectedPeriod, dateRange],
     queryFn: async () => {
       if (!isDealer || !dealerId) return null;
-      
+
       console.log('Fetching dealer dashboard data for dealerId:', dealerId);
-      
+
       const { data: dealer } = await supabase
         .from('dealers')
         .select('*')
         .eq('id', dealerId)
         .single();
-      
+
       let vehiclesQuery = supabase.from('vehicles').select('*').eq('reservedby', dealerId);
-      
+
       let ordersQuery = supabase
         .from('orders')
         .select('*, vehicles(*)')
         .eq('dealerid', dealerId)
         .order('orderdate', { ascending: false });
-      
+
       let quotesQuery = supabase
         .from('quotes')
         .select('*, vehicles(*)')
         .eq('dealerid', dealerId)
         .order('createdat', { ascending: false });
-      
+
       if (dateRange.from && dateRange.to) {
         const fromDate = dateRange.from.toISOString();
         const toDate = dateRange.to.toISOString();
-        
+
         ordersQuery = ordersQuery.gte('orderdate', fromDate).lte('orderdate', toDate);
         quotesQuery = quotesQuery.gte('createdat', fromDate).lte('createdat', toDate);
       } else if (selectedPeriod !== 'all') {
         let startDate = new Date();
-        
+
         if (selectedPeriod === 'week') {
           startDate.setDate(startDate.getDate() - 7);
         } else if (selectedPeriod === 'month') {
@@ -103,18 +103,18 @@ const Dashboard = () => {
         } else if (selectedPeriod === 'year') {
           startDate.setFullYear(startDate.getFullYear() - 1);
         }
-        
+
         const startDateStr = startDate.toISOString();
-        
+
         ordersQuery = ordersQuery.gte('orderdate', startDateStr);
         quotesQuery = quotesQuery.gte('createdat', startDateStr);
       }
-      
+
       const { data: vehicles } = await vehiclesQuery;
       const { data: orders } = await ordersQuery;
       const { data: quotes } = await quotesQuery.limit(5);
       const { data: allOrders } = await ordersQuery;
-      
+
       return {
         dealer,
         vehicles: vehicles || [],
@@ -130,26 +130,26 @@ const Dashboard = () => {
     queryKey: ['adminDashboard', selectedPeriod, dateRange],
     queryFn: async () => {
       if (isDealer) return null;
-      
+
       console.log('Fetching admin dashboard data');
-      
+
       let vehiclesQuery = supabase.from('vehicles')
         .select('*')
         .neq('location', 'Stock Virtuale')
         .in('status', ['available', 'reserved']);
-        
+
       let ordersQuery = supabase.from('orders').select('*, vehicles(*), dealers(*)');
       let quotesQuery = supabase.from('quotes').select('*, vehicles(*), dealers(*)');
-      
+
       if (dateRange.from && dateRange.to) {
         const fromDate = dateRange.from.toISOString();
         const toDate = dateRange.to.toISOString();
-        
+
         ordersQuery = ordersQuery.gte('orderdate', fromDate).lte('orderdate', toDate);
         quotesQuery = quotesQuery.gte('createdat', fromDate).lte('createdat', toDate);
       } else if (selectedPeriod !== 'all') {
         let startDate = new Date();
-        
+
         if (selectedPeriod === 'week') {
           startDate.setDate(startDate.getDate() - 7);
         } else if (selectedPeriod === 'month') {
@@ -157,24 +157,24 @@ const Dashboard = () => {
         } else if (selectedPeriod === 'year') {
           startDate.setFullYear(startDate.getFullYear() - 1);
         }
-        
+
         const startDateStr = startDate.toISOString();
-        
+
         ordersQuery = ordersQuery.gte('orderdate', startDateStr);
         quotesQuery = quotesQuery.gte('createdat', startDateStr);
       }
-      
+
       const { data: vehicles } = await vehiclesQuery;
       const { data: orders } = await ordersQuery;
       const { data: quotes } = await quotesQuery;
       const { data: dealers } = await supabase.from('dealers').select('*');
-      
+
       const { data: allVehicles } = await supabase
         .from('vehicles')
         .select('*')
         .neq('location', 'Stock Virtuale')
         .in('status', ['available', 'reserved']);
-      
+
       return {
         vehicles: vehicles || [],
         orders: orders || [],
@@ -188,65 +188,65 @@ const Dashboard = () => {
 
   const dealerStats = React.useMemo(() => {
     if (!dealerData) return null;
-    
+
     const { vehicles, quotes, orders, allOrders, dealer } = dealerData;
-    
+
     const cmcVehicles = vehicles.filter(v => v.location !== 'Stock Virtuale');
-    
+
     const daysInStockValues = cmcVehicles.map(v => calculateDaysInStock(v.dateadded));
-    const avgDaysInStock = daysInStockValues.length > 0 
-      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
+    const avgDaysInStock = daysInStockValues.length > 0
+      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length)
       : 0;
-    
-    const conversionRate = quotes.length > 0 
-      ? Math.round((orders.length / quotes.length) * 100) 
+
+    const conversionRate = quotes.length > 0
+      ? Math.round((orders.length / quotes.length) * 100)
       : 0;
-    
+
     const currentMonth = new Date().getMonth();
     const ordersThisMonth = allOrders.filter(o => {
       const orderDate = new Date(o.orderdate);
       return orderDate.getMonth() === currentMonth;
     });
-    
+
     const monthlyTarget = 5;
     const monthlyProgress = Math.min(100, Math.round((ordersThisMonth.length / monthlyTarget) * 100));
-    
+
     const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
     const currentYear = new Date().getFullYear();
-    
+
     const monthlySalesData = monthNames.map((month, idx) => {
       const ordersInMonth = allOrders.filter(o => {
         const orderDate = new Date(o.orderdate);
         return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
       });
-      
+
       return {
         name: month,
         value: ordersInMonth.length
       };
     });
-    
+
     const totalInvoiced = allOrders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
       return sum + price;
     }, 0);
-    
+
     const modelDistribution = cmcVehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
       acc[model]++;
       return acc;
     }, {});
-    
+
     const modelData = Object.entries(modelDistribution).map(([model, count]) => ({
       name: model,
       value: count
     }));
-    
+
     if (modelData.length === 0) {
       modelData.push({ name: 'Nessun veicolo', value: 0 });
     }
-    
+
     return {
       vehiclesCount: cmcVehicles.length,
       quotesCount: quotes.length,
@@ -279,80 +279,80 @@ const Dashboard = () => {
 
   const adminStats = React.useMemo(() => {
     if (!adminData) return null;
-    
+
     const { vehicles, orders, quotes, dealers, allVehicles } = adminData;
-    
+
     const daysInStockValues = vehicles.map(v => calculateDaysInStock(v.dateadded));
-    const avgDaysInStock = daysInStockValues.length > 0 
-      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length) 
+    const avgDaysInStock = daysInStockValues.length > 0
+      ? Math.round(daysInStockValues.reduce((sum, days) => sum + days, 0) / daysInStockValues.length)
       : 0;
-    
+
     const totalInvoiced = orders.reduce((sum, order) => {
       const price = order.vehicles?.price || 0;
       return sum + price;
     }, 0);
-    
+
     const modelCounts = vehicles.reduce((acc, vehicle) => {
       const model = vehicle.model;
       if (!acc[model]) acc[model] = 0;
       acc[model]++;
       return acc;
     }, {});
-    
+
     const inventoryByModel = Object.entries(modelCounts).map(([name, value]) => ({
       name,
       value
     }));
-    
+
     const dealerSales = orders.reduce((acc, order) => {
       const dealerName = order.dealers?.companyname || 'Unknown';
       if (!acc[dealerName]) acc[dealerName] = 0;
       acc[dealerName]++;
       return acc;
     }, {});
-    
+
     const salesByDealer = Object.entries(dealerSales).map(([name, value]) => ({
       name,
       value
     }));
-    
+
     const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
     const currentYear = new Date().getFullYear();
-    
+
     const monthlySalesData = monthNames.map((month, idx) => {
       const ordersInMonth = orders.filter(o => {
         const orderDate = new Date(o.orderdate);
         return orderDate.getMonth() === idx && orderDate.getFullYear() === currentYear;
       });
-      
+
       const totalValue = ordersInMonth.reduce((sum, order) => {
         const vehiclePrice = order.vehicles?.price || 0;
         return sum + vehiclePrice;
       }, 0);
-      
+
       return {
         name: month,
         value: totalValue
       };
     });
-    
+
     const recentOrders = [...orders].sort((a, b) => {
       return new Date(b.orderdate).getTime() - new Date(a.orderdate).getTime();
     }).slice(0, 5);
-    
+
     const recentQuotes = [...quotes].sort((a, b) => {
       return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
     }).slice(0, 5);
-    
+
     const currentMonth = new Date().getMonth();
     const ordersThisMonth = orders.filter(o => {
       const orderDate = new Date(o.orderdate);
       return orderDate.getMonth() === currentMonth;
     });
-    
+
     const monthlyTarget = 5;
     const monthlyProgress = Math.min(100, Math.round((ordersThisMonth.length / monthlyTarget) * 100));
-    
+
     return {
       inventoryByModel,
       salesByDealer,
@@ -390,11 +390,11 @@ const Dashboard = () => {
     setSelectedPeriod(value);
     setDateRange({ from: undefined, to: undefined });
   };
-  
+
   const toggleDarkMode = () => {
     setUseDarkMode(!useDarkMode);
   };
-  
+
   if (isDealer && !dealerId) {
     return (
       <div className="container mx-auto py-6 px-4">
@@ -422,9 +422,9 @@ const Dashboard = () => {
   return (
     <div className={`container mx-auto py-6 px-4 animate-fade-in ${useDarkMode ? 'bg-gray-900 text-white' : ''}`} key={renderKey}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Dashboard {isDealer ? 'Concessionario' : 'Admin'}</h1>
+        <h1 className="text-2xl font-bold">Dashboard{isDealer ? 'Concessionario' : 'Admin'}</h1>
         <div className="mt-4 md:mt-0 flex items-center gap-4 flex-wrap">
-          <button 
+          <button
             onClick={toggleDarkMode}
             className={`px-3 py-1 rounded-full text-sm ${useDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
           >
@@ -443,14 +443,14 @@ const Dashboard = () => {
               <TabsTrigger value="all" className={useDarkMode ? 'data-[state=active]:bg-gray-700' : ''}>Tutto</TabsTrigger>
             </TabsList>
           </Tabs>
-          <DateRangePicker 
-            dateRange={dateRange} 
-            setDateRange={setDateRange} 
-            darkMode={useDarkMode} 
+          <DateRangePicker
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            darkMode={useDarkMode}
           />
         </div>
       </div>
-      
+
       {isDealer ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -480,7 +480,7 @@ const Dashboard = () => {
             <div className="md:col-span-1">
               {dealerStats?.vehicles && <HighInventoryVehicles vehicles={dealerStats.vehicles} darkMode={useDarkMode} />}
             </div>
-            
+
             <div className="md:col-span-1">
               <Card className={`overflow-hidden ${useDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}>
                 <CardHeader className="pb-2">
@@ -533,8 +533,8 @@ const Dashboard = () => {
                 {dealerStats?.monthlySalesData && dealerStats.monthlySalesData.some(m => m.value > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dealerStats.monthlySalesData}>
-                      <XAxis 
-                        dataKey="name" 
+                      <XAxis
+                        dataKey="name"
                         stroke={useDarkMode ? "#888888" : "#888888"}
                         fontSize={12}
                         tickLine={false}
@@ -548,8 +548,8 @@ const Dashboard = () => {
                       />
                       <Tooltip
                         formatter={(value) => [value, 'Quantità']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                        contentStyle={{
+                          backgroundColor: useDarkMode ? '#333' : 'white',
                           border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
                           borderRadius: '0.5rem',
                           color: useDarkMode ? '#fff' : 'inherit'
@@ -596,10 +596,10 @@ const Dashboard = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => [value, 'Quantità']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                        contentStyle={{
+                          backgroundColor: useDarkMode ? '#333' : 'white',
                           border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
                           borderRadius: '0.5rem',
                           color: useDarkMode ? '#fff' : 'inherit'
@@ -618,7 +618,7 @@ const Dashboard = () => {
 
           <Card className={`p-4 mb-6 mt-6 transition-all duration-300 hover:shadow-md rounded-xl ${useDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini Recenti</h3>
+              <h3 className={`text-lg font-medium ${useDarkMode ? 'text-white' : ''}`}>Ordini  Recenti</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -635,17 +635,18 @@ const Dashboard = () => {
                   {dealerStats?.recentOrders?.length > 0 ? (
                     dealerStats.recentOrders.map((order) => (
                       <tr key={order.id} className={`border-b ${useDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                        <td className="py-3">{order.vehicles?.model || 'N/A'}</td>
+                        <td className="py-3">{order.vehicles?.model || 'N/A'} hhr</td>
+
                         <td className="py-3">{order.customername || 'N/A'}</td>
+
                         <td className="py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                          <span className={`px-2 py-1 rounded-full text-xs ${order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
                             order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                              'bg-red-100 text-red-800'
+                            }`}>
                             {order.status === 'processing' ? 'In Lavorazione' :
-                             order.status === 'delivered' ? 'Consegnato' :
-                             order.status === 'cancelled' ? 'Cancellato' : order.status}
+                              order.status === 'delivered' ? 'Consegnato' :
+                                order.status === 'cancelled' ? 'Cancellato' : order.status}
                           </span>
                         </td>
                         <td className="py-3">
@@ -709,8 +710,8 @@ const Dashboard = () => {
                 {adminStats?.monthlySalesData && adminStats.monthlySalesData.some(m => m.value > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={adminStats.monthlySalesData}>
-                      <XAxis 
-                        dataKey="name" 
+                      <XAxis
+                        dataKey="name"
                         stroke={useDarkMode ? "#888888" : "#888888"}
                         fontSize={12}
                         tickLine={false}
@@ -726,8 +727,8 @@ const Dashboard = () => {
                         formatter={(value: any) => {
                           return [formatCurrency(Number(value)), 'Fatturato'];
                         }}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                        contentStyle={{
+                          backgroundColor: useDarkMode ? '#333' : 'white',
                           border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
                           borderRadius: '0.5rem',
                           color: useDarkMode ? '#fff' : 'inherit'
@@ -774,10 +775,10 @@ const Dashboard = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => [value, 'Quantità']}
-                        contentStyle={{ 
-                          backgroundColor: useDarkMode ? '#333' : 'white', 
+                        contentStyle={{
+                          backgroundColor: useDarkMode ? '#333' : 'white',
                           border: useDarkMode ? '1px solid #555' : '1px solid #e2e8f0',
                           borderRadius: '0.5rem',
                           color: useDarkMode ? '#fff' : 'inherit'

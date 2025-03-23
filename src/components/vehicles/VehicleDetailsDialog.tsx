@@ -179,7 +179,7 @@ const VehicleDetailsDialog = ({
             <span>
               {isVirtualStock || vehicle.location === 'Stock Virtuale'
                 ? 'Dettagli Veicolo (Stock Virtuale)'
-                : `${vehicle.model} ${vehicle.trim}`}
+                : ``}
             </span>
           </DialogTitle>
         </DialogHeader>

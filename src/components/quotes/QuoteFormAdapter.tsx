@@ -20,19 +20,20 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
   onCreateQuote
 }) => {
   const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
   
+  const effectiveVehicleId = vehicleId || queryParams.get("vehicleId");
   // Check if we have a vehicle ID from navigation state
   useEffect(() => {
     const state = location.state as { fromInventory?: boolean; vehicleId?: string } | null;
-    if (state?.fromInventory && state?.vehicleId && !open) {
-      console.log('Opening quote form from inventory with vehicle ID:', state.vehicleId);
+    if (queryParams.get("vehicleId")&& !open) {
       onOpenChange(true);
     }
-  }, [location.state, onOpenChange, open]);
+
+  }, [queryParams, onOpenChange, open]);
   
   // Get vehicle ID from either props or location state
-  const effectiveVehicleId = vehicleId || 
-    ((location.state as { vehicleId?: string } | null)?.vehicleId);
   
   console.log('QuoteFormAdapter rendering with vehicleId:', effectiveVehicleId);
   
@@ -49,7 +50,9 @@ export const QuoteFormAdapter: React.FC<QuoteFormAdapterProps> = ({
           <QuoteForm
             isManualQuote={isManualQuote}
             onSubmit={onCreateQuote}
-            onCancel={() => onOpenChange(false)}
+            onCancel={() =>{
+              onOpenChange(false)
+            }}
           />
         ) : (
           // Regular quote form
