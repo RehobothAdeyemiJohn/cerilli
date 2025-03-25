@@ -1,5 +1,6 @@
 import { Order } from '@/types';
 import { supabase } from './client';
+import { PDFDocument } from 'pdf-lib';
 
 // Helper function to map database dealer to frontend type
 const mapDealerDbToFrontend = (dealer: any) => {
@@ -338,18 +339,43 @@ export const ordersApi = {
   
   generatePdf: async (orderId: string): Promise<Uint8Array> => {
     console.log("Generating PDF for order:", orderId);
-    
-    // Mock implementation - in a real app, you'd call an API to generate the PDF
-    const mockPdfData = new Uint8Array([80, 68, 70, 45, 49, 46, 52, 10]);
-    
-    // Mark proforma as generated
-    await supabase
-      .from('orders')
-      .update({ has_proforma: true })
-      .eq('id', orderId);
-    
-    return mockPdfData;
-  },
+
+    try {
+        // Fetch order details (optional)
+        const { data: order, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+        
+        if (error) throw new Error(`Failed to fetch order: ${error.message}`);
+
+        // Create a new PDF
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage([600, 400]);
+        const { width, height } = page.getSize();
+
+        page.drawText(`Proforma Invoice for Order: ${orderId}`, {
+            x: 50,
+            y: height - 50,
+            size: 16,
+        });
+
+        // Serialize to Uint8Array
+        const pdfBytes = await pdfDoc.save();
+
+        // Update order status
+        await supabase
+            .from('orders')
+            .update({ has_proforma: true })
+            .eq('id', orderId);
+
+        return pdfBytes;
+    } catch (err) {
+        console.error("Error generating PDF:", err);
+        throw err;
+    }
+},
   
   getDealers: async () => {
     const { data, error } = await supabase
