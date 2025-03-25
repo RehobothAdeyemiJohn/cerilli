@@ -20,7 +20,7 @@ const VirtualReservationPrice: React.FC<VirtualReservationPriceProps> = ({
 }) => {
   const formatPrice = (price: number | undefined): string => {
     if (price === undefined) return "€0";
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
+    return `€${price}`;
   };
 
   return (

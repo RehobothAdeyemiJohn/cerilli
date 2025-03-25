@@ -50,17 +50,17 @@ const VehicleList: React.FC<VehicleListProps> = ({
   }, [openVehicleDetails]);
   
   // Auto-open vehicle dialog for reservation when navigating with state
-  useEffect(() => {
-    if (locationState?.reserveVehicle && locationState.vehicleId) {
-      console.log("Auto-opening vehicle for reservation:", locationState.vehicleId);
-      const vehicleToReserve = vehicles.find(v => v.id === locationState.vehicleId);
-      if (vehicleToReserve) {
-        setSelectedVehicle(vehicleToReserve);
-        setOpenVehicleDetails(true);
-        setRequestedAction('reserve');
-      }
-    }
-  }, [locationState, vehicles]);
+  // useEffect(() => {
+  //   if (locationState?.reserveVehicle && locationState.vehicleId) {
+  //     console.log("Auto-opening vehicle for reservation:", locationState.vehicleId);
+  //     const vehicleToReserve = vehicles.find(v => v.id === locationState.vehicleId);
+  //     if (vehicleToReserve) {
+  //       setSelectedVehicle(vehicleToReserve);
+  //       setOpenVehicleDetails(true);
+  //       setRequestedAction('reserve');
+  //     }
+  //   }
+  // }, [locationState, vehicles]);
   
   const handleViewVehicle = (vehicle: Vehicle) => {
     console.log("Opening vehicle details:", vehicle);

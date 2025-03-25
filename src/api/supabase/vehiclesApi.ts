@@ -6,7 +6,7 @@ import { calculateEstimatedArrival } from '@/lib/utils';
 
 export const vehiclesApi = {
   getAll: async (): Promise<Vehicle[]> => {
-    console.log("Supabase API: getAll - Recupero veicoli");
+    // console.log("Supabase API: getAll - Recupero veicoli");
     const { data, error } = await supabase
       .from('vehicles')
       .select('*')
@@ -42,7 +42,7 @@ export const vehiclesApi = {
       reservationDestination: vehicle.reservation_destination,
     }));
 
-    console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);
+    // console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);
     return formattedVehicles as Vehicle[];
   },
   
@@ -83,12 +83,12 @@ export const vehiclesApi = {
       reservationDestination: data.reservation_destination,
     };
 
-    console.log("Supabase API: getById - Veicolo recuperato:", formattedVehicle);
+    // console.log("Supabase API: getById - Veicolo recuperato:", formattedVehicle);
     return formattedVehicle as Vehicle;
   },
   
   create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
-    console.log("Supabase API: create - Creazione veicolo:", vehicle);
+    // console.log("Supabase API: create - Creazione veicolo:", vehicle);
     
     // Calculate estimated arrival days for virtual stock
     let estimatedArrivalDays = vehicle.estimatedArrivalDays;
@@ -101,7 +101,7 @@ export const vehiclesApi = {
         // China stock (default): 90-120 days
         estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
       }
-      console.log(`Giorni di arrivo stimati per stock ${vehicle.originalStock}: ${estimatedArrivalDays}`);
+      // console.log(`Giorni di arrivo stimati per stock ${vehicle.originalStock}: ${estimatedArrivalDays}`);
     }
     
     // Map frontend field names to database column names
@@ -126,7 +126,7 @@ export const vehiclesApi = {
       updated_at: new Date().toISOString()
     };
     
-    console.log("Supabase API: create - Richiesta insert:", newVehicle);
+    // console.log("Supabase API: create - Richiesta insert:", newVehicle);
     
     const { data, error } = await supabase
       .from('vehicles')
@@ -139,7 +139,7 @@ export const vehiclesApi = {
       throw error;
     }
     
-    console.log("Supabase API: create - Risposta:", data);
+    // console.log("Supabase API: create - Risposta:", data);
     
     // Convert database field names to match our frontend model
     const formattedVehicle = {
@@ -202,7 +202,7 @@ export const vehiclesApi = {
       }
     });
     
-    console.log("Supabase API: update - Richiesta update:", dbUpdates);
+    // console.log("Supabase API: update - Richiesta update:", dbUpdates);
     
     const { data, error } = await supabase
       .from('vehicles')
@@ -216,7 +216,7 @@ export const vehiclesApi = {
       throw error;
     }
     
-    console.log("Supabase API: update - Risposta:", data);
+    // console.log("Supabase API: update - Risposta:", data);
     
     // Convert database field names back to frontend model
     const formattedVehicle = {
@@ -273,9 +273,9 @@ export const vehiclesApi = {
   },
   
   reserve: async (id: string, dealerId: string, reservedBy: string, reservedAccessories?: string[], virtualConfig?: Vehicle['virtualConfig'], reservationDestination?: string): Promise<Vehicle> => {
-    console.log("Supabase API: reserve - Prenotazione veicolo:", {
-      id, dealerId, reservedBy, reservedAccessories, virtualConfig
-    });
+    // console.log("Supabase API: reserve - Prenotazione veicolo:", {
+    //   id, dealerId, reservedBy, reservedAccessories, virtualConfig
+    // });
     
     const vehicle = await vehiclesApi.getById(id);
     
@@ -311,7 +311,7 @@ export const vehiclesApi = {
   },
   
   transformToOrder: async (id: string): Promise<Vehicle> => {
-    console.log("Supabase API: transformToOrder - Trasforma prenotazione in ordine:", id);
+    // console.log("Supabase API: transformToOrder - Trasforma prenotazione in ordine:", id);
     
     const vehicle = await vehiclesApi.getById(id);
     

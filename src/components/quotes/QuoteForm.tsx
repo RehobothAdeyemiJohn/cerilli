@@ -41,7 +41,7 @@ const QuoteForm = ({
       />
     );
   }
-  
+  console.log(vehicle)
   // For vehicle-based quotes, use the existing form with proper checks
   const {
     form,
@@ -60,6 +60,7 @@ const QuoteForm = ({
     handleSubmit,
     totalDiscount,
     roadPreparationFee,
+    watchLicensePlateBonus,
     watchReducedVAT
   } = useQuoteForm(vehicle, onSubmit, editQuote);
 
@@ -206,7 +207,7 @@ const QuoteForm = ({
               
               <div>
                 <Label>Prezzo di Listino Calcolato:</Label>
-                <div className="text-xl font-bold">€{basePrice}</div>
+                <div className="text-xl font-bold"><span>€ {finalPrice}</span></div>
               </div>
             </div>
           </div>
@@ -276,9 +277,22 @@ const QuoteForm = ({
                   </div>
                 )}
                 
-                {totalDiscount > 0 && (
+                
+                {watchDiscount > 0 && (
                   <div className="flex justify-between text-red-600">
                     <span>Sconto:</span>
+                    <span>- € {watchDiscount}</span>
+                  </div>
+                )}
+                {watchLicensePlateBonus > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Premio Targa:</span>
+                    <span>- € {watchLicensePlateBonus}</span>
+                  </div>
+                )}
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Sconto total:</span>
                     <span>- € {totalDiscount}</span>
                   </div>
                 )}

@@ -46,7 +46,7 @@ const VirtualReservationAccessories = ({
                 <FormLabel className="font-normal text-sm">
                   {accessory.name}
                   <span className="ml-1 text-xs text-gray-500">
-                    (+€{accessory.priceWithVAT.toLocaleString('it-IT')})
+                    (+€{accessory.price.toLocaleString('it-IT')})
                   </span>
                 </FormLabel>
               </FormItem>

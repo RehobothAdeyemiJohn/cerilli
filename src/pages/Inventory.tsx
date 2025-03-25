@@ -21,7 +21,6 @@ const Inventory = () => {
   const isDealer = user?.type === 'dealer' || user?.type === 'vendor';
   const dealerName = user?.dealerName || '';
   const navigate = useNavigate();
-  const location = useLocation();
   
   const {
     inventory,

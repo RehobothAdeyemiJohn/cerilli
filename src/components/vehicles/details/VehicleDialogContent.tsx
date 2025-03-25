@@ -100,7 +100,6 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
       />
     );
   }
-  
   if (showVirtualReserveForm) {
     return (
       <ReserveVirtualVehicleForm 

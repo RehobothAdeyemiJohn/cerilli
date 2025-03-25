@@ -53,8 +53,8 @@ export const useCalculatePrice = (
         accessoriesPrice = watchAccessories.reduce((sum, accessoryName) => {
           const accessory = accessories.find(a => a.name === accessoryName);
           if (accessory) {
-            console.log(`Found accessory ${accessoryName} with price ${accessory.priceWithVAT}`);
-            return sum + (accessory.priceWithVAT || 0);
+            console.log(`Found accessory ${accessoryName} with price ${accessory.price}`);
+            return sum + (accessory.price || 0);
           }
           console.log(`Accessory ${accessoryName} not found in available accessories`);
           return sum;
@@ -82,17 +82,17 @@ export const useCalculatePrice = (
         const components = {
           basePrice: modelObj.basePrice,
           trimPrice: trimObj.basePrice,
-          fuelTypeAdjustment: fuelTypeObj.priceAdjustment,
-          colorAdjustment: colorObj.priceAdjustment,
-          transmissionAdjustment: transmissionObj.priceAdjustment,
+          fuelTypeAdjustment: fuelTypeObj.price_adjustment,
+          colorAdjustment: colorObj.price_adjustment,
+          transmissionAdjustment: transmissionObj.price_adjustment,
           accessoriesPrice
         };
 
         const totalPrice = modelObj.basePrice +
                           trimObj.basePrice +
-                          fuelTypeObj.priceAdjustment +
-                          colorObj.priceAdjustment +
-                          transmissionObj.priceAdjustment +
+                          fuelTypeObj.price_adjustment +
+                          colorObj.price_adjustment +
+                          transmissionObj.price_adjustment +
                           accessoriesPrice;
 
         console.log("Price calculation components:", components);

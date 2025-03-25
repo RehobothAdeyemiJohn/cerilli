@@ -195,8 +195,9 @@ const Orders = () => {
   const handlePdfPreview = async (order: Order) => {
     try {
       const response = await ordersApi.generatePdf(order.id);
-      setPdfData(response);
-      setPdfPreviewOpen(true);
+      console.log(response)
+      // setPdfData(response);
+      // setPdfPreviewOpen(true);
     } catch (error) {
       console.error('Error generating PDF preview:', error);
       toast({

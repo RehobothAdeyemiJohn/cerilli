@@ -25,6 +25,7 @@ export const useQuoteForm = (
   const basePrice = vehicle?.price || 0;
   const roadPreparationFee = editQuote?.roadPreparationFee || 400; // Changed from 350 to 400
   
+  // console.log(vehicle)
   const form = useForm({
     defaultValues: {
       vehicleId: vehicle?.id || '',
@@ -99,8 +100,9 @@ export const useQuoteForm = (
   const calculatedPrice = vatAdjustedBasePrice + accessoryTotalPrice + vatAdjustedRoadPrep - 
     (vatAdjustedDiscount + vatAdjustedPlateBonus + vatAdjustedTradeInBonus) - 
     Number(watchTradeInValue) + vatAdjustedSafetyKit + vatAdjustedHandlingFee;
+    console.log(calculatedPrice)
   
-  const finalPrice = calculatedPrice > 0 ? calculatedPrice : 0;
+  const finalPrice = Math.ceil((calculatedPrice > 0 ? calculatedPrice : 0)*100)/100;
   
   useEffect(() => {
     setShowTradeIn(watchHasTradeIn);
@@ -130,6 +132,7 @@ export const useQuoteForm = (
     user,
     basePrice,
     accessoryTotalPrice,
+    watchLicensePlateBonus,
     finalPrice,
     watchHasTradeIn,
     watchDiscount,

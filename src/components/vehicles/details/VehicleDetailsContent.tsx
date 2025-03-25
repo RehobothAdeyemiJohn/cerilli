@@ -128,6 +128,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   
   return (
     <div className="space-y-6">
+    
       <VehicleDialogHeader 
         vehicle={vehicle}
         onDuplicate={showDuplicateButton ? handleDuplicate : undefined}
