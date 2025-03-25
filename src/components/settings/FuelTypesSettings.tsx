@@ -109,7 +109,7 @@ const FuelTypesSettings = () => {
   };
 
   const handleSaveFuelType = () => {
-    if (!currentFuelType.name || currentFuelType.priceAdjustment === undefined) {
+    if (!currentFuelType.name || currentFuelType.price_adjustment === undefined) {
       toast({
         title: "Errore",
         description: "Tutti i campi sono obbligatori.",
@@ -136,8 +136,8 @@ const FuelTypesSettings = () => {
     { 
       header: "Adeguamento Prezzo", 
       accessor: (fuelType) => {
-        return fuelType.priceAdjustment !== undefined ? 
-          `€${fuelType.priceAdjustment.toLocaleString('it-IT')}` : 
+        return fuelType.price_adjustment !== undefined ? 
+          `€${fuelType.price_adjustment}.00` : 
           '€0';
       },
       className: "text-right" 

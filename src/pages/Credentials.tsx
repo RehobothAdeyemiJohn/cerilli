@@ -6,6 +6,7 @@ import AdminUserList from '@/components/credentials/AdminUserList';
 import AdminUserFormDialog from '@/components/credentials/AdminUserFormDialog';
 import { adminUsersApi } from '@/api/supabase/adminUsersApi';
 import { AdminUser } from '@/types/admin';
+import { Button } from '@/components/ui/button';
 
 const Credentials = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -31,9 +32,21 @@ const Credentials = () => {
     handleCloseDialog();
   };
   
+ 
   return (
     <div className="container mx-auto py-6">
+      <div className='flex justify-between '>
       <h1 className="text-2xl font-bold mb-6">Gestione Credenziali</h1>
+      <Button 
+       variant="secondary"
+        className="mt-4 md:mt-0 "
+        onClick={()=>{
+          setIsAddDialogOpen(true)
+          setEditUser(null)
+        }}
+      >creare un utente</Button>
+
+      </div>
       <Card className="p-6">
         {isLoading ? (
           <div className="text-center py-12">Caricamento in corso...</div>

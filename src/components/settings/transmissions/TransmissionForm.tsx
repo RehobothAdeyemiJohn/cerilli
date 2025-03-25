@@ -19,7 +19,7 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
   });
 
   // Debug the compatible models to understand what's being saved
-  console.log("Current transmission compatibleModels:", transmission.compatibleModels);
+  console.log("Current transmission compatible_models:", transmission.compatible_models);
 
   return (
     <div className="space-y-4">
@@ -33,12 +33,12 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="priceAdjustment">Adeguamento Prezzo (€)</Label>
+        <Label htmlFor="price_adjustment">Adeguamento Prezzo (€)</Label>
         <Input
-          id="priceAdjustment"
+          id="price_adjustment"
           type="number"
-          value={transmission.priceAdjustment || ''}
-          onChange={(e) => onChange('priceAdjustment', Number(e.target.value))}
+          value={transmission.price_adjustment || ''}
+          onChange={(e) => onChange('price_adjustment', Number(e.target.value))}
           placeholder="es. 1500"
         />
       </div>
@@ -49,9 +49,9 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
         </p>
         <div className="grid grid-cols-2 gap-2">
           {models.map((model) => {
-            // Check if the model ID exists in compatibleModels
-            const isChecked = Array.isArray(transmission.compatibleModels) && 
-              transmission.compatibleModels.includes(model.id);
+            // Check if the model ID exists in compatible_models
+            const isChecked = Array.isArray(transmission.compatible_models) && 
+              transmission.compatible_models.includes(model.id);
             
             console.log(`Model ${model.name} (${model.id}) checked:`, isChecked);
             
@@ -61,16 +61,16 @@ const TransmissionForm: React.FC<TransmissionFormProps> = ({ transmission, onCha
                   id={`model-${model.id}`}
                   checked={isChecked}
                   onCheckedChange={(checked) => {
-                    const currentModels = Array.isArray(transmission.compatibleModels) 
-                      ? [...transmission.compatibleModels] 
+                    const currentModels = Array.isArray(transmission.compatible_models) 
+                      ? [...transmission.compatible_models] 
                       : [];
                     
                     const updatedModels = checked
                       ? [...currentModels, model.id]
                       : currentModels.filter(id => id !== model.id);
                     
-                    console.log("Updating compatibleModels to:", updatedModels);
-                    onChange('compatibleModels', updatedModels);
+                    console.log("Updating compatible_models to:", updatedModels);
+                    onChange('compatible_models', updatedModels);
                   }}
                 />
                 <Label htmlFor={`model-${model.id}`}>{model.name}</Label>

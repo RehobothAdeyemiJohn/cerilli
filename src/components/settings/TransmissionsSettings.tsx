@@ -116,7 +116,7 @@ const TransmissionsSettings = () => {
   };
 
   const handleSaveTransmission = () => {
-    if (!currentTransmission.name || currentTransmission.priceAdjustment === undefined) {
+    if (!currentTransmission.name || currentTransmission.price_adjustment === undefined) {
       toast({
         title: "Errore",
         description: "Nome e adeguamento prezzo sono obbligatori.",
@@ -127,7 +127,7 @@ const TransmissionsSettings = () => {
 
     const transmissionToSave = {
       ...currentTransmission,
-      compatibleModels: currentTransmission.compatibleModels || []
+      compatible_models: currentTransmission.compatible_models || []
     };
 
     console.log("Saving transmission:", transmissionToSave);
@@ -150,8 +150,8 @@ const TransmissionsSettings = () => {
     { 
       header: "Adeguamento Prezzo", 
       accessor: (transmission) => {
-        return transmission.priceAdjustment !== undefined ? 
-          `€${transmission.priceAdjustment.toLocaleString('it-IT')}` : 
+        return transmission.price_adjustment !== undefined ? 
+          `€${transmission.price_adjustment}.00` : 
           '€0';
       },
       className: "text-right" 

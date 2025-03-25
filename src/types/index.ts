@@ -23,6 +23,7 @@ export type Vehicle = {
   reservationDestination?: string;
   reservationTimestamp?: string;
   estimatedArrivalDays?: number;
+  estimated_arrival_days?:any,
   virtualConfig?: {
     trim: string;
     fuelType: string;
@@ -192,38 +193,37 @@ export type VehicleTrim = {
   id: string;
   name: string;
   basePrice: number;
-  compatibleModels: string[];
+  compatible_models: string[];
 }
 
 export type FuelType = {
   id: string;
   name: string;
-  priceAdjustment: number;
-  compatibleModels: string[];
+  price_adjustment: number;
+  compatible_models: string[];
 }
 
 export type ExteriorColor = {
   id: string;
   name: string;
   type: string;
-  priceAdjustment: number;
-  compatibleModels: string[];
+  price_adjustment: number;
+  compatible_models: string[];
 }
 
 export type Transmission = {
   id: string;
   name: string;
-  priceAdjustment: number;
-  compatibleModels: string[];
+  price_adjustment: number;
+  compatible_models: string[];
 }
 
 export type Accessory = {
   id: string;
   name: string;
-  priceWithVAT: number;
-  priceWithoutVAT: number;
-  compatibleModels: string[];
-  compatibleTrims: string[];
+  price: number;
+  compatible_models: string[];
+  compatible_trims: string[];
 }
 
 export type DefectReport = {

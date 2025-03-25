@@ -48,11 +48,11 @@ const AdminUserList: React.FC<AdminUserListProps> = ({ users, onEdit, onRefetch 
   
   const handleToggleActive = async (user: AdminUser) => {
     try {
-      await adminUsersApi.update(user.id, { isActive: !user.isActive });
+      await adminUsersApi.update(user.id, { active: !user.active });
       onRefetch();
       toast({
-        title: user.isActive ? "Utente disattivato" : "Utente attivato",
-        description: `${user.firstName} ${user.lastName} è stato ${user.isActive ? 'disattivato' : 'attivato'}.`,
+        title: user.active ? "Utente disattivato" : "Utente attivato",
+        description: `${user.first_name} ${user.last_name} è stato ${user.active ? 'disattivato' : 'attivato'}.`,
       });
     } catch (error) {
       console.error("Errore durante l'aggiornamento dello stato:", error);
@@ -101,7 +101,6 @@ const AdminUserList: React.FC<AdminUserListProps> = ({ users, onEdit, onRefetch 
       </div>
     );
   }
-  
   return (
     <>
       <div className="rounded-md border overflow-hidden">
@@ -120,20 +119,20 @@ const AdminUserList: React.FC<AdminUserListProps> = ({ users, onEdit, onRefetch 
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">
-                  {user.firstName} {user.lastName}
+                  {user.first_name} {user.last_name}
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{getRoleBadge(user.role)}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={user.isActive}
+                      checked={user.active}
                       onCheckedChange={() => handleToggleActive(user)}
                     />
                     <span className="text-sm text-muted-foreground">
-                      {user.isActive ? 'Attivo' : 'Disattivato'}
+                      {user.active ? 'Attivo' : 'Disattivato'}
                     </span>
-                    {user.isActive ? 
+                    {user.active ? 
                       <ShieldCheck className="h-4 w-4 text-green-500" /> : 
                       <ShieldAlert className="h-4 w-4 text-red-500" />
                     }

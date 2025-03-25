@@ -12,11 +12,11 @@ export type Role = 'superAdmin' | 'admin' | 'operator' | 'supervisor';
 
 export type AdminUser = {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string; // In a real app, this should only be a hash
-  isActive: boolean;
+  active: boolean;
   role: Role;
   permissions: Permission[];
   lastLogin?: string;
@@ -25,11 +25,11 @@ export type AdminUser = {
 };
 
 export type AdminUserFormData = {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
-  isActive: boolean;
+  active: boolean;
   role: Role;
   permissions: Permission[];
 };

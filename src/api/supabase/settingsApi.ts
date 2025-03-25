@@ -145,7 +145,7 @@ const trimsApi = {
       id: item.id,
       name: item.name,
       basePrice: item.price_adjustment,
-      compatibleModels: item.compatible_models || []
+      compatible_models: item.compatible_models || []
     }));
     
     console.log('Fetched trims:', mappedData);
@@ -183,7 +183,7 @@ const trimsApi = {
     const dbTrim = {
       name: trim.name,
       price_adjustment: trim.basePrice,
-      compatible_models: trim.compatibleModels || []
+      compatible_models: trim.compatible_models || []
     };
     
     const { data, error } = await supabase
@@ -200,7 +200,7 @@ const trimsApi = {
       id: data.id,
       name: data.name,
       basePrice: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
+      compatible_models: data.compatible_models || []
     };
   },
   
@@ -233,8 +233,8 @@ const fuelTypesApi = {
     const mappedData = data.map(item => ({
       id: item.id,
       name: item.name,
-      priceAdjustment: item.price_adjustment,
-      compatibleModels: item.compatible_models || []
+      price_adjustment: item.price_adjustment,
+      compatible_models: item.compatible_models || []
     }));
     
     console.log('Fetched fuel types:', mappedData);
@@ -271,8 +271,8 @@ const fuelTypesApi = {
     // Map from our API model to the database columns
     const dbFuelType = {
       name: fuelType.name,
-      price_adjustment: fuelType.priceAdjustment,
-      compatible_models: fuelType.compatibleModels || []
+      price_adjustment: fuelType.price_adjustment,
+      compatible_models: fuelType.compatible_models || []
     };
     
     const { data, error } = await supabase
@@ -288,8 +288,8 @@ const fuelTypesApi = {
     return {
       id: data.id,
       name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
+      price_adjustment: data.price_adjustment,
+      compatible_models: data.compatible_models || []
     };
   },
   
@@ -351,8 +351,8 @@ const colorsApi = {
     const dbColor = {
       name: color.name,
       type: color.type,
-      price_adjustment: color.priceAdjustment,
-      compatible_models: color.compatibleModels || []
+      price_adjustment: color.price_adjustment,
+      compatible_models: color.compatible_models || []
     };
     
     const { data, error } = await supabase
@@ -369,8 +369,8 @@ const colorsApi = {
       id: data.id,
       name: data.name,
       type: data.type,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
+      price_adjustment: data.price_adjustment,
+      compatible_models: data.compatible_models || []
     };
   },
   
@@ -431,8 +431,8 @@ const transmissionsApi = {
     // Map from our API model to the database columns
     const dbTransmission = {
       name: transmission.name,
-      price_adjustment: transmission.priceAdjustment,
-      compatible_models: transmission.compatibleModels || []
+      price_adjustment: transmission.price_adjustment,
+      compatible_models: transmission.compatible_models || []
     };
     
     console.log('Updating transmission with data:', dbTransmission);
@@ -453,8 +453,8 @@ const transmissionsApi = {
     return {
       id: data.id,
       name: data.name,
-      priceAdjustment: data.price_adjustment,
-      compatibleModels: data.compatible_models || []
+      price_adjustment: data.price_adjustment,
+      compatible_models: data.compatible_models || []
     };
   },
   
@@ -481,7 +481,7 @@ const accessoriesApi = {
       console.error('Error fetching accessories:', error);
       return [];
     }
-    
+    console.log(data)
     return data as Accessory[];
   },
   
@@ -512,21 +512,20 @@ const accessoriesApi = {
     
     // Filter accessories that are compatible with the model and trim
     return (data as Accessory[]).filter(accessory => {
-      const modelCompatible = accessory.compatibleModels.length === 0 || 
-                             accessory.compatibleModels.includes(modelId);
-      const trimCompatible = accessory.compatibleTrims.length === 0 || 
-                            accessory.compatibleTrims.includes(trimId);
+      const modelCompatible = accessory.compatible_models.length === 0 || 
+                             accessory.compatible_models.includes(modelId);
+      const trimCompatible = accessory.compatible_trims.length === 0 || 
+                            accessory.compatible_trims.includes(trimId);
       return modelCompatible && trimCompatible;
     });
   },
   
   create: async (accessory: Omit<Accessory, 'id'>): Promise<Accessory> => {
     // Calculate priceWithoutVAT
-    const priceWithoutVAT = Math.round((accessory.priceWithVAT || 0) / 1.22);
     
     const { data, error } = await supabase
       .from('settings_accessories')
-      .insert([{ ...accessory, priceWithoutVAT }])
+      .insert([{ ...accessory }])
       .select()
       .single();
     
@@ -535,22 +534,17 @@ const accessoriesApi = {
   },
   
   update: async (id: string, accessory: Partial<Accessory>): Promise<Accessory> => {
-    // If priceWithVAT is being updated, recalculate priceWithoutVAT
+    // If price is being updated, recalculate priceWithoutVAT
     let dbUpdates: any = {
       name: accessory.name
     };
     
-    if (accessory.priceWithVAT !== undefined) {
-      dbUpdates.price_with_vat = accessory.priceWithVAT;
-      dbUpdates.price_without_vat = Math.round(accessory.priceWithVAT / 1.22);
+    if (accessory.compatible_models !== undefined) {
+      dbUpdates.compatible_models = accessory.compatible_models;
     }
     
-    if (accessory.compatibleModels !== undefined) {
-      dbUpdates.compatible_models = accessory.compatibleModels;
-    }
-    
-    if (accessory.compatibleTrims !== undefined) {
-      dbUpdates.compatible_trims = accessory.compatibleTrims;
+    if (accessory.compatible_trims !== undefined) {
+      dbUpdates.compatible_trims = accessory.compatible_trims;
     }
     
     const { data, error } = await supabase
@@ -569,10 +563,9 @@ const accessoriesApi = {
     return {
       id: data.id,
       name: data.name,
-      priceWithVAT: data.price_with_vat,
-      priceWithoutVAT: data.price_without_vat,
-      compatibleModels: data.compatible_models || [],
-      compatibleTrims: data.compatible_trims || []
+      price: data.price,
+      compatible_models: data.compatible_models || [],
+      compatible_trims: data.compatible_trims || []
     };
   },
   
@@ -614,19 +607,19 @@ const calculateVehiclePrice = async (
     // Get fuel type
     const fuelType = await fuelTypesApi.getById(fuelTypeId);
     if (fuelType) {
-      totalPrice += fuelType.priceAdjustment;
+      totalPrice += fuelType.price_adjustment;
     }
     
     // Get color
     const color = await colorsApi.getById(colorId);
     if (color) {
-      totalPrice += color.priceAdjustment;
+      totalPrice += color.price_adjustment;
     }
     
     // Get transmission
     const transmission = await transmissionsApi.getById(transmissionId);
     if (transmission) {
-      totalPrice += transmission.priceAdjustment;
+      totalPrice += transmission.price_adjustment;
     }
     
     // Get accessories and sum their prices
@@ -634,7 +627,7 @@ const calculateVehiclePrice = async (
       const accessories = await accessoriesApi.getAll();
       const selectedAccessories = accessories.filter(acc => accessoryIds.includes(acc.id));
       for (const acc of selectedAccessories) {
-        totalPrice += acc.priceWithVAT;
+        totalPrice += acc.price;
       }
     }
     

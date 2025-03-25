@@ -112,7 +112,7 @@ const ColorsSettings = () => {
   };
 
   const handleSaveColor = () => {
-    if (!currentColor.name || !currentColor.type || currentColor.priceAdjustment === undefined) {
+    if (!currentColor.name || !currentColor.type || currentColor.price_adjustment === undefined) {
       toast({
         title: "Errore",
         description: "Nome, tipo e adeguamento prezzo sono obbligatori.",
@@ -124,7 +124,7 @@ const ColorsSettings = () => {
     // Ensure compatibleModels is defined (even if empty)
     const colorToSave: Partial<ExteriorColor> = {
       ...currentColor,
-      compatibleModels: currentColor.compatibleModels || []
+      compatible_models: currentColor.compatible_models || []
     };
 
     if (colorToSave.id) {
@@ -148,9 +148,9 @@ const ColorsSettings = () => {
     },
     { 
       header: "Adeguamento Prezzo", 
-      accessor: (color) => {
-        return color.priceAdjustment !== undefined ? 
-          `€${color.priceAdjustment.toLocaleString('it-IT')}` : 
+      accessor: (color:any) => {
+        return color.price_adjustment!== undefined ? 
+          `€${color.price_adjustment}.00` : 
           '€0';
       },
       className: "text-right" 

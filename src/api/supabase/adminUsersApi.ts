@@ -32,13 +32,13 @@ export const adminUsersApi = {
     const { data, error } = await supabase
       .from('admin_users')
       .insert({
-        first_name: userData.firstName,
-        last_name: userData.lastName,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
         email: userData.email,
         password: userData.password,
         role: userData.role,
         permissions: userData.permissions,
-        active: userData.isActive
+        active: userData.active
       })
       .select()
       .single();
@@ -51,13 +51,13 @@ export const adminUsersApi = {
     // Transform the response to match our AdminUser type
     return {
       id: data.id,
-      firstName: data.first_name,
-      lastName: data.last_name,
+      first_name: data.first_name,
+      last_name: data.last_name,
       email: data.email,
       password: data.password,
       role: data.role,
       permissions: data.permissions,
-      isActive: data.active,
+      active: data.active,
       lastLogin: data.last_login,
       createdAt: data.created_at,
       updatedAt: data.updated_at
@@ -67,13 +67,13 @@ export const adminUsersApi = {
   update: async (id: string, userData: Partial<AdminUserFormData>): Promise<AdminUser | undefined> => {
     // Prepare the update data with snake_case field names
     const updateData: any = {};
-    if (userData.firstName !== undefined) updateData.first_name = userData.firstName;
-    if (userData.lastName !== undefined) updateData.last_name = userData.lastName;
+    if (userData.first_name !== undefined) updateData.first_name = userData.first_name;
+    if (userData.last_name !== undefined) updateData.last_name = userData.last_name;
     if (userData.email !== undefined) updateData.email = userData.email;
     if (userData.password !== undefined) updateData.password = userData.password;
     if (userData.role !== undefined) updateData.role = userData.role;
     if (userData.permissions !== undefined) updateData.permissions = userData.permissions;
-    if (userData.isActive !== undefined) updateData.active = userData.isActive;
+    if (userData.active !== undefined) updateData.active = userData.active;
     
     // Update the admin_users table
     const { data, error } = await supabase
@@ -93,13 +93,13 @@ export const adminUsersApi = {
     // Transform the response to match our AdminUser type
     return {
       id: data.id,
-      firstName: data.first_name,
-      lastName: data.last_name,
+      first_name: data.first_name,
+      last_name: data.last_name,
       email: data.email,
       password: data.password,
       role: data.role,
       permissions: data.permissions,
-      isActive: data.active,
+      active: data.active,
       lastLogin: data.last_login,
       createdAt: data.created_at,
       updatedAt: data.updated_at

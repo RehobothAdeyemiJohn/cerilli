@@ -138,7 +138,7 @@ const TrimsSettings = () => {
       header: "Prezzo Base", 
       accessor: (trim) => {
         return trim.basePrice !== undefined ? 
-          `€${trim.basePrice.toLocaleString('it-IT')}` : 
+          `€${trim.basePrice}.00` : 
           '€0';
       },
       className: "text-right" 

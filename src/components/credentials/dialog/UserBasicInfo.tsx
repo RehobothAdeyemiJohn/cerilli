@@ -24,7 +24,7 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ control }) => {
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="firstName"
+          name="first_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome</FormLabel>
@@ -38,7 +38,7 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ control }) => {
         
         <FormField
           control={control}
-          name="lastName"
+          name="last_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Cognome</FormLabel>

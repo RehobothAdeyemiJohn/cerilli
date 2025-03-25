@@ -79,7 +79,7 @@ const Settings = () => {
         await supabaseTrimsApi.create({
           name: trim.name,
           basePrice: trim.basePrice,
-          compatibleModels: trim.compatibleModels || []
+          compatible_models: trim.compatible_models || []
         });
       }
       
@@ -88,8 +88,8 @@ const Settings = () => {
       for (const fuelType of fuelTypes) {
         await supabaseFuelTypesApi.create({
           name: fuelType.name,
-          priceAdjustment: fuelType.priceAdjustment,
-          compatibleModels: fuelType.compatibleModels || []
+          price_adjustment: fuelType.price_adjustment,
+          compatible_models: fuelType.compatible_models || []
         });
       }
       
@@ -102,8 +102,8 @@ const Settings = () => {
           await supabaseColorsApi.create({
             name: color.name,
             type: color.type,
-            priceAdjustment: color.priceAdjustment,
-            compatibleModels: color.compatibleModels || []
+            price_adjustment: color.price_adjustment,
+            compatible_models: color.compatible_models || []
           });
         } catch (error) {
           console.error(`Error migrating color ${color.name}:`, error);
@@ -115,8 +115,8 @@ const Settings = () => {
       for (const transmission of transmissions) {
         await supabaseTransmissionsApi.create({
           name: transmission.name,
-          priceAdjustment: transmission.priceAdjustment,
-          compatibleModels: transmission.compatibleModels || []
+          price_adjustment: transmission.price_adjustment,
+          compatible_models: transmission.compatible_models || []
         });
       }
       
@@ -125,10 +125,9 @@ const Settings = () => {
       for (const accessory of accessories) {
         await supabaseAccessoriesApi.create({
           name: accessory.name,
-          priceWithVAT: accessory.priceWithVAT,
-          priceWithoutVAT: accessory.priceWithoutVAT,
-          compatibleModels: accessory.compatibleModels || [],
-          compatibleTrims: accessory.compatibleTrims || []
+          price: accessory.price,
+          compatible_models: accessory.compatible_models || [],
+          compatible_trims: accessory.compatible_trims || []
         });
       }
       

@@ -140,7 +140,7 @@ const ModelsSettings = () => {
       header: "Prezzo Base", 
       accessor: (model) => {
         return model.basePrice !== undefined ? 
-          `€${model.basePrice.toLocaleString('it-IT')}` : 
+          `€${model.basePrice}.00` : 
           '€0';
       },
       className: "text-right" 

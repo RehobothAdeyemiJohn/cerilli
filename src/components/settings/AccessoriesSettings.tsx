@@ -14,8 +14,8 @@ const AccessoriesSettings = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentAccessory, setCurrentAccessory] = useState<Partial<Accessory>>({
-    compatibleModels: [],
-    compatibleTrims: []
+    compatible_models: [],
+    compatible_trims: []
   });
   
   const queryClient = useQueryClient();
@@ -27,7 +27,7 @@ const AccessoriesSettings = () => {
 
   const createMutation = useMutation({
     mutationFn: (accessory: Omit<Accessory, 'id'>) => {
-      // The priceWithoutVAT will be calculated by the API
+      // The price_without_vat will be calculated by the API
       return accessoriesApi.create(accessory);
     },
     onSuccess: () => {
@@ -38,8 +38,8 @@ const AccessoriesSettings = () => {
       });
       setIsAddDialogOpen(false);
       setCurrentAccessory({
-        compatibleModels: [],
-        compatibleTrims: []
+        compatible_models: [],
+        compatible_trims: []
       });
     },
   });
@@ -55,8 +55,8 @@ const AccessoriesSettings = () => {
       });
       setIsEditDialogOpen(false);
       setCurrentAccessory({
-        compatibleModels: [],
-        compatibleTrims: []
+        compatible_models: [],
+        compatible_trims: []
       });
     },
   });
@@ -77,8 +77,8 @@ const AccessoriesSettings = () => {
 
   const handleAddAccessory = () => {
     setCurrentAccessory({
-      compatibleModels: [],
-      compatibleTrims: []
+      compatible_models: [],
+      compatible_trims: []
     });
     setIsAddDialogOpen(true);
   };
@@ -102,7 +102,7 @@ const AccessoriesSettings = () => {
   };
 
   const handleSaveAccessory = () => {
-    if (!currentAccessory.name || currentAccessory.priceWithVAT === undefined) {
+    if (!currentAccessory.name || currentAccessory.price === undefined) {
       toast({
         title: "Errore",
         description: "Nome e prezzo sono obbligatori.",
@@ -111,21 +111,25 @@ const AccessoriesSettings = () => {
       return;
     }
 
-    // Calculate priceWithoutVAT by dividing priceWithVAT by 1.22 (22% VAT)
-    const priceWithoutVAT = Math.round((currentAccessory.priceWithVAT || 0) / 1.22);
+    // Calculate price_without_vat by dividing priceWithVAT by 1.22 (22% VAT)
+    const price = Math.round((currentAccessory.price || 0));
+    // const price_without_vat = Math.round((currentAccessory.price || 0) / 1.22);
+    // const price_with_vat = Math.round((currentAccessory.price || 0) / 1.22);
+    // console.log(currentAccessory);
+    // return
     
     if (currentAccessory.id) {
       updateMutation.mutate({
         id: currentAccessory.id,
         accessory: {
           ...currentAccessory as Accessory,
-          priceWithoutVAT
+          price,
         },
       });
     } else {
       createMutation.mutate({
         ...currentAccessory as Omit<Accessory, 'id'>,
-        priceWithoutVAT
+        price,
       });
     }
   };
@@ -138,8 +142,8 @@ const AccessoriesSettings = () => {
     { 
       header: "Prezzo con IVA", 
       accessor: (accessory) => {
-        return accessory.priceWithVAT !== undefined ? 
-          `€${accessory.priceWithVAT.toLocaleString('it-IT')}` : 
+        return accessory.price !== undefined ? 
+          `€${accessory.price}.00` : 
           '€0';
       },
       className: "text-right" 
@@ -147,8 +151,8 @@ const AccessoriesSettings = () => {
     { 
       header: "Prezzo senza IVA", 
       accessor: (accessory) => {
-        return accessory.priceWithoutVAT !== undefined ? 
-          `€${accessory.priceWithoutVAT.toLocaleString('it-IT')}` : 
+        return accessory.price !== undefined ? 
+          `€${accessory.price}.00` : 
           '€0';
       }, 
       className: "text-right" 

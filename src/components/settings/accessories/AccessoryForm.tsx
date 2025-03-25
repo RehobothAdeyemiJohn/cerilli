@@ -14,8 +14,8 @@ interface AccessoryFormProps {
 }
 
 const AccessoryForm: React.FC<AccessoryFormProps> = ({ accessory, onChange }) => {
-  const [selectedModels, setSelectedModels] = useState<string[]>(accessory.compatibleModels || []);
-  const [selectedTrims, setSelectedTrims] = useState<string[]>(accessory.compatibleTrims || []);
+  const [selectedModels, setSelectedModels] = useState<string[]>(accessory.compatible_models || []);
+  const [selectedTrims, setSelectedTrims] = useState<string[]>(accessory.compatible_trims || []);
   
   const { data: models = [] } = useQuery({
     queryKey: ['models'],
@@ -29,11 +29,11 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ accessory, onChange }) =>
   
   // Update the parent component when selections change
   useEffect(() => {
-    onChange('compatibleModels', selectedModels);
+    onChange('compatible_models', selectedModels);
   }, [selectedModels, onChange]);
   
   useEffect(() => {
-    onChange('compatibleTrims', selectedTrims);
+    onChange('compatible_trims', selectedTrims);
   }, [selectedTrims, onChange]);
   
   const toggleModel = (modelId: string) => {
@@ -69,8 +69,8 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ accessory, onChange }) =>
           <Input
             id="priceWithVAT"
             type="number"
-            value={accessory.priceWithVAT || ''}
-            onChange={(e) => onChange('priceWithVAT', Number(e.target.value))}
+            value={accessory.price || ''}
+            onChange={(e) => onChange('price', Number(e.target.value))}
             placeholder="es. 1500"
           />
           <p className="text-xs text-gray-500">

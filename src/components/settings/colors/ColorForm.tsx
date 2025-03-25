@@ -37,12 +37,13 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
       <div className="space-y-2">
         <Label htmlFor="type">Tipo</Label>
         <Select 
-          value={color.type || ''} 
-          onValueChange={(value) => onChange('type', value)}
+          onValueChange={(value) =>{
+            onChange("type",value)
+          }}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleziona il tipo di colore" />
-          </SelectTrigger>
+           <SelectTrigger>
+             <SelectValue placeholder="Seleziona il tipo di colore" />
+           </SelectTrigger>
           <SelectContent>
             <SelectItem value="metallizzato">Metallizzato</SelectItem>
             <SelectItem value="pastello">Pastello</SelectItem>
@@ -56,8 +57,8 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
         <Input
           id="priceAdjustment"
           type="number"
-          value={color.priceAdjustment || ''}
-          onChange={(e) => onChange('priceAdjustment', Number(e.target.value))}
+          value={color.price_adjustment || ''}
+          onChange={(e) => onChange('price_adjustment', Number(e.target.value))}
           placeholder="es. 800"
         />
       </div>
@@ -72,13 +73,13 @@ const ColorForm: React.FC<ColorFormProps> = ({ color, onChange }) => {
             <div key={model.id} className="flex items-center space-x-2">
               <Checkbox 
                 id={`model-${model.id}`}
-                checked={(color.compatibleModels || []).includes(model.id)}
+                checked={(color.compatible_models || []).includes(model.id)}
                 onCheckedChange={(checked) => {
-                  const currentModels = color.compatibleModels || [];
+                  const currentModels = color.compatible_models || [];
                   const updatedModels = checked
                     ? [...currentModels, model.id]
                     : currentModels.filter(id => id !== model.id);
-                  onChange('compatibleModels', updatedModels);
+                  onChange('compatible_models', updatedModels);
                 }}
               />
               <Label htmlFor={`model-${model.id}`}>{model.name}</Label>

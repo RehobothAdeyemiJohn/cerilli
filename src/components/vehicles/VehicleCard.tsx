@@ -150,7 +150,7 @@ const VehicleCard = ({
                 Data Arrivo:
               </span>
               <span className="font-medium text-primary">
-                {estimatedArrival.formattedRange}
+                {vehicle?.estimated_arrival_days??new Date().toLocaleDateString()}
               </span>
             </div>
           )}

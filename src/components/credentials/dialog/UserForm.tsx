@@ -22,8 +22,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
       email: user?.email || '',
       password: user?.password || '',
       isActive: user?.isActive ?? true,
@@ -54,14 +54,15 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
   const onSubmit = async (values: FormValues) => {
     try {
       const userData: AdminUserFormData = {
-        firstName: values.firstName,
-        lastName: values.lastName,
+        first_name: values.first_name,
+        last_name: values.last_name,
         email: values.email,
         password: values.password,
         isActive: values.isActive,
         role: values.role,
         permissions: values.permissions,
       };
+      console.log(userData)
 
       if (user) {
         await adminUsersApi.update(user.id, userData);
