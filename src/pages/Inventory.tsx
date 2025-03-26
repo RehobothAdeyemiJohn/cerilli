@@ -65,7 +65,7 @@ const Inventory = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('Page became visible, refreshing data');
+        // console.log('Page became visible, refreshing data');
         refetch();
       }
     };

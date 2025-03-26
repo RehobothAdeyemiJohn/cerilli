@@ -202,7 +202,6 @@ export const vehiclesApi = {
       }
     });
     
-    // console.log("Supabase API: update - Richiesta update:", dbUpdates);
     
     const { data, error } = await supabase
       .from('vehicles')

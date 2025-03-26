@@ -11,7 +11,7 @@ import {
 // Models API
 const modelsApi = {
   getAll: async (): Promise<VehicleModel[]> => {
-    console.log('Fetching models from Supabase');
+    // console.log('Fetching models from Supabase');
     const { data, error } = await supabase
       .from('settings_models')
       .select('*')
@@ -30,12 +30,12 @@ const modelsApi = {
       imageUrl: item.imageurl
     }));
     
-    console.log('Fetched models:', mappedData);
+    // console.log('Fetched models:', mappedData);
     return mappedData;
   },
   
   getById: async (id: string): Promise<VehicleModel | null> => {
-    console.log('Fetching model by id from Supabase:', id);
+    // console.log('Fetching model by id from Supabase:', id);
     const { data, error } = await supabase
       .from('settings_models')
       .select('*')
@@ -59,7 +59,7 @@ const modelsApi = {
   },
   
   create: async (model: Omit<VehicleModel, 'id'>): Promise<VehicleModel> => {
-    console.log('Creating model in Supabase:', model);
+    // console.log('Creating model in Supabase:', model);
     const { data, error } = await supabase
       .from('settings_models')
       .insert([{
@@ -87,7 +87,7 @@ const modelsApi = {
   },
   
   update: async (id: string, model: VehicleModel): Promise<VehicleModel> => {
-    console.log('Updating model in Supabase:', { id, model });
+    // console.log('Updating model in Supabase:', { id, model });
     const { data, error } = await supabase
       .from('settings_models')
       .update({
@@ -129,7 +129,7 @@ const modelsApi = {
 // Trims API
 const trimsApi = {
   getAll: async (): Promise<VehicleTrim[]> => {
-    console.log('Fetching trims from Supabase');
+    // console.log('Fetching trims from Supabase');
     const { data, error } = await supabase
       .from('settings_trims')
       .select('*')
@@ -218,7 +218,7 @@ const trimsApi = {
 // Fuel Types API
 const fuelTypesApi = {
   getAll: async (): Promise<FuelType[]> => {
-    console.log('Fetching fuel types from Supabase');
+    // console.log('Fetching fuel types from Supabase');
     const { data, error } = await supabase
       .from('settings_fuel_types')
       .select('*')
@@ -435,7 +435,7 @@ const transmissionsApi = {
       compatible_models: transmission.compatible_models || []
     };
     
-    console.log('Updating transmission with data:', dbTransmission);
+    // console.log('Updating transmission with data:', dbTransmission);
     
     const { data, error } = await supabase
       .from('settings_transmissions')

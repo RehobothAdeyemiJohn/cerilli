@@ -72,9 +72,11 @@ export const useVehicleActions = () => {
       }
       
       console.log('Cleaned vehicle data for update:', cleanVehicle);
+      console.log("damilare",cleanVehicle)
       
       // Actually perform the update
       const result = await updateMutation.mutateAsync(cleanVehicle);
+      // console.log(result)
       
       console.log('Vehicle update response:', result);
       
@@ -130,6 +132,7 @@ export const useVehicleActions = () => {
 
   return {
     handleVehicleUpdate,
+    isPending:updateMutation.isPending,
     handleVehicleDelete,
     handleVehicleDuplicate,
     isDeleting,

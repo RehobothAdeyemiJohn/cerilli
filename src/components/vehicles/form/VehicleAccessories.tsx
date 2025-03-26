@@ -14,10 +14,10 @@ interface VehicleAccessoriesProps {
 const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAccessoriesProps) => {
   // Debug log
   useEffect(() => {
-    console.log("VehicleAccessories rendered with:", {
-      formAccessories: form.getValues('accessories'),
-      compatibleAccessories
-    });
+    // console.log("VehicleAccessories rendered with:", {
+    //   formAccessories: form.getValues('accessories'),
+    //   compatibleAccessories
+    // });
   }, [compatibleAccessories, form]);
 
   return (
@@ -39,7 +39,7 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                   // Check if this accessory is selected
                   const isChecked = currentAccessories.includes(accessory.name);
                   
-                  console.log(`Rendering accessory ${accessory.name}, selected: ${isChecked}`);
+                  // console.log(`Rendering accessory ${accessory.name}, selected: ${isChecked}`);
                   
                   return (
                     <div key={accessory.id} className="flex items-center space-x-3">
@@ -58,14 +58,14 @@ const VehicleAccessories = ({ control, compatibleAccessories, form }: VehicleAcc
                           
                           // Set the updated array in the form
                           form.setValue('accessories', updated, { shouldValidate: true, shouldDirty: true });
-                          console.log("Updated accessories:", updated);
+                          // console.log("Updated accessories:", updated);
                         }}
                       />
                       <div className="flex items-center">
                         <FormLabel className="font-normal cursor-pointer">
                           {accessory.name} 
                           <span className="text-sm text-gray-600 ml-1">
-                            (+€{accessory.priceWithVAT ? accessory.priceWithVAT.toLocaleString('it-IT') : '0'})
+                            (+€{accessory.price ? accessory.price : '0'})
                           </span>
                         </FormLabel>
                       </div>

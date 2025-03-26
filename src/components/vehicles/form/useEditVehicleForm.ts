@@ -37,8 +37,8 @@ export const useEditVehicleForm = (
   const [validationError, setValidationError] = useState<string | null>(null);
   const [priceComponents, setPriceComponents] = useState<any>({});
 
-  console.log("Initial vehicle data for form:", vehicle);
-  console.log("Initial accessories:", vehicle.accessories);
+  // console.log("Initial vehicle data for form:", vehicle);
+  // console.log("Initial accessories:", vehicle.accessories);
 
   // Make sure accessories is always an array
   const safeAccessories = Array.isArray(vehicle.accessories) 
@@ -124,14 +124,14 @@ export const useEditVehicleForm = (
       }
 
       if (watchModel && watchTrim && watchFuelType && watchColor && watchTransmission) {
-        console.log("Calculating price with:", {
-          model: watchModel,
-          trim: watchTrim,
-          fuelType: watchFuelType,
-          color: watchColor,
-          transmission: watchTransmission,
-          accessories: watchAccessories
-        });
+        // console.log("Calculating price with:", {
+        //   model: watchModel,
+        //   trim: watchTrim,
+        //   fuelType: watchFuelType,
+        //   color: watchColor,
+        //   transmission: watchTransmission,
+        //   accessories: watchAccessories
+        // });
         
         // Find model
         const modelObj = models.find(m => m.name === watchModel);
@@ -173,13 +173,13 @@ export const useEditVehicleForm = (
         // Find transmission
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
-        console.log("Found objects for price calculation:", {
-          modelObj,
-          trimObj,
-          fuelTypeObj,
-          colorObj,
-          transmissionObj
-        });
+        // console.log("Found objects for price calculation:", {
+        //   modelObj,
+        //   trimObj,
+        //   fuelTypeObj,
+        //   colorObj,
+        //   transmissionObj
+        // });
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
           // Calculate each component's contribution to the price
@@ -191,7 +191,7 @@ export const useEditVehicleForm = (
             transmissionAdjustment: transmissionObj.price_adjustment || 0,
           };
           
-          console.log("Price components:", components);
+          // console.log("Price components:", components);
           setPriceComponents(components);
           
           // Find accessory IDs based on names
@@ -204,7 +204,7 @@ export const useEditVehicleForm = (
               })
               .filter(id => id !== '') : [];
 
-          console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
+          // console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
 
           try {
             // Calculate total price
@@ -217,7 +217,7 @@ export const useEditVehicleForm = (
               selectedAccessoryIds
             );
             
-            console.log("Final calculated price:", price);
+            // console.log("Final calculated price:", price);
             setCalculatedPrice(price);
           } catch (error) {
             console.error("Error calculating price:", error);
@@ -233,19 +233,19 @@ export const useEditVehicleForm = (
   useEffect(() => {
     const updateCompatibleAccessories = async () => {
       if (watchModel && watchTrim && accessories.length > 0) {
-        console.log("Fetching compatible accessories for model:", watchModel, "and trim:", watchTrim);
+        // console.log("Fetching compatible accessories for model:", watchModel, "and trim:", watchTrim);
         
         try {
           const modelObj = models.find(m => m.name === watchModel);
           const trimObj = trims.find(t => t.name === watchTrim);
           
           if (modelObj && trimObj) {
-            console.log("Found model and trim objects:", modelObj, trimObj);
+            // console.log("Found model and trim objects:", modelObj, trimObj);
             const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
-            console.log("Compatible accessories:", compatibles);
+            // console.log("Compatible accessories:", compatibles);
             setCompatibleAccessories(compatibles);
           } else {
-            console.log("Model or trim not found in available options");
+            // console.log("Model or trim not found in available options");
             setCompatibleAccessories([]);
           }
         } catch (error) {
@@ -253,7 +253,7 @@ export const useEditVehicleForm = (
           setCompatibleAccessories([]);
         }
       } else {
-        console.log("Missing model or trim, can't fetch compatible accessories");
+        // console.log("Missing model or trim, can't fetch compatible accessories");
         setCompatibleAccessories([]);
       }
     };
@@ -263,7 +263,7 @@ export const useEditVehicleForm = (
 
   // Form submission handler
   const onSubmit = async (data: VehicleFormValues) => {
-    console.log("Form submitted with data:", data);
+    // console.log("Form submitted with data:", data);
     setValidationError(null);
     
     // Custom validation based on location
@@ -328,7 +328,7 @@ export const useEditVehicleForm = (
       estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
     };
     
-    console.log("Submitting updated vehicle:", updatedVehicle);
+    // console.log("Submitting updated vehicle:", updatedVehicle);
     onComplete(updatedVehicle);
   };
 

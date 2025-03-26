@@ -13,12 +13,13 @@ import EditVehicleFormActions from './form/EditVehicleFormActions';
 
 interface EditVehicleFormProps {
   vehicle: Vehicle;
+  isLoading?:Boolean|any;
   onComplete: (vehicle: Vehicle) => void;
   onCancel: () => void;
   locationOptions?: string[];
 }
 
-const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: EditVehicleFormProps) => {
+const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions,isLoading }: EditVehicleFormProps) => {
   const [locations, setLocations] = useState<string[]>(['Stock CMC', 'Stock Virtuale']);
   
   const {
@@ -86,7 +87,7 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions }: Edi
         )}
         
         {/* Form actions */}
-        <EditVehicleFormActions onCancel={onCancel} />
+        <EditVehicleFormActions isLoading={isLoading} onCancel={onCancel} />
       </form>
     </Form>
   );

@@ -26,6 +26,7 @@ export const useInventoryMutations = () => {
     },
     onSuccess: () => {
       // Force an immediate refetch of the vehicles data
+      
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.refetchQueries({ queryKey: ['vehicles'] });
     },

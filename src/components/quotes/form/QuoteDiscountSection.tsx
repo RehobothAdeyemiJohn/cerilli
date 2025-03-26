@@ -74,7 +74,7 @@ const QuoteDiscountSection: React.FC = () => {
         {/* Kit Sicurezza */}
         <FormField
           control={form.control}
-          name="kitSicurezza"
+          name="safetyKit"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Kit Sicurezza (€)</FormLabel>

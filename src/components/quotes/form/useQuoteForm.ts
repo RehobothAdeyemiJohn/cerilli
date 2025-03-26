@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Vehicle, Quote } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { dealersApi } from '@/api/supabase/dealersApi';
+import { vehiclesApi } from '@/api/supabase';
 
 export const useQuoteForm = (
   vehicle?: Vehicle, 
@@ -20,6 +21,10 @@ export const useQuoteForm = (
     queryKey: ['dealers'],
     queryFn: () => dealersApi.getAll(),
   });
+  const {data:vehic={}}=useQuery({
+    queryKey:["vehicle"],
+    queryFn:()=>vehiclesApi.getById(vehicle.id)
+  })
 
   const compatibleAccessories = vehicle?.accessories || [];
   const basePrice = vehicle?.price || 0;
@@ -139,7 +144,11 @@ export const useQuoteForm = (
     watchTradeInValue,
     handleSubmit,
     totalDiscount,
+    vehicleDetail:vehic as any,
     roadPreparationFee,
-    watchReducedVAT
+    watchReducedVAT,
+    vatAdjustedSafetyKit,
+    watchTradeInBonus,
+    vatAdjustedHandlingFee
   };
 };

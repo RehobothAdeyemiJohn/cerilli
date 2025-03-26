@@ -30,7 +30,7 @@ const QuoteForm = ({
   editQuote = null
 }: QuoteFormProps) => {
   
-  console.log(isManualQuote)
+  // 
   if (isManualQuote) {
     return (
       <ManualQuoteForm
@@ -47,10 +47,13 @@ const QuoteForm = ({
     form,
     showTradeIn,
     setShowTradeIn,
+    vatAdjustedSafetyKit,
     compatibleAccessories,
+    vehicleDetail,
     dealers,
     isAdmin,
     user,
+    watchTradeInBonus,
     basePrice,
     accessoryTotalPrice,
     finalPrice,
@@ -61,7 +64,8 @@ const QuoteForm = ({
     totalDiscount,
     roadPreparationFee,
     watchLicensePlateBonus,
-    watchReducedVAT
+    watchReducedVAT,
+    vatAdjustedHandlingFee
   } = useQuoteForm(vehicle, onSubmit, editQuote);
 
   // If no vehicle is provided, show a message
@@ -169,7 +173,7 @@ const QuoteForm = ({
                 <div>
                   <Label>Modello</Label>
                   <Input 
-                    value={vehicle.model} 
+                    value={vehicleDetail?.model} 
                     className="bg-gray-100"
                     readOnly
                   />
@@ -178,7 +182,7 @@ const QuoteForm = ({
                 <div>
                   <Label>Allestimento</Label>
                   <Input 
-                    value={vehicle.trim} 
+                    value={vehicleDetail?.trim} 
                     className="bg-gray-100"
                     readOnly
                   />
@@ -188,7 +192,7 @@ const QuoteForm = ({
                   <div>
                     <Label>Colore</Label>
                     <Input 
-                      value={vehicle.exteriorColor} 
+                      value={vehicleDetail?.exteriorColor} 
                       className="bg-gray-100"
                       readOnly
                     />
@@ -197,7 +201,7 @@ const QuoteForm = ({
                   <div>
                     <Label>Motore</Label>
                     <Input 
-                      value={vehicle.fuelType} 
+                      value={vehicleDetail?.fuelType} 
                       className="bg-gray-100"
                       readOnly
                     />
@@ -262,7 +266,6 @@ const QuoteForm = ({
             
             {/* Price Summary */}
             <div className="mt-6 bg-gray-50 p-4 rounded-md">
-              <h3 className="text-md font-semibold mb-2">Prezzo Finale</h3>
               
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -290,17 +293,30 @@ const QuoteForm = ({
                     <span>- € {watchLicensePlateBonus}</span>
                   </div>
                 )}
-                {totalDiscount > 0 && (
-                  <div className="flex justify-between text-red-600">
-                    <span>Sconto total:</span>
-                    <span>- € {totalDiscount}</span>
-                  </div>
-                )}
                 
                 {watchHasTradeIn && watchTradeInValue > 0 && (
                   <div className="flex justify-between text-red-600">
                     <span>Valore Permuta:</span>
                     <span>- € {watchTradeInValue}</span>
+                  </div>
+                )}
+                {watchTradeInBonus && watchTradeInBonus > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Premio Permuta :</span>
+                    <span>- € {watchTradeInBonus}</span>
+                  </div>
+                )}
+                {vatAdjustedSafetyKit> 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Kit Sicurezza:</span>
+                    <span>+ € {vatAdjustedSafetyKit}</span>
+                  </div>
+                )}
+
+                {vatAdjustedHandlingFee> 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Gestione Usato:</span>
+                    <span>+ € {    vatAdjustedHandlingFee }</span>
                   </div>
                 )}
                 

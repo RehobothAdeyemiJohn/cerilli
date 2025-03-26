@@ -46,7 +46,7 @@ const VehicleDetailsDialog = ({
 }: VehicleDetailsDialogProps) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const { locationOptions } = useInventory();
-  const { handleVehicleUpdate } = useVehicleActions();
+  const { handleVehicleUpdate,isPending } = useVehicleActions();
   const queryClient = useQueryClient();
   
   // Create a new state to track if we should show the reservation form
@@ -187,6 +187,7 @@ const VehicleDetailsDialog = ({
         {showEditForm ? (
           <EditVehicleForm
             vehicle={vehicle}
+            isLoading={isPending}
             onComplete={handleEditComplete}
             onCancel={handleEditCancel}
             locationOptions={locationOptions}

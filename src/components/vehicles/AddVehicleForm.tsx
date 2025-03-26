@@ -30,17 +30,17 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
   } = useVehicleForm(onComplete);
 
   // Set up location options
-  useEffect(() => {
-    if (locationOptions) {
-      setLocations(locationOptions);
-    } else {
-      const defaultLocations = ['Stock CMC', 'Stock Virtuale'];
-      const activeDealerLocations = dealers
-        .filter(dealer => dealer.isActive)
-        .map(dealer => dealer.companyName);
-      setLocations([...defaultLocations, ...activeDealerLocations]);
-    }
-  }, [locationOptions]);
+  // useEffect(() => {
+  //   if (locationOptions) {
+  //     setLocations(locationOptions);
+  //   } else {
+  //     const defaultLocations = ['Stock CMC', 'Stock Virtuale'];
+  //     const activeDealerLocations = dealers
+  //       .filter(dealer => dealer.isActive)
+  //       .map(dealer => dealer.companyName);
+  //     setLocations([...defaultLocations, ...activeDealerLocations]);
+  //   }
+  // }, [locationOptions]);
 
   return (
     <Form {...form}>
