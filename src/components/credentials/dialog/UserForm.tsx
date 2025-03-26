@@ -26,7 +26,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
       last_name: user?.last_name || '',
       email: user?.email || '',
       password: user?.password || '',
-      isActive: user?.isActive ?? true,
+      active: user?.active ?? true,
       role: user?.role || 'operator' as Role,
       permissions: user?.permissions || [] as Permission[],
     },
@@ -58,7 +58,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
         last_name: values.last_name,
         email: values.email,
         password: values.password,
-        isActive: values.isActive,
+        active: values.active,
         role: values.role,
         permissions: values.permissions,
       };

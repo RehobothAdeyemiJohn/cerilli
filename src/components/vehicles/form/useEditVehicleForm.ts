@@ -186,9 +186,9 @@ export const useEditVehicleForm = (
           const components = {
             baseModelPrice: modelObj.basePrice || 0,
             trimPrice: trimObj.basePrice || 0,
-            fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
-            colorAdjustment: colorObj.priceAdjustment || 0,
-            transmissionAdjustment: transmissionObj.priceAdjustment || 0,
+            fuelTypeAdjustment: fuelTypeObj.price_adjustment || 0,
+            colorAdjustment: colorObj.price_adjustment || 0,
+            transmissionAdjustment: transmissionObj.price_adjustment || 0,
           };
           
           console.log("Price components:", components);

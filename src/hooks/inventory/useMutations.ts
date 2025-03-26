@@ -10,7 +10,6 @@ export const useInventoryMutations = () => {
   // Update vehicle mutation
   const updateMutation = useMutation({
     mutationFn: async (vehicle: Vehicle) => {
-      console.log('Supabase mutation updating vehicle:', vehicle);
       
       // Ensure all required fields are properly formatted
       const formattedVehicle = {
@@ -22,18 +21,15 @@ export const useInventoryMutations = () => {
       // Send update to Supabase
       const updatedVehicle = await vehiclesApi.update(vehicle.id, formattedVehicle);
       
-      console.log('Vehicle updated successfully:', updatedVehicle);
       
       return updatedVehicle;
     },
     onSuccess: () => {
       // Force an immediate refetch of the vehicles data
-      console.log('Update mutation completed successfully, invalidating and refetching queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.refetchQueries({ queryKey: ['vehicles'] });
     },
     onError: (error) => {
-      console.error('Error updating vehicle:', error);
       toast({
         title: "Errore",
         description: "Si è verificato un errore durante l'aggiornamento del veicolo",
@@ -45,11 +41,9 @@ export const useInventoryMutations = () => {
   // Delete vehicle mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Delete mutation called for ID:', id);
       return await vehiclesApi.delete(id);
     },
     onSuccess: () => {
-      console.log('Delete mutation completed successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast({
@@ -58,7 +52,7 @@ export const useInventoryMutations = () => {
       });
     },
     onError: (error) => {
-      console.error('Error deleting vehicle:', error);
+      // console.error('Error deleting vehicle:', error);
       toast({
         title: "Errore",
         description: "Si è verificato un errore durante l'eliminazione del veicolo",
@@ -70,7 +64,7 @@ export const useInventoryMutations = () => {
   // Create vehicle mutation
   const createMutation = useMutation({
     mutationFn: async (vehicle: Omit<Vehicle, 'id'>) => {
-      console.log('Create mutation called with vehicle:', vehicle);
+      // console.log('Create mutation called with vehicle:', vehicle);
       
       // Ensure price is a number and accessories is an array
       const formattedVehicle = {
@@ -82,7 +76,7 @@ export const useInventoryMutations = () => {
       return await vehiclesApi.create(formattedVehicle);
     },
     onSuccess: () => {
-      console.log('Create mutation completed successfully, invalidating queries');
+      // console.log('Create mutation completed successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       toast({
         title: "Veicolo aggiunto",
@@ -90,7 +84,7 @@ export const useInventoryMutations = () => {
       });
     },
     onError: (error) => {
-      console.error('Error creating vehicle:', error);
+      // console.error('Error creating vehicle:', error);
       toast({
         title: "Errore",
         description: "Si è verificato un errore durante l'aggiunta del veicolo",
@@ -102,9 +96,9 @@ export const useInventoryMutations = () => {
   // Helper function to add a vehicle
   const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
     try {
-      console.log("Adding vehicle to Supabase:", vehicle);
+      // console.log("Adding vehicle to Supabase:", vehicle);
       const newVehicle = await createMutation.mutateAsync(vehicle);
-      console.log("Response from Supabase vehicle creation:", newVehicle);
+      // console.log("Response from Supabase vehicle creation:", newVehicle);
       return newVehicle;
     } catch (error) {
       console.error('Error adding vehicle:', error);
@@ -115,11 +109,11 @@ export const useInventoryMutations = () => {
   // Helper function to duplicate a vehicle
   const duplicateVehicle = async (vehicleId: string) => {
     try {
-      console.log("Duplicating vehicle with ID:", vehicleId);
+      // console.log("Duplicating vehicle with ID:", vehicleId);
       const duplicatedVehicle = await vehiclesApi.duplicate(vehicleId);
       
       // Force a refresh of the vehicles data
-      console.log('Vehicle duplicated successfully, invalidating queries');
+      // console.log('Vehicle duplicated successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.refetchQueries({ queryKey: ['vehicles'] });
       

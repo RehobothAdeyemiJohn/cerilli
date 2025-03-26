@@ -1,5 +1,6 @@
 import { Dealer, Order } from '@/types';
 import { supabase } from './client';
+import {v4} from 'uuid'
 
 // Helper function to map database dealer to frontend type
 const mapDealerDbToFrontend = (dealer: any) => {
@@ -66,7 +67,7 @@ const mapOrderToFrontend = (order: any): Order => {
 
 export const dealersApi = {
   getAll: async (): Promise<Dealer[]> => {
-    console.log("Fetching all dealers from Supabase");
+    // console.log("Fetching all dealers from Supabase");
     
     try {
       const { data, error } = await supabase
@@ -247,6 +248,7 @@ export const dealersApi = {
     
     // Map frontend field names to database column names
     const newDealer = {
+      id:v4(),
       companyname: dealer.companyName,
       address: dealer.address,
       city: dealer.city,

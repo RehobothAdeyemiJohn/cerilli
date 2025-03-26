@@ -29,7 +29,7 @@ const UserRoleSection: React.FC<UserRoleSectionProps> = ({ control, onRoleChange
     <div className="grid grid-cols-2 gap-4">
       <FormField
         control={control}
-        name="isActive"
+        name="active"
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
@@ -57,8 +57,9 @@ const UserRoleSection: React.FC<UserRoleSectionProps> = ({ control, onRoleChange
             <Select 
               value={field.value} 
               onValueChange={(value: Role) => {
-                field.onChange(value);
-                onRoleChange(value);
+                // console.log(value)
+                // field.onChange(value);
+                // onRoleChange(value);
               }}
             >
               <FormControl>

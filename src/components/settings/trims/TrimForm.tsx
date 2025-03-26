@@ -49,13 +49,13 @@ const TrimForm: React.FC<TrimFormProps> = ({ trim, onChange }) => {
             <div key={model.id} className="flex items-center space-x-2">
               <Checkbox 
                 id={`model-${model.id}`}
-                checked={(trim.compatibleModels || []).includes(model.id)}
+                checked={(trim.compatible_models || []).includes(model.id)}
                 onCheckedChange={(checked) => {
-                  const currentModels = trim.compatibleModels || [];
+                  const currentModels = trim.compatible_models || [];
                   const updatedModels = checked
                     ? [...currentModels, model.id]
                     : currentModels.filter(id => id !== model.id);
-                  onChange('compatibleModels', updatedModels);
+                  onChange('compatible_models', updatedModels);
                 }}
               />
               <Label htmlFor={`model-${model.id}`}>{model.name}</Label>

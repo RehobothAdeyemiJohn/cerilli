@@ -148,7 +148,7 @@ const trimsApi = {
       compatible_models: item.compatible_models || []
     }));
     
-    console.log('Fetched trims:', mappedData);
+    // console.log('Fetched trims:', mappedData);
     return mappedData;
   },
   
@@ -237,7 +237,7 @@ const fuelTypesApi = {
       compatible_models: item.compatible_models || []
     }));
     
-    console.log('Fetched fuel types:', mappedData);
+    // console.log('Fetched fuel types:', mappedData);
     return mappedData;
   },
   
@@ -481,7 +481,7 @@ const accessoriesApi = {
       console.error('Error fetching accessories:', error);
       return [];
     }
-    console.log(data)
+    // console.log(data)
     return data as Accessory[];
   },
   

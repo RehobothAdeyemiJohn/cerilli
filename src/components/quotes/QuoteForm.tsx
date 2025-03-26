@@ -30,7 +30,7 @@ const QuoteForm = ({
   editQuote = null
 }: QuoteFormProps) => {
   
-  // If it's a manual quote, use the ManualQuoteForm component
+  console.log(isManualQuote)
   if (isManualQuote) {
     return (
       <ManualQuoteForm
@@ -41,7 +41,7 @@ const QuoteForm = ({
       />
     );
   }
-  console.log(vehicle)
+  // console.log(vehicle.id)
   // For vehicle-based quotes, use the existing form with proper checks
   const {
     form,
