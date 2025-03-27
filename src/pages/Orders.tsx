@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from '@/hooks/use-toast';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
-import { ordersApi, vehiclesApi } from '@/api/apiClient';
+import { ordersApi } from '@/api/apiClient';
+import {  vehiclesApi } from '@/api/supabase/vehiclesApi';
 import {
   Select,
   SelectContent,
@@ -75,10 +76,11 @@ const Orders = () => {
   const [hasConformity, setHasConformity] = useState<boolean | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
+  
   // Table state
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-
+  
   // Dialog states
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -88,7 +90,7 @@ const Orders = () => {
   // PDF preview states
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-
+  
   // Copy to clipboard state
   const [copied, setCopied] = useCopyToClipboard();
 
@@ -112,6 +114,7 @@ const Orders = () => {
     dealerId,
     model: selectedModel
   });
+  const filterOder=searchText===''?allOrders:allOrders.filter((order)=>order.customerName.includes(searchText))
 
   // Get order actions
   const {
@@ -127,6 +130,7 @@ const Orders = () => {
     const fetchModels = async () => {
       try {
         const vehicles = await vehiclesApi.getAll();
+        console.log(vehicles)
         const uniqueModels = [...new Set(vehicles.map(vehicle => vehicle.model))];
         setModels(uniqueModels);
       } catch (error) {
@@ -504,12 +508,12 @@ const Orders = () => {
               <TableRow>
                 <TableCell colSpan={13} className="text-center">Caricamento...</TableCell>
               </TableRow>
-            ) : allOrders.length === 0 ? (
+            ) : filterOder.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={13} className="text-center">Nessun ordine trovato.</TableCell>
               </TableRow>
             ) : (
-              allOrders.map((order) => (
+              filterOder.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="w-12">
                     <input
@@ -519,9 +523,7 @@ const Orders = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {order.progressiveNumber ? 
-                      `#${order.progressiveNumber.toString().padStart(3, '0')}` : 
-                      getOrderNumber(order)
+                    {order.progressiveNumber 
                     }
                   </TableCell>
                   <TableCell>{order.customerName}</TableCell>

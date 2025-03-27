@@ -20,8 +20,8 @@ const getById = async (id: string): Promise<Accessory> => {
 const getCompatible = async (modelId: string, trimId: string): Promise<Accessory[]> => {
   const accessories = await getAll();
   return accessories.filter(accessory => {
-    const isModelCompatible = accessory.compatibleModels.includes(modelId);
-    const isTrimCompatible = !accessory.compatibleTrims.length || accessory.compatibleTrims.includes(trimId);
+    const isModelCompatible = accessory.compatible_models.includes(modelId);
+    const isTrimCompatible = !accessory.compatible_trims.length || accessory.compatible_trims.includes(trimId);
     return isModelCompatible && isTrimCompatible;
   });
 };

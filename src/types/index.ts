@@ -24,6 +24,7 @@ export type Vehicle = {
   reservationTimestamp?: string;
   estimatedArrivalDays?: number;
   estimated_arrival_days?:any,
+  created_at?:any,
   virtualConfig?: {
     trim: string;
     fuelType: string;

@@ -40,6 +40,7 @@ export const vehiclesApi = {
       estimatedArrivalDays: vehicle.estimated_arrival_days,
       reservationTimestamp: vehicle.reservation_timestamp,
       reservationDestination: vehicle.reservation_destination,
+      created_at:vehicle.created_at
     }));
 
     // console.log("Supabase API: getAll - Dati recuperati:", formattedVehicles);

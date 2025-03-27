@@ -6,8 +6,23 @@ import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock, 
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
+function getDateRange(createdAt:any) {
+  const createdDate = new Date(createdAt);
+  
+  // Add 30 days
+  const minDate = new Date(createdDate);
+  minDate.setDate(minDate.getDate() + 30);
+
+  // Add 45 days
+  const maxDate = new Date(createdDate);
+  maxDate.setDate(maxDate.getDate() + 45);
+
+  return [minDate, maxDate ];
+}
+
+
 interface VehicleCardProps {
-  vehicle: Vehicle;
+  vehicle: Vehicle|any;
   onClick: (vehicle: Vehicle) => void;
   onEdit: (vehicle: Vehicle) => void;
   onDelete: (vehicle: Vehicle) => void;
@@ -150,7 +165,8 @@ const VehicleCard = ({
                 Data Arrivo:
               </span>
               <span className="font-medium text-primary">
-                {vehicle?.estimated_arrival_days??new Date().toLocaleDateString()}
+                {/* {vehicle?.created_at} */}
+                {getDateRange(vehicle?.created_at)[0].toDateString()}
               </span>
             </div>
           )}
