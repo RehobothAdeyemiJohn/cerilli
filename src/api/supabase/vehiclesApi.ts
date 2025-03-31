@@ -127,6 +127,7 @@ export const vehiclesApi = {
       updated_at: new Date().toISOString()
     };
     
+    
     // console.log("Supabase API: create - Richiesta insert:", newVehicle);
     
     const { data, error } = await supabase

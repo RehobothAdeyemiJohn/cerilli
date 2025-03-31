@@ -73,6 +73,7 @@ export const useInventoryMutations = () => {
         accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],
         price: typeof vehicle.price === 'number' ? vehicle.price : parseFloat(String(vehicle.price)) || 0
       };
+      console.log(formattedVehicle)
       
       return await vehiclesApi.create(formattedVehicle);
     },
@@ -98,10 +99,14 @@ export const useInventoryMutations = () => {
   const addVehicle = async (vehicle: Omit<Vehicle, 'id'>) => {
     try {
       // console.log("Adding vehicle to Supabase:", vehicle);
+      
+      console.log("creating new vehicle")
       const newVehicle = await createMutation.mutateAsync(vehicle);
+      console.log("new vehicle created")
       // console.log("Response from Supabase vehicle creation:", newVehicle);
       return newVehicle;
     } catch (error) {
+      console.log(error.message)
       console.error('Error adding vehicle:', error);
       throw error;
     }

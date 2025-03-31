@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { vehicles } from '@/data/mockData';
 
 const Inventory = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -262,7 +263,9 @@ const Inventory = () => {
           <div className="px-6  max-w-2xl mx-auto h-screen py-10 overflow-y-auto" id='scrollbar-hide'>
             <h2 className="text-xl font-bold mb-4">Aggiungi Nuovo Veicolo</h2>
             <AddVehicleForm 
-              onComplete={handleVehicleAdd}
+              onComplete={(vehicle)=>{
+               handleVehicleAdd(vehicle)
+              }}
               locationOptions={locationOptions} 
             />
           </div>

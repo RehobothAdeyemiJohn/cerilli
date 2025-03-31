@@ -1,6 +1,6 @@
 import { Order } from '@/types';
 import { supabase } from './client';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 // Helper function to map database dealer to frontend type
 const mapDealerDbToFrontend = (dealer: any) => {
@@ -352,16 +352,48 @@ export const ordersApi = {
 
         // Create a new PDF
         const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage([600, 400]);
+        const page = pdfDoc.addPage([600, 600]);
         const { width, height } = page.getSize();
-
-        page.drawText(`Proforma Invoice for Order: ${orderId}`, {
-            x: 50,
-            y: height - 50,
-            size: 16,
-        });
-
-        // Serialize to Uint8Array
+        const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const textFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        
+        let y = height - 50;
+        
+        page.drawText(`Proforma Invoice`, { x: 50, y, size: 20, font, color: rgb(0, 0, 0) });
+        y -= 30;
+        
+        const drawLabel = (label, value) => {
+            page.drawText(`${label}:`, { x: 50, y, size: 14, font, color: rgb(0, 0, 0) });
+            page.drawText(`${value !== null ? value : 'N/A'}`, { x: 200, y, size: 14, font: textFont, color: rgb(0, 0, 0) });
+            y -= 20;
+        };
+        
+        drawLabel('Order ID', order.id);
+        drawLabel('Customer Name', order.customername);
+        drawLabel('Dealer Name', order.dealer_name);
+        drawLabel('Model Name', order.model_name);
+        drawLabel('Chassis', order.chassis);
+        drawLabel('Price', `${order.price}`);
+        drawLabel('Status', order.status);
+        drawLabel('Progressive Number', order.progressive_number);
+        drawLabel('Vehicle ID', order.vehicle_id);
+        drawLabel('Dealer ID', order.dealer_id);
+        drawLabel('Created At', order.created_at);
+        drawLabel('Updated At', order.updated_at);
+        drawLabel('Invoice Number', order.invoice_number);
+        drawLabel('Invoice Date', order.invoice_date);
+        drawLabel('Delivery Date', order.delivery_date);
+        drawLabel('Payment Date', order.payment_date);
+        drawLabel('Funding Type', order.funding_type);
+        drawLabel('Has Conformity', order.has_conformity);
+        drawLabel('Has Proforma', order.has_proforma);
+        drawLabel('Is Invoiced', order.is_invoiced);
+        drawLabel('Is Licensable', order.is_licensable);
+        drawLabel('Is Paid', order.is_paid);
+        drawLabel('Plafond Dealer', `${order.plafond_dealer}`);
+        drawLabel('Restoration Costs', `${order.restoration_costs}`);
+        drawLabel('Transport Costs', `${order.transport_costs}`);
+        
         const pdfBytes = await pdfDoc.save();
 
         // Update order status

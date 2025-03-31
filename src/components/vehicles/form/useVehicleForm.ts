@@ -5,9 +5,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Vehicle, Accessory } from '@/types';
-import { 
-  modelsApi, trimsApi, fuelTypesApi, colorsApi, 
-  transmissionsApi, accessoriesApi, calculateVehiclePrice 
+import {
+  modelsApi, trimsApi, fuelTypesApi, colorsApi,
+  transmissionsApi, accessoriesApi, calculateVehiclePrice
 } from '@/api/supabase/settingsApi';
 
 // Schema for vehicle form
@@ -26,7 +26,7 @@ const vehicleSchema = z.object({
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
-export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void) => {
+export const useVehicleForm = (onComplete:any) => {
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [isVirtualStock, setIsVirtualStock] = useState<boolean>(false);
@@ -106,20 +106,20 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         return;
       }
 
-      if (watchModel && watchTrim && watchFuelType && watchColor && watchTransmission) {
-        console.log("Calculating price with:", {
-          model: watchModel,
-          trim: watchTrim,
-          fuelType: watchFuelType,
-          color: watchColor,
-          transmission: watchTransmission,
-          accessories: watchAccessories
-        });
+      if (watchModel || watchTrim || watchFuelType || watchColor || watchTransmission) {
+        // console.log("Calculating price with:", {
+        //   model: watchModel,
+        //   trim: watchTrim,
+        //   fuelType: watchFuelType,
+        //   color: watchColor,
+        //   transmission: watchTransmission,
+        //   accessories: watchAccessories
+        // });
 
         const modelObj = models.find(m => m.name === watchModel);
         const trimObj = trims.find(t => t.name === watchTrim);
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        
+
         // Handle different color formats
         let colorObj;
         if (watchColor) {
@@ -134,7 +134,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
             colorObj = colors.find(c => c.name === watchColor);
           }
         }
-        
+
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
         console.log("Found objects:", {
@@ -145,21 +145,21 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
           transmissionObj
         });
 
-        if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
+        if (modelObj || trimObj || fuelTypeObj || colorObj || transmissionObj) {
           // Store price components for debugging
           const components = {
-            baseModelPrice: modelObj.basePrice || 0,
-            trimPrice: trimObj.basePrice || 0,
-            fuelTypeAdjustment: fuelTypeObj.priceAdjustment || 0,
-            colorAdjustment: colorObj.priceAdjustment || 0,
-            transmissionAdjustment: transmissionObj.priceAdjustment || 0,
+            baseModelPrice: modelObj?.basePrice || 0,
+            trimPrice: trimObj?.basePrice || 0,
+            fuelTypeAdjustment: fuelTypeObj?.price_adjustment || 0,
+            colorAdjustment: colorObj?.price_adjustment || 0,
+            transmissionAdjustment: transmissionObj?.price_adjustment || 0,
           };
-          
+
           console.log("Price components:", components);
           setPriceComponents(components);
 
           // Get accessory IDs for price calculation
-          const selectedAccessoryIds = Array.isArray(watchAccessories) ? 
+          const selectedAccessoryIds = Array.isArray(watchAccessories) ?
             watchAccessories
               .filter(name => name)
               .map(name => {
@@ -170,14 +170,14 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
 
           try {
             const price = await calculateVehiclePrice(
-              modelObj.id,
-              trimObj.id,
-              fuelTypeObj.id,
-              colorObj.id,
-              transmissionObj.id,
+              modelObj?.id,
+              trimObj?.id,
+              fuelTypeObj?.id,
+              colorObj?.id,
+              transmissionObj?.id,
               selectedAccessoryIds
             );
-            
+
             console.log("Final calculated price:", price);
             setCalculatedPrice(price);
           } catch (error) {
@@ -197,7 +197,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         try {
           const modelObj = models.find(m => m.name === watchModel);
           const trimObj = trims.find(t => t.name === watchTrim);
-          
+
           if (modelObj && trimObj) {
             console.log("Fetching compatible accessories for:", modelObj.id, trimObj.id);
             const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
@@ -223,7 +223,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
   const onSubmit = async (data: VehicleFormValues) => {
     try {
       setValidationError(null);
-      
+
       // Custom validation based on location
       if (isVirtualStock) {
         // For Stock Virtuale, only model and originalStock are required
@@ -231,12 +231,12 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
           setValidationError("Il modello è obbligatorio.");
           return;
         }
-        
+
         if (!data.originalStock) {
           setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
           return;
         }
-        
+
         // Validate originalStock value
         if (data.originalStock !== 'Cina' && data.originalStock !== 'Germania') {
           setValidationError("Lo stock origine deve essere 'Cina' o 'Germania'");
@@ -244,19 +244,19 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         }
       } else {
         // For other locations, all main fields are required
-        if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
-            !data.location || !data.transmission || !data.status || !data.telaio) {
+        if (!data.model || !data.fuelType || !data.exteriorColor ||
+          !data.location || !data.transmission || !data.status || !data.telaio) {
           setValidationError("Tutti i campi sono obbligatori per veicoli non in Stock Virtuale");
           return;
         }
       }
-      
+
       // Calculate estimated arrival days for virtual stock
       let estimatedArrivalDays: number | undefined = undefined;
       if (isVirtualStock && data.originalStock) {
         // Ensure originalStock is of the correct type
         const stockOrigin = data.originalStock as 'Cina' | 'Germania';
-        
+
         if (stockOrigin === 'Germania') {
           // Germany stock: 38-52 days
           estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
@@ -266,7 +266,7 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         }
         console.log("Estimated arrival days:", estimatedArrivalDays);
       }
-      
+
       // Prepare vehicle data for creation
       const newVehicleData: Omit<Vehicle, 'id'> = {
         model: data.model,
@@ -284,11 +284,13 @@ export const useVehicleForm = (onComplete: (newVehicle: Vehicle | null) => void)
         originalStock: isVirtualStock ? (data.originalStock as 'Cina' | 'Germania') : undefined,
         estimatedArrivalDays: estimatedArrivalDays
       };
-      
+
       console.log("Prepared vehicle data for Supabase:", newVehicleData);
-      
+
+
       // Pass the vehicle to the callback
-      onComplete(newVehicleData as Vehicle);
+      if (!newVehicleData.trim) delete newVehicleData.trim;
+      onComplete(newVehicleData as any);
     } catch (error) {
       console.error('Error during vehicle save:', error);
       setValidationError("Si è verificato un errore durante il salvataggio del veicolo.");
