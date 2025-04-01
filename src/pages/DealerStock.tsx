@@ -73,7 +73,7 @@ const DealerStock = () => {
     });
     
     // Navigate to quotes page with the selected vehicle
-    navigate('/quotes', { 
+    navigate('/quotes/?vehicleId='+ vehicle.id , { 
       state: { 
         fromInventory: true,
         vehicleId: vehicle.id 

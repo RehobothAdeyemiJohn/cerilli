@@ -224,7 +224,7 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
                 <Calendar className="h-4 w-4 text-gray-500 mt-0.5" />
                 <div>
                   <div className="text-sm font-medium">Data Arrivo Prevista</div>
-                  <div className="text-sm text-gray-600">{estimatedArrival.formattedRange}</div>
+                  <div className="text-sm text-gray-600">  {getDateRange(vehicle?.created_at)[0].toDateString()}</div>
                 </div>
               </div>
             )}
@@ -279,3 +279,18 @@ const VehicleDialogContent: React.FC<VehicleDialogContentProps> = ({
 };
 
 export default VehicleDialogContent;
+
+
+function getDateRange(createdAt:any) {
+  const createdDate = new Date(createdAt);
+  
+  // Add 30 days
+  const minDate = new Date(createdDate);
+  minDate.setDate(minDate.getDate() + 30);
+
+  // Add 45 days
+  const maxDate = new Date(createdDate);
+  maxDate.setDate(maxDate.getDate() + 45);
+
+  return [minDate, maxDate ];
+}
