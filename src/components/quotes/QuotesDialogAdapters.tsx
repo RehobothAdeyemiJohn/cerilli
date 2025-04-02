@@ -22,6 +22,7 @@ export const QuoteDetailsDialogAdapter: React.FC<QuoteDetailsDialogAdapterProps>
   onUpdateStatus,
   onConvertToContract
 }) => {
+  console.log("hello")
   return (
     <QuoteDetailsDialog
       open={open}

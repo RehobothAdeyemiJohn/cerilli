@@ -11,6 +11,7 @@ import { useVehicleDetailsDialog } from './useVehicleDetailsDialog';
 interface VehicleDetailsContentProps {
   vehicle: Vehicle;
   onEdit?: () => void;
+  handleEditComplete:(vehicle:Vehicle)=>void;
   onDelete?: () => void;
   isDealerStock?: boolean;
   isVirtualStock?: boolean;
@@ -26,6 +27,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   onDelete,
   isDealerStock,
   isVirtualStock,
+  handleEditComplete,
   onCreateQuote,
   onReserve,
   onTransformToOrder,
@@ -45,7 +47,7 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
   const [showVirtualReserveForm, setShowVirtualReserveForm] = useState(false);
   const [showCancelReservationForm, setShowCancelReservationForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Auto-open reservation form if shouldReserve is true
   useEffect(() => {
     if (shouldReserve && vehicle && vehicle.status === 'available') {
@@ -85,7 +87,12 @@ const VehicleDetailsContent: React.FC<VehicleDetailsContentProps> = ({
     setShowCancelReservationForm(false);
   };
   
-  const handleShowCancelReservationForm = () => setShowCancelReservationForm(true);
+  const handleShowCancelReservationForm = () => {
+    const newVehicle={...vehicle,status:"available"}
+    handleEditComplete(newVehicle as Vehicle)
+    console.log("completed")
+
+  }
   const handleCancelReservationSubmit = async () => {
     setIsSubmitting(true);
     // Implementation would go here

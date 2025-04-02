@@ -206,7 +206,7 @@ const Quotes = () => {
         )}
       </div>
 
-      <QuoteDetailsDialogAdapter
+      {open&&selectedQuote&&<QuoteDetailsDialogAdapter
         open={isViewDialogOpen}
         onOpenChange={
           (e) => {
@@ -219,7 +219,7 @@ const Quotes = () => {
         quote={selectedQuote || {} as Quote}
         onUpdateStatus={handleUpdateStatus}
         onConvertToContract={handlePrepareContract}
-      />
+      />}
 
       <QuoteRejectDialogAdapter
         open={isRejectDialogOpen}

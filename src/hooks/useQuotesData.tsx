@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { quotesApi, dealerContractsApi } from '@/api/supabase';
+import { quotesApi, dealerContractsApi,vehiclesApi } from '@/api/supabase';
 import { DealerContract, Quote } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -25,6 +25,9 @@ export const useQuotesData = () => {
     queryFn: () => quotesApi.getAll(),
   });
   
+
+  const getVehicleById=(id)=>vehiclesApi.getById(id)
+
   const { mutate: deleteQuote } = useMutation({
     mutationFn: async (id: string) => {
       setIsDeleting(true);
@@ -137,6 +140,7 @@ export const useQuotesData = () => {
     handleDeleteQuoteConfirm,
     isContractDialogOpen,
     setIsContractDialogOpen,
+    getVehicleById,
     selectedQuote,
     setSelectedQuote,
     handleOpenContractDialog,

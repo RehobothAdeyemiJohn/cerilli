@@ -1,5 +1,7 @@
 import { Order } from '@/types';
 import { supabase } from './client';
+import { vehiclesApi } from './vehiclesApi';
+import { dealersApi } from './dealersApi';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 // Helper function to map database dealer to frontend type
@@ -130,7 +132,7 @@ const mapOrderFrontendToDb = (order: Partial<Order>) => {
 
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    console.log("Fetching all orders from Supabase");
+    // console.log("Fetching all orders from Supabase");
     
     try {
       // IMPORTANT FIX: Use correct join names and column names
@@ -152,8 +154,8 @@ export const ordersApi = {
         return [];
       }
       
-      console.log(`Retrieved ${data.length} orders from database`);
-      console.log("Sample raw order:", data[0]);
+      // console.log(`Retrieved ${data.length} orders from database`);
+      // console.log("Sample raw order:", data[0]);
       
       // Map each database record to our frontend Order type
       const orders = data.map(order => mapOrderDbToFrontend(order));
@@ -349,6 +351,14 @@ export const ordersApi = {
             .single();
         
         if (error) throw new Error(`Failed to fetch order: ${error.message}`);
+        console.log(order.vehicle_id)
+        const vehicle=await vehiclesApi.getById(order.vehicle_id)
+        const dealer =await dealersApi.getById(order.dealer_id)
+        console.log(JSON.stringify(order))
+        console.log(JSON.stringify(vehicle))
+        console.log(JSON.stringify(dealer))
+
+
 
         // Create a new PDF
         const pdfDoc = await PDFDocument.create();

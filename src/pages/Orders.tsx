@@ -35,7 +35,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { ordersApi } from '@/api/apiClient';
-import {  vehiclesApi } from '@/api/supabase/vehiclesApi';
+import { vehiclesApi } from '@/api/supabase/vehiclesApi';
 import {
   Select,
   SelectContent,
@@ -59,6 +59,16 @@ import { useOrdersData } from '@/hooks/orders/useOrdersData';
 import { useOrdersActions } from '@/hooks/orders/useOrdersActions';
 import { Check } from 'lucide-react';
 
+function isDateInRange(date, from, to) {
+  const targetDate = new Date(date);
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+
+  return targetDate >= fromDate && targetDate <= toDate;
+}
+
+
+
 const Orders = () => {
   const { user, isAdmin } = useAuth();
   const dealerId = user?.dealerId;
@@ -76,11 +86,11 @@ const Orders = () => {
   const [hasConformity, setHasConformity] = useState<boolean | null>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
-  
+
   // Table state
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  
+
   // Dialog states
   const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -90,7 +100,7 @@ const Orders = () => {
   // PDF preview states
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-  
+
   // Copy to clipboard state
   const [copied, setCopied] = useCopyToClipboard();
 
@@ -114,7 +124,24 @@ const Orders = () => {
     dealerId,
     model: selectedModel
   });
-  const filterOder=searchText===''?allOrders:allOrders.filter((order)=>order.customerName.includes(searchText))
+  const filterOder = () => {
+    let data = allOrders;
+    console.log(data)
+    if (searchText !== '') {
+      data = data.filter((order) => order.customerName.includes(searchText))
+    }
+    if (selectedModels.length > 0) {
+      data = data.filter((order) => selectedModels.includes(order.modelName))
+    }
+    if (!!dateRange && "from" in dateRange && 'to' in dateRange) {
+      data = data.filter((order) => isDateInRange(order.deliveryDate, dateRange.from, dateRange.to))
+    }
+    if (selectedDealers.length > 1) {
+      data = data.filter((order) => selectedDealers.includes(order.dealerId))
+    }
+    return data
+  }
+
 
   // Get order actions
   const {
@@ -130,7 +157,7 @@ const Orders = () => {
     const fetchModels = async () => {
       try {
         const vehicles = await vehiclesApi.getAll();
-        console.log(vehicles)
+        // console.log(vehicles)
         const uniqueModels = [...new Set(vehicles.map(vehicle => vehicle.model))];
         setModels(uniqueModels);
       } catch (error) {
@@ -148,8 +175,8 @@ const Orders = () => {
       try {
         const { data, error } = await ordersApi.getDealers();
         if (!error && data) {
-          console.log("dealers")
-          console.log(data)
+          // console.log("dealers")
+          // console.log(data)
           setDealers(data);
         }
       } catch (error) {
@@ -239,7 +266,7 @@ const Orders = () => {
             Copia ID Ordini
           </Button>
           {copied ? <Badge variant="secondary">Copiato!</Badge> : null}
-          
+
           <Button variant="default" size="sm" onClick={refreshAllOrderData}>
             Aggiorna
           </Button>
@@ -284,7 +311,9 @@ const Orders = () => {
               mode="range"
               defaultMonth={dateRange?.from}
               selected={dateRange}
-              onSelect={setDateRange}
+              onSelect={(e) => {
+                setDateRange(e)
+              }}
               numberOfMonths={2}
             />
           </PopoverContent>
@@ -355,7 +384,7 @@ const Orders = () => {
                         className={`mr-2 h-4 w-4 ${selectedDealers.includes(dealer.id) ? "opacity-100" : "opacity-0"
                           }`}
                       />
-                      {dealer.companyName}
+                      {dealer.companyname}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -392,8 +421,8 @@ const Orders = () => {
                         className={`mr-2 h-4 w-4 ${selectedStatus.includes(status) ? "opacity-100" : "opacity-0"
                           }`}
                       />
-                      {status === 'processing' ? 'In Lavorazione' : 
-                       status === 'delivered' ? 'Consegnato' : 'Annullato'}
+                      {status === 'processing' ? 'In Lavorazione' :
+                        status === 'delivered' ? 'Consegnato' : 'Annullato'}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -405,7 +434,7 @@ const Orders = () => {
 
       {/* Boolean Filters */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-        <Select 
+        <Select
           onValueChange={(value) => setIsLicensable(value === "true" ? true : value === "false" ? false : null)}
           defaultValue="null"
         >
@@ -419,7 +448,7 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select 
+        <Select
           onValueChange={(value) => setHasProforma(value === "true" ? true : value === "false" ? false : null)}
           defaultValue="null"
         >
@@ -433,7 +462,7 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select 
+        <Select
           onValueChange={(value) => setIsPaid(value === "true" ? true : value === "false" ? false : null)}
           defaultValue="null"
         >
@@ -447,7 +476,7 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select 
+        <Select
           onValueChange={(value) => setIsInvoiced(value === "true" ? true : value === "false" ? false : null)}
           defaultValue="null"
         >
@@ -461,7 +490,7 @@ const Orders = () => {
           </SelectContent>
         </Select>
 
-        <Select 
+        <Select
           onValueChange={(value) => setHasConformity(value === "true" ? true : value === "false" ? false : null)}
           defaultValue="null"
         >
@@ -508,12 +537,12 @@ const Orders = () => {
               <TableRow>
                 <TableCell colSpan={13} className="text-center">Caricamento...</TableCell>
               </TableRow>
-            ) : filterOder.length === 0 ? (
+            ) : filterOder().length === 0 ? (
               <TableRow>
                 <TableCell colSpan={13} className="text-center">Nessun ordine trovato.</TableCell>
               </TableRow>
             ) : (
-              filterOder.map((order) => (
+              filterOder().map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="w-12">
                     <input
@@ -523,36 +552,36 @@ const Orders = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {order.progressiveNumber 
+                    {order.progressiveNumber
                     }
                   </TableCell>
                   <TableCell>{order.customerName}</TableCell>
                   <TableCell>
-                    {order.plafondDealer !== undefined ? 
+                    {order.plafondDealer !== undefined ?
                       <span className={
                         order.plafondDealer > 80000 ? "text-green-600 font-medium" :
-                        order.plafondDealer < 20000 ? "text-red-600 font-medium" :
-                        order.plafondDealer < 50000 ? "text-orange-500 font-medium" :
-                        "text-gray-800"
+                          order.plafondDealer < 20000 ? "text-red-600 font-medium" :
+                            order.plafondDealer < 50000 ? "text-orange-500 font-medium" :
+                              "text-gray-800"
                       }>
                         {formatCurrency(order.plafondDealer)}
-                      </span> : 
+                      </span> :
                       "-"
                     }
                   </TableCell>
                   <TableCell>{order.modelName || (order.vehicle ? `${order.vehicle.model} ${order.vehicle.trim || ''}` : 'Non disponibile')}</TableCell>
                   <TableCell>{order.orderDate ? formatDate(new Date(order.orderDate)) : '-'}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={
                         order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
+                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
                       }
                     >
                       {order.status === 'processing' ? 'In Lavorazione' :
-                       order.status === 'delivered' ? 'Consegnato' : 'Cancellato'}
+                        order.status === 'delivered' ? 'Consegnato' : 'Cancellato'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
@@ -581,9 +610,9 @@ const Orders = () => {
                         APRI ORDINE
                       </Button>
                       {order.status === 'processing' && order.odlGenerated && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleMarkAsDelivered(order.id)}
                           className="bg-green-100 hover:bg-green-200 text-green-800"
                         >
@@ -592,8 +621,8 @@ const Orders = () => {
                         </Button>
                       )}
                       {isAdmin && (
-                        <Button 
-                          variant="destructive" 
+                        <Button
+                          variant="destructive"
                           size="sm"
                           onClick={() => handleOpenDeleteDialog(order.id)}
                         >

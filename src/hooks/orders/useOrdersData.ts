@@ -29,21 +29,21 @@ export const useOrdersData = (filters: {
     queryKey: ['orders'],
     queryFn: async () => {
       try {
-        console.log("Fetching orders data...");
+        // console.log("Fetching orders data...");
         const orders = await ordersApi.getAll();
-        console.log(`Orders data fetched successfully: ${orders.length} orders`);
+        // console.log(`Orders data fetched successfully: ${orders.length} orders`);
         
         // Log detailed information about orders
         if (orders.length > 0) {
-          console.log("First order details:", orders[0]);
-          console.log("Boolean flags for first order:", {
-            isLicensable: orders[0].isLicensable,
-            hasProforma: orders[0].hasProforma,
-            isPaid: orders[0].isPaid,
-            isInvoiced: orders[0].isInvoiced,
-            hasConformity: orders[0].hasConformity,
-            odlGenerated: orders[0].odlGenerated
-          });
+          // console.log("First order details:", orders[0]);
+          // console.log("Boolean flags for first order:", {
+          //   isLicensable: orders[0].isLicensable,
+          //   hasProforma: orders[0].hasProforma,
+          //   isPaid: orders[0].isPaid,
+          //   isInvoiced: orders[0].isInvoiced,
+          //   hasConformity: orders[0].hasConformity,
+          //   odlGenerated: orders[0].odlGenerated
+          // });
         } else {
           console.log("No orders found in the database");
         }
@@ -94,11 +94,11 @@ export const useOrdersData = (filters: {
   const filterOrders = (orders: Order[], status?: string) => {
     let filtered = [...orders]; // Create a copy to avoid mutating the original
     
-    console.log(`Filtering ${filtered.length} orders with status: ${status || 'all'}`);
+    // console.log(`Filtering ${filtered.length} orders with status: ${status || 'all'}`);
     
     if (status && status !== 'all') {
       filtered = filtered.filter(o => o.status === status);
-      console.log(`After status filter: ${filtered.length} orders`);
+      // console.log(`After status filter: ${filtered.length} orders`);
     }
     
     // Apply detailed filters

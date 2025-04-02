@@ -198,6 +198,7 @@ const VehicleDetailsDialog = ({
             onEdit={showActions ? handleEdit : undefined}
             onDelete={showActions ? handleDelete : undefined}
             isDealerStock={isDealerStock}
+            handleEditComplete={handleEditComplete}
             isVirtualStock={isVirtualStock}
             onCreateQuote={onCreateQuote}
             onReserve={onReserve}

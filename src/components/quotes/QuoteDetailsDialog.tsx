@@ -33,17 +33,15 @@ const QuoteDetailsDialog = ({
   onConvert,
   onEdit
 }: QuoteDetailsDialogProps) => {
-  if (!quote || !vehicle) return null;
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <QuoteDetailsHeader quote={quote} />
         
-        <QuotePrintSection quote={quote} vehicle={vehicle} />
+        {/* <QuotePrintSection quote={quote} vehicle={vehicle} /> */}
 
         <div className="mt-2 space-y-3 text-sm">
-          <QuoteVehicleInfo quote={quote} vehicle={vehicle} />
+          {/* <QuoteVehicleInfo quote={quote} vehicle={vehicle} /> */}
           <QuoteCustomerInfo quote={quote} />
           
           {quote.hasTradeIn && (
