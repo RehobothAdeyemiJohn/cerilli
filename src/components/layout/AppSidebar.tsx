@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import front from '../../../public/cerillilogo.jpg'
 import { 
   SidebarMenu,
   SidebarMenuItem,
@@ -49,7 +50,7 @@ const AppSidebar = () => {
     <div className="h-full flex flex-col app-sidebar">
       {/* Logo */}
       <div className="p-4 flex justify-center">
-        <img src="/cirelli-logo.svg" alt="Cirelli Motor Company Logo" className="h-10" />
+        <img src={front} alt="Cirelli Motor Company Logo" className="h-10" />
       </div>
 
       {/* Navigation Links */}
