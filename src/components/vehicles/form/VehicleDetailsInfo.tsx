@@ -6,10 +6,16 @@ import { Control } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { trimsApi, fuelTypesApi } from '@/api/localStorage';
 
+// interface VehicleDetailsInfoProps {
+//   control: Control<any>;
+//   form?:any
+// }
+
 interface VehicleDetailsInfoProps {
   control: Control<any>;
-  form?:any
+  form: any; // remove the "?" so it's not optional
 }
+
 
 const VehicleDetailsInfo = ({ control,form }: VehicleDetailsInfoProps) => {
   const { data: trims = [] } = useQuery({
@@ -22,10 +28,12 @@ const VehicleDetailsInfo = ({ control,form }: VehicleDetailsInfoProps) => {
     queryFn: fuelTypesApi.getAll
   });
 
-  const watchModel=form.watch("model")
+  // const watchModel=form.watch("model")
+  const watchModel = form?.watch?.("model") ?? "";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {watchModel===""&&(
+    {watchModel===""&&  (
       <FormField
         control={control}
         name="trim"
