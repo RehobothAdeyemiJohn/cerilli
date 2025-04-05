@@ -55,7 +55,7 @@ const AddVehicleForm = ({ onComplete, locationOptions }: AddVehicleFormProps) =>
         {/* Additional fields shown only for non-virtual stock */}
         {!isVirtualStock && (
           <>
-            <VehicleDetailsInfo form={form}  control={form.control} />
+            <VehicleDetailsInfo  control={form.control} />
             <VehicleSpecifications control={form.control} />
             <VehicleAccessories 
               control={form.control}

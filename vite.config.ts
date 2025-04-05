@@ -7,6 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
+    allowedHosts: ['8080-4plancrm-cirelli-ydrvv842urq.ws-eu118.gitpod.io'],
     port: 8080,
   },
   plugins: [

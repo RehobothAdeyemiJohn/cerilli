@@ -13,18 +13,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
   // Ensure calculatedPrice is a valid number
   const price = typeof calculatedPrice === 'number' && !isNaN(calculatedPrice) ? calculatedPrice : 0;
 
-  const array: any = ['basePrice', 'trimPrice', 'fuelTypeAdjustment', 'colorAdjustment', 'transmissionAdjustment', 'accessoriesPrice'];
 
-  const calculatePrice = () => {
-    let price: any = 0;
-    for (const name of array) {
-      const item = priceComponents[name]
-      if (item && item != undefined) {
-        price += item
-      }
-    }
-    return price
-  }
 
   return (
     <div className="border p-4 rounded-md bg-gray-50">
@@ -80,7 +69,7 @@ const VehiclePriceDisplay = ({ calculatedPrice, priceComponents }: VehiclePriceD
 
       <div className="flex justify-between text-lg font-semibold">
         <span>Prezzo Totale Chiavi in Mano:</span>
-        <span>€{calculatePrice()}</span>
+        <span>€{price}</span>
       </div>
     </div>
   );

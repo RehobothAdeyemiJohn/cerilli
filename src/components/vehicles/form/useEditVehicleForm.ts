@@ -5,9 +5,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Vehicle, Accessory } from '@/types';
-import { 
-  modelsApi, trimsApi, fuelTypesApi, colorsApi, 
-  transmissionsApi, accessoriesApi, calculateVehiclePrice 
+import {
+  modelsApi, trimsApi, fuelTypesApi, colorsApi,
+  transmissionsApi, accessoriesApi, calculateVehiclePrice
 } from '@/api/supabase/settingsApi';
 
 // Schema for vehicle edit form
@@ -41,8 +41,8 @@ export const useEditVehicleForm = (
   // console.log("Initial accessories:", vehicle.accessories);
 
   // Make sure accessories is always an array
-  const safeAccessories = Array.isArray(vehicle.accessories) 
-    ? vehicle.accessories 
+  const safeAccessories = Array.isArray(vehicle.accessories)
+    ? vehicle.accessories
     : [];
 
   // Initialize form with vehicle data
@@ -132,16 +132,20 @@ export const useEditVehicleForm = (
         //   transmission: watchTransmission,
         //   accessories: watchAccessories
         // });
-        
+
         // Find model
         const modelObj = models.find(m => m.name === watchModel);
-        
+
         // Find trim
         const trimObj = trims.find(t => t.name === watchTrim);
-        
+
         // Find fuel type
         const fuelTypeObj = fuelTypes.find(f => f.name === watchFuelType);
-        
+
+        // console.log(modelObj)
+        // console.log(trimObj)
+        // console.log(fuelTypeObj)
+
         // Find color (handling different formats)
         let colorObj;
         if (watchColor && colors.length > 0) {
@@ -154,12 +158,12 @@ export const useEditVehicleForm = (
               colorObj = colors.find(c => c.name === colorName && c.type === colorType);
             }
           }
-          
+
           // If not found, try direct name match
           if (!colorObj) {
             colorObj = colors.find(c => c.name === watchColor);
           }
-          
+
           // If still not found and there are parts, try each part
           if (!colorObj && watchColor.includes(' ')) {
             const parts = watchColor.split(' ');
@@ -169,7 +173,7 @@ export const useEditVehicleForm = (
             }
           }
         }
-        
+
         // Find transmission
         const transmissionObj = transmissions.find(t => t.name === watchTransmission);
 
@@ -183,40 +187,46 @@ export const useEditVehicleForm = (
 
         if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
           // Calculate each component's contribution to the price
-          const components = {
-            baseModelPrice: modelObj.basePrice || 0,
-            trimPrice: trimObj.basePrice || 0,
-            fuelTypeAdjustment: fuelTypeObj.price_adjustment || 0,
-            colorAdjustment: colorObj.price_adjustment || 0,
-            transmissionAdjustment: transmissionObj.price_adjustment || 0,
-          };
-          
-          // console.log("Price components:", components);
-          setPriceComponents(components);
-          
-          // Find accessory IDs based on names
-          const selectedAccessoryIds = Array.isArray(watchAccessories) ? 
+
+          const totalAccessories = (Array.isArray(watchAccessories) ?
             watchAccessories
               .filter(name => name) // Filter out any empty strings
               .map(name => {
                 const acc = accessories.find(a => a.name === name);
-                return acc ? acc.id : '';
-              })
-              .filter(id => id !== '') : [];
+                return acc ? acc.price : 0;
+              }) : []).reduce((sum, price) => sum + price, 0);
+
+
+          const components = {
+            basePrice: modelObj.basePrice || 0,
+            trimPrice: trimObj.basePrice || 0,
+            fuelTypeAdjustment: fuelTypeObj.price_adjustment || 0,
+            colorAdjustment: colorObj.price_adjustment || 0,
+            transmissionAdjustment: transmissionObj.price_adjustment || 0,
+            accessoriesPrice:totalAccessories
+          };
+
+          // console.log("Price components:", components);
+          setPriceComponents(components);
+
+          // Find accessory IDs based on names
+          
+
 
           // console.log("Selected accessory IDs for price calculation:", selectedAccessoryIds);
 
           try {
             // Calculate total price
+
             const price = await calculateVehiclePrice(
-              modelObj.id,
-              trimObj.id,
-              fuelTypeObj.id,
-              colorObj.id,
-              transmissionObj.id,
-              selectedAccessoryIds
+              modelObj.basePrice,
+              trimObj.basePrice,
+              fuelTypeObj.price_adjustment,
+              colorObj.price_adjustment,
+              transmissionObj.price_adjustment,
+              totalAccessories
             );
-            
+
             // console.log("Final calculated price:", price);
             setCalculatedPrice(price);
           } catch (error) {
@@ -234,11 +244,11 @@ export const useEditVehicleForm = (
     const updateCompatibleAccessories = async () => {
       if (watchModel && watchTrim && accessories.length > 0) {
         // console.log("Fetching compatible accessories for model:", watchModel, "and trim:", watchTrim);
-        
+
         try {
           const modelObj = models.find(m => m.name === watchModel);
           const trimObj = trims.find(t => t.name === watchTrim);
-          
+
           if (modelObj && trimObj) {
             // console.log("Found model and trim objects:", modelObj, trimObj);
             const compatibles = await accessoriesApi.getCompatible(modelObj.id, trimObj.id);
@@ -265,7 +275,7 @@ export const useEditVehicleForm = (
   const onSubmit = async (data: VehicleFormValues) => {
     // console.log("Form submitted with data:", data);
     setValidationError(null);
-    
+
     // Custom validation based on location
     if (isVirtualStock) {
       // For Stock Virtuale, model and originalStock are required
@@ -273,32 +283,32 @@ export const useEditVehicleForm = (
         setValidationError("Il modello è obbligatorio.");
         return;
       }
-      
+
       if (!data.originalStock) {
         setValidationError("Lo stock origine è obbligatorio per veicoli in Stock Virtuale");
         return;
       }
-      
+
       if (data.originalStock !== 'Cina' && data.originalStock !== 'Germania') {
         setValidationError("Lo stock origine deve essere 'Cina' o 'Germania'");
         return;
       }
     } else {
       // For other locations, all main fields are required
-      if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor || 
-          !data.location || !data.transmission || !data.status || !data.telaio) {
+      if (!data.model || !data.trim || !data.fuelType || !data.exteriorColor ||
+        !data.location || !data.transmission || !data.status || !data.telaio) {
         setValidationError("Tutti i campi sono obbligatori per veicoli non in Stock Virtuale");
         return;
       }
     }
-    
+
     // Calculate estimated arrival days for Virtual Stock
     let estimatedArrivalDays = vehicle.estimatedArrivalDays;
     if (isVirtualStock && data.originalStock) {
       // Only recalculate if origin changed or not previously set
       const originChanged = data.originalStock !== vehicle.originalStock;
       const noExistingEstimate = !vehicle.estimatedArrivalDays;
-      
+
       if (originChanged || noExistingEstimate) {
         if (data.originalStock === 'Germania') {
           // Germany stock: 38-52 days
@@ -310,7 +320,7 @@ export const useEditVehicleForm = (
         console.log(`Calculated new estimated arrival days: ${estimatedArrivalDays}`);
       }
     }
-    
+
     // Prepare updated vehicle data
     const updatedVehicle: Vehicle = {
       ...vehicle,
@@ -327,7 +337,7 @@ export const useEditVehicleForm = (
       originalStock: isVirtualStock ? (data.originalStock as 'Cina' | 'Germania') : undefined,
       estimatedArrivalDays: isVirtualStock ? estimatedArrivalDays : undefined
     };
-    
+
     // console.log("Submitting updated vehicle:", updatedVehicle);
     onComplete(updatedVehicle);
   };

@@ -13,11 +13,11 @@ import { trimsApi, fuelTypesApi } from '@/api/localStorage';
 
 interface VehicleDetailsInfoProps {
   control: Control<any>;
-  form: any; // remove the "?" so it's not optional
+  // form: any; // remove the "?" so it's not optional
 }
 
 
-const VehicleDetailsInfo = ({ control,form }: VehicleDetailsInfoProps) => {
+const VehicleDetailsInfo = ({ control }: VehicleDetailsInfoProps) => {
   const { data: trims = [] } = useQuery({
     queryKey: ['trims'],
     queryFn: trimsApi.getAll
@@ -28,12 +28,10 @@ const VehicleDetailsInfo = ({ control,form }: VehicleDetailsInfoProps) => {
     queryFn: fuelTypesApi.getAll
   });
 
-  // const watchModel=form.watch("model")
-  const watchModel = form?.watch?.("model") ?? "";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {watchModel===""&&  (
+
       <FormField
         control={control}
         name="trim"
@@ -58,7 +56,7 @@ const VehicleDetailsInfo = ({ control,form }: VehicleDetailsInfoProps) => {
           </FormItem>
         )}
       />
-    )} 
+
       <FormField
         control={control}
         name="status"

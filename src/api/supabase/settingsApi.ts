@@ -582,53 +582,41 @@ const accessoriesApi = {
 
 // Helper function to calculate vehicle price
 const calculateVehiclePrice = async (
-  modelId: string,
-  trimId: string,
-  fuelTypeId: string,
-  colorId: string,
-  transmissionId: string,
-  accessoryIds: string[]
+  model: number,
+  trim: number,
+  fuelType: number,
+  color: number,
+  transmission: number,
+  accessorys: number
 ): Promise<number> => {
   let totalPrice = 0;
   
   try {
-    // Get model
-    const model = await modelsApi.getById(modelId);
+  
     if (model) {
-      totalPrice += model.basePrice;
+      totalPrice += model;
     }
     
-    // Get trim
-    const trim = await trimsApi.getById(trimId);
     if (trim) {
-      totalPrice += trim.basePrice;
+      totalPrice += trim;
     }
-    
-    // Get fuel type
-    const fuelType = await fuelTypesApi.getById(fuelTypeId);
+
     if (fuelType) {
-      totalPrice += fuelType.price_adjustment;
+      totalPrice += fuelType;
     }
     
-    // Get color
-    const color = await colorsApi.getById(colorId);
+
     if (color) {
-      totalPrice += color.price_adjustment;
+      totalPrice += color;
     }
     
-    // Get transmission
-    const transmission = await transmissionsApi.getById(transmissionId);
     if (transmission) {
-      totalPrice += transmission.price_adjustment;
+      totalPrice += transmission;
     }
     
-    // Get accessories and sum their prices
-    if (accessoryIds.length > 0) {
-      const accessories = await accessoriesApi.getAll();
-      const selectedAccessories = accessories.filter(acc => accessoryIds.includes(acc.id));
-      for (const acc of selectedAccessories) {
-        totalPrice += acc.price;
-      }
+    // // Get accessories and sum their prices
+    if(accessorys){
+      totalPrice+=accessorys
     }
     
     return totalPrice;

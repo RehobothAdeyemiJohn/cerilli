@@ -26,7 +26,7 @@ const vehicleSchema = z.object({
 
 export type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
-export const useVehicleForm = (onComplete:any) => {
+export const useVehicleForm = (onComplete: any) => {
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Accessory[]>([]);
   const [isVirtualStock, setIsVirtualStock] = useState<boolean>(false);
@@ -147,35 +147,39 @@ export const useVehicleForm = (onComplete:any) => {
 
         if (modelObj || trimObj || fuelTypeObj || colorObj || transmissionObj) {
           // Store price components for debugging
+
+          const totalAccessories = (Array.isArray(watchAccessories) ?
+          watchAccessories
+            .filter(name => name) // Filter out any empty strings
+            .map(name => {
+              const acc = accessories.find(a => a.name === name);
+              return acc ? acc.price : 0;
+            }) : []).reduce((sum, price) => sum + price, 0);
+
           const components = {
-            baseModelPrice: modelObj?.basePrice || 0,
+            basePrice: modelObj?.basePrice || 0,
             trimPrice: trimObj?.basePrice || 0,
             fuelTypeAdjustment: fuelTypeObj?.price_adjustment || 0,
             colorAdjustment: colorObj?.price_adjustment || 0,
             transmissionAdjustment: transmissionObj?.price_adjustment || 0,
+            accessoriesPrice:totalAccessories
           };
 
           console.log("Price components:", components);
           setPriceComponents(components);
 
           // Get accessory IDs for price calculation
-          const selectedAccessoryIds = Array.isArray(watchAccessories) ?
-            watchAccessories
-              .filter(name => name)
-              .map(name => {
-                const acc = accessories.find(a => a.name === name);
-                return acc ? acc.id : '';
-              })
-              .filter(id => id !== '') : [];
+        
 
           try {
+
             const price = await calculateVehiclePrice(
-              modelObj?.id,
-              trimObj?.id,
-              fuelTypeObj?.id,
-              colorObj?.id,
-              transmissionObj?.id,
-              selectedAccessoryIds
+              modelObj.basePrice,
+              trimObj.basePrice,
+              fuelTypeObj.price_adjustment,
+              colorObj.price_adjustment,
+              transmissionObj.price_adjustment,
+              totalAccessories
             );
 
             console.log("Final calculated price:", price);

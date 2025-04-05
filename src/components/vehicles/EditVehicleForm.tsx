@@ -70,7 +70,7 @@ const EditVehicleForm = ({ vehicle, onComplete, onCancel, locationOptions,isLoad
         {/* Additional fields shown only for non-virtual stock */}
         {!isVirtualStock && (
           <>
-            <VehicleDetailsInfo control={form.control} />
+            <VehicleDetailsInfo   control={form.control} />
             <VehicleSpecifications control={form.control} />
             <VehicleAccessories 
               control={form.control}
