@@ -99,9 +99,7 @@ const VehicleDetailsDialog = ({
         await queryClient.refetchQueries({ queryKey: ['vehicles'] });
         
         // Call onVehicleUpdated callback if provided
-        if (onVehicleUpdated) {
           onVehicleUpdated();
-        }
         
         // Close the dialog after successful update
         onOpenChange(false);

@@ -12,6 +12,7 @@ export const useInventoryMutations = () => {
     mutationFn: async (vehicle: Vehicle) => {
       
       // Ensure all required fields are properly formatted
+      
       const formattedVehicle = {
         ...vehicle,
         accessories: Array.isArray(vehicle.accessories) ? vehicle.accessories : [],

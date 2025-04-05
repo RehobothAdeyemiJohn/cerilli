@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { filterVehicles } from '@/utils/vehicleFilters';
 import VehicleList from '@/components/vehicles/VehicleList';
@@ -51,9 +51,9 @@ const Inventory = () => {
     ? filterVehicles(dealerFilteredInventory, activeFilters)
     : dealerFilteredInventory;
     
-  const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC');
-  const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale');
-  const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved');
+  const stockCMCVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock CMC').sort((a,b)=> new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const stockVirtualeVehicles = filteredVehicles.filter(v => v.status === 'available' && v.location === 'Stock Virtuale').sort((a,b)=> new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const reservedVehicles = filteredVehicles.filter(v => v.status === 'reserved').sort((a,b)=> new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,9 +110,12 @@ const Inventory = () => {
     }
   };
   
-  const handleFiltersChange = (filters: VehicleFilter) => {
+  const handleFiltersChange = useCallback((filters: VehicleFilter) => {
+    // Your actual filter update logic here
     setActiveFilters(filters);
-  };
+    console.log("Filters updated:", filters);
+  }, []);
+  
   
   const handleVehicleDeleteWrapper = async (vehicleId: string): Promise<void> => {
     console.log('Inventory: handleVehicleDeleteWrapper called with ID:', vehicleId);

@@ -205,6 +205,7 @@ export const vehiclesApi = {
     });
     
     
+    console.log(dbUpdates)
     const { data, error } = await supabase
       .from('vehicles')
       .update(dbUpdates)
@@ -217,6 +218,7 @@ export const vehiclesApi = {
       throw error;
     }
     
+    console.log(data)
     // console.log("Supabase API: update - Risposta:", data);
     
     // Convert database field names back to frontend model

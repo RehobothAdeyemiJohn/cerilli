@@ -145,7 +145,7 @@ export const useVehicleForm = (onComplete: any) => {
           transmissionObj
         });
 
-        if (modelObj || trimObj || fuelTypeObj || colorObj || transmissionObj) {
+        if (modelObj ||  fuelTypeObj || colorObj || transmissionObj) {
           // Store price components for debugging
 
           const totalAccessories = (Array.isArray(watchAccessories) ?
@@ -174,11 +174,11 @@ export const useVehicleForm = (onComplete: any) => {
           try {
 
             const price = await calculateVehiclePrice(
-              modelObj.basePrice,
-              trimObj.basePrice,
-              fuelTypeObj.price_adjustment,
-              colorObj.price_adjustment,
-              transmissionObj.price_adjustment,
+              modelObj?.basePrice??0,
+              trimObj?.basePrice??0,
+              fuelTypeObj?.price_adjustment??0,
+              colorObj?.price_adjustment??0,
+              transmissionObj?.price_adjustment??0,
               totalAccessories
             );
 
@@ -274,7 +274,7 @@ export const useVehicleForm = (onComplete: any) => {
       // Prepare vehicle data for creation
       const newVehicleData: Omit<Vehicle, 'id'> = {
         model: data.model,
-        trim: isVirtualStock ? '' : (data.trim || ''),
+        trim: isVirtualStock ? '' : (data?.trim || ''),
         fuelType: isVirtualStock ? '' : (data.fuelType || ''),
         exteriorColor: isVirtualStock ? '' : (data.exteriorColor || ''),
         location: data.location,

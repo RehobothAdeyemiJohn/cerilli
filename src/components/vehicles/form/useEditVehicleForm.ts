@@ -185,7 +185,7 @@ export const useEditVehicleForm = (
         //   transmissionObj
         // });
 
-        if (modelObj && trimObj && fuelTypeObj && colorObj && transmissionObj) {
+        if (modelObj &&  fuelTypeObj&&colorObj&& transmissionObj) {
           // Calculate each component's contribution to the price
 
           const totalAccessories = (Array.isArray(watchAccessories) ?
@@ -198,11 +198,11 @@ export const useEditVehicleForm = (
 
 
           const components = {
-            basePrice: modelObj.basePrice || 0,
-            trimPrice: trimObj.basePrice || 0,
-            fuelTypeAdjustment: fuelTypeObj.price_adjustment || 0,
-            colorAdjustment: colorObj.price_adjustment || 0,
-            transmissionAdjustment: transmissionObj.price_adjustment || 0,
+            basePrice: modelObj?.basePrice || 0,
+            trimPrice: trimObj?.basePrice || 0,
+            fuelTypeAdjustment: fuelTypeObj?.price_adjustment || 0,
+            colorAdjustment: colorObj?.price_adjustment || 0,
+            transmissionAdjustment: transmissionObj?.price_adjustment || 0,
             accessoriesPrice:totalAccessories
           };
 
@@ -220,10 +220,10 @@ export const useEditVehicleForm = (
 
             const price = await calculateVehiclePrice(
               modelObj.basePrice,
-              trimObj.basePrice,
-              fuelTypeObj.price_adjustment,
-              colorObj.price_adjustment,
-              transmissionObj.price_adjustment,
+              trimObj?.basePrice??0,
+              fuelTypeObj?.price_adjustment,
+              colorObj?.price_adjustment,
+              transmissionObj?.price_adjustment,
               totalAccessories
             );
 
