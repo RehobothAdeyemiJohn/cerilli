@@ -7,6 +7,7 @@ import QuotesTable from '@/components/quotes/QuotesTable';
 import QuotesPagination from '@/components/quotes/QuotesPagination';
 import { useComprehensiveQuotesData } from '@/hooks/useComprehensiveQuotesData';
 import { Quote } from '@/types';
+import { dealersApi } from '@/api/supabase/dealersApi';
 import {
   QuoteDetailsDialogAdapter,
   QuoteRejectDialogAdapter,
@@ -183,7 +184,7 @@ const Quotes = () => {
         <QuotesTable
           quotes={quotes}
           getVehicleById={(id) => null}
-          getDealerName={(id) => ""}
+          getDealerName={(id) => ''}
           getShortId={(id) => id.substring(0, 8)}
           getStatusBadgeClass={(status) => ""}
           formatDate={(date) => new Date(date).toLocaleDateString()}

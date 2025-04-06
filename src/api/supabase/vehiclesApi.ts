@@ -97,10 +97,10 @@ export const vehiclesApi = {
       // Different arrival time estimates based on the original stock location
       if (vehicle.originalStock === 'Germania') {
         // Germany stock: 38-52 days
-        estimatedArrivalDays = Math.floor(Math.random() * (52 - 38 + 1)) + 38;
+        estimatedArrivalDays = Math.floor(Math.random() * (45 - 30 + 1)) + 38;
       } else {
         // China stock (default): 90-120 days
-        estimatedArrivalDays = Math.floor(Math.random() * (120 - 90 + 1)) + 90;
+        estimatedArrivalDays = Math.floor(Math.random() * (110 - 90 + 1)) + 90;
       }
       // console.log(`Giorni di arrivo stimati per stock ${vehicle.originalStock}: ${estimatedArrivalDays}`);
     }

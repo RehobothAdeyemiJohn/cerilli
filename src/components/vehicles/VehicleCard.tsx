@@ -6,18 +6,27 @@ import { Pencil, Trash2, Copy, Clock, Settings, FileCheck, Plus, CalendarClock, 
 import { formatCurrency, calculateDaysInStock, calculateEstimatedArrival } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
-function getDateRange(createdAt:any) {
-  const createdDate = new Date(createdAt);
-  
-  // Add 30 days
-  const minDate = new Date(createdDate);
-  minDate.setDate(minDate.getDate() + 30);
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
 
-  // Add 45 days
-  const maxDate = new Date(createdDate);
-  maxDate.setDate(maxDate.getDate() + 45);
+function calculateDate( number = 0, unit = 'days', fromDate = new Date() ) {
+  const date = new Date(fromDate);
 
-  return [minDate, maxDate ];
+  const units = {
+    days: () => date.setDate(date.getDate() + number),
+    months: () => date.setMonth(date.getMonth() + number),
+    years: () => date.setFullYear(date.getFullYear() + number),
+  };
+
+  units[unit]?.();
+
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm =  monthNames[date.getMonth()];;
+  const yyyy = date.getFullYear();
+
+  return `${dd}-${mm}-${yyyy}`;
 }
 
 
@@ -95,6 +104,7 @@ const VehicleCard = ({
 
   // Show admin buttons for admins and only for stock that's not virtual
   const showAdminButtons = isAdmin && !isVirtualStock;
+  // console.log()
 
   return (
     <div 
@@ -158,15 +168,14 @@ const VehicleCard = ({
               <span>Stock {vehicle.originalStock}</span>
             </div>
           )}
-          {isVirtualStock && estimatedArrival && (
+          {isVirtualStock && vehicle.estimatedArrivalDays && (
             <div className="flex justify-between text-sm items-center">
               <span className="text-gray-500 flex items-center gap-1">
                 <CalendarClock className="h-3 w-3" />
                 Data Arrivo:
               </span>
               <span className="font-medium text-primary">
-                {/* {vehicle?.created_at} */}
-                {getDateRange(vehicle?.created_at)[0].toDateString()}
+               {calculateDate(vehicle.estimatedArrivalDays)}
               </span>
             </div>
           )}
@@ -205,7 +214,9 @@ const VehicleCard = ({
             )}
           </div>
           {!isVirtualStock && (
-            <div className="font-bold text-primary">{formatCurrency(vehicle.price)}</div>
+            <div className="font-bold text-primary">
+              {formatCurrency(vehicle.price)}
+              </div>
           )}
         </div>
       </div>

@@ -26,14 +26,14 @@ export const useQuoteForm = (
     queryFn:()=>vehiclesApi.getById(vehicle.id)
   })
 
-  const compatibleAccessories = vehicle?.accessories || [];
-  const basePrice = vehicle?.price || 0;
+  const compatibleAccessories = vehic?.accessories || [];
+  const basePrice = vehic?.price || 0;
   const roadPreparationFee = editQuote?.roadPreparationFee || 400; // Changed from 350 to 400
   
   // console.log(vehicle)
   const form = useForm({
     defaultValues: {
-      vehicleId: vehicle?.id || '',
+      vehicleId: vehic?.id || '',
       dealerId: user?.dealerId || dealers[0]?.id || '',
       customerName: editQuote?.customerName || '',
       customerEmail: editQuote?.customerEmail || '',
